@@ -6,26 +6,28 @@
 
 ## 0. 一句话结论
 
-基线 7.45 万行 Go 分成五块：
+基线 7.45 万行 Go 分成六块：
 
 | 块 | 规模（非测试行 / 包数） | 对 GP 的意义 | 动作 |
 |---|---|---|---|
 | **底座** | ≈15.0k / 18 | 全都要：SSH、配置、输出、Web 外壳、更新、安装 | 留，只改名（改名推迟到阶段 3） |
 | **Genero 层** | ≈16.5k / 7 | GP 的主战场：4GL 大纲、`.42f/.42s` 画面、fgldb 调试 | 留，**拔掉夹在里面的 T100 假设** |
-| **T100 领域层** | ≈36.8k / 10 + 两张资产树 | 用不上 | 最终删（并行 → 替换 → 剥离，删除放最后） |
+| **GP 字典层** | ≈10.7k / 2（`internal/dict` 4587 + `cli/dict` 6108） | GP 也需要字典（表/字段/索引/程序/开窗/消息） | **改造**：留机制，把 T100 的 24 张表换成 GP 的 `zta/gat/gaq/gaz/gao/gal`（2026-11-09 拍板） |
+| **T100 领域层** | ≈26.1k / 8 + 两张资产树 | 用不上 | 最终删（并行 → 替换 → 剥离，删除放最后） |
 | **GP 领域层** | ≈2.9k / 2（`internal/gp` + `cli/gp`） | 就是 GP 版本身 | 补完（见 §7） |
 | **半通用** | ≈3.3k / 2（`cli/db`、`cli/file`） | 机制通用、路径与白名单是 T100 的 | 改造 |
 
 三条不要混的前提：
 
-1. **"层"有两套编号**。`internal/README.md` 里的 L0–L7 是**依赖深度**（谁 import 谁，零环），本文件的"底座 / Genero / T100"是**产品归属**。同一个包可以是"L0 但属于 T100 领域"（`dict/db`、`entdir`）。
+1. **"层"有两套编号**。`internal/README.md` 里的 L0–L7 是**依赖深度**（谁 import 谁，零环），本文件的"底座 / Genero / T100"是**产品归属**。同一个包可以是"L0 但属于 T100 领域"（`entdir`）。
 2. **删除放最后**。TT-src 只是只读副本、没有 git 历史，删掉的代码在本仓库里就回不来了；而现在 `go test ./...` 还有 5 个包是红的，删之前得先能测。
 3. **"删"和"改"要分开 commit**。一次 commit 里既挪文件又删模块，事后没法看。
+4. **"T100 的表"不等于"T100 的机制"**。`internal/dict` 的 `db.Source`（表/字段/键/索引/程序/作业/校验/规格/分类码/开窗/消息/参数 25 个查询方法）是**通用字典语义**，换一套表就是另一套 ERP 的字典；所以它进"改造"而不是"删"。
 
 ## 1. 判定口径：一个包值不值得留，只问三句
 
 1. **GP 用得上吗？** 用不上就是 T100 领域层——不管它写得多好。
-2. **它是 Genero 的规范，还是 T100 的约定？** 前者（4GL 语法、`.42f` 格式、fgldb 提示符）GP 一定用；后者（企业 ENT、`zta_file`、`.tzc`）GP 一定不用。混着的那几个包就是 §5 的三处手术。
+2. **它是 Genero 的规范，还是 T100 的约定？** 前者（4GL 语法、`.42f` 格式、fgldb 提示符）GP 一定用；后者（企业 ENT、`.tzc`）GP 一定不用。混着的那几个包就是 §5 的手术；`zta_file` 之类的**表**则进 §4.D 的换表，不删包。
 3. **谁 import 它？** 光看名字会骗人：`dict/live` 名字在 T100 字典包下，实际是"直连 ERP 库执行一条只读 SQL"，GP 的 `tt gp link/msg` 正在用它（`cli/gp/register.go:164`）。
 
 ## 2. 底座（留，只改名）
@@ -86,8 +88,6 @@ m.Handle("/api/gp/", s.opt.GP)                                    // GP
 
 | 包 / 目录 | 行数 | 是什么 |
 |---|---|---|
-| `cli/dict` | 6108 | `tt dict`：表/字段/校验/开窗/消息/参数/ACC + 字典库运维 |
-| `dict`（`db`/`dbsync`/`live`/`server`） | 4587 | T100 字典：本地 SQLite + 远程同步 + 直查 + REST |
 | `cli/debug` | 4547 | `tt debug`：T100 作业调试器的命令行面（停站、断点、接口日志重放） |
 | `dev`（`fence`/`model`/`pkgfile`/`split`/`store`/`synth`/`verify`/`tzs`/`tapfile`/`tglfile`/`testutil`） | 12895 | `.tzc`/`.tzs` 设计器包的读写、围栏、合成、闸门 |
 | `cli/dev`（`tzc`/`tzs`/`common`） | 5015 | `tt dev tzc` / `tt dev tzs` 命令面 |
@@ -110,7 +110,30 @@ m.Handle("/api/gp/", s.opt.GP)                                    // GP
 
 ### 4.C 领域耦合的共享件：要拆，不是删
 
-`target`（寻址文法）、`cli/at`（`@企业`）、`dict/live`（被 GP 引用）、`debug`（被 GP 需要）——这四个是 §5 的主角。
+`target`（寻址文法）、`cli/at`（`@企业`）、`debug`（被 GP 需要）——这三个是 §5 的主角。`dict` 不走"拆"，它整体进 4.D 的改造。
+
+### 4.D 字典层：留机制，换表（2026-11-09 拍板：`internal/dict` 不删）
+
+**为什么留**：`internal/dict/db.Source`（`internal/dict/db/source.go:10`）是 25 个方法的**通用字典语义**——表/字段/键/索引/程序/作业/校验/规格/分类码/开窗/消息/参数，三个后端（本地 SQLite、金仓、Oracle）实现同一组方法。换一套表，它就是另一套 ERP 的字典。
+
+**GP 已经有一半**：`internal/gp/dict.go` 把 Oracle 的 `zta_file`/`all_tab_columns`/`all_indexes`/`all_constraints`/`gao_file`/`gal_file` 同步进本地 SQLite，表是 `t_table`/`t_column`/`t_index`/`t_constraint`/`t_module`/`t_prog`/`t_prog_link`。
+
+**改造要点**：
+
+| 项 | T100 现在 | GP 改成 |
+|---|---|---|
+| 表档 / 字段档 | `dzea_t` / `dzeb_t` | `zta_file` / `all_tab_columns`（已在本地库） |
+| 键 / 索引 | `dzed_t` / `dzec_t` | `all_constraints` / `all_indexes`（已在本地库） |
+| 程序 / 作业 | `gzza_t` / `zzz_t` / `gzdg_t` | `gal_file`（p_link，已在本地库）；"作业"概念 GP 没有 |
+| 开窗 | `dzca_t`/`dzcb_t`/`dzcc_t` | `gaq_file`——**本地库还没建表**，现在只在线查 |
+| 消息 | `gzze_t` | `gaz_file`——同上 |
+| 校验 / 规格 | `dzcd_t`…/`dzep_t` | 校验 GP 无（返回空）；规格用 `t_column` 顶 |
+| 分类码 / ACC / 参数 | `gzca_t`/`gzaa_t`/`gzsz_t` | GP 无（返回空；`IsMissingTable` 已容忍缺表） |
+
+**命令面**：`cli/dict` 的 6108 行按 `Source` 的方法一一对应（rt/rv/desc/scc/rq/prog/param/msg/acc），改造时按"GP 有 → 保留、GP 无 → 报空/隐藏"逐条过，不整组删。
+
+**连带影响**：Q6 的"查询数据源（本地镜像 / 远程直查）"在字典改造后**才有语义**，所以那个控件先别删（原建议 A 作废，见 §10）。
+
 
 ## 5. 四处手术（§5.1 已定，其余待拍板）
 
@@ -145,9 +168,13 @@ m.Handle("/api/gp/", s.opt.GP)                                    // GP
 
 ### 5.2 `dict/live` 其实不是字典包
 
-`cli/gp/register.go` 用 `live.Open(ctx, *t.env.DB)` + `queryLive` 查 GP 的 Oracle 表。所以 `dict/live` 的真实身份是"**直连库执行一条只读 SQL**"，与 `erpdb` 是同一件事的两半（`erpdb` 管连接，`live` 管执行 + `dict/db.Source` 适配）。
+### 5.2 `dict/live` —— **已作废**（2026-11-09：`internal/dict` 不删）
 
-处置：把执行那半搬到 `erpdb`（或新建 `livedb`），`dict/live` 只留 `Source` 适配壳。这样删 T100 字典时，`cli/gp` 的 import 不用跟着改。
+原稿的 Q2 是"把 `live.Open` 那 74 行搬进 `erpdb`，好让阶段 3 删字典时 `cli/gp` 的 import 不断"。
+
+用户拍板：**`internal/dict` 不删，改成 GP 的字典层**（§4.D）。既然字典树留着，`cli/gp` 继续 import `dict/live` 就没有问题，搬家这件事整个作废。
+
+留一句备查：`live.go` 的 74 行确实只做 `erpdb.Open` + 可选 SSH 隧道（`sshtun.Dial`），将来若真要拆，搬进 `erpdb` 仍是最省事的路子。
 
 ### 5.3 `target` 的 ENT 语义 → GP 没有企业
 
@@ -162,7 +189,7 @@ GP **没有 ENT**（`cli/gp/register.go` 的包注释明写"GP 没有 T100 的 E
 
 ### 5.4 `web` 的路由表要可拆
 
-现在三条线硬挂在 `server.go`。阶段 3 删掉 `debug`/`dict` 之后，`web` 要么编译不过，要么留一堆死引用。处置：`web.Options` 的 `Debug`/`Dict`/`GP` 三个 handler 已经是可空接口，只要把"挂载行"收进一个 `mount()`，删的时候是删一行而不是改文件。
+现在三条线硬挂在 `server.go`。阶段 3 删掉 `debug`（字典要改成 GP 的，不删）之后，`web` 要么编译不过，要么留一堆死引用。处置：`web.Options` 的 `Debug`/`Dict`/`GP` 三个 handler 已经是可空接口，只要把"挂载行"收进一个 `mount()`，删的时候是删一行而不是改文件。
 
 ## 6. 阶段与闸门
 
@@ -180,7 +207,7 @@ TT 的 GP 面现在只有"环境 / 镜像 / 字典 / 调试会话"四件事，**
 
 ### 阶段 2（替换）：共享件去 T100 化
 
-按 §5 的顺序：`dict/live` → `target` → `web` 路由 → `debug`。每做完一处，`go build ./...` + `go test ./...` 都要绿。
+按这个顺序：**字典换表（§4.D）** → `target` 摘 ENT → `debug` 拔接线（§5.1）→ `web` 路由收成 `mount()`。每做完一处，`go build ./...` + `go test ./...` 都要绿。
 
 ### 阶段 3（剥离）：删 + 改名
 
@@ -198,7 +225,7 @@ TT 的 GP 面现在只有"环境 / 镜像 / 字典 / 调试会话"四件事，**
 
 ## 7. 今天实测出来的缺口（不是设计缺失，是没接线）
 
-这六条都有代码证据，改起来都不大，但会决定用户第一次打开 TG 的印象。
+这七条都有代码证据，改起来都不大，但会决定用户第一次打开 TG 的印象。
 
 1. **`tt debug` 完全不认 GP 环境。** `internal/cli/debug` 全包搜不到一处 `Product` 判断。对着 GP 环境跑 `tt debug`，它会按 T100 的路径去解析作业、企业、源码镜像——报错大概是"找不到作业"，而不是"这是 GP 环境"。
 2. **GP 调试没有命令行面。** 只有 `/api/gp/session/{new,list,exec,close}`；`tt gp` 只有 `table|link|msg`。也就是说：**GP 版的"调试"今天只有 Web 能做，命令行做不了**。而 TT 的定位是 CLI-first。
@@ -211,6 +238,7 @@ TT 的 GP 面现在只有"环境 / 镜像 / 字典 / 调试会话"四件事，**
    **pickdir 已修**（改调 `/api/pickdir`，前端 `tsc --noEmit` 与 `check:app` 全绿，dist 已重建）；`/api/gp/settings` 与 `querySource` 按 Q6 待定。
 5. **`skills/` 没有 GP 技能。** 分发的 4 个技能全是 T100 的；GP 那套（`gp-erp-architecture`/`-debug`/`-read`）现在只在本机 `.agents/skills` 之外。用户装完 TG，Agent 拿到的是 T100 文档——这是**对外发版前必须换的**。
 6. **`internal/README.md` 的包地图里没有 `internal/gp`。** 55 个包的清单从 `cli/at` 到 `cli` 都有，唯独这个 2067 行、带 9 个端点的子系统没登记（整份文档里 `gp` 出现 0 次）。
+7. **GP 字典只有三条命令。** `tt gp` 只有 `table|link|msg`；而本地库里已经同步了 `t_table`/`t_column`/`t_index`/`t_constraint`/`t_module`/`t_prog`/`t_prog_link` 七张表，开窗（`gaq_file`）与消息（`gaz_file`）连本地表都没建。改造字典层（§4.D）就是把这七张表接到 `db.Source` 的 25 个查询方法上。
 
 ## 8. 沙箱跑不出来的测试（别误判成代码坏了）
 
@@ -243,8 +271,8 @@ Get-ChildItem internal -Directory | ForEach-Object {
 ## 10. 待拍板
 
 - ~~**Q1**：`debug` 合一还是各留一份~~ —— **已定（2026-11-09）**：TG 与 TT 完全独立，不与 T100 共享代码；`internal/debug` 归 TG，拔掉 T100 接线，不新建第二套（§5.1）。
-- **Q2**：`dict/live` 搬到 `erpdb` 还是新建 `livedb`（§5.2）。
+- ~~**Q2**：`dict/live` 搬到 `erpdb` 还是新建 `livedb`~~ —— **已作废（2026-11-09）**：`internal/dict` 不删，改造成 GP 的字典层（§4.D），`cli/gp` 继续用它没有断 import 的问题。
 - **Q3**：GP 镜像要不要扩到 `42f/42s/inc`（§7.3）——扩了 GP 才能真正离线改画面。
 - **Q4**：`designer-src/` + `engine/`（16 MB、1264 文件）什么时候删——它们对 GP 零价值，但删了在本仓库不可回。
 - **Q5**：阶段 3 的改名要不要一次性做（`module tt`、`tt.exe`、`TT_WEB_DIR`、MSI 产品名、数据目录），还是继续分批。
-- **Q6**：GP 页的"查询数据源"怎么处理（§7.4）——**A** 删掉控件（如今 `tt gp` 只有在线路径，本地 `.db` 只给调试的 `LookupModule` 用，控件是死的）；**B** 接上共享的 `query.source`（meta 回读 + `PUT /api/hosts` 保存），并给 `tt gp` 补一条本地库查询路径。A 是一小时的事，B 要动 `cli/gp` 的取数路径。
+- **Q6**：GP 页的"查询数据源"怎么处理（§7.4）——**原建议 A（删控件）已随 §4.D 作废**：字典改造成 GP 的之后，"本地镜像 / 远程直查"这个选择才有语义，所以控件先留着，等字典改造落地再接 B（meta 回读 + `PUT /api/hosts` 保存 + `tt gp` 本地库查询）。
