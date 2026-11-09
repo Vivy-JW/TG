@@ -1,0 +1,403 @@
+package debug
+
+// 服务器环境(SSH)与调试配置。
+// 环境模型/连接/登录动态路径探测由 tt/internal/host 共享包承载(CLI 命令同样依赖它),
+// 本包 Config 在 host 类型之上追加 debug 专属参数与运行时合并结果。
+// T100 路径(topDir/moduleRoots)不允许静态配置:登录后按 zone 动态获取,失败即报错。
+//
+// 配置来源是合并后的统一配置:环境清单在顶层 hosts(三工具共用),调试设置在
+// debug 节,监听地址在顶层 listen。合并前它们挤在同一个顶层 debug 节里
+// (debug.sshs + debug.listen + debug.launchArgs …),拆节与旧配置的迁移由
+// tt/internal/config 统一处理,本文件只负责把三段读成一个 Config。
+
+import (
+	"fmt"
+	"strings"
+
+	"tt/internal/config"
+	"tt/internal/dbconfig"
+	"tt/internal/host"
+)
+
+// Config debug 功能配置,由统一配置的三段组装而成:
+// 调试设置取自 debug 节,监听地址取自顶层 listen,环境清单取自顶层 hosts。
+// SSH/Zone/Topent/DB/Runtime 为运行时合并结果(ApplyDefaultEnv 由环境 + dbConn 引用生成),
+// 不参与持久化;环境清单本身也不落在本包里 —— 落盘走 config.SaveHosts / config.EditHosts。
+// 「当前环境」是运行时概念(envName,不落盘):由会话选择/切换时确定,无会话时取
+// hosts.activeEnv(可用 debug.activeEnv 覆盖)。
+type Config struct {
+	// Product 这条会话属于哪个产品："" / "t100" = T100，"gp" = TOP GP。
+	// 两者跑同一个 fglrun -d、同一套 fgldb 命令，只有登录与启动两段不同，
+	// 所以工作台（源码/断点/栈/变量）不用分叉。
+	Product         string          `json:"-"`
+	SSHs            []host.NamedSsh `json:"-"`               // 服务器环境列表(来自 hosts.sshs;落盘不走本字段)
+	Listen          string          `json:"listen"`          // HTTP 监听地址(统一配置的顶层 listen)
+	LaunchArgs      string          `json:"launchArgs"`      // 作业启动参数默认模板,{prog} 替换为作业名(ssh 可覆盖)
+	WatchdogSeconds int             `json:"watchdogSeconds"` // 停站停留超时默认(秒);ssh 可覆盖
+	FGLServer       string          `json:"fglserver"`       // 留空使用 T100 按 SSH 来源 IP 自动设置
+	TermWidth       int             `json:"termWidth"`
+	TermHeight      int             `json:"termHeight"`
+	PrintElements   int             `json:"printElements"`      // fgldb 单次 print 的数组元素上限;0=默认 1000
+	PersistBPs      *bool           `json:"persistBreakpoints"` // 断点持久化开关(nil 视为 true)
+	// AITakeover 是**默认起步模式**：打开后，新建的调试会话直接以「协作模式」启动
+	// （AI 可写：能启动作业、下断点、步进、求值）。
+	//
+	// 它只是**省掉一次切换**，不再是唯一的入口：AI 也可以对已有会话用
+	// `tt debug mode collab` 自行接管（hMode 两个方向都放行）。默认 false ——
+	// 没打开时新建会话仍以纯人工起步，人是默认驾驶者。
+	AITakeover bool   `json:"aiTakeover"`
+	DataDir    string `json:"-"` // 数据目录(断点持久化等);serve 注入,空=禁用
+
+	// ---- 运行时(合并结果,json:"-" 不持久化) ----
+	envName   string               // 当前环境名(会话选择/切换时写入;空=取 sshs 首条)
+	Workspace string               `json:"-"` // TOP GP 的 $TOP 源码根；T100 为空
+	CustRoot  string               `json:"-"` // TOP GP 的 $CUST 客制根；T100 为空
+	SSH       host.SSHConfig       `json:"-"` // 生效 SSH(envName 合并)
+	Zone      string               `json:"-"` // 生效登录区域
+	Topent    host.EntValue        `json:"-"` // 生效默认企业(连接会话即下发到 shell；会话内可覆盖)
+	DB        *dbconfig.Connection `json:"-"` // 生效数据库连接(该环境的 ssh.db 深拷贝;nil=该 ssh 未挂库)
+	Runtime   *host.RuntimeEnv     `json:"-"` // 登录后动态获取的 T100 路径(探针/选区回显);nil=尚未获取,需登录探测
+}
+
+// applySsh 把某 ssh 环境的连接与启动参数合并到运行时字段(ApplyDefaultEnv 与 CloneEnv 共用)
+func (c *Config) applySsh(e *host.NamedSsh) {
+	c.envName = e.Name
+	c.Product = e.Product // "" / "t100" / "gp"，登录与启动两段按它分叉
+	c.Workspace = strings.TrimSpace(e.Workspace)
+	c.CustRoot = strings.TrimSpace(e.CustRoot)
+	if e.Host != "" {
+		c.SSH = e.SSHConfig
+		if c.SSH.Port == 0 {
+			c.SSH.Port = 22
+		}
+	}
+	if e.Zone != "" {
+		c.Zone = e.Zone
+	}
+	// **不再从环境取企业编号**:topent 已从 config 移除,ENT 只能由用户每次显式给
+	// (CLI --ent / Web 会话面板)。这里刻意不清 c.Topent —— 它现在是"会话级显式值",
+	// 由 SetTopent 写入,换环境时不该被环境配置覆盖(环境配置已经不持有它了)。
+	// 换环境 = 换服务器/区域:清动态路径,登录后重新获取
+	c.Runtime = nil
+	if e.LaunchArgs != "" {
+		c.LaunchArgs = e.LaunchArgs
+	}
+	if e.WatchdogSeconds > 0 {
+		c.WatchdogSeconds = e.WatchdogSeconds
+	}
+	// 该环境一对一挂载的数据库连接(深拷贝,防共享底层切片)
+	c.DB = nil
+	if e.DB != nil {
+		x := *e.DB
+		x.Accounts = append([]dbconfig.DBAcct(nil), e.DB.Accounts...)
+		c.DB = &x
+	}
+	c.fillDefaults()
+}
+
+// ApplyDefaultEnv 把**当前会话环境**(envName)的 SSH/zone/库引用合并到运行时字段。
+//
+// 「当前会话环境」必须已经明确(c.envName 非空)——**不再有"未确定时取首条"这回事**:
+// 解不出环境就清空运行时字段,由调用方去要一个明确的环境名。
+// 无任何 ssh 时(设置页可删空)同样清空。
+func (c *Config) ApplyDefaultEnv() {
+	// 环境可能为空(首次运行还没配、或配置文件被手改成空;统一服务的 /api/hosts
+	// 保存路径会拦下空列表,此处仍须兜底):清空当前环境与全部运行时合并结果。
+	// 只清 envName 不够 —— EnvName() 会用 c.SSH.Host+Zone 兜底拼出幽灵环境名。
+	if len(c.SSHs) == 0 {
+		c.envName = ""
+		c.SSH = host.SSHConfig{}
+		c.Zone = ""
+		c.DB = nil
+		c.Runtime = nil
+		return
+	}
+	// 环境名的选择顺序只有一份实现(config.Hosts.Resolve),这里不再自己写一遍线性查找。
+	// 与上面"没有环境"同一套处理:**解不出环境就清空运行时字段,不再回落到首条** ——
+	// 回落会把会话悄悄切到另一台机上,而那正是这次要根除的行为。
+	h := config.Hosts{SSHs: c.SSHs}
+	ref, err := h.Resolve(c.envName)
+	if err != nil {
+		c.envName = ""
+		c.SSH = host.SSHConfig{}
+		c.Zone = ""
+		c.DB = nil
+		c.Runtime = nil
+		return
+	}
+	c.envName = ref.Name
+	c.applySsh(ref.Env)
+}
+
+// SSHByName 按名取 SSH 连接;空名/未命中返回生效 SSH(合并后的 c.SSH)
+func (c *Config) SSHByName(name string) host.SSHConfig {
+	if name != "" {
+		for _, s := range c.SSHs {
+			if s.Name == name {
+				if s.Port == 0 {
+					s.Port = 22
+				}
+				return s.SSHConfig
+			}
+		}
+	}
+	return c.SSH
+}
+
+// EnvName 会话所属环境名:优先运行时选定的环境,缺省用 host-zone 推导名
+func (c *Config) EnvName() string {
+	if c.envName != "" {
+		return c.envName
+	}
+	return c.SSH.Host + "-" + c.Zone
+}
+
+// CloneEnv 复制配置并切换到指定 ssh 环境(name 命中 SSHs 之一):
+// 用于会话「切换/重启」按目标环境重连;未命中返回 nil。
+func (c *Config) CloneEnv(name string) *Config {
+	if name == "" {
+		return nil
+	}
+	var hit *host.NamedSsh
+	for i := range c.SSHs {
+		if c.SSHs[i].Name == name {
+			hit = &c.SSHs[i]
+			break
+		}
+	}
+	if hit == nil {
+		return nil
+	}
+	c2 := *c
+	c2.applySsh(hit)
+	return &c2
+}
+
+// TopentInt 返回生效默认企业的数字编号(数据库探测用;文本/未配置返回 0=仅列映射)
+func (c *Config) TopentInt() int {
+	n, _ := c.Topent.Int()
+	return n
+}
+
+// EntAccount 按企业编号取该环境 ENT 清单里的账号（纯配置，不联网）。
+//
+// 这是"企业→账号"在**配置层**的唯一实现：CLI 的 tt db sql 与 Web 的 /api/dbsql
+// 都从这里取，两条路落到同一个 schema。清单没同步就报“没同步”，绝不猜一个账号
+// —— 猜错的账号查出来是 0 行，而那看起来和“数据不存在”一模一样。
+func (c *Config) EntAccount(ent int) (string, error) {
+	name := c.EnvName()
+	for i := range c.SSHs {
+		if c.SSHs[i].Name != name {
+			continue
+		}
+		e := &c.SSHs[i]
+		for _, x := range e.Ents {
+			if x.Ent != ent {
+				continue
+			}
+			if a := strings.TrimSpace(x.Account); a != "" && a != "-" {
+				return a, nil
+			}
+			return "", fmt.Errorf("企业 %d 在配置的 ENT 清单里没有可用账号（tt env ents %s 可看，或到设置页「ENT」页签刷新）", ent, name)
+		}
+		if len(e.Ents) == 0 {
+			return "", fmt.Errorf("环境 %q 还没同步过 ENT 清单：跑 tt env ents %s --refresh（或设置页「ENT」页签）", name, name)
+		}
+		return "", fmt.Errorf("企业 %d 不在 %s 的 ENT 清单里（tt env ents %s 看全部）", ent, name, name)
+	}
+	return "", fmt.Errorf("环境 %q 不在配置里", name)
+}
+
+// DBConnForEnt 取该环境的库连接副本，并把 Account 槽位换成本次企业的账号。
+//
+// 返回的是**副本**：Accounts 切片只读共享，Account 是"这次用哪个账号"的一次性槽位，
+// 改它不能影响配置本体（否则下一次查询会沿用上一次的企业）。
+func (c *Config) DBConnForEnt(ent int) (*dbconfig.Connection, error) {
+	if c.DB == nil {
+		return nil, fmt.Errorf("环境 %q 未挂数据库连接（设置 → 站点管理 → 数据库）", c.EnvName())
+	}
+	cc := *c.DB
+	if ent > 0 {
+		acct, err := c.EntAccount(ent)
+		if err != nil {
+			return nil, err
+		}
+		cc.Account = acct
+	}
+	return &cc, nil
+}
+
+// BPsPersisted 断点持久化是否启用
+func (c *Config) BPsPersisted() bool {
+	return c.DataDir != "" && (c.PersistBPs == nil || *c.PersistBPs)
+}
+
+func (c *Config) fillDefaults() {
+	if c.Listen == "" {
+		c.Listen = config.DefaultListen
+	}
+	if c.LaunchArgs == "" {
+		c.LaunchArgs = config.DefaultLaunchArgs
+	}
+	if c.WatchdogSeconds == 0 {
+		c.WatchdogSeconds = config.DefaultWatchdogSeconds
+	}
+	if c.TermWidth == 0 {
+		c.TermWidth = config.DefaultTermWidth
+	}
+	if c.TermHeight == 0 {
+		c.TermHeight = config.DefaultTermHeight
+	}
+	if c.SSH.Port == 0 {
+		c.SSH.Port = 22
+	}
+	if c.PrintElements == 0 {
+		c.PrintElements = 1000
+	}
+}
+
+// TopDirActual 返回登录后动态获取的区域顶级目录(TOP)。
+// 未获取(Runtime 为 nil)时返回空串——调用方须先确保动态环境已获取,不得回退静态路径。
+func (c *Config) TopDirActual() string {
+	if c.Runtime != nil {
+		return c.Runtime.TOP
+	}
+	return ""
+}
+
+// ModuleRootsActual 返回登录后动态获取的源码查找根目录(ERP/COM/wss)。
+// 未获取时返回 nil——调用方须先确保动态环境已获取,不得回退静态路径。
+func (c *Config) ModuleRootsActual() []string {
+	// TOP GP 没有 T100 的 Runtime($ERP/$COM)，源码根就是环境里配的 $TOP/$CUST。
+	// 不补这一段，GP 会话能停站，但 source/breakpoints 永远找不到文件（实测）。
+	if strings.EqualFold(c.Product, "gp") {
+		var roots []string
+		if c.Workspace != "" {
+			roots = append(roots, strings.TrimSuffix(c.Workspace, "/"))
+		}
+		if c.CustRoot != "" {
+			roots = append(roots, strings.TrimSuffix(c.CustRoot, "/"))
+		}
+		return roots
+	}
+	if c.Runtime != nil && c.Runtime.ERP != "" {
+		// WebService 程序(wssp* / awsp*)挂 com/wss(标准)与 com/cwss(客制),
+		// com 根的通配已覆盖两者;再显式列 com/wss 兼容直挂布局
+		return []string{c.Runtime.ERP, c.Runtime.COM, c.Runtime.COM + "/wss"}
+	}
+	return nil
+}
+
+// Top 返回区域顶级目录(去尾斜杠)
+func (c *Config) Top() string { return c.TopDirActual() }
+
+// CloneWithZone 复制配置并覆盖区域(启动参数 --zone 用):
+// 区域变了,登录后的动态路径需重新获取(Runtime 置空),不做任何静态推导。
+func (c *Config) CloneWithZone(zone string) *Config {
+	c2 := *c
+	if zone != "" && zone != c.Zone {
+		c2.Zone = zone
+		c2.Runtime = nil // 区域变了,动态路径需重新获取
+	}
+	return &c2
+}
+
+// ModuleDir 返回模块主目录:业务模块在 erp 下(客制目录即其模块本身,如 erp/csf);
+// 接口(WebService)模块挂载在 com 下——标准 wss 与客制 cwss 同根(与登录环境
+// $WSS/$CWSS、awsq990 的 cd $WSS/4gl 语义一致)。top 须登录后动态获取。
+func (c *Config) ModuleDir(module string) string {
+	top := c.TopDirActual()
+	if module == "wss" || module == "cwss" {
+		return top + "/com/" + module
+	}
+	return top + "/erp/" + module
+}
+
+// FGLSOURCEPath 返回 launch 前 export 的源码搜索路径
+func (c *Config) FGLSOURCEPath(module string) string {
+	top := c.TopDirActual()
+	base := top + "/erp/" + module
+	if module == "wss" || module == "cwss" {
+		base = top + "/com/" + module
+	}
+	dirs := []string{
+		base + "/4gl",
+		base + "/42m",
+		top + "/com/lib/42m",
+		top + "/com/sub/42m",
+		top + "/com/qry/42m",
+	}
+	out := ""
+	for i, d := range dirs {
+		if i > 0 {
+			out += ":"
+		}
+		out += d
+	}
+	return out
+}
+
+// LoadConfig 从统一配置读取 debug 设置、监听地址与环境清单并填充默认值;
+// 要求已配置至少一个服务器环境(CLI 命令都按"有环境可连"前提工作)。
+func LoadConfig(path string) (*Config, error) { return loadConfig(path, true) }
+
+// LoadConfigAllowEmpty 同 LoadConfig,但允许环境清单为空。
+// 服务首次启动时可能一个环境都还没配,这时它要能先起来,用户再到「设置 → 环境」里添加;
+// CLI 路径不用它,保持"没配环境就报错"的既有语义。
+func LoadConfigAllowEmpty(path string) (*Config, error) { return loadConfig(path, false) }
+
+// NewDefaultConfig 返回一份填好默认值的空配置(不含任何服务器环境):
+// 首次运行写 config.json 骨架用,默认值与 fillDefaults 永远一致(不重复硬编码)。
+func NewDefaultConfig() *Config {
+	c := &Config{}
+	c.fillDefaults()
+	return c
+}
+
+// debugSettingsOf 取 Config 里属于 debug 节的设置(与 loadConfig 的读法一一对应)。
+// activeEnv 不在其中:它是统一配置里 debug.activeEnv 覆盖项,不由运行态回写。
+func debugSettingsOf(c *Config) config.DebugSettings {
+	return config.DebugSettings{
+		LaunchArgs:      c.LaunchArgs,
+		WatchdogSeconds: c.WatchdogSeconds,
+		FGLServer:       c.FGLServer,
+		TermWidth:       c.TermWidth,
+		TermHeight:      c.TermHeight,
+		PrintElements:   c.PrintElements,
+		PersistBPs:      c.PersistBPs,
+		AITakeover:      c.AITakeover,
+	}
+}
+
+// loadConfig 读统一配置并组装运行态视图。requireEnv 为真时必须已配置环境。
+//
+// 对应的三段:hosts.sshs → SSHs,顶层 listen → Listen,debug.* → 调试设置。
+// 默认环境取 debug.activeEnv 覆盖 hosts.activeEnv 的结果(见 config.ActiveHost)。
+func loadConfig(path string, requireEnv bool) (*Config, error) {
+	root, err := config.Load(path)
+	if err != nil {
+		return nil, fmt.Errorf("读取配置失败: %w", err)
+	}
+	cfg := &Config{
+		SSHs:            root.Hosts.SSHs,
+		Listen:          root.Listen,
+		LaunchArgs:      root.Debug.LaunchArgs,
+		WatchdogSeconds: root.Debug.WatchdogSeconds,
+		FGLServer:       root.Debug.FGLServer,
+		TermWidth:       root.Debug.TermWidth,
+		TermHeight:      root.Debug.TermHeight,
+		PrintElements:   root.Debug.PrintElements,
+		PersistBPs:      root.Debug.PersistBPs,
+		AITakeover:      root.Debug.AITakeover,
+	}
+	// 默认环境:hosts.activeEnv,被 debug.activeEnv 覆盖(未命中则回落到首条)。
+	// 写进 envName 后,ApplyDefaultEnv 会把它的连接/参数合并到运行时字段。
+	if h := root.ActiveHost("debug"); h != nil {
+		cfg.envName = h.Name
+	}
+	cfg.fillDefaults()
+	if requireEnv && len(cfg.SSHs) == 0 {
+		return nil, fmt.Errorf("hosts.sshs 尚未配置任何服务器环境(请在设置-环境-SSH 页添加)")
+	}
+	return cfg, nil
+}

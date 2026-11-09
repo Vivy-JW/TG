@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<languages>
+  <language ui_id="zh_CN" desc="简体中文"/>
+  <language ui_id="zh_TW" desc="繁體中文"/>
+</languages>

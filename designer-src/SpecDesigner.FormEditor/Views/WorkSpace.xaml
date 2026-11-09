@@ -1,0 +1,221 @@
+<UserControl
+	x:Class="SpecDesigner.FormEditor.Views.WorkSpace"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:localViews="clr-namespace:SpecDesigner.FormEditor.Views"
+	xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+	xmlns:ed="http://schemas.microsoft.com/expression/2010/drawing"
+	xmlns:views="clr-namespace:SpecDesigner.FormEditor.Views"
+	xmlns:ads="clr-namespace:SpecDesigner.FormEditor.ActionDefaults"
+	xmlns:pf="clr-namespace:SpecDesignerPreference;assembly=SpecDesignerCommon"
+	xmlns:sh="clr-namespace:SpecDesigner.SpecEditor.Helpers;assembly=SpecDesigner.SpecEditor">
+	<FrameworkElement.Resources>
+		<ResourceDictionary>
+			<sh:BoolToVisibilityConverter
+				x:Key="BoolToVisibilityConverter" />
+			<Style
+				x:Key="GridSplitterPreviewStyle">
+				<Setter
+					Property="Control.Template">
+					<Setter.Value>
+						<ControlTemplate>
+							<Rectangle
+								Fill="#80000000" />
+						</ControlTemplate>
+					</Setter.Value>
+				</Setter>
+			</Style>
+			<Style
+				x:Key="GridSplitterStyle1"
+				TargetType="{x:Type GridSplitter}">
+				<Setter
+					Property="Background"
+					Value="#01FFFFFF" />
+				<Setter
+					Property="GridSplitter.PreviewStyle"
+					Value="{StaticResource GridSplitterPreviewStyle}" />
+				<Setter
+					Property="Template">
+					<Setter.Value>
+						<ControlTemplate
+							TargetType="{x:Type GridSplitter}">
+							<Border
+								x:Name="border"
+								BorderBrush="{TemplateBinding Control.BorderBrush}"
+								BorderThickness="{TemplateBinding Control.BorderThickness}"
+								Background="{TemplateBinding Control.Background}">
+								<Grid
+									VerticalAlignment="Center">
+									<Grid.RowDefinitions>
+										<RowDefinition />
+										<RowDefinition />
+									</Grid.RowDefinitions>
+									<ed:RegularPolygon
+										x:Name="extendRegular"
+										Fill="#FF000000"
+										HorizontalAlignment="Center"
+										VerticalAlignment="Center"
+										Height="{TemplateBinding FrameworkElement.Width}"
+										InnerRadius="1"
+										PointCount="3"
+										Stretch="Fill"
+										Stroke="#FF000000"
+										Width="{TemplateBinding FrameworkElement.Width}"
+										RenderTransformOrigin="0.5,0.5"
+										Cursor="Hand">
+										<UIElement.RenderTransform>
+											<TransformGroup>
+												<ScaleTransform />
+												<SkewTransform />
+												<RotateTransform
+													Angle="90" />
+												<TranslateTransform />
+											</TransformGroup>
+										</UIElement.RenderTransform>
+										<i:Interaction.Triggers>
+											<i:EventTrigger
+												EventName="MouseLeftButtonDown">
+												<i:InvokeCommandAction
+													Command="{Binding SplitterExtendCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type localViews:WorkSpace}}}" />
+											</i:EventTrigger>
+										</i:Interaction.Triggers>
+									</ed:RegularPolygon>
+									<ed:RegularPolygon
+										x:Name="reduceRegular"
+										Fill="#FF000000"
+										Grid.Row="1"
+										HorizontalAlignment="Center"
+										VerticalAlignment="Center"
+										Height="{TemplateBinding FrameworkElement.Width}"
+										InnerRadius="1"
+										PointCount="3"
+										Stretch="Fill"
+										Stroke="#FF000000"
+										Width="{TemplateBinding FrameworkElement.Width}"
+										RenderTransformOrigin="0.5,0.5"
+										Cursor="Hand">
+										<i:Interaction.Triggers>
+											<i:EventTrigger
+												EventName="MouseLeftButtonDown">
+												<i:InvokeCommandAction
+													Command="{Binding ReduceExtendExtendCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type localViews:WorkSpace}}}" />
+											</i:EventTrigger>
+										</i:Interaction.Triggers>
+										<UIElement.RenderTransform>
+											<TransformGroup>
+												<ScaleTransform />
+												<SkewTransform />
+												<RotateTransform
+													Angle="270" />
+												<TranslateTransform />
+											</TransformGroup>
+										</UIElement.RenderTransform>
+									</ed:RegularPolygon>
+								</Grid>
+							</Border>
+						</ControlTemplate>
+					</Setter.Value>
+				</Setter>
+			</Style>
+		</ResourceDictionary>
+	</FrameworkElement.Resources>
+	<Grid
+		x:Name="LayoutRoot">
+		<Panel.Background>
+			<LinearGradientBrush
+				EndPoint="0.5,1"
+				StartPoint="0.5,0">
+				<GradientStop
+					Color="#FFBFDBFF"
+					Offset="0" />
+				<GradientStop
+					Color="#FF6692CE"
+					Offset="0.511" />
+			</LinearGradientBrush>
+		</Panel.Background>
+		<Grid.RowDefinitions>
+			<RowDefinition
+				Height="Auto" />
+			<RowDefinition
+				Height="*" />
+		</Grid.RowDefinitions>
+		<Grid
+			Margin="0">
+			<views:WidgetBox
+				x:Name="widgetBox" />
+		</Grid>
+		<Grid
+			Margin="0">
+			<views:SimpleFormWidgetBox
+				x:Name="simpleFormWidgetBox" />
+		</Grid>
+		<Grid
+			x:Name="DesignContainer"
+			Row="1"
+			Background="#f7f7f7">
+			<Grid.RowDefinitions>
+				<RowDefinition
+					Height="Auto" />
+				<RowDefinition
+					Height="*" />
+			</Grid.RowDefinitions>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition />
+				<ColumnDefinition>
+					<FrameworkContentElement.Style>
+						<Style
+							TargetType="{x:Type ColumnDefinition}">
+							<Style.Triggers>
+								<DataTrigger
+									Value="Collapsed"
+									Binding="{Binding Visibility, ElementName=ActionView}">
+									<Setter
+										Property="Width"
+										Value="0" />
+								</DataTrigger>
+								<DataTrigger
+									Value="Visible"
+									Binding="{Binding Visibility, ElementName=ActionView}">
+									<Setter
+										Property="Width"
+										Value="150" />
+								</DataTrigger>
+							</Style.Triggers>
+						</Style>
+					</FrameworkContentElement.Style>
+				</ColumnDefinition>
+			</Grid.ColumnDefinitions>
+			<views:ToolBar
+				x:Name="toolbar"
+				Grid.Row="0"
+				Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+			<views:ManagedForm
+				x:Name="managedForm"
+				Grid.Row="1"
+				VerticalAlignment="Stretch"
+				HorizontalAlignment="Stretch" />
+			<GridSplitter
+				Grid.Column="0"
+				Grid.Row="2"
+				HorizontalAlignment="Right"
+				Width="2" />
+			<ScrollViewer
+				x:Name="ActionView"
+				Grid.Column="1"
+				Grid.Row="0"
+				Grid.RowSpan="2"
+				Margin="2"
+				VerticalScrollBarVisibility="Auto"
+				Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}">
+				<StackPanel>
+					<ads:ActionDefaults
+						x:Name="actionDefaults" />
+				</StackPanel>
+			</ScrollViewer>
+		</Grid>
+		<Canvas
+			x:Name="PlatformCanvas" />
+	</Grid>
+</UserControl>

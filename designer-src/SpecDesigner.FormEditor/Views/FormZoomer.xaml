@@ -1,0 +1,38 @@
+<Window
+	x:Class="SpecDesigner.FormEditor.Views.FormZoomer"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	WindowStyle="ToolWindow"
+	ResizeMode="NoResize"
+	Title="Navigation"
+	Width="200"
+	Height="200"
+	xmlns:views="clr-namespace:SpecDesigner.FormEditor.Views">
+	<Grid
+		x:Name="layoutRoot">
+		<Image
+			x:Name="bgImage" />
+		<TextBox
+			x:Name="tbBox"
+			IsReadOnly="True"
+			Visibility="Collapsed" />
+		<Canvas>
+			<Canvas
+				x:Name="zoom"
+				Background="#330000ff"
+				Cursor="ScrollAll" />
+		</Canvas>
+		<Button
+			x:Name="refresh"
+			VerticalAlignment="Bottom"
+			HorizontalAlignment="Right"
+			Style="{StaticResource DesignerAttachedButton}"
+			Click="refresh_Click">
+			<Image
+				Source="pack://application:,,,/SpecDesigner.FormEditor;component/Images/refresh.png"
+				Stretch="Uniform"
+				Width="16"
+				Height="16" />
+		</Button>
+	</Grid>
+</Window>

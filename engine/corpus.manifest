@@ -1,0 +1,75 @@
+# Corpus manifest -- the pinned input set for the four batch drivers.
+# Regenerate: ./make-manifest.sh [root]
+# Format: <sha256-16>  <bytes>  <path>
+#
+# batch.sh used to glob *.tzs without excluding the drivers' own scratch files, so its
+# stored baseline included _ai_*.tzs from earlier AddField runs. Those can appear and
+# disappear between runs, which made the baseline unreproducible. This list is the fix.
+
+3ddac577b1d467d6     13138  /d/t100_wrok_dir/hengshuo/prd/aapp320(c).tzs
+359f1ddeefb45fb9     31987  /d/t100_wrok_dir/hengshuo/prd/aapt110(c).tzs
+a7d31103eeadd686     57818  /d/t100_wrok_dir/hengshuo/prd/aapt300(c).tzs
+e342110484192591     45078  /d/t100_wrok_dir/hengshuo/prd/aapt300(s).tzs
+8deb3420a5f05fe1     57584  /d/t100_wrok_dir/hengshuo/prd/aapt310(c).tzs
+ffad609fda3439ae     16202  /d/t100_wrok_dir/hengshuo/prd/aapt415(c).tzs
+c9b8c0f59c7850a4     19758  /d/t100_wrok_dir/hengshuo/prd/abmm200_wf(c).tzs
+24d99a385995d76b     15623  /d/t100_wrok_dir/hengshuo/prd/aimi101_wf(c).tzs
+f06a4ace9380fa60     28883  /d/t100_wrok_dir/hengshuo/prd/aimm200_wf(c).tzs
+872e3ec93816c6fb     22520  /d/t100_wrok_dir/hengshuo/prd/aimm201_wf(c).tzs
+ec7108f171003ce9      9732  /d/t100_wrok_dir/hengshuo/prd/aimm207(s).tzs
+9eb83eb9fc1d593e      8442  /d/t100_wrok_dir/hengshuo/prd/aini001(c).tzs
+9a151e86361d20d8      7552  /d/t100_wrok_dir/hengshuo/prd/aini001(s).tzs
+09a1ca562dc54af7      5696  /d/t100_wrok_dir/hengshuo/prd/aini005(c).tzs
+c264f76a48558043     19479  /d/t100_wrok_dir/hengshuo/prd/aint302_wf(c).tzs
+f79c55d21af53744     14748  /d/t100_wrok_dir/hengshuo/prd/aisp320(c).tzs
+3c07628c8cc41d4c     12436  /d/t100_wrok_dir/hengshuo/prd/aisp320(s).tzs
+2e77f85c286f6ecb     11439  /d/t100_wrok_dir/hengshuo/prd/aisp320_wf(c).tzs
+209931c81eb23289     42065  /d/t100_wrok_dir/hengshuo/prd/aist310(c).tzs
+d94e63f40b94ce8b     53294  /d/t100_wrok_dir/hengshuo/prd/aist310_wf(c).tzs
+05c16cfce4b2c19f      7763  /d/t100_wrok_dir/hengshuo/prd/aooi199(s).tzs
+f67dea63cbbe2845     17973  /d/t100_wrok_dir/hengshuo/prd/aooi200(s).tzs
+f52605f337f1258c      8799  /d/t100_wrok_dir/hengshuo/prd/aooi350_01(c).tzs
+2cbe28a52fdc7b5e      6207  /d/t100_wrok_dir/hengshuo/prd/aooi350_02(c).tzs
+be542c5603d7945c      5711  /d/t100_wrok_dir/hengshuo/prd/aooi350_02(s).tzs
+9278e0c8649db406      7484  /d/t100_wrok_dir/hengshuo/prd/apmi070(c).tzs
+924c26e0d0c131dd     40832  /d/t100_wrok_dir/hengshuo/prd/apmm100(c).tzs
+84136ca0b1045241      5534  /d/t100_wrok_dir/hengshuo/prd/apmm100_02(c).tzs
+c3b506560cf63fdc     34558  /d/t100_wrok_dir/hengshuo/prd/apmm101(c).tzs
+a16829b2969b6dfd      7430  /d/t100_wrok_dir/hengshuo/prd/apmp490(c).tzs
+aea2aad0a661b3e9      9791  /d/t100_wrok_dir/hengshuo/prd/apmp490_01(s).tzs
+75150865434dd720      9010  /d/t100_wrok_dir/hengshuo/prd/apmp520(c).tzs
+7b03143c216bbb41     13610  /d/t100_wrok_dir/hengshuo/prd/apmp520_01(c).tzs
+58d1bdac7eac5573     50071  /d/t100_wrok_dir/hengshuo/prd/apmt500_wf(c).tzs
+98555d438ab24a71     35141  /d/t100_wrok_dir/hengshuo/prd/apmt520_wf(c).tzs
+859f1b2fadd6c806     10441  /d/t100_wrok_dir/hengshuo/prd/arti202(c).tzs
+370630ba350509d0     33567  /d/t100_wrok_dir/hengshuo/prd/axcq540(c).tzs
+30c922faa4fdee08     48204  /d/t100_wrok_dir/hengshuo/prd/axmt500_wf(c).tzs
+45e38050f834d306     39988  /d/t100_wrok_dir/hengshuo/prd/axmt520_wf(c).tzs
+6b3cebd04c6ce996     45561  /d/t100_wrok_dir/hengshuo/prd/axmt540_wf(c).tzs
+d66cb945368ee13a     26906  /d/t100_wrok_dir/hengshuo/prd/axmt600_wf(c).tzs
+aeefb572b61e58e2     11187  /d/t100_wrok_dir/hengshuo/prd/axrt402(c).tzs
+3063b67f8b15537f      4376  /d/t100_wrok_dir/hengshuo/prd/azzp661(s).tzs
+156a47bfa12d0a4a      4918  /d/t100_wrok_dir/hengshuo/prd/azzp666_wf(s).tzs
+bbde87f333688291     35623  /d/t100_wrok_dir/hengshuo/prd/bsft001_wf(c).tzs
+a9923dd893f4cab2      6744  /d/t100_wrok_dir/hengshuo/prd/bsft001_wf_02(s).tzs
+dfbedf8f78ba5a6c      9808  /d/t100_wrok_dir/hengshuo/prd/bwfi002_wf(c).tzs
+111c8c4674659c06      9897  /d/t100_wrok_dir/hengshuo/prd/bwfi003_wf(c).tzs
+9008589e749b3d16      6195  /d/t100_wrok_dir/hengshuo/prd/bwfi004_wf(c).tzs
+877e721d1a1adba1      5725  /d/t100_wrok_dir/hengshuo/prd/bwfi006_wf(c).tzs
+dda9e0a549851c48      8903  /d/t100_wrok_dir/hengshuo/prd/bwfi007_wf(c).tzs
+2bbc4255cdc83415      3464  /d/t100_wrok_dir/hengshuo/prd/bwfi007_wf_01(s).tzs
+bdc879d973a66f19      4382  /d/t100_wrok_dir/hengshuo/prd/bwfp001_wf(c).tzs
+5a771b85baff31b6      9280  /d/t100_wrok_dir/hengshuo/prd/capp001(c).tzs
+68d54a98a55b6439     19316  /d/t100_wrok_dir/hengshuo/prd/capp002(c).tzs
+9605d4fe1c616026     14893  /d/t100_wrok_dir/hengshuo/prd/capp113(c).tzs
+61ef1142e86fe7f1     13922  /d/t100_wrok_dir/hengshuo/prd/capt110(c).tzs
+8f9ab1c4d129a742      4501  /d/t100_wrok_dir/hengshuo/prd/capt111(c).tzs
+760d817fe3f6226d      5747  /d/t100_wrok_dir/hengshuo/prd/cooi005(c).tzs
+8bfc9578ff466919      3121  /d/t100_wrok_dir/hengshuo/prd/cpmp530(c).tzs
+de6b0de268d8a29c      8651  /d/t100_wrok_dir/hengshuo/prd/cpmq001(c).tzs
+8fd5904decc9c0ea     19150  /d/t100_wrok_dir/hengshuo/prd/cpmt441(c).tzs
+d3a59ff4cf99ef1a      5430  /d/t100_wrok_dir/hengshuo/prd/csfi001(c).tzs
+c77ad39796bf6cc4     26304  /d/t100_wrok_dir/xiyuan/prd/abmm200_wf(c).tzs
+e434ad4f10caec42     21946  /d/t100_wrok_dir/xiyuan/prd/ainq120_wf(c).tzs
+7a6f3deaeb3bdbd6     39916  /d/t100_wrok_dir/xiyuan/prd/asft310_wf(c).tzs
+8e77555d96e60c1f     18403  /d/t100_wrok_dir/xiyuan/prd/asft330(c).tzs

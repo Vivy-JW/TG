@@ -1,0 +1,31 @@
+<UserControl
+	x:Class="SpecDesigner.SpecEditor.Views.ActionTypeDataGrid"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	Width="Auto"
+	xmlns:views="clr-namespace:SpecDesigner.SpecEditor.Views">
+	<DataGrid
+		x:Name="dg"
+		AutoGenerateColumns="False"
+		HorizontalAlignment="Stretch"
+		CanUserAddRows="False"
+		CanUserDeleteRows="False"
+		CanUserSortColumns="False"
+		HeadersVisibility="Column"
+		SelectionUnit="FullRow">
+		<DataGrid.Columns>
+			<DataGridCheckBoxColumn
+				Header=""
+				Width="Auto"
+				ElementStyle="{StaticResource {x:Type CheckBox}}"
+				Binding="{Binding ActionType, UpdateSourceTrigger=PropertyChanged}" />
+			<DataGridTextColumn
+				Header="Description"
+				IsReadOnly="True"
+				Width="Auto"
+				Binding="{Binding ActionDescription}" />
+		</DataGrid.Columns>
+	</DataGrid>
+</UserControl>

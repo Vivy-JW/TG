@@ -1,0 +1,31 @@
+<Window
+	x:Class="SpecDesignerCommon.Views.AutoCloseDialog"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	Title="AutoCloseDialog"
+	SizeToContent="WidthAndHeight"
+	WindowStyle="SingleBorderWindow"
+	ResizeMode="NoResize"
+	WindowStartupLocation="CenterOwner"
+	xmlns:views="clr-namespace:SpecDesignerCommon.Views">
+	<StackPanel>
+		<Label
+			x:Name="messageLabel"
+			Content="This is a self-closing window!"
+			HorizontalAlignment="Center"
+			VerticalAlignment="Center"
+			FontSize="18"
+			FontWeight="Bold"
+			Margin="10" />
+		<Separator />
+		<Button
+			x:Name="close_btn"
+			HorizontalAlignment="Right"
+			Content="關閉"
+			Width="80"
+			Margin="10"
+			Click="CloseButton_Click" />
+	</StackPanel>
+</Window>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="ASCII"?>
+<Form name="demoform" build="3.21.03" spacing="normal" style="dialog4" width="58" height="4">
+  <LStr text="demo.title"/>
+  <Grid width="58" height="4">
+    <Label width="4" text="demo.lbOne" posX="1" posY="0">
+      <LStr text="demo.lbOne"/>
+    </Label>
+    <FormField name="formonly.demo001" colName="demo001" fieldId="0" sqlTabName="formonly" tabIndex="1">
+      <Edit width="20" posX="6" posY="0" gridWidth="20"/>
+    </FormField>
+    <FormField name="formonly.demo002" colName="demo002" fieldId="1" sqlTabName="formonly" notNull="1" required="1" tabIndex="2" text="lbl_demo002" sqlType="CHAR">
+      <CheckBox width="14" text="demo.cbTwo" posX="6" posY="1" gridWidth="14" comment="cmt_demo002">
+        <LStr text="demo.cbTwo"/>
+      </CheckBox>
+    </FormField>
+    <ScrollGrid>
+      <Table name="demo_t">
+        <TableColumn name="demo_t.demo003" colName="demo003" sqlType="SMALLINT" fieldId="2" sqlTabName="demo_t" tabIndex="3" text="lbl_demo003" comment="cmt_demo003">
+          <Edit width="8" posX="7" posY="3"/>
+        </TableColumn>
+      </Table>
+    </ScrollGrid>
+  </Grid>
+  <RecordView tabName="demo_t">
+    <Link colName="demo003" fieldIdRef="2"/>
+  </RecordView>
+</Form>

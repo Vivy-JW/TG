@@ -1,0 +1,211 @@
+<UserControl
+	x:Class="SpecDesigner.FormEditor.Relation.TBLModifyBox"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:sys="clr-namespace:System;assembly=mscorlib"
+	x:Name="this"
+	xmlns:relation="clr-namespace:SpecDesigner.FormEditor.Relation">
+	<Grid
+		Background="#AACCCCCC">
+		<Border
+			BorderThickness="3"
+			Background="#FFFFFFFF"
+			BorderBrush="#FF0000FF"
+			CornerRadius="2"
+			VerticalAlignment="Center"
+			HorizontalAlignment="Center"
+			Grid.Row="1">
+			<StackPanel
+				MaxWidth="300">
+				<TextBlock
+					Text="{StaticResource Message_ChageTableRelation}"
+					Foreground="#FFFF0000"
+					TextWrapping="Wrap"
+					Margin="10,5,10,5"
+					FontWeight="Bold" />
+				<GroupBox
+					Header="PK/FK設定"
+					Margin="5"
+					Width="300"
+					Background="#FFFFFFFF">
+					<UniformGrid
+						Margin="4"
+						Columns="2">
+						<TextBlock
+							Text="Table:" />
+						<ComboBox
+							x:Name="modifyTBLNameCB"
+							DisplayMemberPath="Text"
+							SelectedValuePath="Name"
+							ItemsSource="{Binding Path=Tables, ElementName=this}"
+							SelectedValue="{Binding TBLName}"
+							SelectionChanged="modifyTBLNameCB_SelectionChanged">
+							<FrameworkElement.Style>
+								<Style
+									BasedOn="{StaticResource {x:Type ComboBox}}"
+									TargetType="{x:Type ComboBox}">
+									<Setter
+										Property="IsEnabled"
+										Value="True" />
+									<Style.Triggers>
+										<DataTrigger
+											Value="Y"
+											Binding="{Binding Main}">
+											<Setter
+												Property="IsEnabled"
+												Value="False" />
+										</DataTrigger>
+									</Style.Triggers>
+								</Style>
+							</FrameworkElement.Style>
+							<ItemsControl.ItemsPanel>
+								<ItemsPanelTemplate>
+									<VirtualizingStackPanel />
+								</ItemsPanelTemplate>
+							</ItemsControl.ItemsPanel>
+							<ItemsControl.ItemContainerStyle>
+								<Style
+									BasedOn="{StaticResource {x:Type ComboBoxItem}}"
+									TargetType="{x:Type ComboBoxItem}">
+									<Setter
+										Property="IsEnabled"
+										Value="{Binding IsEnabled}" />
+								</Style>
+							</ItemsControl.ItemContainerStyle>
+						</ComboBox>
+						<TextBlock
+							Text="PK:" />
+						<TextBox
+							x:Name="modifyPkTB"
+							Text="{Binding PK}" />
+						<TextBlock
+							Text="FkMaster:" />
+						<TextBox
+							x:Name="modifyFkmTB"
+							Text="{Binding FkMaster, ValidatesOnExceptions=True, ValidatesOnDataErrors=True}" />
+						<TextBlock
+							Text="FkDetail:" />
+						<TextBox
+							x:Name="modifyFkdTB"
+							Text="{Binding FkDetail, ValidatesOnExceptions=True, ValidatesOnDataErrors=True}" />
+					</UniformGrid>
+				</GroupBox>
+				<GroupBox
+					Header="{StaticResource tableRlation_layerDisplay}"
+					Margin="5"
+					Width="300"
+					Background="#FFFFFFFF">
+					<UniformGrid
+						Margin="4"
+						Columns="2">
+						<TextBlock
+							Text="{StaticResource tableRlation_upperTable}" />
+						<ComboBox
+							x:Name="modifyUpperTBLNameCB"
+							DisplayMemberPath="Text"
+							SelectedValuePath="Name"
+							ItemsSource="{Binding Path=UpperTables, ElementName=this}"
+							SelectedValue="{Binding UpperTable}"
+							SelectionChanged="modifyUpperTBLNameCB_SelectionChanged">
+							<FrameworkElement.Style>
+								<Style
+									BasedOn="{StaticResource {x:Type ComboBox}}"
+									TargetType="{x:Type ComboBox}">
+									<Setter
+										Property="IsEnabled"
+										Value="True" />
+									<Style.Triggers>
+										<DataTrigger
+											Value="Y"
+											Binding="{Binding Main}">
+											<Setter
+												Property="IsEnabled"
+												Value="False" />
+										</DataTrigger>
+									</Style.Triggers>
+								</Style>
+							</FrameworkElement.Style>
+							<ItemsControl.ItemsPanel>
+								<ItemsPanelTemplate>
+									<VirtualizingStackPanel />
+								</ItemsPanelTemplate>
+							</ItemsControl.ItemsPanel>
+							<ItemsControl.ItemContainerStyle>
+								<Style
+									TargetType="{x:Type ComboBoxItem}">
+									<Setter
+										Property="IsEnabled"
+										Value="{Binding IsEnabled}" />
+								</Style>
+							</ItemsControl.ItemContainerStyle>
+						</ComboBox>
+						<TextBlock
+							Text="{StaticResource tableRlation_upperKey}" />
+						<TextBox
+							x:Name="modifyUpperKeyTB"
+							Text="{Binding UpperKey}">
+							<FrameworkElement.Style>
+								<Style
+									BasedOn="{StaticResource {x:Type TextBox}}"
+									TargetType="{x:Type TextBox}">
+									<Setter
+										Property="IsEnabled"
+										Value="True" />
+									<Style.Triggers>
+										<DataTrigger
+											Value="{x:Static sys:String.Empty}"
+											Binding="{Binding UpperTable, Mode=OneWay}">
+											<Setter
+												Property="IsEnabled"
+												Value="False" />
+										</DataTrigger>
+									</Style.Triggers>
+								</Style>
+							</FrameworkElement.Style>
+						</TextBox>
+						<TextBlock
+							Text="{StaticResource tableRlation_thisKey}" />
+						<TextBox
+							x:Name="modifyThisKeyTB"
+							Text="{Binding ThisKey}">
+							<FrameworkElement.Style>
+								<Style
+									BasedOn="{StaticResource {x:Type TextBox}}"
+									TargetType="{x:Type TextBox}">
+									<Setter
+										Property="IsEnabled"
+										Value="True" />
+									<Style.Triggers>
+										<DataTrigger
+											Value="{x:Static sys:String.Empty}"
+											Binding="{Binding UpperTable, Mode=OneWay}">
+											<Setter
+												Property="IsEnabled"
+												Value="False" />
+										</DataTrigger>
+									</Style.Triggers>
+								</Style>
+							</FrameworkElement.Style>
+						</TextBox>
+					</UniformGrid>
+				</GroupBox>
+				<UniformGrid>
+					<Button
+						Content="{StaticResource Button_OK}"
+						HorizontalAlignment="Center"
+						Margin="4,0"
+						MinWidth="70"
+						Command="{Binding ConfirmCommand, ElementName=this}" />
+					<Button
+						Content="{StaticResource Button_Cancel}"
+						HorizontalAlignment="Center"
+						Margin="4,0"
+						MinWidth="70"
+						Click="CancelTBLBox_MouseLeftButtonUp" />
+				</UniformGrid>
+			</StackPanel>
+		</Border>
+	</Grid>
+</UserControl>

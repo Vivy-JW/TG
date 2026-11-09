@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="ASCII"?>
+<Form name="partial" build="3.21.03" width="10" height="3">
+  <FormField name="formonly.a" colName="a001" fieldId="9" tabIndex="1">
+    <Edit width="4" posX="1" posY="0"/>
+  </FormField>
+  <FormField name="formonly.b" fieldId="10" tabIndex="2">
+    <Edit width="4" posX="1" posY="1"/>
+  </FormField>
+  <FormField name="formonly.c" colName="c001" tabIndex="3">
+    <Edit width="4" posX="1" posY="2"/>
+  </FormField>
+  <TableColumn name="demo_t.d" colName="d001" fieldId="notanumber">
+    <Edit width="4"/>
+  </TableColumn>
+</Form>

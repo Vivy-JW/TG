@@ -1,0 +1,22 @@
+<Window
+	x:Class="SpecDesigner.InformationWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	x:Name="Window"
+	Title="About"
+	WindowStyle="ToolWindow"
+	ShowInTaskbar="False"
+	ResizeMode="CanResizeWithGrip"
+	SizeToContent="WidthAndHeight"
+	WindowStartupLocation="CenterOwner"
+	xmlns:specdesigner="clr-namespace:SpecDesigner">
+	<UniformGrid
+		x:Name="LayoutRoot"
+		Columns="2">
+		<Label
+			Content="Version" />
+		<Label
+			x:Name="verNum"
+			Content="-------" />
+	</UniformGrid>
+</Window>

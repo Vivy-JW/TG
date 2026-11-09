@@ -1,0 +1,93 @@
+# 构建产物
+/tt.exe
+/tt.exe~
+*.exe
+/dist/
+# 前端产物不入库，但那个占位文件必须入库：main.go 的 //go:embed all:web/dist
+# 在没有该目录时会直接报错（pattern all:web/dist: no matching files found），
+# 于是全新克隆连 go build 都过不去。占位文件让"后端不依赖前端构建"成立。
+# 注意：vite 的 emptyOutDir 会连它一起清掉，所以构建后由 postbuild 脚本写回
+# （web/app/scripts/gitkeep.mjs）—— 只写在这个忽略规则里是不够的。
+/web/dist/*
+!/web/dist/.gitkeep
+/web/node_modules/
+/web/app/node_modules/
+
+# 配置：含明文 SSH / 数据库口令，绝不入库
+/config.json
+/config.json.bak
+/config.local.json
+*/.tdev/
+/srccache/
+/debug-bps/
+/ents/
+/logs/
+.tt-serve.json
+.tt-serve.log
+.tdebug-serve.json
+.tdebug-serve.log
+
+# 本地数据
+/erp_data.db
+/erp_data.db-*
+
+# 本机构建缓存
+/.gocache/
+/.gotmp/
+
+# 编辑器与工具
+/.zcode/
+/.zcodeignore
+/.claude/skills/
+/.claude/settings.local.json
+# 本机装的第三方技能与其锁文件（与 /.claude/skills/ 同类：属于这台机器，不属于仓库）
+/skills-lock.json
+.DS_Store
+Thumbs.db
+
+# 本机预览用的启动配置(含沙箱绝对路径),不入库
+/.claude/launch.json
+
+# 前端 check runner 的 esbuild 中间产物
+/web/app/scripts/.tmp-*.mjs
+
+# Python 的字节码缓存（tools/ 下有脚本，跑一下就冒出来）
+__pycache__/
+*.pyc
+
+# 前端构建的历史备份目录(web/dist.old-*):只是回滚用的产物,不入库
+web/dist.old-*/
+
+# 便携布局的**整个数据目录**(config.json / sites / spill / srccache / dict / audit 都在里面)。
+# 上游只忽略了根目录那个 /config.json 单文件 —— 这种布局下真正的口令在 config/config.json
+# 与 config/sites/*.json 里,不整目录挡掉就等于没挡。
+/config/
+
+# 本机 SSH 主机指纹(连过哪些服务器),机器专属
+/ssh_known_hosts
+
+# exe 的备份副本:*.exe 罩不住 tt.exe.bak-20261022 / backup_tt.exe.200545 这类命名
+/tt.exe.bak-*
+/backup_tt.exe*
+/tt.exe.new
+
+# 手工替换 dist 时的中转目录(vite --outDir ../dist.new 那套)
+/web/dist.new/
+
+# agent plan：本机的工作计划，不进公共仓库（.agents/skills 与 .agents/docs 仍入库）
+/.agents/plan/
+
+# ── TG 导入 TT 0.5.2 基线时补齐的漏网规则 ──
+# 构建产物实际叫 tt-fork.exe，原规则只写了 /tt.exe.bak-*，它的备份（.bak-20261105* 共 18 个）会漏进来
+/tt-fork.exe.bak-*
+/backup_tt-fork.exe*
+/*.exe.bak-*
+/*.exe.new
+
+# 改名成 TG 之后的产物，提前挡住
+/tg.exe
+/tg.exe.bak-*
+/backup_tg.exe*
+
+# robocopy 从 TT-src 带过来的空 tmp/，将来构建也可能往里写
+/tmp/

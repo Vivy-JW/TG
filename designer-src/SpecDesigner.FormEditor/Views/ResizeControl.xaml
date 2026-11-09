@@ -1,0 +1,123 @@
+<UserControl
+	x:Class="SpecDesigner.FormEditor.Views.ResizeControl"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:c="clr-namespace:SpecDesigner.FormEditor.Converters"
+	xmlns:views="clr-namespace:SpecDesigner.FormEditor.Views">
+	<FrameworkElement.Resources>
+		<ResourceDictionary>
+			<c:ResizeDirectionConverter
+				x:Key="ResizeDirectionConverter" />
+			<SolidColorBrush
+				x:Key="RectFillBrush"
+				Color="White" />
+			<SolidColorBrush
+				x:Key="RectStrokeBrush"
+				Color="#FF0027FF" />
+			<Style
+				x:Key="{x:Type Thumb}"
+				TargetType="{x:Type Thumb}">
+				<Setter
+					Property="Width"
+					Value="6" />
+				<Setter
+					Property="Height"
+					Value="6" />
+				<Setter
+					Property="Template">
+					<Setter.Value>
+						<ControlTemplate>
+							<Rectangle
+								x:Name="thumbRec"
+								HorizontalAlignment="{TemplateBinding FrameworkElement.HorizontalAlignment}"
+								Height="{TemplateBinding FrameworkElement.Height}"
+								VerticalAlignment="{TemplateBinding FrameworkElement.VerticalAlignment}"
+								Width="{TemplateBinding FrameworkElement.Width}"
+								Margin="{TemplateBinding FrameworkElement.Margin}"
+								Stroke="{DynamicResource RectStrokeBrush}"
+								Fill="{StaticResource RectStrokeBrush}" />
+							<ControlTemplate.Triggers>
+								<Trigger
+									Property="IsEnabled"
+									Value="False">
+									<Setter
+										Property="FrameworkElement.Cursor"
+										Value="No" />
+									<Setter
+										TargetName="thumbRec"
+										Property="Shape.Fill"
+										Value="{StaticResource RectFillBrush}" />
+								</Trigger>
+							</ControlTemplate.Triggers>
+						</ControlTemplate>
+					</Setter.Value>
+				</Setter>
+			</Style>
+		</ResourceDictionary>
+	</FrameworkElement.Resources>
+	<Grid>
+		<Rectangle
+			Stroke="#FF000000"
+			StrokeDashArray="2"
+			StrokeThickness="1"
+			Margin="0" />
+		<Thumb
+			x:Name="LeftRect"
+			HorizontalAlignment="Left"
+			VerticalAlignment="Center"
+			Margin="-1,0,0,0"
+			Cursor="SizeWE"
+			IsEnabled="{Binding Converter='{StaticResource ResizeDirectionConverter}', ConverterParameter=Left, Mode=OneWay}" />
+		<Thumb
+			x:Name="RightRect"
+			HorizontalAlignment="Right"
+			VerticalAlignment="Center"
+			Margin="0,0,-1,0"
+			Cursor="SizeWE"
+			IsEnabled="{Binding Converter='{StaticResource ResizeDirectionConverter}', ConverterParameter=Right, Mode=OneWay}" />
+		<Thumb
+			x:Name="TopRect"
+			HorizontalAlignment="Center"
+			VerticalAlignment="Top"
+			Margin="0,-1,0,0"
+			Cursor="SizeNS"
+			IsEnabled="{Binding Converter='{StaticResource ResizeDirectionConverter}', ConverterParameter=Top, Mode=OneWay}" />
+		<Thumb
+			x:Name="BottomRect"
+			HorizontalAlignment="Center"
+			VerticalAlignment="Bottom"
+			Margin="0,0,0,-1"
+			Cursor="SizeNS"
+			IsEnabled="{Binding Converter='{StaticResource ResizeDirectionConverter}', ConverterParameter=Bottom, Mode=OneWay}" />
+		<Thumb
+			x:Name="TopLeftRect"
+			HorizontalAlignment="Left"
+			VerticalAlignment="Top"
+			Margin="-1,-1,0,0"
+			Cursor="SizeNWSE"
+			IsEnabled="{Binding Converter='{StaticResource ResizeDirectionConverter}', ConverterParameter=TopLeft, Mode=OneWay}" />
+		<Thumb
+			x:Name="TopRightRect"
+			HorizontalAlignment="Right"
+			VerticalAlignment="Top"
+			Margin="0,-1,-1,0"
+			Cursor="SizeNESW"
+			IsEnabled="{Binding Converter='{StaticResource ResizeDirectionConverter}', ConverterParameter=TopRight, Mode=OneWay}" />
+		<Thumb
+			x:Name="BottomLeftRect"
+			HorizontalAlignment="Left"
+			VerticalAlignment="Bottom"
+			Margin="-1,0,0,-1"
+			Cursor="SizeNESW"
+			IsEnabled="{Binding Converter='{StaticResource ResizeDirectionConverter}', ConverterParameter=BottomLeft, Mode=OneWay}" />
+		<Thumb
+			x:Name="BottomRightRect"
+			HorizontalAlignment="Right"
+			VerticalAlignment="Bottom"
+			Margin="0,0,-1,-1"
+			Cursor="SizeNWSE"
+			IsEnabled="{Binding Converter='{StaticResource ResizeDirectionConverter}', ConverterParameter=BottomRight, Mode=OneWay}" />
+	</Grid>
+</UserControl>

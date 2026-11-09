@@ -1,0 +1,930 @@
+<Window
+	x:Class="SpecDesignerCommon.Site.SiteManager"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:behaviors="clr-namespace:SpecDesignerCommon.Site.Behaviors"
+	xmlns:helper="clr-namespace:SpecDesignerCommon.Site.Converters"
+	xmlns:s="clr-namespace:System;assembly=mscorlib"
+	xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+	xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
+	xmlns:views="clr-namespace:SpecDesignerCommon.Site.Views"
+	xmlns:cmd="clr-namespace:SpecDesignerCommon.Site"
+	xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+	xmlns:converter="clr-namespace:SpecDesignerCommon.Site.Converters"
+	x:Name="connectionManager"
+	MinWidth="500"
+	Width="700"
+	Height="500">
+	<FrameworkElement.Resources>
+		<ResourceDictionary>
+			<converter:NameLabelConverter
+				x:Key="NameLabelConverter" />
+			<converter:VersionEnabledConverter
+				x:Key="VersionCompareConverter" />
+			<Style
+				x:Key="{x:Type TreeViewItem}"
+				TargetType="{x:Type TreeViewItem}">
+				<Setter
+					Property="TreeViewItem.IsExpanded"
+					Value="{Binding IsExpanded}" />
+				<Setter
+					Property="TreeViewItem.IsSelected"
+					Value="{Binding IsSelected, Mode=TwoWay}" />
+				<Setter
+					Property="HorizontalContentAlignment"
+					Value="Stretch" />
+				<EventSetter
+					Event="MouseDoubleClick"
+					Handler="OnTreeNodeDoubleClick" />
+			</Style>
+			<Style
+				x:Key="SelectionEnabledStyle"
+				TargetType="{x:Type Button}"
+				BasedOn="{StaticResource {x:Type Button}}">
+				<Setter
+					Property="IsEnabled"
+					Value="False" />
+				<Style.Triggers>
+					<DataTrigger
+						Value="True"
+						Binding="{Binding SelectedItem.IsFolder, ElementName=settingTV}">
+						<Setter
+							Property="IsEnabled"
+							Value="False" />
+					</DataTrigger>
+					<DataTrigger
+						Value="False"
+						Binding="{Binding SelectedItem.IsFolder, ElementName=settingTV}">
+						<Setter
+							Property="IsEnabled"
+							Value="True" />
+					</DataTrigger>
+				</Style.Triggers>
+			</Style>
+			<Style
+				x:Key="{x:Type TextBox}"
+				TargetType="{x:Type TextBox}"
+				BasedOn="{StaticResource {x:Type TextBox}}">
+				<Setter
+					Property="IsEnabled"
+					Value="False" />
+				<Style.Triggers>
+					<DataTrigger
+						Value="True"
+						Binding="{Binding SelectedItem.IsFolder, ElementName=settingTV}">
+						<Setter
+							Property="IsEnabled"
+							Value="False" />
+					</DataTrigger>
+					<DataTrigger
+						Value="False"
+						Binding="{Binding SelectedItem.IsFolder, ElementName=settingTV}">
+						<Setter
+							Property="IsEnabled"
+							Value="True" />
+					</DataTrigger>
+				</Style.Triggers>
+			</Style>
+			<Style
+				x:Key="{x:Type ComboBox}"
+				TargetType="{x:Type ComboBox}"
+				BasedOn="{StaticResource {x:Type ComboBox}}">
+				<Setter
+					Property="IsEnabled"
+					Value="False" />
+				<Style.Triggers>
+					<DataTrigger
+						Value="True"
+						Binding="{Binding SelectedItem.IsFolder, ElementName=settingTV}">
+						<Setter
+							Property="IsEnabled"
+							Value="False" />
+					</DataTrigger>
+					<DataTrigger
+						Value="False"
+						Binding="{Binding SelectedItem.IsFolder, ElementName=settingTV}">
+						<Setter
+							Property="IsEnabled"
+							Value="True" />
+					</DataTrigger>
+				</Style.Triggers>
+			</Style>
+			<Style
+				x:Key="{x:Type PasswordBox}"
+				TargetType="{x:Type PasswordBox}"
+				BasedOn="{StaticResource {x:Type PasswordBox}}">
+				<Setter
+					Property="IsEnabled"
+					Value="False" />
+				<Style.Triggers>
+					<DataTrigger
+						Value="True"
+						Binding="{Binding SelectedItem.IsFolder, ElementName=settingTV}">
+						<Setter
+							Property="IsEnabled"
+							Value="False" />
+					</DataTrigger>
+					<DataTrigger
+						Value="False"
+						Binding="{Binding SelectedItem.IsFolder, ElementName=settingTV}">
+						<Setter
+							Property="IsEnabled"
+							Value="True" />
+					</DataTrigger>
+				</Style.Triggers>
+			</Style>
+			<Style
+				x:Key="buttonImageStyle"
+				TargetType="{x:Type Image}">
+				<Setter
+					Property="Margin"
+					Value="2" />
+				<Setter
+					Property="Height"
+					Value="16" />
+				<Setter
+					Property="Width"
+					Value="16" />
+				<Setter
+					Property="Stretch"
+					Value="Uniform" />
+			</Style>
+		</ResourceDictionary>
+	</FrameworkElement.Resources>
+	<Grid
+		x:Name="LayoutRoot">
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition
+				Width=".55*" />
+			<ColumnDefinition
+				Width="5" />
+			<ColumnDefinition
+				Width="*" />
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition
+				Height="*" />
+			<RowDefinition
+				Height="45" />
+		</Grid.RowDefinitions>
+		<Grid
+			Row="1"
+			ColumnSpan="3">
+			<Separator
+				VerticalAlignment="Top" />
+			<StackPanel
+				Orientation="Horizontal"
+				HorizontalAlignment="Right"
+				Margin="5">
+				<Button
+					Name="BtnSelectSite"
+					Content="{StaticResource Site_SelectTheSite}"
+					VerticalAlignment="Center"
+					Margin="4,0"
+					MinWidth="70"
+					IsDefault="True"
+					Style="{StaticResource SelectionEnabledStyle}"
+					Command="{Binding ConnectCommand, ElementName=connectionManager}" />
+				<Button
+					Content="{StaticResource Site_ConfirmModify}"
+					VerticalAlignment="Center"
+					Margin="4,0"
+					MinWidth="70"
+					Command="{Binding ConfirmCommand, ElementName=connectionManager}" />
+				<Button
+					Content="{StaticResource Site_Cancel}"
+					VerticalAlignment="Center"
+					Margin="4,0"
+					MinWidth="70"
+					IsCancel="True"
+					Command="{Binding CancelCommand, ElementName=connectionManager}" />
+			</StackPanel>
+		</Grid>
+		<GridSplitter
+			Grid.Column="1"
+			Width="5"
+			HorizontalAlignment="Stretch" />
+		<Grid
+			Column="0">
+			<Grid.RowDefinitions>
+				<RowDefinition
+					Height="*" />
+				<RowDefinition
+					Height="Auto" />
+			</Grid.RowDefinitions>
+			<ScrollViewer
+				VerticalScrollBarVisibility="Auto"
+				HorizontalScrollBarVisibility="Auto">
+				<UIElement.InputBindings>
+					<KeyBinding
+						Key="F2"
+						Command="{Binding SelectedItem.ModifyCommand, ElementName=settingTV}" />
+					<KeyBinding
+						Key="Escape"
+						Command="{Binding SelectedItem.CancelNamingCommand, ElementName=settingTV}" />
+					<KeyBinding
+						Key="Delete"
+						Command="{Binding SelectedItem.DeleteCommand, ElementName=settingTV}" />
+				</UIElement.InputBindings>
+				<Grid>
+					<Grid.RowDefinitions>
+						<RowDefinition
+							Height="Auto" />
+						<RowDefinition
+							Height="*" />
+					</Grid.RowDefinitions>
+					<ToolBarTray
+						IsLocked="True">
+						<ToolBar>
+							<Button
+								ToolTip="{StaticResource Site_CreateNewFolder}"
+								Command="{Binding SelectedItem.CreateFolderCommand, ElementName=settingTV}">
+								<FrameworkElement.Style>
+									<Style
+										BasedOn="{StaticResource ToolBarButtonBaseStyle}"
+										TargetType="{x:Type Button}">
+										<Setter
+											Property="Content">
+											<Setter.Value>
+												<Image
+													Source="pack://application:,,,/SpecDesignerCommon;component/Images/Site_newFolder_dark.png"
+													Style="{StaticResource buttonImageStyle}" />
+											</Setter.Value>
+										</Setter>
+										<Style.Triggers>
+											<Trigger
+												Property="IsEnabled"
+												Value="False">
+												<Setter
+													Property="Content">
+													<Setter.Value>
+														<Image
+															Source="pack://application:,,,/SpecDesignerCommon;component/Images/Site_newFolder_gray.png"
+															Style="{StaticResource buttonImageStyle}" />
+													</Setter.Value>
+												</Setter>
+											</Trigger>
+										</Style.Triggers>
+									</Style>
+								</FrameworkElement.Style>
+							</Button>
+							<Button
+								ToolTip="{StaticResource Site_CreateNewSite}"
+								Command="{Binding SelectedItem.CreateConnectionCommand, ElementName=settingTV}">
+								<FrameworkElement.Style>
+									<Style
+										BasedOn="{StaticResource ToolBarButtonBaseStyle}"
+										TargetType="{x:Type Button}">
+										<Setter
+											Property="Content">
+											<Setter.Value>
+												<Image
+													Source="pack://application:,,,/SpecDesignerCommon;component/Images/Site_newCon_dark.png"
+													Style="{StaticResource buttonImageStyle}" />
+											</Setter.Value>
+										</Setter>
+										<Style.Triggers>
+											<Trigger
+												Property="IsEnabled"
+												Value="False">
+												<Setter
+													Property="Content">
+													<Setter.Value>
+														<Image
+															Source="pack://application:,,,/SpecDesignerCommon;component/Images/Site_newCon_gray.png"
+															Style="{StaticResource buttonImageStyle}" />
+													</Setter.Value>
+												</Setter>
+											</Trigger>
+										</Style.Triggers>
+									</Style>
+								</FrameworkElement.Style>
+							</Button>
+							<Button
+								ToolTip="{StaticResource Site_Rename}"
+								Command="{Binding SelectedItem.ModifyCommand, ElementName=settingTV}">
+								<FrameworkElement.Style>
+									<Style
+										BasedOn="{StaticResource ToolBarButtonBaseStyle}"
+										TargetType="{x:Type Button}">
+										<Setter
+											Property="Content">
+											<Setter.Value>
+												<Image
+													Source="pack://application:,,,/SpecDesignerCommon;component/Images/Site_rename_dark.png"
+													Style="{StaticResource buttonImageStyle}" />
+											</Setter.Value>
+										</Setter>
+										<Style.Triggers>
+											<Trigger
+												Property="IsEnabled"
+												Value="False">
+												<Setter
+													Property="Content">
+													<Setter.Value>
+														<Image
+															Source="pack://application:,,,/SpecDesignerCommon;component/Images/Site_rename_gray.png"
+															Style="{StaticResource buttonImageStyle}" />
+													</Setter.Value>
+												</Setter>
+											</Trigger>
+										</Style.Triggers>
+									</Style>
+								</FrameworkElement.Style>
+							</Button>
+							<Button
+								ToolTip="{StaticResource Site_Copy}"
+								Command="{Binding SelectedItem.CopyCommand, ElementName=settingTV}">
+								<FrameworkElement.Style>
+									<Style
+										BasedOn="{StaticResource ToolBarButtonBaseStyle}"
+										TargetType="{x:Type Button}">
+										<Setter
+											Property="Content">
+											<Setter.Value>
+												<Image
+													Source="pack://application:,,,/SpecDesignerCommon;component/Images/Site_copy_dark.png"
+													Style="{StaticResource buttonImageStyle}" />
+											</Setter.Value>
+										</Setter>
+										<Style.Triggers>
+											<Trigger
+												Property="IsEnabled"
+												Value="False">
+												<Setter
+													Property="Content">
+													<Setter.Value>
+														<Image
+															Source="pack://application:,,,/SpecDesignerCommon;component/Images/Site_copy_gray.png"
+															Style="{StaticResource buttonImageStyle}" />
+													</Setter.Value>
+												</Setter>
+											</Trigger>
+										</Style.Triggers>
+									</Style>
+								</FrameworkElement.Style>
+							</Button>
+							<Button
+								ToolTip="{StaticResource Site_Delete}"
+								Command="{Binding SelectedItem.DeleteCommand, ElementName=settingTV}">
+								<FrameworkElement.Style>
+									<Style
+										BasedOn="{StaticResource ToolBarButtonBaseStyle}"
+										TargetType="{x:Type Button}">
+										<Setter
+											Property="Content">
+											<Setter.Value>
+												<Image
+													Source="pack://application:,,,/SpecDesignerCommon;component/Images/Site_delete_dark.png"
+													Style="{StaticResource buttonImageStyle}" />
+											</Setter.Value>
+										</Setter>
+										<Style.Triggers>
+											<Trigger
+												Property="IsEnabled"
+												Value="False">
+												<Setter
+													Property="Content">
+													<Setter.Value>
+														<Image
+															Source="pack://application:,,,/SpecDesignerCommon;component/Images/Site_delete_gray.png"
+															Style="{StaticResource buttonImageStyle}" />
+													</Setter.Value>
+												</Setter>
+											</Trigger>
+										</Style.Triggers>
+									</Style>
+								</FrameworkElement.Style>
+							</Button>
+							<Button
+								Command="cmd:SiteManagerCommand.ExportCommand"
+								ToolTip="{StaticResource Site_ExportSettings}">
+								<FrameworkElement.Style>
+									<Style
+										BasedOn="{StaticResource ToolBarButtonBaseStyle}"
+										TargetType="{x:Type Button}">
+										<Setter
+											Property="Content">
+											<Setter.Value>
+												<Image
+													Source="pack://application:,,,/SpecDesignerCommon;component/Images/Site_export_dark.png"
+													Style="{StaticResource buttonImageStyle}" />
+											</Setter.Value>
+										</Setter>
+										<Style.Triggers>
+											<Trigger
+												Property="IsEnabled"
+												Value="False">
+												<Setter
+													Property="Content">
+													<Setter.Value>
+														<Image
+															Source="pack://application:,,,/SpecDesignerCommon;component/Images/Site_export_gray.png"
+															Style="{StaticResource buttonImageStyle}" />
+													</Setter.Value>
+												</Setter>
+											</Trigger>
+										</Style.Triggers>
+									</Style>
+								</FrameworkElement.Style>
+							</Button>
+							<Button
+								Command="cmd:SiteManagerCommand.ImportCommand"
+								ToolTip="{StaticResource Site_ImportSettings}">
+								<FrameworkElement.Style>
+									<Style
+										BasedOn="{StaticResource ToolBarButtonBaseStyle}"
+										TargetType="{x:Type Button}">
+										<Setter
+											Property="Content">
+											<Setter.Value>
+												<Image
+													Source="pack://application:,,,/SpecDesignerCommon;component/Images/Site_import_dark.png"
+													Style="{StaticResource buttonImageStyle}" />
+											</Setter.Value>
+										</Setter>
+										<Style.Triggers>
+											<Trigger
+												Property="IsEnabled"
+												Value="False">
+												<Setter
+													Property="Content">
+													<Setter.Value>
+														<Image
+															Source="pack://application:,,,/SpecDesignerCommon;component/Images/Site_import_gray.png"
+															Style="{StaticResource buttonImageStyle}" />
+													</Setter.Value>
+												</Setter>
+											</Trigger>
+										</Style.Triggers>
+									</Style>
+								</FrameworkElement.Style>
+							</Button>
+							<Button
+								ToolTip="{StaticResource Site_CreateDesktopLink}"
+								Command="{Binding SelectedItem.CeateDesktopLinkCommand, ElementName=settingTV}">
+								<FrameworkElement.Style>
+									<Style
+										BasedOn="{StaticResource ToolBarButtonBaseStyle}"
+										TargetType="{x:Type Button}">
+										<Setter
+											Property="Content">
+											<Setter.Value>
+												<Image
+													Source="pack://application:,,,/SpecDesignerCommon;component/Images/Site_shortcut_dark.png"
+													Style="{StaticResource buttonImageStyle}" />
+											</Setter.Value>
+										</Setter>
+										<Style.Triggers>
+											<Trigger
+												Property="IsEnabled"
+												Value="False">
+												<Setter
+													Property="Content">
+													<Setter.Value>
+														<Image
+															Source="pack://application:,,,/SpecDesignerCommon;component/Images/Site_shortcut_gray.png"
+															Style="{StaticResource buttonImageStyle}" />
+													</Setter.Value>
+												</Setter>
+											</Trigger>
+										</Style.Triggers>
+									</Style>
+								</FrameworkElement.Style>
+							</Button>
+						</ToolBar>
+					</ToolBarTray>
+					<TreeView
+						x:Name="settingTV"
+						Grid.Row="1"
+						IsHitTestVisible="True"
+						Focusable="True"
+						ItemsSource="{Binding Settings}"
+						SelectedItemChanged="settingTV_SelectedItemChanged">
+						<ItemsControl.ItemTemplate>
+							<HierarchicalDataTemplate
+								ItemsSource="{Binding Settings}">
+								<StackPanel
+									Orientation="Horizontal"
+									Margin="1">
+									<i:Interaction.Behaviors>
+										<behaviors:SiteDragBehavrior />
+										<behaviors:SiteDropBehavior />
+									</i:Interaction.Behaviors>
+									<Image
+										Source="pack://application:,,,/SpecDesignerCommon;component/Images/Site_folder.png"
+										Width="16"
+										Height="16">
+										<FrameworkElement.Style>
+											<Style
+												TargetType="{x:Type Image}">
+												<Setter
+													Property="Margin"
+													Value="0 0 2 0" />
+												<Setter
+													Property="Visibility"
+													Value="Collapsed" />
+												<Style.Triggers>
+													<DataTrigger
+														Value="True"
+														Binding="{Binding IsFolder}">
+														<Setter
+															Property="Visibility"
+															Value="Visible" />
+													</DataTrigger>
+												</Style.Triggers>
+											</Style>
+										</FrameworkElement.Style>
+									</Image>
+									<Image
+										Width="16"
+										Height="16">
+										<FrameworkElement.Style>
+											<Style
+												TargetType="{x:Type Image}">
+												<Setter
+													Property="Margin"
+													Value="0 0 2 0" />
+												<Setter
+													Property="Visibility"
+													Value="Collapsed" />
+												<Style.Triggers>
+													<DataTrigger
+														Value="True"
+														Binding="{Binding Connection.IsInstalled}">
+														<Setter
+															Property="Source"
+															Value="pack://application:,,,/SpecDesignerCommon;component/Images/Site_con.png" />
+														<Setter
+															Property="Visibility"
+															Value="Visible" />
+													</DataTrigger>
+													<DataTrigger
+														Value="False"
+														Binding="{Binding Connection.IsInstalled}">
+														<Setter
+															Property="Source"
+															Value="pack://application:,,,/SpecDesignerCommon;component/Images/Site_con_gray.png" />
+														<Setter
+															Property="Visibility"
+															Value="Visible" />
+													</DataTrigger>
+												</Style.Triggers>
+											</Style>
+										</FrameworkElement.Style>
+									</Image>
+									<TextBlock
+										VerticalAlignment="Bottom">
+										<TextBlock.Text>
+											<MultiBinding
+												Converter="{StaticResource NameLabelConverter}">
+												<Binding
+													Path="Name" />
+												<Binding
+													Path="Connection.Version" />
+											</MultiBinding>
+										</TextBlock.Text>
+										<FrameworkElement.Style>
+											<Style
+												TargetType="{x:Type TextBlock}">
+												<Style.Triggers>
+													<DataTrigger
+														Value="True"
+														Binding="{Binding IsModifying}">
+														<Setter
+															Property="Visibility"
+															Value="Collapsed" />
+													</DataTrigger>
+													<DataTrigger
+														Value="False"
+														Binding="{Binding IsModifying}">
+														<Setter
+															Property="Visibility"
+															Value="Visible" />
+													</DataTrigger>
+												</Style.Triggers>
+											</Style>
+										</FrameworkElement.Style>
+									</TextBlock>
+									<TextBox
+										x:Name="nameBox"
+										VerticalAlignment="Bottom"
+										Text="{Binding Name, Mode=TwoWay}"
+										LostKeyboardFocus="nameBox_LostKeyboardFocus"
+										KeyDown="NameTextBox_KeyDown"
+										IsVisibleChanged="nameBox_IsVisibleChanged">
+										<FrameworkElement.Style>
+											<Style
+												TargetType="{x:Type TextBox}">
+												<Setter
+													Property="Visibility"
+													Value="Collapsed" />
+												<Style.Triggers>
+													<DataTrigger
+														Value="True"
+														Binding="{Binding IsModifying}">
+														<Setter
+															Property="Visibility"
+															Value="Visible" />
+													</DataTrigger>
+													<DataTrigger
+														Value="False"
+														Binding="{Binding IsModifying}">
+														<Setter
+															Property="Visibility"
+															Value="Collapsed" />
+													</DataTrigger>
+												</Style.Triggers>
+											</Style>
+										</FrameworkElement.Style>
+									</TextBox>
+								</StackPanel>
+							</HierarchicalDataTemplate>
+						</ItemsControl.ItemTemplate>
+					</TreeView>
+				</Grid>
+			</ScrollViewer>
+		</Grid>
+		<TabControl
+			x:Name="settingTabControl"
+			Grid.Column="2"
+			DataContext="{Binding SelectedItem, ElementName=settingTV}">
+			<TabItem
+				Header="{StaticResource Site_SiteSetting}">
+				<ScrollViewer
+					VerticalScrollBarVisibility="Auto"
+					HorizontalScrollBarVisibility="Auto">
+					<Grid
+						Margin="4">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition
+								Width="Auto" />
+							<ColumnDefinition
+								Width="*" />
+						</Grid.ColumnDefinitions>
+						<Grid.RowDefinitions>
+							<RowDefinition
+								Height="Auto" />
+							<RowDefinition
+								Height="Auto" />
+							<RowDefinition
+								Height="Auto" />
+							<RowDefinition
+								Height="Auto" />
+							<RowDefinition
+								Height="Auto" />
+						</Grid.RowDefinitions>
+						<TextBlock
+							Text="{StaticResource Site_ServerIP}"
+							Grid.Row="0"
+							Grid.Column="0" />
+						<Grid
+							Row="0"
+							Column="1"
+							Margin="5">
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition
+									Width="Auto" />
+								<ColumnDefinition
+									Width="*" />
+								<ColumnDefinition
+									Width="Auto" />
+								<ColumnDefinition
+									Width="Auto" />
+							</Grid.ColumnDefinitions>
+							<ComboBox
+								VerticalAlignment="Center"
+								SelectedValue="{Binding Connection.Protocol, Mode=TwoWay}"
+								ItemsSource="{Binding Connection.Protocols}" />
+							<TextBox
+								Grid.Column="1"
+								Text="{Binding Connection.IP, Mode=TwoWay, NotifyOnValidationError=True, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}" />
+							<TextBlock
+								Margin="5 0 2 0"
+								Grid.Column="2"
+								Text="Port：" />
+							<TextBox
+								Grid.Column="3"
+								Text="{Binding Connection.Port, Mode=TwoWay}" />
+						</Grid>
+						<TextBlock
+							Text="{StaticResource Site_Area}"
+							Grid.Row="1"
+							Grid.Column="0" />
+						<TextBox
+							Grid.Row="1"
+							Grid.Column="1"
+							Margin="5"
+							Text="{Binding Connection.Area, Mode=TwoWay, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}" />
+						<TextBlock
+							Text="{StaticResource Site_Login}"
+							Grid.Row="2"
+							Grid.Column="0" />
+						<TextBox
+							Grid.Row="2"
+							Grid.Column="1"
+							Margin="5"
+							Text="{Binding Connection.Login, Mode=TwoWay}" />
+						<TextBlock
+							Text="{StaticResource Site_Password}"
+							Grid.Row="3"
+							Grid.Column="0" />
+						<PasswordBox
+							views:PasswordHelper.Attach="True"
+							Grid.Row="3"
+							Grid.Column="1"
+							Margin="5"
+							views:PasswordHelper.Password="{Binding Connection.Password, Mode=TwoWay}" />
+						<TextBlock
+							Text="{StaticResource Site_Workspace}"
+							Grid.Row="4"
+							Grid.Column="0" />
+						<Grid
+							Row="4"
+							Column="1"
+							Margin="5">
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition
+									Width="*" />
+								<ColumnDefinition
+									Width="Auto" />
+							</Grid.ColumnDefinitions>
+							<TextBox
+								x:Name="workDirTB"
+								IsReadOnly="True"
+								Text="{Binding Connection.Workspace, Mode=TwoWay, NotifyOnValidationError=True, ValidatesOnDataErrors=True, ValidatesOnExceptions=True, UpdateSourceTrigger=PropertyChanged}" />
+							<Button
+								x:Name="dirButton"
+								Grid.Column="1"
+								Content="..."
+								Style="{StaticResource SelectionEnabledStyle}"
+								Height="{Binding ActualHeight, ElementName=workDirTB}"
+								Click="dirButton_Click" />
+						</Grid>
+					</Grid>
+				</ScrollViewer>
+			</TabItem>
+			<TabItem
+				Header="{StaticResource Site_UpdateSetting}">
+				<StackPanel
+					Margin="4">
+					<Grid>
+						<Grid.RowDefinitions>
+							<RowDefinition
+								Height="Auto" />
+							<RowDefinition
+								Height="Auto" />
+						</Grid.RowDefinitions>
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition
+								Width="Auto" />
+							<ColumnDefinition
+								Width="*" />
+						</Grid.ColumnDefinitions>
+						<TextBlock
+							Text="{StaticResource Site_Zone}" />
+						<TextBox
+							Grid.Row="0"
+							Grid.Column="1"
+							Margin="5"
+							Text="{Binding Connection.Zone, Mode=TwoWay, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}" />
+						<TextBlock
+							Text="{StaticResource Site_RemoteVersion}"
+							Grid.Row="1"
+							Grid.Column="0" />
+						<Grid
+							Row="2"
+							Column="1"
+							Margin="5">
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition
+									Width="*" />
+								<ColumnDefinition
+									Width="Auto" />
+							</Grid.ColumnDefinitions>
+							<TextBox
+								Text="{Binding Connection.Version, Mode=TwoWay, NotifyOnValidationError=True, ValidatesOnDataErrors=True}" />
+							<Button
+								Content="{StaticResource Site_CheckUpdateNow}"
+								VerticalAlignment="Center"
+								Grid.Column="1"
+								Style="{StaticResource SelectionEnabledStyle}"
+								Click="CheckNow_Click" />
+						</Grid>
+					</Grid>
+					<TextBlock
+						Text="{StaticResource Site_UpdateSettingWarning}"
+						Foreground="#FFFF0000"
+						FontWeight="ExtraBold" />
+				</StackPanel>
+			</TabItem>
+			<TabItem
+				Header="{StaticResource Site_Prompt}">
+				<StackPanel
+					Margin="4">
+					<Grid>
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition
+								Width="Auto" />
+							<ColumnDefinition
+								Width="*" />
+						</Grid.ColumnDefinitions>
+						<Grid.RowDefinitions>
+							<RowDefinition
+								Height="Auto" />
+							<RowDefinition
+								Height="Auto" />
+							<RowDefinition
+								Height="Auto" />
+							<RowDefinition
+								Height="Auto" />
+						</Grid.RowDefinitions>
+						<TextBlock
+							Text="{StaticResource Site_LoginPrompt}"
+							Grid.Column="0"
+							Grid.Row="0" />
+						<TextBox
+							x:Name="loginPromptBox"
+							Grid.Column="1"
+							Grid.Row="0"
+							Margin="5"
+							IsReadOnly="True"
+							Text="{Binding Connection.LoginPrompt, Mode=TwoWay}" />
+						<TextBlock
+							Text="{StaticResource Site_PasswordPrompt}"
+							Grid.Column="0"
+							Grid.Row="1" />
+						<TextBox
+							x:Name="passwordPrompBox"
+							Grid.Column="1"
+							Grid.Row="1"
+							Margin="5"
+							IsReadOnly="True"
+							Text="{Binding Connection.PasswordPrompt, Mode=TwoWay}" />
+						<TextBlock
+							Text="{StaticResource Site_AreaPrompt}"
+							Grid.Column="0"
+							Grid.Row="2" />
+						<TextBox
+							x:Name="areaPromptBox"
+							Grid.Column="1"
+							Grid.Row="2"
+							Margin="5"
+							IsReadOnly="True"
+							Text="{Binding Connection.AreaPrompt, Mode=TwoWay}" />
+					</Grid>
+					<TextBlock
+						Text="{StaticResource Site_ModifyPrompt}"
+						Foreground="#FFFF0000"
+						FontWeight="ExtraBold" />
+					<Button
+						Content="{StaticResource Site_ModifyPromptConfirm}"
+						HorizontalAlignment="Left"
+						Click="ModifyButton_Click" />
+				</StackPanel>
+			</TabItem>
+			<TabItem
+				Header="{StaticResource Site_Others}">
+				<Grid
+					Margin="4">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition
+							Width="Auto" />
+						<ColumnDefinition
+							Width="*" />
+					</Grid.ColumnDefinitions>
+					<Grid.RowDefinitions>
+						<RowDefinition
+							Height="Auto" />
+						<RowDefinition />
+					</Grid.RowDefinitions>
+					<TextBlock
+						Text="{StaticResource Site_ExtraCommand}"
+						Grid.Column="0" />
+					<TextBox
+						Grid.Column="1"
+						HorizontalScrollBarVisibility="Auto"
+						Margin="5"
+						Text="{Binding Connection.ExtraCommand, Mode=TwoWay}" />
+				</Grid>
+			</TabItem>
+		</TabControl>
+		<xctk:BusyIndicator
+			x:Name="busyIndicator"
+			BusyContent="{StaticResource Site_CheckVersion}"
+			Grid.RowSpan="2"
+			Grid.ColumnSpan="3"
+			IsBusy="{Binding ElementName=connectionManager, Path=IsBusying}">
+			<xctk:BusyIndicator.OverlayStyle>
+				<Style
+					TargetType="{x:Type Rectangle}">
+					<Setter
+						Property="Fill"
+						Value="#44000000" />
+				</Style>
+			</xctk:BusyIndicator.OverlayStyle>
+		</xctk:BusyIndicator>
+	</Grid>
+</Window>

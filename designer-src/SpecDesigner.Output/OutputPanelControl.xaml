@@ -1,0 +1,313 @@
+<UserControl
+	x:Class="SpecDesigner.Output.OutputPanelControl"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:local="clr-namespace:SpecDesigner.Output"
+	xmlns:vsm="clr-namespace:System.Windows;assembly=PresentationFramework"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	x:Name="outputPanel">
+	<vsm:FrameworkElement.Resources>
+		<vsm:ResourceDictionary>
+			<BitmapImage
+				x:Key="ErrorImage"
+				UriSource="pack://application:,,,/SpecDesigner.Output;component/Images/error.png" />
+			<BitmapImage
+				x:Key="WarningImage"
+				UriSource="pack://application:,,,/SpecDesigner.Output;component/Images/warning.png" />
+			<BitmapImage
+				x:Key="InformationImage"
+				UriSource="pack://application:,,,/SpecDesigner.Output;component/Images/information.png" />
+			<local:DocumentErrorsSource
+				x:Key="errors" />
+			<CollectionViewSource
+				x:Key="errorsSource"
+				Source="{vsm:StaticResource errors}"
+				Filter="CollectionViewSource_Filter">
+				<CollectionViewSource.GroupDescriptions>
+					<PropertyGroupDescription
+						PropertyName="Program" />
+				</CollectionViewSource.GroupDescriptions>
+			</CollectionViewSource>
+			<SolidColorBrush
+				x:Key="MouseOverBackgroundColor"
+				Color="#FFBBD1ED" />
+			<SolidColorBrush
+				x:Key="MousePressedBackgroundColor"
+				Color="#FF92AFD0" />
+			<vsm:Style
+				x:Key="ButtonFocusVisual">
+				<vsm:Setter
+					Property="Control.Template">
+					<vsm:Setter.Value>
+						<ControlTemplate />
+					</vsm:Setter.Value>
+				</vsm:Setter>
+			</vsm:Style>
+			<vsm:Style
+				x:Key="{x:Type Button}"
+				TargetType="{x:Type Button}">
+				<vsm:Setter
+					Property="UIElement.SnapsToDevicePixels"
+					Value="True" />
+				<vsm:Setter
+					Property="vsm:FrameworkElement.OverridesDefaultStyle"
+					Value="True" />
+				<vsm:Setter
+					Property="vsm:FrameworkElement.FocusVisualStyle"
+					Value="{vsm:StaticResource ButtonFocusVisual}" />
+				<vsm:Setter
+					Property="Template">
+					<vsm:Setter.Value>
+						<ControlTemplate
+							TargetType="{x:Type Button}">
+							<vsm:FrameworkTemplate.Resources>
+								<vsm:ResourceDictionary>
+									<Storyboard
+										x:Key="Storyboard1" />
+								</vsm:ResourceDictionary>
+							</vsm:FrameworkTemplate.Resources>
+							<Border
+								x:Name="Border"
+								TextBlock.Foreground="{vsm:TemplateBinding Control.Foreground}"
+								BorderThickness="1"
+								BorderBrush="#00FFFFFF">
+								<vsm:VisualStateManager.VisualStateGroups>
+									<vsm:VisualStateGroup
+										x:Name="CommonStates">
+										<vsm:VisualStateGroup.Transitions>
+											<vsm:VisualTransition
+												GeneratedDuration="0:0:0.5" />
+											<vsm:VisualTransition
+												GeneratedDuration="0"
+												To="Pressed" />
+										</vsm:VisualStateGroup.Transitions>
+										<vsm:VisualState
+											x:Name="Normal" />
+										<vsm:VisualState
+											x:Name="MouseOver" />
+										<vsm:VisualState
+											x:Name="Pressed" />
+										<vsm:VisualState
+											x:Name="Disabled" />
+									</vsm:VisualStateGroup>
+								</vsm:VisualStateManager.VisualStateGroups>
+								<ContentPresenter
+									Margin="2"
+									HorizontalAlignment="Center"
+									VerticalAlignment="Center"
+									RecognizesAccessKey="True" />
+							</Border>
+							<ControlTemplate.Triggers>
+								<vsm:Trigger
+									Property="UIElement.IsMouseOver"
+									Value="True">
+									<vsm:TriggerBase.EnterActions>
+										<BeginStoryboard
+											x:Name="Storyboard1_BeginStoryboard"
+											Storyboard="{vsm:StaticResource Storyboard1}" />
+									</vsm:TriggerBase.EnterActions>
+									<vsm:Setter
+										TargetName="Border"
+										Property="Border.Background"
+										Value="{vsm:StaticResource MouseOverBackgroundColor}" />
+								</vsm:Trigger>
+								<vsm:Trigger
+									Property="IsPressed"
+									Value="True">
+									<vsm:Setter
+										TargetName="Border"
+										Property="Border.Background"
+										Value="{vsm:StaticResource MousePressedBackgroundColor}" />
+								</vsm:Trigger>
+							</ControlTemplate.Triggers>
+						</ControlTemplate>
+					</vsm:Setter.Value>
+				</vsm:Setter>
+			</vsm:Style>
+			<vsm:Style
+				x:Key="{x:Type ToggleButton}"
+				TargetType="{x:Type ToggleButton}">
+				<vsm:Setter
+					Property="UIElement.SnapsToDevicePixels"
+					Value="True" />
+				<vsm:Setter
+					Property="vsm:FrameworkElement.OverridesDefaultStyle"
+					Value="True" />
+				<vsm:Setter
+					Property="Foreground"
+					Value="#00FFFFFF" />
+				<vsm:Setter
+					Property="Background"
+					Value="#00FFFFFF" />
+				<vsm:Setter
+					Property="Template">
+					<vsm:Setter.Value>
+						<ControlTemplate
+							TargetType="{x:Type ToggleButton}">
+							<Border
+								x:Name="Border"
+								TextBlock.Foreground="{vsm:TemplateBinding Control.Foreground}"
+								BorderThickness="1"
+								BorderBrush="#00FFFFFF">
+								<ContentPresenter
+									Margin="2"
+									HorizontalAlignment="Center"
+									VerticalAlignment="Center"
+									RecognizesAccessKey="True" />
+							</Border>
+							<ControlTemplate.Triggers>
+								<vsm:Trigger
+									Property="ToggleButton.IsChecked"
+									Value="True">
+									<vsm:Setter
+										TargetName="Border"
+										Property="Border.Background"
+										Value="{vsm:StaticResource MousePressedBackgroundColor}" />
+								</vsm:Trigger>
+								<vsm:Trigger
+									Property="UIElement.IsMouseOver"
+									Value="True">
+									<vsm:Setter
+										TargetName="Border"
+										Property="Border.Background"
+										Value="{vsm:StaticResource MouseOverBackgroundColor}" />
+								</vsm:Trigger>
+								<vsm:Trigger
+									Property="IsPressed"
+									Value="True">
+									<vsm:Setter
+										TargetName="Border"
+										Property="Border.Background"
+										Value="{vsm:StaticResource MousePressedBackgroundColor}" />
+								</vsm:Trigger>
+							</ControlTemplate.Triggers>
+						</ControlTemplate>
+					</vsm:Setter.Value>
+				</vsm:Setter>
+			</vsm:Style>
+		</vsm:ResourceDictionary>
+	</vsm:FrameworkElement.Resources>
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition
+				Height="Auto" />
+			<RowDefinition
+				Height="*" />
+		</Grid.RowDefinitions>
+		<StackPanel
+			Orientation="Horizontal">
+			<ToggleButton
+				x:Name="btnError"
+				IsChecked="True"
+				ToolTip="Show Errors"
+				Click="ToggleButton_Click">
+				<ContentControl.Content>
+					<Image
+						Source="Images/error.png" />
+				</ContentControl.Content>
+			</ToggleButton>
+			<ToggleButton
+				x:Name="btnWarning"
+				IsChecked="True"
+				ToolTip="Show Warnings"
+				Click="ToggleButton_Click">
+				<ContentControl.Content>
+					<Image
+						Source="Images/warning.png" />
+				</ContentControl.Content>
+			</ToggleButton>
+			<ToggleButton
+				x:Name="btnInfo"
+				IsChecked="False"
+				ToolTip="Show Information"
+				Click="ToggleButton_Click">
+				<ContentControl.Content>
+					<Image
+						Source="Images/information.png" />
+				</ContentControl.Content>
+			</ToggleButton>
+			<Button
+				ToolTip="Clear All"
+				Click="Button_Click">
+				<ContentControl.Content>
+					<Image
+						Source="Images/deleteAll.png" />
+				</ContentControl.Content>
+			</Button>
+		</StackPanel>
+		<DataGrid
+			x:Name="dataGrid1"
+			Grid.Row="1"
+			GridLinesVisibility="None"
+			AutoGenerateColumns="False"
+			IsReadOnly="True"
+			SelectionMode="Single"
+			Background="#FFFFFFFF"
+			ItemsSource="{Binding Source='{vsm:StaticResource errorsSource}'}"
+			MouseDoubleClick="DataGrid_MouseDoubleClick">
+			<DataGrid.Columns>
+				<DataGridTextColumn
+					Header="{vsm:StaticResource menu_Time}"
+					Width="Auto"
+					Binding="{Binding Time, StringFormat={}{0:HH:mm:ss}}" />
+				<DataGridTextColumn
+					Header="{vsm:StaticResource menu_Program}"
+					Width="Auto"
+					Binding="{Binding ProgramKey.Program}" />
+				<DataGridTemplateColumn
+					Header="{vsm:StaticResource menu_Description}"
+					Width="*">
+					<DataGridTemplateColumn.CellTemplate>
+						<vsm:DataTemplate>
+							<Grid>
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition
+										Width="Auto" />
+									<ColumnDefinition
+										Width="*" />
+								</Grid.ColumnDefinitions>
+								<Image
+									Width="12"
+									Height="12">
+									<vsm:FrameworkElement.Style>
+										<vsm:Style
+											TargetType="{x:Type Image}">
+											<vsm:Style.Triggers>
+												<vsm:DataTrigger
+													Value="ERROR"
+													Binding="{Binding ErrorType}">
+													<vsm:Setter
+														Property="Source"
+														Value="{vsm:StaticResource ErrorImage}" />
+												</vsm:DataTrigger>
+												<vsm:DataTrigger
+													Value="WARNING"
+													Binding="{Binding ErrorType}">
+													<vsm:Setter
+														Property="Source"
+														Value="{vsm:StaticResource WarningImage}" />
+												</vsm:DataTrigger>
+												<vsm:DataTrigger
+													Value="INFORMATION"
+													Binding="{Binding ErrorType}">
+													<vsm:Setter
+														Property="Source"
+														Value="{vsm:StaticResource InformationImage}" />
+												</vsm:DataTrigger>
+											</vsm:Style.Triggers>
+										</vsm:Style>
+									</vsm:FrameworkElement.Style>
+								</Image>
+								<TextBlock
+									Margin="3 0 0 0"
+									Grid.Column="1"
+									Text="{Binding Description}" />
+							</Grid>
+						</vsm:DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+			</DataGrid.Columns>
+		</DataGrid>
+	</Grid>
+</UserControl>

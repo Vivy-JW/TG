@@ -1,0 +1,112 @@
+<Window
+	x:Class="SpecDesignerCommon.Views.LocalItemsSelectionWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	ResizeMode="CanResizeWithGrip"
+	Height="300"
+	Width="500"
+	Title="{StaticResource specImport_title}"
+	xmlns:views="clr-namespace:SpecDesignerCommon.Views">
+	<FrameworkElement.Resources>
+		<ResourceDictionary>
+			<Style
+				x:Key="{x:Type CheckBox}"
+				TargetType="{x:Type CheckBox}"
+				BasedOn="{StaticResource {x:Type CheckBox}}">
+				<Setter
+					Property="HorizontalAlignment"
+					Value="Center" />
+				<Setter
+					Property="VerticalAlignment"
+					Value="Center" />
+			</Style>
+			<Style
+				x:Key="HighlightRow"
+				TargetType="{x:Type DataGridRow}">
+				<Style.Triggers>
+					<MultiDataTrigger>
+						<MultiDataTrigger.Conditions>
+							<Condition
+								Value="True"
+								Binding="{Binding Path=IsDuplicated}" />
+							<Condition
+								Value="True"
+								Binding="{Binding Path=IsImport}" />
+						</MultiDataTrigger.Conditions>
+						<Setter
+							Property="BorderThickness"
+							Value="1" />
+						<Setter
+							Property="BorderBrush"
+							Value="#FFFF0000" />
+					</MultiDataTrigger>
+				</Style.Triggers>
+			</Style>
+		</ResourceDictionary>
+	</FrameworkElement.Resources>
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition
+				Height="Auto" />
+			<RowDefinition
+				Height="Auto" />
+			<RowDefinition
+				Height="*" />
+			<RowDefinition
+				Height="Auto" />
+		</Grid.RowDefinitions>
+		<Label
+			Content="{StaticResource specImport_Confirm}" />
+		<DataGrid
+			Grid.Row="2"
+			RowStyle="{StaticResource HighlightRow}"
+			ItemsSource="{Binding}">
+			<DataGrid.Columns>
+				<DataGridTemplateColumn
+					Header="{StaticResource specImport_importOrNot}"
+					IsReadOnly="True">
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<CheckBox
+								IsChecked="{Binding IsImport, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+				<DataGridTemplateColumn
+					Header="{StaticResource specImport_exist}"
+					IsReadOnly="True">
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<CheckBox
+								IsEnabled="False"
+								IsChecked="{Binding IsDuplicated, Mode=OneTime}" />
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+				<DataGridTextColumn
+					Header="{StaticResource specImport_Name}"
+					IsReadOnly="True"
+					Binding="{Binding Key, Mode=OneTime}" />
+				<DataGridTextColumn
+					Header="{StaticResource specImport_Content}"
+					IsReadOnly="True"
+					Width="*"
+					Binding="{Binding Value, Mode=OneTime}" />
+			</DataGrid.Columns>
+		</DataGrid>
+		<StackPanel
+			Orientation="Horizontal"
+			HorizontalAlignment="Right"
+			Margin="5"
+			Grid.Row="4">
+			<Button
+				Content="{StaticResource specImport_Import}"
+				VerticalAlignment="Center"
+				Margin="4,0"
+				MinWidth="70"
+				Click="OKButton_Click" />
+		</StackPanel>
+	</Grid>
+</Window>

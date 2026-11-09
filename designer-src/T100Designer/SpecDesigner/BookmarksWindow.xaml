@@ -1,0 +1,148 @@
+<UserControl
+	x:Class="SpecDesigner.BookmarksWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:ci="clr-namespace:SpecDesigner.Infrastructure.Helper;assembly=Infrastructure"
+	xmlns:l="clr-namespace:SpecDesigner.Helper"
+	x:Name="class"
+	xmlns:specdesigner="clr-namespace:SpecDesigner"
+	DataContext="{Binding ActiveDocument}">
+	<FrameworkElement.Resources>
+		<ResourceDictionary>
+			<l:ActiveDocoucmentConverter
+				x:Key="activeDocConverter" />
+			<Style
+				x:Key="{x:Type Image}"
+				TargetType="{x:Type Image}">
+				<Style.Triggers>
+					<Trigger
+						Property="IsEnabled"
+						Value="False">
+						<Setter
+							Property="UIElement.Opacity"
+							Value="0.3" />
+					</Trigger>
+				</Style.Triggers>
+			</Style>
+			<Style
+				x:Key="DataGridCellStyle1"
+				TargetType="{x:Type DataGridCell}">
+				<Setter
+					Property="Background"
+					Value="#00FFFFFF" />
+				<Setter
+					Property="BorderBrush"
+					Value="#00FFFFFF" />
+				<Setter
+					Property="BorderThickness"
+					Value="0" />
+				<Style.Triggers>
+					<Trigger
+						Property="DataGridCell.IsSelected"
+						Value="True">
+						<Setter
+							Property="Background"
+							Value="#FFE0EEFF" />
+						<Setter
+							Property="Foreground"
+							Value="#FF000000" />
+						<Setter
+							Property="BorderBrush"
+							Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" />
+						<Setter
+							Property="FontWeight"
+							Value="Bold" />
+					</Trigger>
+					<Trigger
+						Property="UIElement.IsKeyboardFocusWithin"
+						Value="True">
+						<Setter
+							Property="BorderBrush"
+							Value="{DynamicResource {x:Static DataGrid.FocusBorderBrushKey}}" />
+					</Trigger>
+				</Style.Triggers>
+			</Style>
+		</ResourceDictionary>
+	</FrameworkElement.Resources>
+	<Grid
+		x:Name="grid">
+		<Grid.RowDefinitions>
+			<RowDefinition
+				Height="Auto" />
+			<RowDefinition
+				Height="*" />
+		</Grid.RowDefinitions>
+		<ToolBar
+			ToolBarTray.IsLocked="True">
+			<Button
+				ToolTip="Previos"
+				Command="ci:BookmarkCommands.PreviousBookmarkCommand"
+				CommandTarget="{Binding Converter='{StaticResource activeDocConverter}'}">
+				<ContentControl.Content>
+					<Image
+						Source="Images/bookmark_previous.png" />
+				</ContentControl.Content>
+			</Button>
+			<Button
+				ToolTip="Next"
+				Command="ci:BookmarkCommands.NextBookmarkCommand"
+				CommandTarget="{Binding Converter='{StaticResource activeDocConverter}'}">
+				<ContentControl.Content>
+					<Image
+						Source="Images/bookmark_next.png" />
+				</ContentControl.Content>
+			</Button>
+			<Separator />
+			<Button
+				ToolTip="Delete"
+				Command="ci:BookmarkCommands.DeleteBookmarkCommand"
+				CommandTarget="{Binding Converter='{StaticResource activeDocConverter}'}">
+				<ContentControl.Content>
+					<Image
+						Source="Images/delete.png" />
+				</ContentControl.Content>
+			</Button>
+			<Button
+				ToolTip="Clear All bookmarks"
+				Command="ci:BookmarkCommands.ClearBookmarkCommand"
+				CommandTarget="{Binding Converter='{StaticResource activeDocConverter}'}">
+				<ContentControl.Content>
+					<Image
+						Source="Images/deleteAll.png" />
+				</ContentControl.Content>
+			</Button>
+		</ToolBar>
+		<DataGrid
+			x:Name="dataGrid"
+			Grid.Row="1"
+			Background="#FFFFFFFF"
+			VerticalScrollBarVisibility="Auto"
+			HorizontalScrollBarVisibility="Auto"
+			HorizontalAlignment="Stretch"
+			VerticalAlignment="Stretch"
+			AutoGenerateColumns="False"
+			CellStyle="{StaticResource DataGridCellStyle1}"
+			SelectedIndex="0"
+			VerticalGridLinesBrush="#FFD3D3D3"
+			HorizontalGridLinesBrush="#FFD3D3D3"
+			ItemsSource="{Binding BookmarkManager.Bookmarks}"
+			SelectedItem="{Binding BookmarkManager.SelectedBookmark, Mode=TwoWay}"
+			MouseDoubleClick="dataGrid_MouseDoubleClick">
+			<DataGrid.Columns>
+				<DataGridTextColumn
+					Header="{StaticResource menu_Bookmarks}"
+					Width="Auto"
+					IsReadOnly="False"
+					Binding="{Binding Name}" />
+				<DataGridTextColumn
+					Header="{StaticResource BookmarkLines}"
+					Width="*"
+					IsReadOnly="True"
+					Binding="{Binding LineNumber}" />
+			</DataGrid.Columns>
+		</DataGrid>
+	</Grid>
+</UserControl>

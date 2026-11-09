@@ -1,0 +1,256 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{472D80D5-9ABC-4E27-AC88-B8516E27EFCA}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>SpecDesigner.SpecEditor</RootNamespace>
+    <AssemblyName>SpecDesigner.SpecEditor</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60DC8134-EBA5-43B8-BCC9-BB4BC16C2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Practices.Prism">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\Microsoft.Practices.Prism.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="SpecDesigner.Controls">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\SpecDesigner.Controls.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Windows.Interactivity">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\System.Windows.Interactivity.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="PresentationFramework.Aero2" />
+    <Reference Include="mscorlib" />
+    <Reference Include="PresentationFramework.Aero" />
+  </ItemGroup>
+  <ItemGroup>
+    <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Controls\BaseModel.cs" />
+    <Compile Include="Controls\ModelHierarchyDataTemplateSelector.cs" />
+    <Compile Include="Controls\NumericTextBox.cs" />
+    <Compile Include="Controls\ObjectToTypeStringConverter.cs" />
+    <Compile Include="Controls\ResetComboBox.cs" />
+    <Compile Include="Controls\ResetTextBox.cs" />
+    <Compile Include="Controls\SRModel.cs" />
+    <Compile Include="Controls\Tables.cs" />
+    <Compile Include="Controls\TableSchemaAssociationWindow.xaml.cs">
+      <DependentUpon>TableSchemaAssociationWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\TblModel.cs" />
+    <Compile Include="Helpers\ActionDisabledCheckedConverter.cs" />
+    <Compile Include="Helpers\ActionStatus.cs" />
+    <Compile Include="Helpers\AggregateVisibilityConverter.cs" />
+    <Compile Include="Helpers\BooleanCheckedConverter.cs" />
+    <Compile Include="Helpers\BoolToVisibilityConverter.cs" />
+    <Compile Include="Helpers\CantDelTagReadonlyConverter.cs" />
+    <Compile Include="Helpers\CheckedStatusConverter.cs" />
+    <Compile Include="Helpers\CheckedValueConverter.cs" />
+    <Compile Include="Helpers\CiteEnabledConverter.cs" />
+    <Compile Include="Helpers\ColumnAttributeConverter.cs" />
+    <Compile Include="Helpers\ColumnTypeConverter.cs" />
+    <Compile Include="Helpers\ConstrucInputValueConverter.cs" />
+    <Compile Include="Helpers\ConverterMarkupExtension.cs" />
+    <Compile Include="Helpers\ExcludeSettingCheckBoxConverter.cs" />
+    <Compile Include="Helpers\ExportTools.cs" />
+    <Compile Include="Helpers\FirstLeafLineMarginConverter.cs" />
+    <Compile Include="Helpers\HelpCodeVisibleConverter.cs" />
+    <Compile Include="Helpers\ItemTextConverter.cs" />
+    <Compile Include="Helpers\LineVisibilityConverter.cs" />
+    <Compile Include="Helpers\LocalizedPropertyMultiConverter.cs" />
+    <Compile Include="Helpers\MatchSpecStatusConverter.cs" />
+    <Compile Include="Helpers\MultiBooleanCheckedConverter.cs" />
+    <Compile Include="Helpers\MultiNullVisibilityConveter.cs" />
+    <Compile Include="Helpers\MultiVisibilityConverter.cs" />
+    <Compile Include="Helpers\MutiComboValueConveter.cs" />
+    <Compile Include="Helpers\MutiTextValueConveter.cs" />
+    <Compile Include="Helpers\NullVisibilityConveter.cs" />
+    <Compile Include="Helpers\PreviewButtonEnabledMultiBindingConverter.cs" />
+    <Compile Include="Helpers\ProgRelVisibleConverter.cs" />
+    <Compile Include="Helpers\RepeatVisibilityConverter.cs" />
+    <Compile Include="Helpers\ResetBoldConverter.cs" />
+    <Compile Include="Helpers\SpecTreeAttVisibilityConverter.cs" />
+    <Compile Include="Helpers\StringLengthBooleanConverter.cs" />
+    <Compile Include="Helpers\StringUpConverter.cs" />
+    <Compile Include="Helpers\TableAssociationConverter.cs" />
+    <Compile Include="Helpers\TableAssociationTextConverter.cs" />
+    <Compile Include="Helpers\TableTreeColumnVisibilityConverter.cs" />
+    <Compile Include="Helpers\TextAttributeVisibilityConverter.cs" />
+    <Compile Include="Helpers\TextBoxEnterBehavior.cs" />
+    <Compile Include="Helpers\TitleAttributeVisibilityConverter.cs" />
+    <Compile Include="Helpers\TreeViewItemToLineTranslateTransformFactor.cs" />
+    <Compile Include="Helpers\VisibilityToBoolConverter.cs" />
+    <Compile Include="Helpers\Visual_ExtensionMethods.cs" />
+    <Compile Include="MenuCommands.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SpecEditor.xaml.cs">
+      <DependentUpon>SpecEditor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SpecEditor\MainWindow.xaml.cs">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SpecificationViewWindow.xaml.cs">
+      <DependentUpon>SpecificationViewWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SpecNodeLoadedEvent.cs" />
+    <Compile Include="SpecNodeLoadedEventArgs.cs" />
+    <Compile Include="SpecPropertyCommands.cs" />
+    <Compile Include="SpecPropertyEditor.xaml.cs">
+      <DependentUpon>SpecPropertyEditor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ViewModel\FieldsSourceViewModel.cs" />
+    <Compile Include="ViewModel\SpecNodesSourceViewModel.cs" />
+    <Compile Include="ViewModel\UncitedSpecNodesViewModel.cs" />
+    <Compile Include="Views\ActionTypeData.cs" />
+    <Compile Include="Views\ActionTypeDataGrid.xaml.cs">
+      <DependentUpon>ActionTypeDataGrid.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\DiffListWindow.xaml.cs">
+      <DependentUpon>DiffListWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\GridLineHelper.cs" />
+    <Compile Include="Views\ItemData.cs" />
+    <Compile Include="Views\ItemPropertyEditor.xaml.cs">
+      <DependentUpon>ItemPropertyEditor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ItemsPropertyEditor.xaml.cs">
+      <DependentUpon>ItemsPropertyEditor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\PreviewSpecWindow.xaml.cs">
+      <DependentUpon>PreviewSpecWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ProgRelProgramsDataGrid.xaml.cs">
+      <DependentUpon>ProgRelProgramsDataGrid.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\SpecExcludeView.xaml.cs">
+      <DependentUpon>SpecExcludeView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\SpecFieldTextControl.xaml.cs">
+      <DependentUpon>SpecFieldTextControl.xaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SpecDesigner.FormDataEditor\SpecDesigner.FormDataEditor.csproj">
+      <Project>{472D80D5-9ABC-4E27-AC88-B8516E27EFC6}</Project>
+      <Name>SpecDesigner.FormDataEditor</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SpecDesignerCommon\SpecDesignerCommon.csproj">
+      <Project>{472D80D5-9ABC-4E27-AC88-B8516E27EFCC}</Project>
+      <Name>SpecDesignerCommon</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\UndoRedoFramework\UndoRedoFramework.csproj">
+      <Project>{472D80D5-9ABC-4E27-AC88-B8516E27EFCD}</Project>
+      <Name>UndoRedoFramework</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="Controls\TableSchemaAssociationWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SpecEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SpecEditor\MainWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SpecificationViewWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SpecPropertyEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Themes\Generic.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\ActionTypeDataGrid.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\DiffListWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\ItemPropertyEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\ItemsPropertyEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\PreviewSpecWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\ProgRelProgramsDataGrid.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\SpecExcludeView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\SpecFieldTextControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="images\alt_edit.png" />
+    <Resource Include="images\application-link-icon.png" />
+    <Resource Include="images\check_simple.png" />
+    <Resource Include="images\cited.png" />
+    <Resource Include="images\delete.png" />
+    <Resource Include="images\edit.png" />
+    <Resource Include="images\items_delete.png" />
+    <Resource Include="images\item_add.png" />
+    <Resource Include="images\item_delete.png" />
+    <Resource Include="images\pe_download.png" />
+    <Resource Include="images\pe_ref_from.png" />
+    <Resource Include="images\pe_ref_to.png" />
+    <Resource Include="images\pe_sa.png" />
+    <Resource Include="images\plus.png" />
+    <Resource Include="images\reset_property_small.png" />
+    <Resource Include="images\restore.png" />
+    <Resource Include="images\setting_down.png" />
+    <Resource Include="images\setting_up.png" />
+    <Resource Include="images\viewmag.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

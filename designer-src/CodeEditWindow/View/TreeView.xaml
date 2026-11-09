@@ -1,0 +1,477 @@
+<UserControl
+	x:Class="SpecDesigner.CodeEditWindow.View.TreeView"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
+	xmlns:h="clr-namespace:SpecDesigner.CodeEditWindow.Helper"
+	xmlns:ext="clr-namespace:SpecDesigner.CodeEditWindow.Extension"
+	xmlns:helper="clr-namespace:SpecDesigner.Infrastructure.Helper;assembly=Infrastructure"
+	xmlns:ch="clr-namespace:SpecDesigner.Controls.Controls;assembly=SpecDesigner.Controls"
+	xmlns:l="clr-namespace:SpecDesigner.CodeEditWindow.View"
+	Focusable="True"
+	FontFamily="{StaticResource Setting_FontFamily}"
+	FontSize="{DynamicResource Setting_FontSize}">
+	<FrameworkElement.Resources>
+		<ResourceDictionary>
+			<ContextMenu
+				x:Key="FolderContextMenu">
+				<MenuItem
+					Command="h:CodeEditCommands.CreateFunction"
+					Header="{StaticResource CE_AddFunction}"
+					CommandParameter="{Binding}" />
+			</ContextMenu>
+			<ContextMenu
+				x:Key="ItemContextMenu">
+				<MenuItem
+					Command="h:CodeEditCommands.DeleteFunction"
+					Header="{StaticResource CE_DeleteFunction}"
+					CommandParameter="{Binding}" />
+			</ContextMenu>
+			<HierarchicalDataTemplate
+				x:Key="NodeTemplate"
+				ItemsSource="{Binding Nodes}">
+				<TextBlock
+					Margin="2"
+					Text="{Binding DisplayName}"
+					Foreground="{Binding Foreground}">
+					<FrameworkElement.ToolTip>
+						<TextBlock
+							FontFamily="{StaticResource Setting_FontFamily}"
+							Text="{Binding Description}" />
+					</FrameworkElement.ToolTip>
+					<FrameworkElement.ContextMenu>
+						<ContextMenu>
+							<MenuItem
+								Command="h:CodeEditCommands.DeleteFunction"
+								Header="{StaticResource CE_DeleteFunction}"
+								CommandParameter="{Binding}" />
+						</ContextMenu>
+					</FrameworkElement.ContextMenu>
+				</TextBlock>
+			</HierarchicalDataTemplate>
+			<HierarchicalDataTemplate
+				x:Key="FunctionNodeTemplate"
+				ItemsSource="{Binding Nodes}">
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition />
+						<ColumnDefinition />
+					</Grid.ColumnDefinitions>
+					<Image
+						Grid.Column="0">
+						<FrameworkElement.Style>
+							<Style
+								TargetType="{x:Type Image}">
+								<Setter
+									Property="Width"
+									Value="16" />
+								<Setter
+									Property="Height"
+									Value="16" />
+								<Setter
+									Property="Source"
+									Value="{x:Null}" />
+								<Style.Triggers>
+									<DataTrigger
+										Value="True"
+										Binding="{Binding IsFolder}">
+										<Setter
+											Property="Source"
+											Value="pack://application:,,,/CodeEditWindow;component/Images/folder.png" />
+									</DataTrigger>
+									<DataTrigger
+										Value="PRIVATE"
+										Binding="{Binding Scope}">
+										<Setter
+											Property="Source"
+											Value="pack://application:,,,/CodeEditWindow;component/Images/lock.png" />
+									</DataTrigger>
+									<DataTrigger
+										Value="PUBLIC"
+										Binding="{Binding Scope}">
+										<Setter
+											Property="Source"
+											Value="pack://application:,,,/CodeEditWindow;component/Images/unlock.png" />
+									</DataTrigger>
+								</Style.Triggers>
+							</Style>
+						</FrameworkElement.Style>
+					</Image>
+					<TextBlock
+						Grid.Column="1"
+						Margin="2"
+						Text="{Binding DisplayName}"
+						Foreground="{Binding Foreground}">
+						<i:Interaction.Behaviors>
+							<ext:MyDragBehavrior />
+							<ext:MyDropBehavior />
+						</i:Interaction.Behaviors>
+						<FrameworkElement.Style>
+							<Style
+								TargetType="{x:Type TextBlock}">
+								<Style.Triggers>
+									<DataTrigger
+										Value="True"
+										Binding="{Binding IsFolder}">
+										<Setter
+											Property="FrameworkElement.ContextMenu"
+											Value="{StaticResource FolderContextMenu}" />
+									</DataTrigger>
+									<DataTrigger
+										Value="False"
+										Binding="{Binding IsFolder}">
+										<Setter
+											Property="FrameworkElement.ContextMenu"
+											Value="{StaticResource ItemContextMenu}" />
+									</DataTrigger>
+								</Style.Triggers>
+							</Style>
+						</FrameworkElement.Style>
+						<FrameworkElement.ToolTip>
+							<ToolTip>
+								<FrameworkElement.Style>
+									<Style
+										TargetType="{x:Type ToolTip}">
+										<Setter
+											Property="Content"
+											Value="{Binding Description}" />
+										<Style.Triggers>
+											<DataTrigger
+												Binding="{Binding Description}"
+												Value="{x:Null}">
+												<Setter
+													Property="Visibility"
+													Value="Hidden" />
+											</DataTrigger>
+										</Style.Triggers>
+									</Style>
+								</FrameworkElement.Style>
+							</ToolTip>
+						</FrameworkElement.ToolTip>
+					</TextBlock>
+				</Grid>
+			</HierarchicalDataTemplate>
+			<HierarchicalDataTemplate
+				x:Key="RootTemplate"
+				ItemTemplate="{StaticResource FunctionNodeTemplate}"
+				ItemsSource="{Binding Nodes}">
+				<TextBlock
+					Grid.Column="1"
+					Margin="2"
+					Text="{Binding DisplayName}"
+					Foreground="{Binding Foreground}"
+					ContextMenuOpening="ContextMenu_ContextMenuOpening">
+					<FrameworkElement.ContextMenu>
+						<ContextMenu>
+							<MenuItem
+								Header="Copy TAP to Clipboard"
+								Click="MenuItem_Click" />
+						</ContextMenu>
+					</FrameworkElement.ContextMenu>
+				</TextBlock>
+			</HierarchicalDataTemplate>
+		</ResourceDictionary>
+	</FrameworkElement.Resources>
+	<FrameworkElement.ContextMenu>
+		<ContextMenu>
+			<MenuItem
+				Header="{StaticResource CE_RefreshList}"
+				Command="h:CodeEditCommands.RefreshStructure" />
+			<MenuItem
+				Header="{StaticResource CE_FunctionOrder}"
+				Command="h:CodeEditCommands.EnabledFunctionOrder" />
+		</ContextMenu>
+	</FrameworkElement.ContextMenu>
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition
+				Height="25px" />
+			<RowDefinition
+				Height="*" />
+		</Grid.RowDefinitions>
+		<TextBox
+			x:Name="TreeSearchBox"
+			Grid.Row="0"
+			ch:TextBoxHelper.Watermark="Search"
+			ch:TextBoxHelper.ButtonMode="Search"
+			TextChanged="TreeSearchBox_TextChanged" />
+		<TreeView
+			x:Name="treeView"
+			Grid.Row="1"
+			BorderThickness="0"
+			ext:DragDropExtension.ScrollOnDragDrop="True"
+			ItemContainerStyle="{DynamicResource {x:Type TreeViewItem}}"
+			Background="#00FFFFFF"
+			ItemTemplate="{StaticResource RootTemplate}"
+			ItemsSource="{Binding Nodes}">
+			<FrameworkElement.Resources>
+				<ResourceDictionary>
+					<PathGeometry
+						x:Key="TreeArrow">
+						<PathGeometry.Figures>
+							<PathFigureCollection>
+								<PathFigure
+									IsFilled="True"
+									StartPoint="0 0"
+									IsClosed="True">
+									<PathFigure.Segments>
+										<PathSegmentCollection>
+											<LineSegment
+												Point="0 6" />
+											<LineSegment
+												Point="6 0" />
+										</PathSegmentCollection>
+									</PathFigure.Segments>
+								</PathFigure>
+							</PathFigureCollection>
+						</PathGeometry.Figures>
+					</PathGeometry>
+					<Style
+						x:Key="ExpandCollapseToggleStyle"
+						TargetType="{x:Type ToggleButton}">
+						<Setter
+							Property="Focusable"
+							Value="False" />
+						<Setter
+							Property="Width"
+							Value="16" />
+						<Setter
+							Property="Height"
+							Value="16" />
+						<Setter
+							Property="Template">
+							<Setter.Value>
+								<ControlTemplate
+									TargetType="{x:Type ToggleButton}">
+									<Border
+										Width="16"
+										Height="16"
+										Background="#00FFFFFF"
+										Padding="5,5,5,5">
+										<Path
+											x:Name="ExpandPath"
+											Fill="#00FFFFFF"
+											Stroke="#FF989898"
+											Data="{StaticResource TreeArrow}">
+											<UIElement.RenderTransform>
+												<RotateTransform
+													Angle="135"
+													CenterX="3"
+													CenterY="3" />
+											</UIElement.RenderTransform>
+										</Path>
+									</Border>
+									<ControlTemplate.Triggers>
+										<Trigger
+											Property="UIElement.IsMouseOver"
+											Value="True">
+											<Setter
+												TargetName="ExpandPath"
+												Property="Shape.Stroke"
+												Value="#FF1BBBFA" />
+											<Setter
+												TargetName="ExpandPath"
+												Property="Shape.Fill"
+												Value="#00FFFFFF" />
+										</Trigger>
+										<Trigger
+											Property="ToggleButton.IsChecked"
+											Value="True">
+											<Setter
+												TargetName="ExpandPath"
+												Property="RenderTransform">
+												<Setter.Value>
+													<RotateTransform
+														Angle="180"
+														CenterX="3"
+														CenterY="3" />
+												</Setter.Value>
+											</Setter>
+											<Setter
+												TargetName="ExpandPath"
+												Property="Shape.Fill"
+												Value="#FF595959" />
+											<Setter
+												TargetName="ExpandPath"
+												Property="Shape.Stroke"
+												Value="#FF262626" />
+										</Trigger>
+									</ControlTemplate.Triggers>
+								</ControlTemplate>
+							</Setter.Value>
+						</Setter>
+					</Style>
+					<Style
+						x:Key="TreeViewItemFocusVisual">
+						<Setter
+							Property="Control.Template">
+							<Setter.Value>
+								<ControlTemplate>
+									<Rectangle />
+								</ControlTemplate>
+							</Setter.Value>
+						</Setter>
+					</Style>
+					<Style
+						x:Key="{x:Type TreeViewItem}"
+						TargetType="{x:Type TreeViewItem}">
+						<Setter
+							Property="helper:TreeViewItemBehavior.IsBroughtIntoViewWhenSelected"
+							Value="True" />
+						<Setter
+							Property="TreeViewItem.IsExpanded"
+							Value="{Binding IsExpanded, Mode=TwoWay}" />
+						<Setter
+							Property="TreeViewItem.IsSelected"
+							Value="{Binding IsSelected, Mode=TwoWay}" />
+						<Setter
+							Property="Background"
+							Value="#00FFFFFF" />
+						<Setter
+							Property="HorizontalContentAlignment"
+							Value="{Binding Path=HorizontalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}" />
+						<Setter
+							Property="VerticalContentAlignment"
+							Value="{Binding Path=VerticalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}" />
+						<Setter
+							Property="Padding"
+							Value="1,0,0,0" />
+						<Setter
+							Property="Foreground"
+							Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
+						<Setter
+							Property="FrameworkElement.FocusVisualStyle"
+							Value="{StaticResource TreeViewItemFocusVisual}" />
+						<Setter
+							Property="Template">
+							<Setter.Value>
+								<ControlTemplate
+									TargetType="{x:Type TreeViewItem}">
+									<Grid>
+										<Grid.ColumnDefinitions>
+											<ColumnDefinition
+												MinWidth="19"
+												Width="Auto" />
+											<ColumnDefinition
+												Width="Auto" />
+											<ColumnDefinition
+												Width="*" />
+										</Grid.ColumnDefinitions>
+										<Grid.RowDefinitions>
+											<RowDefinition
+												Height="Auto" />
+											<RowDefinition />
+										</Grid.RowDefinitions>
+										<ToggleButton
+											x:Name="Expander"
+											ClickMode="Press"
+											Style="{StaticResource ExpandCollapseToggleStyle}"
+											IsChecked="{Binding Path=IsExpanded, RelativeSource={RelativeSource TemplatedParent}}" />
+										<Border
+											Name="Bd"
+											Grid.Column="1"
+											Background="{TemplateBinding Control.Background}"
+											BorderBrush="{TemplateBinding Control.BorderBrush}"
+											BorderThickness="{TemplateBinding Control.BorderThickness}"
+											Padding="{TemplateBinding Control.Padding}"
+											SnapsToDevicePixels="True">
+											<ContentPresenter
+												x:Name="PART_Header"
+												ContentSource="Header"
+												HorizontalAlignment="{TemplateBinding Control.HorizontalContentAlignment}"
+												SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}" />
+										</Border>
+										<ItemsPresenter
+											x:Name="ItemsHost"
+											Grid.Row="1"
+											Grid.Column="1"
+											Grid.ColumnSpan="2" />
+									</Grid>
+									<ControlTemplate.Triggers>
+										<Trigger
+											Property="TreeViewItem.IsExpanded"
+											Value="False">
+											<Setter
+												TargetName="ItemsHost"
+												Property="Visibility"
+												Value="Collapsed" />
+										</Trigger>
+										<Trigger
+											Property="ItemsControl.HasItems"
+											Value="False">
+											<Setter
+												TargetName="Expander"
+												Property="Visibility"
+												Value="Hidden" />
+										</Trigger>
+										<Trigger
+											Property="TreeViewItem.IsSelected"
+											Value="True">
+											<Setter
+												TargetName="Bd"
+												Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"
+												Property="Border.Background" />
+											<Setter
+												Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"
+												Property="Foreground" />
+										</Trigger>
+										<MultiTrigger>
+											<MultiTrigger.Conditions>
+												<Condition
+													Property="TreeViewItem.IsSelected"
+													Value="True" />
+												<Condition
+													Property="TreeViewItem.IsSelectionActive"
+													Value="False" />
+											</MultiTrigger.Conditions>
+											<Setter
+												TargetName="Bd"
+												Value="{DynamicResource {x:Static SystemColors.HighlightColor}}"
+												Property="Border.Background" />
+											<Setter
+												Property="Foreground"
+												Value="#FFFFFFFF" />
+										</MultiTrigger>
+										<Trigger
+											Property="IsEnabled"
+											Value="False">
+											<Setter
+												Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+												Property="Foreground" />
+										</Trigger>
+										<DataTrigger
+											Value="False"
+											Binding="{Binding IsVisible}">
+											<Setter
+												Property="Visibility"
+												Value="Collapsed" />
+										</DataTrigger>
+									</ControlTemplate.Triggers>
+								</ControlTemplate>
+							</Setter.Value>
+						</Setter>
+						<Style.Triggers>
+							<Trigger
+								Property="VirtualizingStackPanel.IsVirtualizing"
+								Value="True">
+								<Setter
+									Property="ItemsPanel">
+									<Setter.Value>
+										<ItemsPanelTemplate>
+											<VirtualizingStackPanel />
+										</ItemsPanelTemplate>
+									</Setter.Value>
+								</Setter>
+							</Trigger>
+						</Style.Triggers>
+						<EventSetter
+							Event="MouseRightButtonDown"
+							Handler="TreeViewItem_MouseRightButtonDown" />
+					</Style>
+				</ResourceDictionary>
+			</FrameworkElement.Resources>
+		</TreeView>
+	</Grid>
+</UserControl>

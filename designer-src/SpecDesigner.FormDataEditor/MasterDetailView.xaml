@@ -1,0 +1,148 @@
+<UserControl
+	x:Class="SpecDesigner.FormDataEditor.MasterDetailView"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:f="clr-namespace:SpecDesigner.FormDataEditor">
+	<FrameworkElement.Resources>
+		<ResourceDictionary>
+			<f:VisibilityConverter
+				x:Key="visibilityConverter" />
+		</ResourceDictionary>
+	</FrameworkElement.Resources>
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition
+				Height="Auto" />
+			<RowDefinition
+				Height="Auto" />
+			<RowDefinition
+				Height="*" />
+			<RowDefinition
+				Height="Auto" />
+		</Grid.RowDefinitions>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition
+				Width="60*" />
+			<ColumnDefinition
+				Width="40*" />
+		</Grid.ColumnDefinitions>
+		<Grid
+			Row="0"
+			ColumnSpan="2"
+			VerticalAlignment="Top"
+			Margin="0 5 0 0">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition
+					Width="Auto" />
+				<ColumnDefinition
+					Width="Auto" />
+			</Grid.ColumnDefinitions>
+			<Label
+				Content="{StaticResource tableView_SearchTitle}" />
+			<TextBox
+				x:Name="query"
+				Grid.Column="1"
+				Width="150"
+				HorizontalAlignment="Left"
+				TextChanged="query_TextChanged" />
+		</Grid>
+		<GridSplitter
+			Width="5"
+			Grid.Row="1"
+			Grid.RowSpan="2"
+			Visibility="{Binding Visibility, ElementName=detail}" />
+		<DockPanel
+			x:Name="panel"
+			Grid.Row="1"
+			Grid.Column="0"
+			Grid.RowSpan="2"
+			Margin="0 0 5 0">
+			<StackPanel
+				DockPanel.Dock="Top"
+				Orientation="Horizontal"
+				Visibility="Collapsed">
+				<Button
+					x:Name="callButton"
+					Content="{StaticResource menu_AddElementTitle}"
+					Margin="10 0 10 0"
+					Click="callButton_Click" />
+				<Button
+					x:Name="queryButton"
+					Content="{StaticResource menu_queryTitle}"
+					Margin="10 0 10 0"
+					Click="queryButton_Click" />
+			</StackPanel>
+			<Border>
+				<DataGrid
+					x:Name="dataGrid"
+					Margin="0 2 0 0"
+					VerticalAlignment="Top"
+					SelectedIndex="0"
+					CanUserResizeColumns="True"
+					SelectedValuePath="{Binding XPath=@id}"
+					SelectionChanged="dataGrid_SelectionChanged">
+					<DataGrid.Columns>
+						<DataGridTemplateColumn
+							Header="use"
+							x:Name="useFlag"
+							CanUserResize="True">
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<CheckBox
+										Tag="{Binding XPath=@id, Path=Value}" />
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+						<DataGridTextColumn
+							Header="ID"
+							IsReadOnly="True"
+							CanUserResize="True"
+							Binding="{Binding XPath=@id}" />
+						<DataGridTextColumn
+							Header="Description"
+							IsReadOnly="True"
+							CanUserResize="True"
+							Binding="{Binding XPath=@desc}" />
+					</DataGrid.Columns>
+				</DataGrid>
+			</Border>
+			<FrameworkElement.Style>
+				<Style
+					TargetType="{x:Type DockPanel}">
+					<Style.Triggers>
+						<DataTrigger
+							Value="Collapsed"
+							Binding="{Binding ElementName=detail, Path=Visibility}">
+							<Setter
+								Property="Grid.ColumnSpan"
+								Value="2" />
+						</DataTrigger>
+					</Style.Triggers>
+				</Style>
+			</FrameworkElement.Style>
+		</DockPanel>
+		<f:DetailView
+			x:Name="detail"
+			Grid.Row="1"
+			Grid.Column="1"
+			DataContext="{Binding SelectedItem, ElementName=dataGrid}"
+			Visibility="{Binding Converter='{StaticResource visibilityConverter}', ElementName=detail}" />
+		<TextBox
+			Grid.Row="2"
+			Grid.Column="2"
+			VerticalAlignment="Top"
+			VerticalScrollBarVisibility="Auto"
+			HorizontalScrollBarVisibility="Auto"
+			IsReadOnly="True"
+			Visibility="{Binding Converter='{StaticResource visibilityConverter}', Path=InnerText}"
+			Text="{Binding SelectedItem.InnerText, ElementName=dataGrid}" />
+		<StatusBar
+			Grid.Row="3"
+			Grid.ColumnSpan="2">
+			<StatusBarItem
+				x:Name="statusItem" />
+		</StatusBar>
+	</Grid>
+</UserControl>

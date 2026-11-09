@@ -1,0 +1,22 @@
+<UserControl
+	x:Class="SpecDesigner.FormEditor.Relation.TBLRelation"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:line="clr-namespace:SpecDesigner.FormEditor.Petzold.Media2D"
+	x:Name="conn"
+	xmlns:relation="clr-namespace:SpecDesigner.FormEditor.Relation">
+	<line:ArrowLine
+		x:Name="path"
+		StrokeThickness="2"
+		ArrowLength="10"
+		IsArrowClosed="True"
+		Stroke="#FF000000"
+		MinWidth="1"
+		MinHeight="1"
+		X1="{Binding Source.X, ElementName=conn}"
+		X2="{Binding Destination.X, ElementName=conn}"
+		Y1="{Binding Source.Y, ElementName=conn}"
+		Y2="{Binding Destination.Y, ElementName=conn}" />
+</UserControl>

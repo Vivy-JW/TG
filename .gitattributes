@@ -1,0 +1,40 @@
+# 设计器的程序集是二进制：别做行尾转换，也别尝试 diff/merge。
+# git 通常能自己认出二进制（文件里有 NUL 字节），这条是把它写成明示 —— 免得哪天有人
+# 开着 core.autocrlf 让它们变成"每次 clone 都改动"。
+engine/designer/*.dll binary
+
+# 最小语料的**工作区那一半**是**被 sha256 钉住的**：`manifest.txt` 记的是每个文件的前 16 位
+# 摘要，而 `TestMiniCorpusIsPinned` 拿**工作区里的字节**去比。行尾转换会让它们在 checkout
+# 之后对不上 —— 那不是夹具坏了，是这条属性没写。
+# 只罩 `ws/**`：README / build.py / manifest.txt 是普通文本，要能 diff、要正常的行尾处理。
+testdata/tzs-mini/ws/** binary
+
+# Go 源码一律 LF。仓库的约定一直是"Go 源与 Markdown 是 LF"，
+# 但那条约定**没有任何机制强制** —— 开发者本机 core.autocrlf=true 就会把工作树 checkout 成
+# CRLF，而 blob 仍是 LF，于是 git status 干净、看不出任何异常。
+#
+# 这不是洁癖：2026-09-27 一位 Windows 上的执行者就因为这件事红了两条守卫，
+# 其中一条还是**假绿**（见 internal/cli/dict/reset_test.go 的 TestScanVarsInIsEOLInvariant）。
+# `eol=lf` 让工作树恒为 LF，不管本机怎么配。
+#
+# **只罩 *.go**，不要顺手加 *.md 或 *.cs：这个仓库的 Markdown 与 C# 是**混合**行尾
+# （engine/SPEC.md 是有意的 CRLF），一律声明会炸出一大片行尾 diff。
+# 要收编那些得先做一次有意的规范化提交，那是另一件事。
+*.go text eol=lf
+
+# `web/dist/.gitkeep` 是**承重墙**（main.go 的 `//go:embed all:web/dist` 靠它成立），而且 vite 每次构建删它、postbuild 用 LF 写回来。
+# 在 autocrlf=true 的机器上，它会被 checkout 成 CRLF、再被 postbuild 写成 LF，
+# 于是每次构建后 `git status` 都多一条 `M web/dist/.gitkeep`（内容其实没变）。
+# 一行属性消掉这层噪音 —— 同一个根因，见上面 *.go 那段。
+web/dist/.gitkeep text eol=lf
+
+# `designer-src/` 是**反编译出来的参考源码**，原样保留、不做任何行尾转换：它是 dnSpy 的产物，
+# 全部是 CRLF，而它存在的意义之一就是**引擎源码注释里那些 `file:line` 能在仓库里对上**
+# （见 DESIGN_DOC.md §3.1）。转换会改变字节，于是"这条注释指的是哪一行"就不再可复核。
+# `-text` 只关掉行尾转换，**保留 diff**（与上面那些 `binary` 不同 —— 那些是二进制，
+# 这些是要能读、能搜、能 diff 的源码）。
+designer-src/** -text
+
+# `Makefile` 的配方对行尾敏感（CRLF 会让某些 make 版本把命令行解析坏），而它没有扩展名，
+# 挂不到 *.go 那类通配上 —— 按文件名声明。
+Makefile text eol=lf

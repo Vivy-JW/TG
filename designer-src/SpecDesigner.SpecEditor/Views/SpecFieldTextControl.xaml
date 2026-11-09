@@ -1,0 +1,120 @@
+<UserControl
+	x:Class="SpecDesigner.SpecEditor.Views.SpecFieldTextControl"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:h="clr-namespace:SpecDesigner.SpecEditor.Helpers"
+	xmlns:cvm="clr-namespace:SpecDesignerCommon.ViewModel;assembly=SpecDesignerCommon"
+	xmlns:views="clr-namespace:SpecDesigner.SpecEditor.Views">
+	<FrameworkElement.Resources>
+		<ResourceDictionary>
+			<h:MatchSpecStatusConverter
+				x:Key="MatchSpecStatusConverter" />
+			<Style
+				x:Key="DeletedStyle"
+				TargetType="{x:Type TextBlock}">
+				<Style.Triggers>
+					<DataTrigger
+						Value="d"
+						Binding="{Binding Attribute[lstr].Value}">
+						<Setter
+							Property="TextDecorations"
+							Value="Strikethrough" />
+						<Setter
+							Property="Foreground"
+							Value="#FFCCCCCC" />
+					</DataTrigger>
+				</Style.Triggers>
+			</Style>
+		</ResourceDictionary>
+	</FrameworkElement.Resources>
+	<Grid>
+		<DataGrid
+			x:Name="dataGrid"
+			AutoGenerateColumns="False"
+			Grid.Row="1">
+			<DataGrid.Columns>
+				<DataGridTemplateColumn
+					Header="Select">
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Button
+								ToolTip="{StaticResource Button_Apply}"
+								Click="ApplyButtonClicked">
+								<Image
+									Width="8"
+									Stretch="Uniform"
+									Source="/SpecDesigner.SpecEditor;component/Images/check_simple.png" />
+							</Button>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+				<DataGridTextColumn
+					Header="text"
+					Width="Auto"
+					ElementStyle="{StaticResource DeletedStyle}"
+					IsReadOnly="True"
+					Binding="{Binding Name}" />
+				<DataGridTextColumn
+					Header="description"
+					Width="*"
+					ElementStyle="{StaticResource DeletedStyle}"
+					Binding="{Binding Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+				<DataGridTemplateColumn
+					Width="Auto">
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<StackPanel>
+								<Button
+									Click="DeleteButtonClicked">
+									<Image
+										Height="8"
+										Stretch="Uniform"
+										Source="../Images/delete.png" />
+									<FrameworkElement.Style>
+										<Style
+											BasedOn="{StaticResource {x:Type Button}}"
+											TargetType="{x:Type Button}">
+											<Style.Triggers>
+												<DataTrigger
+													Value="True"
+													Binding="{Binding Status, Converter='{StaticResource MatchSpecStatusConverter}', ConverterParameter='{x:Static cvm:SpecStatus.DELETE}'}">
+													<Setter
+														Property="Visibility"
+														Value="Collapsed" />
+												</DataTrigger>
+											</Style.Triggers>
+										</Style>
+									</FrameworkElement.Style>
+								</Button>
+								<Button
+									Click="RestoreButtonClicked">
+									<Image
+										Height="8"
+										Stretch="Uniform"
+										Source="../Images/restore.png" />
+									<FrameworkElement.Style>
+										<Style
+											BasedOn="{StaticResource {x:Type Button}}"
+											TargetType="{x:Type Button}">
+											<Style.Triggers>
+												<DataTrigger
+													Value="False"
+													Binding="{Binding Status, Converter='{StaticResource MatchSpecStatusConverter}', ConverterParameter='{x:Static cvm:SpecStatus.DELETE}'}">
+													<Setter
+														Property="Visibility"
+														Value="Collapsed" />
+												</DataTrigger>
+											</Style.Triggers>
+										</Style>
+									</FrameworkElement.Style>
+								</Button>
+							</StackPanel>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+			</DataGrid.Columns>
+		</DataGrid>
+	</Grid>
+</UserControl>

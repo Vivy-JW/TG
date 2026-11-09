@@ -1,0 +1,76 @@
+<UserControl
+	x:Class="SpecDesigner.EditorWorkspaceList"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:converters="clr-namespace:SpecDesigner.Converters"
+	xmlns:specdesigner="clr-namespace:SpecDesigner">
+	<FrameworkElement.Resources>
+		<ResourceDictionary>
+			<converters:ObjectToTypeStringConverter
+				x:Key="objectToStringConverter" />
+			<Style
+				x:Key="{x:Type TreeViewItem}"
+				TargetType="{x:Type TreeViewItem}">
+				<Setter
+					Property="TreeViewItem.IsSelected"
+					Value="{Binding IsSelected}" />
+			</Style>
+		</ResourceDictionary>
+	</FrameworkElement.Resources>
+	<Grid>
+		<TreeView
+			x:Name="treeView"
+			ItemsSource="{Binding Editors}">
+			<ItemsControl.ItemTemplate>
+				<HierarchicalDataTemplate
+					ItemsSource="{Binding Editors}">
+					<Grid>
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition
+								Width="*" />
+							<ColumnDefinition />
+						</Grid.ColumnDefinitions>
+						<Image
+							Grid.Column="0"
+							Height="16"
+							Width="16">
+							<FrameworkElement.Style>
+								<Style
+									TargetType="{x:Type Image}">
+									<Setter
+										Property="Margin"
+										Value="2" />
+									<Setter
+										Property="Source"
+										Value="{x:Null}" />
+									<Style.Triggers>
+										<DataTrigger
+											Value="SpecDesigner.FormEditor.FormEditorMainWindow"
+											Binding="{Binding UI, Converter='{StaticResource objectToStringConverter}'}">
+											<Setter
+												Property="Source"
+												Value="/Images/document_4fd.png" />
+										</DataTrigger>
+										<DataTrigger
+											Value="SpecDesigner.CodeEditWindow.View.CodeEditorMainWindow"
+											Binding="{Binding UI, Converter='{StaticResource objectToStringConverter}'}">
+											<Setter
+												Property="Source"
+												Value="/Images/document_4gl.png" />
+										</DataTrigger>
+									</Style.Triggers>
+								</Style>
+							</FrameworkElement.Style>
+						</Image>
+						<TextBlock
+							Margin="2"
+							Grid.Column="1"
+							Text="{Binding Title}" />
+					</Grid>
+				</HierarchicalDataTemplate>
+			</ItemsControl.ItemTemplate>
+		</TreeView>
+	</Grid>
+</UserControl>

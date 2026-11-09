@@ -1,0 +1,103 @@
+<UserControl
+	x:Class="SpecDesigner.Search.ReplaceBoxControl"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:Custom="http://schemas.microsoft.com/wpf/2008/toolkit"
+	xmlns:s="clr-namespace:System;assembly=mscorlib"
+	xmlns:l="clr-namespace:SpecDesigner.Search"
+	xmlns:h="clr-namespace:SpecDesigner.Search.Helper"
+	xmlns:lc="clr-namespace:SpecDesigner.Controls.Controls;assembly=SpecDesigner.Controls"
+	x:Name="replaceBoxControl">
+	<FrameworkElement.Resources>
+		<ResourceDictionary>
+			<h:MatchStringConverter
+				x:Key="matchStringConverter" />
+		</ResourceDictionary>
+	</FrameworkElement.Resources>
+	<Grid
+		Background="#FFFFFFFF">
+		<Grid.RowDefinitions>
+			<RowDefinition
+				Height="Auto" />
+			<RowDefinition
+				Height="Auto" />
+		</Grid.RowDefinitions>
+		<StackPanel
+			Grid.Row="0">
+			<TextBlock
+				Text="{StaticResource menu_Replace}" />
+			<lc:AutoFilteredComboBox
+				x:Name="SearchCB"
+				IsCaseSensitive="False"
+				IsEditable="True"
+				StaysOpenOnEdit="False"
+				IsTextSearchCaseSensitive="True"
+				IsTextSearchEnabled="True"
+				ItemsSource="{Binding SearchHistory}">
+				<UIElement.InputBindings>
+					<KeyBinding
+						Command="l:ReplaceCommands.ReplaceCommnad"
+						Key="Enter" />
+				</UIElement.InputBindings>
+			</lc:AutoFilteredComboBox>
+			<TextBlock
+				Text="{StaticResource menu_ReplaceAs}" />
+			<lc:AutoFilteredComboBox
+				x:Name="ReplaceAsCB"
+				IsCaseSensitive="False"
+				IsEditable="True"
+				StaysOpenOnEdit="False"
+				IsTextSearchCaseSensitive="True"
+				IsTextSearchEnabled="True"
+				ItemsSource="{Binding ReplaceHistory}">
+				<UIElement.InputBindings>
+					<KeyBinding
+						Command="l:ReplaceCommands.ReplaceCommnad"
+						Key="Enter" />
+				</UIElement.InputBindings>
+			</lc:AutoFilteredComboBox>
+			<TextBlock
+				Text="{StaticResource menu_FindRange}" />
+			<ComboBox
+				x:Name="SearchTargetCB"
+				IsEditable="True"
+				SelectedIndex="0">
+				<ComboBoxItem
+					Tag="Current Document"
+					Content="{StaticResource Search_CurrentDocument}" />
+			</ComboBox>
+			<GroupBox
+				Header="Options"
+				Margin="0 4 0 4">
+				<StackPanel>
+					<CheckBox
+						Content="{StaticResource Search_MatchCase}"
+						IsChecked="{Binding IsMatchCase, ElementName=replaceBoxControl, Mode=TwoWay}" />
+					<CheckBox
+						Content="選取範圍內"
+						Visibility="Hidden"
+						IsChecked="{Binding IsSelectedOnly, ElementName=replaceBoxControl, Mode=TwoWay}" />
+				</StackPanel>
+			</GroupBox>
+		</StackPanel>
+		<UniformGrid
+			HorizontalAlignment="Right"
+			Grid.Row="1"
+			Columns="2">
+			<Button
+				x:Name="ReplaceBtn"
+				Content="{StaticResource menu_Replace}"
+				Margin="4,0"
+				MinWidth="70"
+				Command="l:ReplaceCommands.ReplaceCommnad" />
+			<Button
+				x:Name="ReplaceAllBtn"
+				Content="{StaticResource menu_ReplaceAll}"
+				Margin="4,0"
+				MinWidth="70"
+				Command="l:ReplaceCommands.ReplaceAllCommnad" />
+		</UniformGrid>
+	</Grid>
+</UserControl>

@@ -1,0 +1,2196 @@
+<ResourceDictionary
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:s="clr-namespace:System;assembly=mscorlib"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+	<s:String
+		x:Key="menu_File">Dữ liệu</s:String>
+	<s:String
+		x:Key="menu_FileOpen">Mở dữ liệu</s:String>
+	<s:String
+		x:Key="menu_FileSave">Lưu dữ liệu</s:String>
+	<s:String
+		x:Key="menu_FileClose">Đóng dữ liệu</s:String>
+	<s:String
+		x:Key="menu_FileCloseAll">Đóng tất cả dữ liệu</s:String>
+	<s:String
+		x:Key="menu_FileExit">Thoát</s:String>
+	<s:String
+		x:Key="menu_RecentFiles">Danh sách dữ liệu mở gần nhất</s:String>
+	<s:String
+		x:Key="menu_ClearRecentFiles">Danh sách dữ liệu mở gần nhất</s:String>
+	<s:String
+		x:Key="menu_RecentSpecFiles">最近開啟畫面檔(tzs)</s:String>
+	<s:String
+		x:Key="menu_RecentCodeFiles">最近開啟程式檔(tzc)</s:String>
+	<s:String
+		x:Key="menu_Bookmarks">书签</s:String>
+	<s:String
+		x:Key="menu_ToogleBookmark">Thêm mới / Hủy Bookmarks</s:String>
+	<s:String
+		x:Key="BookmarkLines">Số hàng</s:String>
+	<s:String
+		x:Key="menu_ToNextDiffLine">下一个差异点</s:String>
+	<s:String
+		x:Key="menu_ToPreviousDiffLine">前一个差异点</s:String>
+	<s:String
+		x:Key="menu_Diff">差异比对</s:String>
+	<s:String
+		x:Key="menu_InsertIndFunIntoStandard">标准程式插入行业函式设定</s:String>
+	<s:String
+		x:Key="menu_Upload">Chuyển lên</s:String>
+	<s:String
+		x:Key="menu_Precompile">预编译(非实际更新)</s:String>
+	<s:String
+		x:Key="menu_Specification">Quy cách</s:String>
+	<s:String
+		x:Key="menu_SpecificationDownload">Quy cách tải xuống (Phiên bản quản lý)</s:String>
+	<s:String
+		x:Key="menu_SpecificationUpload">Quy cách chuyển lên</s:String>
+	<s:String
+		x:Key="Message_UploadAndGenAll">Đồng thời phát sinh lại chương trình liên quan khác đa ngôn ngữ</s:String>
+	<s:String
+		x:Key="menu_SpecificationUploadResetTAP">Xóa chương trình cắt lát</s:String>
+	<s:String
+		x:Key="menu_SpecificationView">Thiết lập quy cách bảng cột</s:String>
+	<s:String
+		x:Key="menu_UncitedSpecificationView">Kiểm tra ngắt kết dẫn dụng quy cách</s:String>
+	<s:String
+		x:Key="menu_PatchComponentListView">检视Patch后新元件清单</s:String>
+	<s:String
+		x:Key="menu_PreviewForm">Xem trước giao diện</s:String>
+	<s:String
+		x:Key="menu_SimpleFormSetup">简易画面设置</s:String>
+	<s:String
+		x:Key="menu_SimpleFormDownload">下载简易画面设置</s:String>
+	<s:String
+		x:Key="menu_SimpleFormUpload">上传简易画面设置</s:String>
+	<s:String
+		x:Key="menu_SpecificationExport">Xuất quy cách</s:String>
+	<s:String
+		x:Key="menu_SCOImport">Chuyển nhập SA phân đoạn quy cách</s:String>
+	<s:String
+		x:Key="menu_UploadAndRC3">上传规格并产生程式</s:String>
+	<s:String
+		x:Key="menu_Program">Chương trình</s:String>
+	<s:String
+		x:Key="menu_ProgramDownload">Tải về chương trình (phiên bản quản lý)</s:String>
+	<s:String
+		x:Key="menu_ProgramUpload">Chuyển lên chương trình</s:String>
+	<s:String
+		x:Key="menu_ProgramTest">Chương trình thí nghiệm</s:String>
+	<s:String
+		x:Key="menu_ProgramDebug">Chương trình xóa sai</s:String>
+	<s:String
+		x:Key="menu_ProgramErrorCheck">逻辑结构除错</s:String>
+	<s:String
+		x:Key="menu_ShowProgramRegen">Chương trình phát sinh lại</s:String>
+	<s:String
+		x:Key="menu_ShowProgramUncited">Kiểm tra ngắt kết dẫn dụng chương trình</s:String>
+	<s:String
+		x:Key="menu_ShowProgramSectionUncited">Kiểm tra Section ngắt kết dẫn dụng chương trình</s:String>
+	<s:String
+		x:Key="menu_ShowProgramCustomAdpList">Kiểm tra danh sách chương trình theo yêu cầu khách hàng</s:String>
+	<s:String
+		x:Key="menu_EnableViMode">Cắt Vi biên tập mô thức</s:String>
+	<s:String
+		x:Key="menu_Undo">Phục hồi</s:String>
+	<s:String
+		x:Key="menu_Redo">Thao tác lại</s:String>
+	<s:String
+		x:Key="menu_Edit">Biên tập</s:String>
+	<s:String
+		x:Key="menu_AutoComplete">Tự động hoàn thành</s:String>
+	<s:String
+		x:Key="menu_ShowKeyword">Hiển thị kho ký tự liên quan</s:String>
+	<s:String
+		x:Key="menu_ShowSelfKeyword">Hiển thị kho riêng</s:String>
+	<s:String
+		x:Key="menu_ShowDBKeyword">Hiển thị cột ký tự kho dữ liệu</s:String>
+	<s:String
+		x:Key="menu_Report">GR mô bản</s:String>
+	<s:String
+		x:Key="menu_Report_Download">Tải về biểu mô bản (phiên bản quản lý)</s:String>
+	<s:String
+		x:Key="menu_Report_Upload">Tải lên mô bản báo biểu</s:String>
+	<s:String
+		x:Key="menu_Report_Open">Mở mô bản báo biểu</s:String>
+	<s:String
+		x:Key="menu_Component">Đơn vị</s:String>
+	<s:String
+		x:Key="menu_ComponentDownload">Đơn vị tải xuống (phiên bản quản lý)</s:String>
+	<s:String
+		x:Key="menu_ComponentUpload">Đơn vị tải lên</s:String>
+	<s:String
+		x:Key="menu_SiteManager">Nhân viên quản lý trạm</s:String>
+	<s:String
+		x:Key="menu_BasicData">Dữ liệu cơ bản</s:String>
+	<s:String
+		x:Key="menu_ReGenerateBasicData">Phát sinh lại dữ liệu cơ bản</s:String>
+	<s:String
+		x:Key="menu_BasicDataUpdate">Thay đổi dữ liệu cơ bản</s:String>
+	<s:String
+		x:Key="menu_BasicDataView">Tra tìm dữ liệu cơ bản</s:String>
+	<s:String
+		x:Key="menu_SelectBasicDataUpdate">挑选更新基础资料</s:String>
+	<s:String
+		x:Key="menu_Tools">Công cụ thường dùng</s:String>
+	<s:String
+		x:Key="menu_azzi900">Thao tác thiết lập dữ liệu cơ bản chương trình（azzi900）</s:String>
+	<s:String
+		x:Key="menu_azzi901">Thao tác thiết lập dữ liệu cơ bản nguyên kiện và chương trình con（azzi901）</s:String>
+	<s:String
+		x:Key="menu_azzi910">Duy trì dữ liệu cơ bản thao tác（azzi910）</s:String>
+	<s:String
+		x:Key="menu_azzi920">thao tác duy trì thông tin hệ thống （azzi920）</s:String>
+	<s:String
+		x:Key="menu_azzi998">画面组件排除功能</s:String>
+	<s:String
+		x:Key="menu_azzi600">Thao tác duy trì mã phân loại hệ thống (SCC)（azzi600）</s:String>
+	<s:String
+		x:Key="menu_azzi650">Thao tác duy trì mã phân loại ứng dụng (ACC)（azzi650）</s:String>
+	<s:String
+		x:Key="menu_adzi140">Máy thiết kế biểu dữ liệu（r.t：adzi140）</s:String>
+	<s:String
+		x:Key="menu_adzi150">Duy trì dữ liệu thiết kế quy cách ô（adzi150）</s:String>
+	<s:String
+		x:Key="menu_adzp168">Máy phát sinh giao diện（r.a：adzp168）</s:String>
+	<s:String
+		x:Key="menu_adzi220">Kiểm nghiệm lấy giá trị máy thiết kế（r.v：adzi220）</s:String>
+	<s:String
+		x:Key="menu_adzq255">Tập tin thiết kế máy Serve giao diện（r.b：adzq255）</s:String>
+	<s:String
+		x:Key="menu_adzi210">Máy thiết kế cửa sổ（r.q：adzi210）</s:String>
+	<s:String
+		x:Key="menu_adzi400">(No Use)Thao tác duy trì nguyên vật liệu（adzi400）</s:String>
+	<s:String
+		x:Key="menu_adzq490">维度组件查询作业（adzq490）</s:String>
+	<s:String
+		x:Key="menu_adzp188">Máy thiết kế nguyên liệu báo biểu（adzp188）</s:String>
+	<s:String
+		x:Key="menu_azzi301">Thao tác thiết lập mẫu chứng từ báo biểu（azzi301）</s:String>
+	<s:String
+		x:Key="menu_azzi300">Thao tác thiết lập tra tìm mô hình báo biểu（azzi300）</s:String>
+	<s:String
+		x:Key="menu_adzp600">(DSC use) Quy cách của ngành nghề và công cụ sản sinh ra chương trình（adzp600）</s:String>
+	<s:String
+		x:Key="menu_adzp270">Sao chép quy cách và chương trình（adzp270）</s:String>
+	<s:String
+		x:Key="menu_queryTitle">Tra tìm mã chương trình tham số</s:String>
+	<s:String
+		x:Key="menu_AddElementTitle">Thêm hạng mục</s:String>
+	<s:String
+		x:Key="menu_adzp990Exp">Chuyển xuất thiết lập dữ liệu</s:String>
+	<s:String
+		x:Key="menu_adzp990Imp">Chuyển nhập thiết lập dữ liệu</s:String>
+	<s:String
+		x:Key="menu_CommonUsed">Tự định đường dẫn</s:String>
+	<s:String
+		x:Key="menu_Preference">Thiết lập sở thích</s:String>
+	<s:String
+		x:Key="menu_TOPSTD">Grant TOPSTD Access</s:String>
+	<s:String
+		x:Key="menu_AdvancedTools">Chức năng cao cấp</s:String>
+	<s:String
+		x:Key="menu_adzp150">Đọc tab phát sinh công cụ tgl</s:String>
+	<s:String
+		x:Key="menu_azzi908">Ngắt kết bản mẫu bố trí thay đổi sử dụng Free Style để mở</s:String>
+	<s:String
+		x:Key="menu_changeProgramTemplate">Thay đổi bản mẫu chương trình</s:String>
+	<s:String
+		x:Key="menu_QSetting">Cấp trên loại Q thiết lập tra liên quan</s:String>
+	<s:String
+		x:Key="menu_SearchKeySetting">正规化搜寻条件设定</s:String>
+	<s:String
+		x:Key="menu_ServiceCloudSetting">服务云帐号密码设定</s:String>
+	<s:String
+		x:Key="menu_Help">Giải thích</s:String>
+	<s:String
+		x:Key="menu_About">Liên quan</s:String>
+	<s:String
+		x:Key="menu_AboutProgram">Thông tin chương trình</s:String>
+	<s:String
+		x:Key="menu_AboutSpec">Thông tin quy cách</s:String>
+	<s:String
+		x:Key="menu_Shortcut">Key tốc độ</s:String>
+	<s:String
+		x:Key="menu_ViCommandList">Vi danh sách lệnh sản xuất</s:String>
+	<s:String
+		x:Key="menu_ThisVersionProgramModify">程序本版次调整更新</s:String>
+	<s:String
+		x:Key="menu_ThisVersionSpecModify">规格本版次调整更新</s:String>
+	<s:String
+		x:Key="menu_Connection">Thông tin kết nối</s:String>
+	<s:String
+		x:Key="menu_ShowLog">Ghi chú kết nối</s:String>
+	<s:String
+		x:Key="menu_View">Cửa sổ</s:String>
+	<s:String
+		x:Key="menu_ViewCodeStructure">Kết cấu chương trình</s:String>
+	<s:String
+		x:Key="menu_ViewFormDesigner">Kiểm tra giao diện</s:String>
+	<s:String
+		x:Key="menu_ViewSpecPropertyEditor">Thuộc tính cột</s:String>
+	<s:String
+		x:Key="menu_ViewSpecEditor">Quy cách cột</s:String>
+	<s:String
+		x:Key="menu_ViewErrorList">Danh sách lỗi</s:String>
+	<s:String
+		x:Key="menu_FormStructure">Kết cấu giao diện</s:String>
+	<s:String
+		x:Key="menu_ViewFormSpecification">Quy cách cột</s:String>
+	<s:String
+		x:Key="menu_SwitchLite">切换简易规格设计器</s:String>
+	<s:String
+		x:Key="menu_SwitchFormal">切换标准规格设计器</s:String>
+	<s:String
+		x:Key="menu_Welcome">歡迎光臨</s:String>
+	<s:String
+		x:Key="menu_Find">Tra tìm</s:String>
+	<s:String
+		x:Key="menu_FindTarget">Mục tiêu tra tìm</s:String>
+	<s:String
+		x:Key="menu_FindRange">Phạm vi tra tìm</s:String>
+	<s:String
+		x:Key="menu_FindPrevios">Tìm cái trước</s:String>
+	<s:String
+		x:Key="menu_FindNext">Tìm cái sau</s:String>
+	<s:String
+		x:Key="menu_FindPrevious">Find Previous</s:String>
+	<s:String
+		x:Key="menu_Replace">Thay thế</s:String>
+	<s:String
+		x:Key="menu_ReplaceAs">Thay thế thành</s:String>
+	<s:String
+		x:Key="menu_ReplaceAll">Thay thế toàn bộ</s:String>
+	<s:String
+		x:Key="menu_Time">Thời gian</s:String>
+	<s:String
+		x:Key="menu_Description">Miêu tả</s:String>
+	<s:String
+		x:Key="menu_TableSchemaAssocSetting">Biểu dữ liệu thiết lập liên quan</s:String>
+	<s:String
+		x:Key="menu_MoveToFirst">Chuyển đến cái đầu tiên</s:String>
+	<s:String
+		x:Key="menu_MoveToPrevious">Chuyển đến cái liền trước</s:String>
+	<s:String
+		x:Key="menu_MoveToNext">Chuyển đến cái liền sau</s:String>
+	<s:String
+		x:Key="menu_MoveToLast">Chuyển đến cái cuối</s:String>
+	<s:String
+		x:Key="menu_Cascade">Liên động</s:String>
+	<s:String
+		x:Key="menu_CreateNewTBL">Thêm biểu dữ liệu</s:String>
+	<s:String
+		x:Key="menu_UploadIndFunctionSetup">上传行业函式设定</s:String>
+	<s:String
+		x:Key="menu_AdjustContainerBlankArea">缩小容器空白区块</s:String>
+	<s:String
+		x:Key="menu_ToggleStandardAndLite">畫面開發簡潔配置</s:String>
+	<s:String
+		x:Key="menu_ForConsultant">畫面開發</s:String>
+	<s:String
+		x:Key="menu_SpecOpen">開啟規格</s:String>
+	<s:String
+		x:Key="menu_TableBasicDataUpdate">快速下载基础资料</s:String>
+	<s:String
+		x:Key="menu_DatabaseSource">資料庫來源</s:String>
+	<s:String
+		x:Key="menu_SpecificationDownload_2">簽出與下載畫面</s:String>
+	<s:String
+		x:Key="menu_UploadAndRC3_2">上傳畫面並產生程式</s:String>
+	<s:String
+		x:Key="menu_SpecCheckIn">簽入畫面</s:String>
+	<s:String
+		x:Key="menu_ProgramDevelopDataExport">程式开发资料导出（adzi888 导出）</s:String>
+	<s:String
+		x:Key="menu_ProgramDevelopDataImport">程式开发资料汇入（adzi888 汇入）</s:String>
+	<s:String
+		x:Key="specProperty_SpecFieldExcludeSetting">Điều chỉnh thiết lập xóa</s:String>
+	<s:String
+		x:Key="specProperty_SpecFieldExcude">Xóa điều chỉnh</s:String>
+	<s:String
+		x:Key="specProperty_SpecFieldExcudeList">Đã xóa danh sách điều chỉnh</s:String>
+	<s:String
+		x:Key="specProperty_SpecAttirbuteSetting">Thiết lập cột quy cách</s:String>
+	<s:String
+		x:Key="specProperty_SpecOtherSetting">Thiết lập cột khác</s:String>
+	<s:String
+		x:Key="specProperty_SpecActionSetting">Thiết lập Action</s:String>
+	<s:String
+		x:Key="specProperty_SpecControlSetting">Điều chỉnh thiết lập quy cách</s:String>
+	<s:String
+		x:Key="specProperty_GeneroComponentAttrSetting">Điều chỉnh thiết lập thuộc tính</s:String>
+	<s:String
+		x:Key="specProperty_ReferenceFieldSetting">Thiết lập cột tham khảo</s:String>
+	<s:String
+		x:Key="specProperty_MultiLangSetting">Thiết lập cột nhiều ngôn ngữ</s:String>
+	<s:String
+		x:Key="specProperty_TreeSetting">Thiết lập nguồn dữ liệu cây</s:String>
+	<s:String
+		x:Key="column_attr">Thuộc tính</s:String>
+	<s:String
+		x:Key="codeEditor_Header">Biên tập chương trình</s:String>
+	<s:String
+		x:Key="button_ViewProgramSpec">Miêu tả chỉnh thể quy cách</s:String>
+	<s:String
+		x:Key="specProperty_table">Mã table</s:String>
+	<s:String
+		x:Key="specProperty_table_name">Tên table</s:String>
+	<s:String
+		x:Key="specProperty_column">Mã cột</s:String>
+	<s:String
+		x:Key="specProperty_column_name">Tên cột</s:String>
+	<s:String
+		x:Key="specProperty_column_comment">Giải thích cột</s:String>
+	<s:String
+		x:Key="specProperty_attribute">Thuộc tính cột</s:String>
+	<s:String
+		x:Key="specProperty_type">Trạng thái cột</s:String>
+	<s:String
+		x:Key="specProperty_req">Cột tất yếu</s:String>
+	<s:String
+		x:Key="specProperty_i_zoom">Khi biên tập mở cửa sổ</s:String>
+	<s:String
+		x:Key="specProperty_c_zoom">Khi tra tìm mở cửa sổ</s:String>
+	<s:String
+		x:Key="specProperty_chk_ref">Kiểm tra thiết lập đem ra giá trị</s:String>
+	<s:String
+		x:Key="specProperty_prog_rel">Mã chương trình liên quan</s:String>
+	<s:String
+		x:Key="specProperty_name">Mã điều chỉnh</s:String>
+	<s:String
+		x:Key="specProperty_isCust">Có theo yêu cầu khách hàng không</s:String>
+	<s:String
+		x:Key="specProperty_items">Mã phân loại hệ thống</s:String>
+	<s:String
+		x:Key="specProperty_default">Giá trị mặc định</s:String>
+	<s:String
+		x:Key="specProperty_max">Giá trị lớn nhất</s:String>
+	<s:String
+		x:Key="specProperty_min">Giá trị nhỏ nhất</s:String>
+	<s:String
+		x:Key="specProperty_percentage">Cột tỷ lệ 100 phần</s:String>
+	<s:String
+		x:Key="specProperty_format">Hiển thị chương trình</s:String>
+	<s:String
+		x:Key="specProperty_ver">Thiết kế phiên bản điểm</s:String>
+	<s:String
+		x:Key="specProperty_spec">SD tự thuật quy cách</s:String>
+	<s:String
+		x:Key="specProperty_id">Mã Action</s:String>
+	<s:String
+		x:Key="specProperty_text">Giải thích Action</s:String>
+	<s:String
+		x:Key="specProperty_comment">Chỉ thị giải thích</s:String>
+	<s:String
+		x:Key="specProperty_action_status">Trạng thái Action</s:String>
+	<s:String
+		x:Key="specProperty_action_invalid">Hết hiệu lực</s:String>
+	<s:String
+		x:Key="specProperty_formonly_name">Điều chỉnh mã</s:String>
+	<s:String
+		x:Key="specProperty_formonly_text">Điều chỉnh giải thích</s:String>
+	<s:String
+		x:Key="specProperty_formonly_comment">Chỉ thị giải thích</s:String>
+	<s:String
+		x:Key="specProperty_ref_rtn_setting">Tham khảo thiết lập cột</s:String>
+	<s:String
+		x:Key="specProperty_multi_lang">Cột nhiều ngôn ngữ</s:String>
+	<s:String
+		x:Key="specProperty_ref">Cột tham khảo</s:String>
+	<s:String
+		x:Key="specProperty_chk_exists_table">Kiểm tra tồn tại của table</s:String>
+	<s:String
+		x:Key="specProperty_chk_exists_column">Tra tìm tồn tại của Colunm</s:String>
+	<s:String
+		x:Key="specProperty_ProgRelFieldGroupSetting">Thiết lập cột liên quan</s:String>
+	<s:String
+		x:Key="specProperty_ProgRelFieldWarning">(Theo điều chỉnh phụ và chương trình liên quan đều phải thiết lập )</s:String>
+	<s:String
+		x:Key="specProperty_widget">Điều chỉnh loại hình</s:String>
+	<s:String
+		x:Key="specProperty_ref_key">Thiết lập tham khảo key</s:String>
+	<s:String
+		x:Key="specProperty_Disable">Hết hiệu lực</s:String>
+	<s:String
+		x:Key="specProperty_citeStd">Thiết lập chương trình chuẩn dẫn dụng</s:String>
+	<s:String
+		x:Key="specProperty_SpecTBActionSetting">Thiết lập Action ToolBar</s:String>
+	<s:String
+		x:Key="specProperty_di">Biên tập Action</s:String>
+	<s:String
+		x:Key="specProperty_db">Trình duyệt Action</s:String>
+	<s:String
+		x:Key="specProperty_all">Chỉnh thể Action</s:String>
+	<s:String
+		x:Key="specProperty_mi">Biên tập đầu đơn Action</s:String>
+	<s:String
+		x:Key="specProperty_canEdit">Có thể biên tập hay không</s:String>
+	<s:String
+		x:Key="specProperty_canQuery">Có hể tra tìm hay không</s:String>
+	<s:String
+		x:Key="specProperty_canQueryEdit">Điều kiện tra tìm</s:String>
+	<s:String
+		x:Key="specProperty_TreeKind">Loại kết cấu thư mục</s:String>
+	<s:String
+		x:Key="specProperty_gencode">Phát sinh quyền hạn tra tìm</s:String>
+	<s:String
+		x:Key="specProperty_noQuery">Không phát sinh câu lệnh tra tìm</s:String>
+	<s:String
+		x:Key="specMessage_createFail">{0} 建构呼叫错误</s:String>
+	<s:String
+		x:Key="specProperty_help_code">Thiệt lập mã ghi nhớ</s:String>
+	<s:String
+		x:Key="specProperty_depend_field">Theo tên điều chỉnh phụ</s:String>
+	<s:String
+		x:Key="specProperty_correspon_key">Thiết lập giá trị chuyển đối ứng</s:String>
+	<s:String
+		x:Key="specProperty_help_table">Mã ghi nhớ Table</s:String>
+	<s:String
+		x:Key="specProperty_help_find">Cột tìm kiếm mã ghi nhớ</s:String>
+	<s:String
+		x:Key="specProperty_help_field">Cột mã ghi nhớ</s:String>
+	<s:String
+		x:Key="specProperty_help_dlang">Cột hệ mã ngữ ghi nhớ</s:String>
+	<s:String
+		x:Key="specProperty_mapping_widget">Chuyển lại điều khiển đối ứng</s:String>
+	<s:String
+		x:Key="specProperty_returning_table_field">助记码Table回传字段</s:String>
+	<s:String
+		x:Key="specProperty_CountDiffMappingWidgetAndTableField">回傳對應控件與助記碼Table回傳欄位個數不同</s:String>
+	<s:String
+		x:Key="specProperty_help_wc">Điều kiện khác</s:String>
+	<s:String
+		x:Key="specProperty_multi_lang_setting">Thiết lập cột nhiều ngôn ngữ</s:String>
+	<s:String
+		x:Key="specProperty_multi_lang_name">Tên điều khiển</s:String>
+	<s:String
+		x:Key="specProperty_lang_table">Nhiều ngôn ngữ Table</s:String>
+	<s:String
+		x:Key="specProperty_lang_column">Colunm nhiều ngôn ngữ</s:String>
+	<s:String
+		x:Key="specProperty_lang_fk">FK nhiều ngôn ngữ</s:String>
+	<s:String
+		x:Key="specProperty_lang_rtn">Cột chuyển nhiều ngôn ngữ</s:String>
+	<s:String
+		x:Key="specProperty_lang_dlang">Hệ mã nhiều ngôn ngữ</s:String>
+	<s:String
+		x:Key="specProperty_ref_field_title">Thiết lập tham khảo cột</s:String>
+	<s:String
+		x:Key="specProperty_ref_name">Tên điều khiển</s:String>
+	<s:String
+		x:Key="specProperty_ref_table">Dữ liệu tham khảo Table</s:String>
+	<s:String
+		x:Key="specProperty_ref_fk">Dữ liệu tham khảo FK</s:String>
+	<s:String
+		x:Key="specProperty_ref_dlang">Dữ liệu tham khảo hệ ngôn ngữ</s:String>
+	<s:String
+		x:Key="specProperty_ref_rtn">Dữ liệu tham khảo chuyển lại</s:String>
+	<s:String
+		x:Key="specProperty_prog_rel_name">Tên điều khiển</s:String>
+	<s:String
+		x:Key="specProperty_prog_rel_program">Tra liên quan mã số chương trình</s:String>
+	<s:String
+		x:Key="specProperty_prog_rel_type">Trạng thái liên quan</s:String>
+	<s:String
+		x:Key="specProperty_prog_rel_type1">Thông thường</s:String>
+	<s:String
+		x:Key="specProperty_prog_rel_type2">Khác</s:String>
+	<s:String
+		x:Key="specProperty_table_association_setting">Thiết lập liên quan Table</s:String>
+	<s:String
+		x:Key="specProperty_SelectCodeTemplate">Mã bản mẫu chương trình:</s:String>
+	<s:String
+		x:Key="specProperty_F_CodeTemplateText">F.Thao tác duy trì</s:String>
+	<s:String
+		x:Key="specProperty_P_CodeTemplateText">P.Thao tác hàng loạt</s:String>
+	<s:String
+		x:Key="specProperty_Q_CodeTemplateText">Q.Thao tác tra tìm</s:String>
+	<s:String
+		x:Key="Menu_SetCodeStartArg">Thiết lập 'Cơ số tham số bảo lưu '</s:String>
+	<s:String
+		x:Key="codeProperty_StartArg">Xin nhập cơ số tham số phải bảo lưu</s:String>
+	<s:String
+		x:Key="specImport_title">汇入多语言</s:String>
+	<s:String
+		x:Key="specImport_Confirm">请检查以下多语言项目汇入项目
+*注意!!若目的端已有同名项目，汇入后会被覆盖</s:String>
+	<s:String
+		x:Key="specImport_importOrNot">是否新增</s:String>
+	<s:String
+		x:Key="specImport_exist">已存在</s:String>
+	<s:String
+		x:Key="specImport_Name">名称</s:String>
+	<s:String
+		x:Key="specImport_Content">内容</s:String>
+	<s:String
+		x:Key="specImport_Import">汇入</s:String>
+	<s:String
+		x:Key="codeEditor_ViewDifferentWithStanard">检视</s:String>
+	<s:String
+		x:Key="codeEditor_CustomedAddPoint">客制过的 add point</s:String>
+	<s:String
+		x:Key="codeEditor_UncitedAddPoint">断开引用的 add point</s:String>
+	<s:String
+		x:Key="codeEditor_NotCoveredWhenMergeAddPoint">patch没有覆盖的标准add point(topstd)</s:String>
+	<s:String
+		x:Key="codeEditor_SynchronousScroll">同时卷动</s:String>
+	<s:String
+		x:Key="codeEditor_Diff">差异行数刷新</s:String>
+	<s:String
+		x:Key="codeEditor_topstdMode">切换为 topstd 编辑</s:String>
+	<s:String
+		x:Key="specEditor_AllSpec">Miêu tả chỉnh thể quy cách</s:String>
+	<s:String
+		x:Key="specEditor_MiAllSpec">Miêu tả quy cách biên tập đầu đơn</s:String>
+	<s:String
+		x:Key="specEditor_DbAllSpec">Miêu tả quy cách biên tập thân đơn</s:String>
+	<s:String
+		x:Key="specEditor_DiAllSpec">Miêu tả quy cách biên tập thân đơn</s:String>
+	<s:String
+		x:Key="specEditor_SDSpec">Miêu tả quy cách SD</s:String>
+	<s:String
+		x:Key="specEditor_refStdSpec">Quy cách chuẩn dẫn dụng</s:String>
+	<s:String
+		x:Key="specEditor_previewSpec">Xem trước quy cách</s:String>
+	<s:String
+		x:Key="specEditor_confirmCopyTsd">Thay thế thiết lập chuẩn! Xác định dẫn dụng [{0}]？</s:String>
+	<s:String
+		x:Key="specEditor_confirmCancelCopyTsd">Xác nhận hủy dẫn dụng [{0}]？</s:String>
+	<s:String
+		x:Key="specEditor_saSpecViewCB">查看SA规格</s:String>
+	<s:String
+		x:Key="tableRlation_layerDisplay">Thiết lập 3 tầng 3 hiển</s:String>
+	<s:String
+		x:Key="tableRlation_upperTable">Table cấp trên :</s:String>
+	<s:String
+		x:Key="tableRlation_upperKey">Thiết lập giá trị Key cấp trên</s:String>
+	<s:String
+		x:Key="tableRlation_thisKey">Thiết lập giá trị Key đối ứng cấp này</s:String>
+	<s:String
+		x:Key="dataView_WindowTitle">Tra tìm dữ liệu cơ bản</s:String>
+	<s:String
+		x:Key="dataView_Items">Hạng mục dữ liệu</s:String>
+	<s:String
+		x:Key="dataView_Messages">Thông báo chỉ thị</s:String>
+	<s:String
+		x:Key="dataView_Zooms">Thiết kế mở cửa sổ</s:String>
+	<s:String
+		x:Key="dataView_Checks">Kiểm tra giá trị đem ra</s:String>
+	<s:String
+		x:Key="dataView_ProgRel">Chương trình tra liên quan</s:String>
+	<s:String
+		x:Key="dataView_Subroutines">Đơn vị ứng dụng</s:String>
+	<s:String
+		x:Key="dataView_Libraries">Đơn vị hệ thống</s:String>
+	<s:String
+		x:Key="dataView_Spec">Thiết lập quy cách cột</s:String>
+	<s:String
+		x:Key="tableView_WindowTitle">Kiểm tra biểu thiết kế dữ liệu</s:String>
+	<s:String
+		x:Key="tableView_ColumnTitle">Kiểm tra biểu hiện tại ：{0} - {1}</s:String>
+	<s:String
+		x:Key="tableView_ModuleTitle">Loại nhóm mô đun:</s:String>
+	<s:String
+		x:Key="tableView_TableModule">Mã mô đun</s:String>
+	<s:String
+		x:Key="tableView_TableName">Mã Table</s:String>
+	<s:String
+		x:Key="tableView_TableDesc">Tên biểu</s:String>
+	<s:String
+		x:Key="tableView_TableType">Trạng thái biểu</s:String>
+	<s:String
+		x:Key="tableView_ColumnName">Mã cột</s:String>
+	<s:String
+		x:Key="tableView_ColumnText">Tên cột</s:String>
+	<s:String
+		x:Key="tableView_ColumnPK">Key</s:String>
+	<s:String
+		x:Key="tableView_ColumnReq">Cột tất yếu</s:String>
+	<s:String
+		x:Key="tableView_ColumnAttr">Thuộc tính cột</s:String>
+	<s:String
+		x:Key="tableView_ColumnAttrName">Tên thuộc tính</s:String>
+	<s:String
+		x:Key="tableView_ColumnType">Trạng thái dữ liệu</s:String>
+	<s:String
+		x:Key="tableView_SearchTitle">Tra tìm :</s:String>
+	<s:String
+		x:Key="columnView_WindowTitle">Kiểm tra cột thiết lập dữ liệu</s:String>
+	<s:String
+		x:Key="columnView_ColumnSpec">Quy cách cột</s:String>
+	<s:String
+		x:Key="columnView_Width">Hiển thị độ rộng</s:String>
+	<s:String
+		x:Key="columnView_Widget">Dữ liệu điều khiển</s:String>
+	<s:String
+		x:Key="columnView_Items">Mã phân loại hệ thống</s:String>
+	<s:String
+		x:Key="columnView_Default">Giá trị mặc định</s:String>
+	<s:String
+		x:Key="columnView_Max">Giá trị lớn nhất</s:String>
+	<s:String
+		x:Key="columnView_Min">Giá trị nhỏ nhất</s:String>
+	<s:String
+		x:Key="columnView_IZoom">Khi biên tập mở cửa sổ</s:String>
+	<s:String
+		x:Key="columnView_CZoom">Khi tra tìm mở cửa sổ</s:String>
+	<s:String
+		x:Key="columnView_ChkRef">Kiểm tra mang ra giá trị</s:String>
+	<s:String
+		x:Key="columnView_ProgRel">Chương trình liên quan</s:String>
+	<s:String
+		x:Key="columnView_Format">Hiển thị chương trình</s:String>
+	<s:String
+		x:Key="columnView_Ref">Cột tham khảo</s:String>
+	<s:String
+		x:Key="columnView_DepField">Theo tên cột phụ</s:String>
+	<s:String
+		x:Key="columnView_CorresponKey">Giá trị chuyển đối ứng</s:String>
+	<s:String
+		x:Key="columnView_CorresponTable">Dữ liệu tham khảo form</s:String>
+	<s:String
+		x:Key="columnView_CorresponFK">Dữ liệu tham khảo FK</s:String>
+	<s:String
+		x:Key="columnView_CorresponLang">Dữ liệu tham khảo hệ ngôn ngữ</s:String>
+	<s:String
+		x:Key="columnView_CorresponReturn">Dữ liệu tham khảo chuyển về</s:String>
+	<s:String
+		x:Key="columnView_MultiLang">Dữ liệu nhiều ngôn ngữ</s:String>
+	<s:String
+		x:Key="columnView_MultiLangTable">Form nhiều ngôn ngữ</s:String>
+	<s:String
+		x:Key="columnView_MultiLangFK">FK nhiều ngôn ngữ</s:String>
+	<s:String
+		x:Key="columnView_MultiLangLang">Hệ nhiều ngôn ngữ</s:String>
+	<s:String
+		x:Key="columnView_MultiLangReturn">Chuyển về nhiều ngôn ngữ</s:String>
+	<s:String
+		x:Key="columnView_Tree">Kết cấu cây thư mục</s:String>
+	<s:String
+		x:Key="columnView_No">Số thứ tự</s:String>
+	<s:String
+		x:Key="columnView_Type">Loại</s:String>
+	<s:String
+		x:Key="columnView_Status">Mã trạng thái</s:String>
+	<s:String
+		x:Key="columnView_StatusType">Giá trị phân loại hệ thống</s:String>
+	<s:String
+		x:Key="columnView_Desc">Giải thích</s:String>
+	<s:String
+		x:Key="columnView_Help">Mã ghi nhớ</s:String>
+	<s:String
+		x:Key="columnView_HelpDepField">Cột đối ứng</s:String>
+	<s:String
+		x:Key="columnView_HelpCorresponKey">Form mã ghi nhớ</s:String>
+	<s:String
+		x:Key="columnView_HelpTable">Cột tra tìm mã ghi nhớ</s:String>
+	<s:String
+		x:Key="columnView_HelpFK">Cột mã ghi nhớ</s:String>
+	<s:String
+		x:Key="columnView_HelpDLang">Mã ghi nhớ hệ ngôn ngữ</s:String>
+	<s:String
+		x:Key="columnView_HelpReturn">Điều kiện khác</s:String>
+	<s:String
+		x:Key="columnView_CopyName">Mã copy</s:String>
+	<s:String
+		x:Key="columnView_CopyColumnsName">复制字段代号</s:String>
+	<s:String
+		x:Key="columnView_CopyAllColumnsToRecord">复制栏位宣告</s:String>
+	<s:String
+		x:Key="ads_all">Chỉnh thể action</s:String>
+	<s:String
+		x:Key="ads_mi">Biên tập đầu đơn</s:String>
+	<s:String
+		x:Key="ads_di">Biên tập thân đơn</s:String>
+	<s:String
+		x:Key="ads_db">Xem trước thân đơn</s:String>
+	<s:String
+		x:Key="ads_detail">Thiết lập Action</s:String>
+	<s:String
+		x:Key="ads_ActionDelConfirm">Xóa thiết lập {0} ？</s:String>
+	<s:String
+		x:Key="Widget_TabIndex">Tab order specification(控件顺序)</s:String>
+	<s:String
+		x:Key="Widget_Label">Label(标签)</s:String>
+	<s:String
+		x:Key="Widget_ButtonEdit">ButtonEdit(编辑开窗)</s:String>
+	<s:String
+		x:Key="Widget_CheckBox">CheckBox(多选)</s:String>
+	<s:String
+		x:Key="Widget_ComboBox">ComboBox(下拉选单)</s:String>
+	<s:String
+		x:Key="Widget_DateEdit">DateEdit(日期)</s:String>
+	<s:String
+		x:Key="Widget_Edit">Edit(文字编辑)</s:String>
+	<s:String
+		x:Key="Widget_TextEdit">TextEdit(多行文字)</s:String>
+	<s:String
+		x:Key="tt_ReferenceLabel">Cột tham khảo</s:String>
+	<s:String
+		x:Key="tt_MultiLangButtonEdit">Cột dữ liệu đa ngôn ngữ</s:String>
+	<s:String
+		x:Key="tt_ButtonQuery">Cột tra liên quan</s:String>
+	<s:String
+		x:Key="CE_ShowParameter">Coó thể xem biến số</s:String>
+	<s:String
+		x:Key="CE_ModuleVariableTitle">[Biến số module]</s:String>
+	<s:String
+		x:Key="CE_LocalVariableTitle">[Biến số khu vực]</s:String>
+	<s:String
+		x:Key="CE_FunctionInfo">Thông tin hàm thức</s:String>
+	<s:String
+		x:Key="CE_AddFunction">Thêm hàm thức</s:String>
+	<s:String
+		x:Key="CE_CopyFunction">Copy hàm thức</s:String>
+	<s:String
+		x:Key="CE_DeleteFunction">Xóa hàm thức</s:String>
+	<s:String
+		x:Key="CE_ShowField">Hiển thị thông tin cột</s:String>
+	<s:String
+		x:Key="CE_CopyContent">Copy nội dung</s:String>
+	<s:String
+		x:Key="CE_FunctionName">Tên hàm thức</s:String>
+	<s:String
+		x:Key="CE_FunctionType">Loại hình</s:String>
+	<s:String
+		x:Key="CE_FunctionDescription">Giải thích hàm thức</s:String>
+	<s:String
+		x:Key="CE_FunctionScope">Lưu đẳng cấp</s:String>
+	<s:String
+		x:Key="CE_FunctionStructure">Kết cấu chương trình</s:String>
+	<s:String
+		x:Key="CE_InputMessage">Xin nhập nội dung ở đây...</s:String>
+	<s:String
+		x:Key="CE_ShowGlobals">Biến số toàn khu vực</s:String>
+	<s:String
+		x:Key="CE_Cite">Tham chiếu chương trình chuẩn</s:String>
+	<s:String
+		x:Key="CE_UnCite">Hủy tham chiếu</s:String>
+	<s:String
+		x:Key="CE_Delete">Xóa nội dung</s:String>
+	<s:String
+		x:Key="CE_UnDelete">Hủy nội dung</s:String>
+	<s:String
+		x:Key="CE_Cut">Cắt</s:String>
+	<s:String
+		x:Key="CE_Copy">Copy</s:String>
+	<s:String
+		x:Key="CE_Paste">Dán</s:String>
+	<s:String
+		x:Key="CE_Block">Thực hiện chọn khu vực chú giải</s:String>
+	<s:String
+		x:Key="CE_UnBlock">Loại bỏ khu vực chú giải</s:String>
+	<s:String
+		x:Key="CE_KeywordConvert">Nội dung quan trọng chuyển thành viết hoa</s:String>
+	<s:String
+		x:Key="CE_ProgramStructure">Kết cấu chương trình</s:String>
+	<s:String
+		x:Key="CE_RefreshList">Sắp xếp lại danh sách hàm thức</s:String>
+	<s:String
+		x:Key="CE_FunctionOrder">Enable to Change Function Order</s:String>
+	<s:String
+		x:Key="CE_Refresh">Sắp xếp lại giao diện</s:String>
+	<s:String
+		x:Key="CE_ToogleDiffEditable">Toogel Diff Edit Mode</s:String>
+	<s:String
+		x:Key="CE_ModifyFunction">Sửa thông tin hàm thức</s:String>
+	<s:String
+		x:Key="CE_CodeCompletion">Bổ sung chữ</s:String>
+	<s:String
+		x:Key="CE_ShowFunction">Tra tìm hàm thức</s:String>
+	<s:String
+		x:Key="CE_OftenUsed">组件常用功能</s:String>
+	<s:String
+		x:Key="CE_MarkFrame">Độ vững chắc kết cấu khối chú giải</s:String>
+	<s:String
+		x:Key="CE_TGLIsEmpty">Tìm không thấy TGL hay nội dung là trống</s:String>
+	<s:String
+		x:Key="CE_GoToLineTitle">Đến…</s:String>
+	<s:String
+		x:Key="CE_LineLimit">Chỉ định số hàng : (1 ~ {0})</s:String>
+	<s:String
+		x:Key="CE_CodeSample">Chèn đoạn chương trình "{0}"</s:String>
+	<s:String
+		x:Key="CE_CiteOrNot">Dẫn dụng</s:String>
+	<s:String
+		x:Key="CE_ChageSessionTitle">Sửa khung chương trình</s:String>
+	<s:String
+		x:Key="CE_AfterChangeSession">Bạn sắp thoát khỏi khung chương trình này! Sau thay đổi, bất kỳ điều chỉnh quy cách nào đều không phát sinh chương trình liên quan, vậy có muốn thay đồi không?</s:String>
+	<s:String
+		x:Key="CE_SelfKey">自建字库</s:String>
+	<s:String
+		x:Key="CE_GeneroKey">Genero关键词</s:String>
+	<s:String
+		x:Key="CE_ReturnToStandard">客制还原标准</s:String>
+	<s:String
+		x:Key="CE_DiffSource">差异比对来源</s:String>
+	<s:String
+		x:Key="CE_DiffTarget">差异比对目标</s:String>
+	<s:String
+		x:Key="CE_DiffSingleContent">单一内容差异比对</s:String>
+	<s:String
+		x:Key="CE_DiffOldAndNewStandardContent">新旧标准内容差异</s:String>
+	<s:String
+		x:Key="CE_SuggestReturnToStandard">建议还原标准</s:String>
+	<s:String
+		x:Key="CE_BeforePath">Patch前标准内容</s:String>
+	<s:String
+		x:Key="CE_AfterPath">Patch后标准内容</s:String>
+	<s:String
+		x:Key="CE_ConfirmDiffSave">是否要储存差异比对内容？</s:String>
+	<s:String
+		x:Key="CE_DiffBlockCopyContent">区块差异复制</s:String>
+	<s:String
+		x:Key="CE_DiffLineCopyContent">单行差异复制</s:String>
+	<s:String
+		x:Key="CE_DiffCopyNewFunction">同步function</s:String>
+	<s:String
+		x:Key="CE_DiffSearchToNext">下一个搜寻点</s:String>
+	<s:String
+		x:Key="CE_DiffSearchToPrevious">前一个搜寻点</s:String>
+	<s:String
+		x:Key="CE_DiffBaseOnStandard">以标准为基础重客制</s:String>
+	<s:String
+		x:Key="CE_DiffSourceCustom">差异比对来源(客制)</s:String>
+	<s:String
+		x:Key="CE_DiffTargetStandars">差异比对目标(标准)</s:String>
+	<s:String
+		x:Key="CE_FullTextKeywordConvert">全文关键字转为大写</s:String>
+	<s:String
+		x:Key="CE_GenerateSqlTemplate">产生简易SQL框架</s:String>
+	<s:String
+		x:Key="FGL_AddItem">Thêm mới hạng mục</s:String>
+	<s:String
+		x:Key="FGL_CreateFunction">Phát sinh chương trình</s:String>
+	<s:String
+		x:Key="Con_Login">Kết nối đến T100</s:String>
+	<s:String
+		x:Key="Button_Close">Đóng</s:String>
+	<s:String
+		x:Key="Button_OK">Xác nhận</s:String>
+	<s:String
+		x:Key="Button_Cancel">Hủy</s:String>
+	<s:String
+		x:Key="Button_Apply">Sử dụng</s:String>
+	<s:String
+		x:Key="Button_ConnectionTest">连线测试</s:String>
+	<s:String
+		x:Key="Button_Clear">清除</s:String>
+	<s:String
+		x:Key="Message_Error">Lỗi</s:String>
+	<s:String
+		x:Key="Message_Message">Thông tin</s:String>
+	<s:String
+		x:Key="Message_Inform">Chỉ thị</s:String>
+	<s:String
+		x:Key="Message_Warning">Cảnh cáo</s:String>
+	<s:String
+		x:Key="Message_ConfirmExit">Đóng cửa sổ sẽ dẫn đến mất dữ liệu chưa lưu, có đóng không?</s:String>
+	<s:String
+		x:Key="Message_ConfirmExitTitle">Đóng chương trình</s:String>
+	<s:String
+		x:Key="Message_AfterUpdateBasicData">Hoàn thành cập nhật dữ liệu cơ bản chương trình</s:String>
+	<s:String
+		x:Key="Message_BasicDataNotFound">基础数据不存在</s:String>
+	<s:String
+		x:Key="Message_BasicDataUnzipFailed">解压缩失败</s:String>
+	<s:String
+		x:Key="Message_BasicDataVersionNotFound">缺少基础数据版本信息！</s:String>
+	<s:String
+		x:Key="Message_BasicDataVersionNotMatch">基础数据版本 {0} 与设计器版本 {1}.{2} 不同！</s:String>
+	<s:String
+		x:Key="Message_BasicDataNotComplete">基础数据不完整，请重新下载</s:String>
+	<s:String
+		x:Key="Message_BasicDataLoadFailed">基础数据加载失败：
+"{0}"</s:String>
+	<s:String
+		x:Key="Message_BasicDataUpdateFailed">更新基础数据发生错误：
+"{0}"</s:String>
+	<s:String
+		x:Key="Message_BasicDataRedownloading">{0}，
+即将重新下载</s:String>
+	<s:String
+		x:Key="Message_BeforeRedownloadingBasicData">读取基础数据发生错误，即将重新下载</s:String>
+	<s:String
+		x:Key="Message_MissBasicData">Thiếu dữ liệu cột, xin tải lại dữ liệu cơ bản. 
+ nếu như lỗi này vẫn phát sinh, xin liên hệ nhân viên quản lý</s:String>
+	<s:String
+		x:Key="Message_AfterUpdateBasicDataFailed">Cập nhật dữ liệu cơ bản thất bại, xin doadload lại</s:String>
+	<s:String
+		x:Key="Message_UpdateBasicDataOrNot">Đã phát sinh mới dữ liệu cơ sở, có tải về hay không?</s:String>
+	<s:String
+		x:Key="Message_ApplicationErrorMessage">Lỗi chương trình !! Nếu lỗi này xảy ra nhiều lần, hãy đóng chương trình này.
+ Tiếp tục chọn (Y), đóng chương trình chọn (N)</s:String>
+	<s:String
+		x:Key="Message_ApplicationErrorTitle">Chương trình phát sinh lỗi</s:String>
+	<s:String
+		x:Key="Message_ExitBeforeSave">Chú ý: Chương trình này sẽ đóng lại, tất cả những thay đổi chưa lưu lại sẽ bị mất!
+ Có xác nhận đóng chương trình không?</s:String>
+	<s:String
+		x:Key="Message_FileNotExist">Hãy đặt tập tin này ( '{0}') trong thư mục C:\TT</s:String>
+	<s:String
+		x:Key="Message_MissingContent">Thiếu nội dung yêu cầu ( '{0}'), xin vui lòng tải lại. 
+, nếu tình trạng này xảy ra nhiều lần, xin vui lòng thông báo cho quản trị viên</s:String>
+	<s:String
+		x:Key="Message_DownloadDataBeforeCoding">Trước khi khai phá cần phải tải dữ liệu cơ sở về trước</s:String>
+	<s:String
+		x:Key="Message_NameAlreadyInUse">Mã số: {0} đã được sử dụng!Hãy đổi tên.</s:String>
+	<s:String
+		x:Key="Message_SaveFile">{0} nội dung đã được thay đổi, trước khi đóng xin hãy lưu tập tin lại?</s:String>
+	<s:String
+		x:Key="Message_SaveBeforeClose">Đóng tập tin</s:String>
+	<s:String
+		x:Key="Message_SaveBeforeUpload">Trước khi tải lên có lưu tập tin lại không?</s:String>
+	<s:String
+		x:Key="Message_ConfirmBeforeUpload_SD">Xác nhận kích thước tải lên: {0}?</s:String>
+	<s:String
+		x:Key="Message_ConfirmBeforeUpload_PR">Xác nhận chương trình tải lên: {0}?</s:String>
+	<s:String
+		x:Key="Message_ConfirmBeforePrecompile_SD">Sure to precompile the program: {0}?</s:String>
+	<s:String
+		x:Key="Message_ConfirmBeforePrecompile_PR">Sure to precompile the specification: {0}?</s:String>
+	<s:String
+		x:Key="Message_UploadWarning">* Lưu ý:</s:String>
+	<s:String
+		x:Key="Message_FreeStyle">Chương trình này là FreeStyle</s:String>
+	<s:String
+		x:Key="Message_SectionBreak">Chương trình này là SectionBreak</s:String>
+	<s:String
+		x:Key="Message_CodeUploaWarning">Nếu tăng giảm Function hoặc điều chỉnh thông số Function,
+Sau khi khai phá (phát triển) xong, tự chạy mã chương trình r.1 {0} ALL,
+Hãy để chương trình có liên quan có thể được sử dụng bình thường</s:String>
+	<s:String
+		x:Key="Message_FormUploaWarning">Chương trình con / giao diện con / giao diện mở cửa sổ - phần ngôn ngữ của những bộ phận này phải được bao gồm trong chương trình chính thì mới có hiệu lực:
+1. Nếu muốn kiểm tra kết quả chạy của một chương trình , xin hãy chạy chương trình r.f$
+2. Nếu cần kiểm tra toàn bộ hệ thống, xin hãy chạy r.f$ chương trình con/ giao diện con/ giao diện cửa sổ</s:String>
+	<s:String
+		x:Key="Message_FormUploaWarning2">The specification changes will affect the program structure. Please re-download the program</s:String>
+	<s:String
+		x:Key="Confirm_DownloadBaseData">Thiếu dữ liệu cơ sở, bây giờ có tải về không?</s:String>
+	<s:String
+		x:Key="Message_BaseDataVersionNotMatch">Dữ liêu cơ sở phiên bản không đồng nhất, có thực hiện tải mới không?</s:String>
+	<s:String
+		x:Key="Message_ConfirmRebuild">Xác nhận xóa chương trình?   </s:String>
+	<s:String
+		x:Key="Message_WriteTzpFail">Không thể ghi {0}! Hãy chắc chắn rằng các tập tin có quyền truy cập!</s:String>
+	<s:String
+		x:Key="Message_NotConnect">Không kết nối</s:String>
+	<s:String
+		x:Key="Message_ConnectInfo">[User: {0}] 	 [Khu vực: {1}] 	 [Server: {2}]</s:String>
+	<s:String
+		x:Key="Message_NoCitedProg">Không thể tìm thấy tập tin tham khảo: {0}!
+ xin vui lòng liên hệ với người quản trị để giải quyết vấn đề này trước khi tiếp tục</s:String>
+	<s:String
+		x:Key="Message_ZipFileNotEnough">{0} thiếu các tập tin cần thiết sau đây: {1} {2} {3} Hãy liên hệ với người quản trị để giải quyết vấn đề này mới có thể tiếp tục</s:String>
+	<s:String
+		x:Key="Message_SameFileNameAlreadyOpened">已开启过同名档案：{0}</s:String>
+	<s:String
+		x:Key="Message_LoadingFailed">加载失败</s:String>
+	<s:String
+		x:Key="Message_StructureError">程序结构处理发生问题：{0}</s:String>
+	<s:String
+		x:Key="Message_SetProgTypeError">无法设定程序样版属性</s:String>
+	<s:String
+		x:Key="Message_ParsingUnFinish">解析尚未完成...，请稍后再次执行</s:String>
+	<s:String
+		x:Key="Message_UnexpectedTreeItem">非预期 TreeItem 类型</s:String>
+	<s:String
+		x:Key="Message_NodeMoveError">程序结构移动发生错误：
+{0}</s:String>
+	<s:String
+		x:Key="Message_BasicDataForCode">基础数据读取发生错误，辅助功能可能无法正常执行。
+请更新基础数据。
+
+(如果此错误重复发生，请联络系统管理员)</s:String>
+	<s:String
+		x:Key="Message_ExportSpecError">无法写入档案，请确认 {0} 有写入权限</s:String>
+	<s:String
+		x:Key="Message_ExportSaveSpecError">{0} 写入失败</s:String>
+	<s:String
+		x:Key="Message_ExportSucess">{0} 输出完成</s:String>
+	<s:String
+		x:Key="Message_ParseError">程序结构解析时发生错误，请联络系统管理员</s:String>
+	<s:String
+		x:Key="Message_CantNull">此栏不能为空！</s:String>
+	<s:String
+		x:Key="Message_CantEmpty">此栏不能为空字符串！</s:String>
+	<s:String
+		x:Key="Message_NotExist">不存在</s:String>
+	<s:String
+		x:Key="Message_NameAlreadyExist">名称重复</s:String>
+	<s:String
+		x:Key="Message_NameAlreadyExistInTemplate">样版中已存在相同名称函式</s:String>
+	<s:String
+		x:Key="Message_CantEmptyOrNull">Trường này không thể là null hoặc chuỗi rỗng!</s:String>
+	<s:String
+		x:Key="Message_CantContainDot">不能包含句点( "." )！</s:String>
+	<s:String
+		x:Key="Message_FunctionNameFormat">Quy ước đặt tên: xxx ()</s:String>
+	<s:String
+		x:Key="Message_FunctionNameFormat_1">Ký tự đặc biệt không được phép</s:String>
+	<s:String
+		x:Key="Message_MustContainParameter">Phải chứa các định nghĩa tham số! (Ví dụ: axmt410 (), axmt410 (p_flag))</s:String>
+	<s:String
+		x:Key="Message_NameMustUnique">Tên chức năng không thể được lặp đi lặp lại!</s:String>
+	<s:String
+		x:Key="Message_NameStartRule">Tên chức năng tùy chỉnh phải bắt đầu bằng "tên chương trình" !</s:String>
+	<s:String
+		x:Key="Message_NameMaxLengthRule">Tên chức năng tùy chỉnh phải nhỏ hơn 50 ký tự!</s:String>
+	<s:String
+		x:Key="Message_NameNoBlackSpace">Tên chức năng tùy chỉnh được xác định không thể chứa trống!</s:String>
+	<s:String
+		x:Key="Message_ConfirmBeforeClose">Đóng cửa sổ này sẽ dẫn đến sự mất mát trực tiếp dữ liệu, xác định đóng?</s:String>
+	<s:String
+		x:Key="Message_MustContainPoundBeforeLine">Chú thích phải bắt đầu từ #</s:String>
+	<s:String
+		x:Key="Message_ProgRelAlreadyExists">Action này thuộc về {0} ô chuỗi kiễm, xin hãy xóa trong giao diện đi!</s:String>
+	<s:String
+		x:Key="Message_DependFieldAlreadyUsedByOther">{0} đã được sử dụng các trường tham chiếu khác! Không thể thiết lập tương đồng tên tập tin đính kèm giống với trường tham khảo khác.</s:String>
+	<s:String
+		x:Key="Message_ConfirmUploadTsdEvenValidationFail">Xác minh quy cách không thành, sau khi tải lên có thể gây ra việc biên dịch thất bại!
+ tiếp tục tải lên, bấm "Có".
+ nhấn "Không" để xem danh sách các lỗi và sửa chữa lỗi.</s:String>
+	<s:String
+		x:Key="Message_NotSetTableAssociation">{0}: Không thiết lập quan hệ Table Schema!</s:String>
+	<s:String
+		x:Key="Message_IncludeCantDelComponent">[{0}] chứa các tập tin kiểm soát Widget hay kiểm soát phiên bản, bạn không thể xóa!</s:String>
+	<s:String
+		x:Key="Message_DuplicateFieldName">{0}: mã kiểm soát trùng lặp, hãy xóa và đổi tên mới!</s:String>
+	<s:String
+		x:Key="Message_CantDeleteFormComponent">Duong lượng chủ yếu của giao diện không thể bị xóa</s:String>
+	<s:String
+		x:Key="Message_CantDeleteStdComponent">Thành phần chương trình tiêu chuẩn không thể bị xóa</s:String>
+	<s:String
+		x:Key="Message_DetailFieldNamePrefix">Tên ô này cần được bắt đầu là "" b_ ""</s:String>
+	<s:String
+		x:Key="Message_FieldNameFormat">Ô phi TABLE_COLUMN, tên kiến nghị là : l_xxx hoặc xxx_desc, nếu không khi chương trình phát sinh sẽ tự lọc ra tên ở dòng cuối cùng.</s:String>
+	<s:String
+		x:Key="Message_ReferenceFieldNameFormat">Tên cách thức của ô nên kết thúc là "" _desc ""</s:String>
+	<s:String
+		x:Key="Message_VersionInCompatible">Tệp {0} là không tương thích với phiên bản hiện tại.
+ phiên bản tập tin: {1} 
+ Designer Version: {2}</s:String>
+	<s:String
+		x:Key="Message_NotInstalled">Phiên bản tương thích chưa được cài đặt trên Designer kết nối.</s:String>
+	<s:String
+		x:Key="Message_TzpNotInWorkspace">{0} không nằm dưới thư mục làm việc, cấm mở.</s:String>
+	<s:String
+		x:Key="Message_ConfirmCreateDirectory">{0} không tồn tại, có thiết lập?</s:String>
+	<s:String
+		x:Key="Message_NotInstallCurrentVersionSpecDesigner">Máy thiết kê phiên bản {0} chưa cài đặt phù hợp</s:String>
+	<s:String
+		x:Key="Message_RemoteVersionNotMatchWorkspaceVersion">{0} của phiên bản này không đáp ứng được các thư mục làm việc hiện tại</s:String>
+	<s:String
+		x:Key="Message_VersionNotFound">Không thể lấy đươc phiên bản máy kết nối</s:String>
+	<s:String
+		x:Key="Message_GetRemoteVersion">取得远程版本</s:String>
+	<s:String
+		x:Key="Message_RemoteHasNewVersion">远程有新版本，联机后将进行更新</s:String>
+	<s:String
+		x:Key="Message_VersionNotFoundInTZS">规格文件未包含版本信息！</s:String>
+	<s:String
+		x:Key="Message_GetVersionButError">取得远程版本时发生错误：</s:String>
+	<s:String
+		x:Key="Message_VersionInCompatibleWarning">开启的设计器版本 v{1} 与远程设计器版本 v{0} 不符合，
+若上传规格及程序可能发生错误!</s:String>
+	<s:String
+		x:Key="Message_ContinueAndIgnoreConnectionError">Có lỗi xảy ra trong khi kiểm tra các bản cập nhật, bỏ qua việc kiểm tra này, nhấn [Yes], trở về sửa đổi [NO]</s:String>
+	<s:String
+		x:Key="Message_ConnectionIsNotValidate">Thiết lập vẫn có lỗi, sửa lại xong xin hãy thử lại!</s:String>
+	<s:String
+		x:Key="Message_ActionHasType">不可在ToolBar上设定type</s:String>
+	<s:String
+		x:Key="Message_MainTableCantChangeName">主表禁止更名</s:String>
+	<s:String
+		x:Key="Message_NotSupportCutContainer">容器不支持剪下功能</s:String>
+	<s:String
+		x:Key="Message_NotSupportCutCantDel">CantDel属性组件不允许剪下</s:String>
+	<s:String
+		x:Key="Message_NotSupportCopyContainer">容器不支持复制功能</s:String>
+	<s:String
+		x:Key="Message_SessionErrorCantSave">Section 标记有问题，无法存盘！</s:String>
+	<s:String
+		x:Key="Message_SessionErrorCantRead">Section 标记有问题，无法开启，请联络管理员！</s:String>
+	<s:String
+		x:Key="Message_TapErrorCantRead">内容有误：{0}，请联络系统管理员！</s:String>
+	<s:String
+		x:Key="Message_CantFindSession">找不到 Section 数据：{0}</s:String>
+	<s:String
+		x:Key="Message_SaveError">"{0}" 写入发生错误</s:String>
+	<s:String
+		x:Key="Message_ADPNameExist">Add Point名称('{0}')重复！</s:String>
+	<s:String
+		x:Key="Message_DelteFailed">"{0}"内容删除失败</s:String>
+	<s:String
+		x:Key="Message_FunctionNotFound">找不到 {0}</s:String>
+	<s:String
+		x:Key="Message_RegFormatError">Regular Expression语法错误，请重新输入</s:String>
+	<s:String
+		x:Key="Message_IllegalInput">不合法的输入值</s:String>
+	<s:String
+		x:Key="Message_InputRange">输入范围必须介于{0} - {1}</s:String>
+	<s:String
+		x:Key="Message_ConfirmDelete">确认删除：
+"{0}"？</s:String>
+	<s:String
+		x:Key="Message_CantGetFunction">无法取得函式信息</s:String>
+	<s:String
+		x:Key="Message_CreateFailed">新增失败：{0}</s:String>
+	<s:String
+		x:Key="Message_NotProduce">不进行自动产生</s:String>
+	<s:String
+		x:Key="Message_CantInput">光标所在禁止编辑，无法插入程序代码</s:String>
+	<s:String
+		x:Key="Message_DuplicatedTag">TGL Tag 重复设定：{0}</s:String>
+	<s:String
+		x:Key="Message_SetArgError">无法设定接收参数起始顺序</s:String>
+	<s:String
+		x:Key="Message_SetFreeStyleError">无法设定FreeStyle属性</s:String>
+	<s:String
+		x:Key="Message_CheckUpdateFailed">检查更新失败！</s:String>
+	<s:String
+		x:Key="Message_CheckerStartFailed">更新程序无法启动：</s:String>
+	<s:String
+		x:Key="Message_CancelUpdate">取消更新</s:String>
+	<s:String
+		x:Key="Message_UpdateFailed">下载更新发生错误！请稍后再进行更新。
+如果此状况重复发生，请联络系统管理员
+
+(错误讯息：{0})</s:String>
+	<s:String
+		x:Key="Message_StartError">无法启动主程序：</s:String>
+	<s:String
+		x:Key="Message_UpdateFinished">更新完成！</s:String>
+	<s:String
+		x:Key="Message_Number">数值</s:String>
+	<s:String
+		x:Key="Message_MustHave">必填</s:String>
+	<s:String
+		x:Key="Message_NotEmpty">非空格</s:String>
+	<s:String
+		x:Key="Message_OnlyAllowNumber">Chỉ cho phép dạng số.</s:String>
+	<s:String
+		x:Key="Message_ActionNameSyntaxIncorrent">Chỉ cho phép chữ số và dấu gạch dưới</s:String>
+	<s:String
+		x:Key="Message_FieldNameSyntaxIncorrent">Chỉ cho phép chữ tiếng Anh và số, dấu gạch dưới, dấu chấm (.)</s:String>
+	<s:String
+		x:Key="Message_PathFormatIncorrent">Chỉ cho phép chữ cái tiếng Anh, số, dấu gạch dưới (_) và dấu gạch ngang (-)</s:String>
+	<s:String
+		x:Key="Message_ValueMustStartWith">Thuộc tính {0} phải bắt đầu với một {1}</s:String>
+	<s:String
+		x:Key="Message_CreateLinkFinish">Đã thiết lập đường dẫn Desktop</s:String>
+	<s:String
+		x:Key="Message_ReorderTabIndex">Có tự động sắp xếp lại tabIndex?</s:String>
+	<s:String
+		x:Key="Message_SetFreeStyleWarning">Bạn muốn thay đổi các thiết kế của chương trình này thành Free Style! Sau khi thay đổi, bất kỳ điều chỉnh quy cách nào cũng sẽ không còn sản xuất các mã tương ứng, xác định bạn muốn thay đổi?</s:String>
+	<s:String
+		x:Key="Message_CodeTemplateFileNotFound">Không thể tìm thấy danh sách các chương trình như bản mẫu, chương trình sử dụng danh sách mặc định của mô hình.
+Kiến nghị từ bảng chức năng -&gt; Dữ liệu cơ sở -&gt; Cập nhật dữ liệu cơ sở, trong mục chọn, thực hiện cập nhật.</s:String>
+	<s:String
+		x:Key="Message_CheckGDCFailedTitle">Không phát hiện GDC</s:String>
+	<s:String
+		x:Key="Message_CheckGDCFailed">Xin hãy khởi động GDC trước, chỉ định thao tác thì mới có thể thực hiện đúng.</s:String>
+	<s:String
+		x:Key="Message_CheckGDCAgain">Bây giờ có phải xem xét kiểm tra lại hay không?</s:String>
+	<s:String
+		x:Key="Message_CancelExecute">Hủy bỏ việc thực hiện</s:String>
+	<s:String
+		x:Key="Message_KeepExecute">Cưỡng chế thi hành</s:String>
+	<s:String
+		x:Key="Message_TryAgain">Kiểm tra lại</s:String>
+	<s:String
+		x:Key="Message_NotBooking">Chưa kiểm xuất</s:String>
+	<s:String
+		x:Key="Message_PropertyChange">Lưu ý: Sau khi thiết lập thay đổi, bạn phải tải lại chương trình để có hiệu lực.</s:String>
+	<s:String
+		x:Key="Message_ChageTableRelation">Bạn không nên đặt PK và FK, và trừ khi bạn muốn thiết lập khác r.t</s:String>
+	<s:String
+		x:Key="Message_QSetting">Xác định việc thực hiện "Thiết lập tra liên quan cấp trên của loại Q"?
+ (Lưu ý: Sau khi thay đổi các thiết lập, xin vui lòng tải về lại chương trình)</s:String>
+	<s:String
+		x:Key="Message_LoginAccountException">账号密码错误</s:String>
+	<s:String
+		x:Key="Message_SocketException">Kết nối thất bại, xin vui lòng kết nối lại
+若以下错误重复出现，请联络系统管理员：</s:String>
+	<s:String
+		x:Key="Message_SocketTimeoutException">Connection timed out, xin vui lòng kết nối lại</s:String>
+	<s:String
+		x:Key="Message_ProgInfoFreeStyleAndSectionFlag">Thông tin chương trình: Section đã được sửa đổi qua, đã chuyển thành FreeStyle</s:String>
+	<s:String
+		x:Key="Message_ProgInfoFreeStyle">Thông tin chương trình: Đã chuyển thành FreeStyle</s:String>
+	<s:String
+		x:Key="Message_ProgInfoSectionFlag">Thông tin chương trình: Section đã được sửa đổi</s:String>
+	<s:String
+		x:Key="Message_RegenComfirm">Xin hỏi có phát sinh lại chương trình "{0}" không?
+ 
+ Sau khi phát sinh lại chương trình, xin vui lòng tải về lại chương trình</s:String>
+	<s:String
+		x:Key="Message_PreviewForm">Nếu kết quả xem trước đã ok, khuyến nghị sau khi tải lên nên xem lại.
+Nếu giao diện xem trước không xuất hiện, xin kiểm tra kết nối.</s:String>
+	<s:String
+		x:Key="Message_ThisVersionModifyConfirm">注意事项:
+  1.此功能是为了解决客制过程中刚好发生标准add-point需要除错的情境, 所以若是正常的开发上传, 请透过正常的上传功能即可.
+  2.当标准签出所修改的add-point刚好是Client端客制的add-point, 则更新后会以客制add-point为主.
+  3.标准签出的目的是为了排除标准程序的问题, 建议不要增减画面控件, 以免上传更新后出现画面与程序不一致的情况.
+  4.若标准签出后就上Patch, 则此更新功能会因为版次不同而被系统挡住.
+  请问是否要继续进行[本版次调整更新]?</s:String>
+	<s:String
+		x:Key="Message_TopstdCantSetFreestyle">topstd不能转freestyle</s:String>
+	<s:String
+		x:Key="Message_TopstdCantChangeProgramTemplate">topstd不能更改程序样板</s:String>
+	<s:String
+		x:Key="Message_TopstdCantChangeStartarg">topstd不能设定保留参数</s:String>
+	<s:String
+		x:Key="Message_Saved">储存完成：{0}</s:String>
+	<s:String
+		x:Key="Message_UnknownFileType">未知文件类型</s:String>
+	<s:String
+		x:Key="Message_NecessaryFileMssing">缺少作业必要信息，请重新下载，或联络管理员</s:String>
+	<s:String
+		x:Key="Message_CitedFileMssing">缺少引用来源档案：{0}</s:String>
+	<s:String
+		x:Key="Message_FileMssing">缺少档案：{0}
+请重新下载基础数据，或联络管理员</s:String>
+	<s:String
+		x:Key="Message_FileContentError">数据有误，请重新下载，或联络管理员</s:String>
+	<s:String
+		x:Key="Message_CitedFileContentError">参考源数据有误，请重新下载，或联络管理员</s:String>
+	<s:String
+		x:Key="Message_TreeNameIllegal">s_browse 名称固定为样版中树状结构使用</s:String>
+	<s:String
+		x:Key="Message_RepeatInScrollGrid">放置于 ScrollGrid 中，repeat 必要为 true</s:String>
+	<s:String
+		x:Key="Message_DiffCopyUnEditable">复制目的区域包含不可编辑区域，请重新选择复制来源范围</s:String>
+	<s:String
+		x:Key="Message_SpecPKNotNull">此栏位为Key值, 建议设定为必要栏位(not null), 请问是否确定要取消勾选?</s:String>
+	<s:String
+		x:Key="Message_SpecReqNotNull">此栏位为必要栏位(not null), 请问是否确定要取消勾选?</s:String>
+	<s:String
+		x:Key="Message_KeyWordNotNull">请输入搜寻内容。</s:String>
+	<s:String
+		x:Key="Message_noError">检核无逻辑结构错误</s:String>
+	<s:String
+		x:Key="Message_CannotFindEndIF">第{0}行IF找不到对应的END IF</s:String>
+	<s:String
+		x:Key="Message_CannotFindIF">第{0}行END IF找不到对应的IF</s:String>
+	<s:String
+		x:Key="Message_ConnectionOK">连线成功</s:String>
+	<s:String
+		x:Key="Message_InvalidReferenceFieldNameSuffix">参考字段的控件名称结尾若不是"_desc", 则参考字段的设置无作用</s:String>
+	<s:String
+		x:Key="Message_ChangeLanguageWarning">温馨提示: 变更语言别请依下列步骤进行</s:String>
+	<s:String
+		x:Key="Message_ChangeLanguageWarning1">1.请到Windows控制面板[地区与语言]确认已安装目标语言包</s:String>
+	<s:String
+		x:Key="Message_ChangeLanguageWarning2">2.请到[用户数据设置作业(azzi800)]变更使用语言</s:String>
+	<s:String
+		x:Key="Message_ChangeLanguageWarning3">3.重启设计器</s:String>
+	<s:String
+		x:Key="Message_ChangeLanguageWarning4">4.到设计器中更新基础数据</s:String>
+	<s:String
+		x:Key="Message_UnsupportedLanguage">警告: 设计器未支持此语言别，将以英文显示!!!</s:String>
+	<s:String
+		x:Key="Message_TableIsExist">表格已存在</s:String>
+	<s:String
+		x:Key="Message_SectionVerify">您没有解开此程序框架的授权，请找有权限的主管透过adzi052(解开程序框架授权作业)进行授权</s:String>
+	<s:String
+		x:Key="Message_SectionVerifyWarning">注意:取得解开程序框架授权后，必须重新下载程序才会生效</s:String>
+	<s:String
+		x:Key="Message_CodeNotBooking">程式未签出，请先签出程式后再点选上传规格并产生程式功能</s:String>
+	<s:String
+		x:Key="Message_AdjustContainerBlankArea">确认要缩小额外的空白区域？</s:String>
+	<s:String
+		x:Key="Message_TapSrcIsNull">此函式不存在tap.src中，請至4gl.src來源區域取得tap，重命名為tap.src檔，更新至客戶環境tap目錄下後，重新下載差異比對檔案</s:String>
+	<s:String
+		x:Key="Message_FunctionIsExistCanNotSync">Function已存在，不可同步</s:String>
+	<s:String
+		x:Key="Message_FunctionIsExistCanNotCopy">Function不存在，無法複製</s:String>
+	<s:String
+		x:Key="Message_BindSelection">選擇的控件已被其它控件綁定，是否要取代原先的綁定？</s:String>
+	<s:String
+		x:Key="Message_TableNotFound">您开启的 {0} 规格档找不到所需要的表格基础资料：{1}，请重新更新基础资料。</s:String>
+	<s:String
+		x:Key="Message_BasicDataUpdating">基础资料更新中...</s:String>
+	<s:String
+		x:Key="WinTitle_TextStringSetting">Thiết lập đa ngôn ngữ</s:String>
+	<s:String
+		x:Key="WinTitle_PreviewSpec">Thông số kỹ thuật Xem trước</s:String>
+	<s:String
+		x:Key="WinTitle_Delete">Xóa bỏ</s:String>
+	<s:String
+		x:Key="WinTitle_SearchBoxTitle">Tìm kiếm</s:String>
+	<s:String
+		x:Key="WinTitle_MainTitle">Designer T100 ({0}) Platform: {1} Thông tin kết nối: {2}</s:String>
+	<s:String
+		x:Key="WinTitle_Close">Đóng</s:String>
+	<s:String
+		x:Key="WinTitle_SearchKeySettingTitle">正规化搜寻条件设定</s:String>
+	<s:String
+		x:Key="Search_BeginSearch">Bắt đầu tìm kiếm</s:String>
+	<s:String
+		x:Key="Search_CurrentDocument">Văn kiện hiện tại</s:String>
+	<s:String
+		x:Key="Search_AllOpenDocument">Những văn kiện đã khởi động</s:String>
+	<s:String
+		x:Key="Search_Previous">Trước</s:String>
+	<s:String
+		x:Key="Search_Next">Kế tiếp</s:String>
+	<s:String
+		x:Key="Search_ProgramName">Mã chương trình</s:String>
+	<s:String
+		x:Key="Search_Source">Nguồn</s:String>
+	<s:String
+		x:Key="Search_Match">Phù hợp</s:String>
+	<s:String
+		x:Key="Search_MatchCase">Phù hợp viết hoa viết thường</s:String>
+	<s:String
+		x:Key="Search_Reg">Phương pháp hiển thị chính quy (Regular Expression)</s:String>
+	<s:String
+		x:Key="Search_Spec">搜寻内容包含规格</s:String>
+	<s:String
+		x:Key="Search_EditableOnly">Vị trí nằm trong khu vực có thể chỉnh sửa</s:String>
+	<s:String
+		x:Key="Replace_Notice">Lưu ý: '{0}' Công năng chỉ có hiệu quả với khu vực có thể chỉnh sửa!</s:String>
+	<s:String
+		x:Key="Items_Add">Thêm mới</s:String>
+	<s:String
+		x:Key="Items_Delete">Xóa bỏ</s:String>
+	<s:String
+		x:Key="Items_Modify">Sửa đổi</s:String>
+	<s:String
+		x:Key="Items_MoveUp">Lên</s:String>
+	<s:String
+		x:Key="Items_MoveDown">Xuống</s:String>
+	<s:String
+		x:Key="Color_black">黑</s:String>
+	<s:String
+		x:Key="Color_white">白</s:String>
+	<s:String
+		x:Key="Color_red">红</s:String>
+	<s:String
+		x:Key="Color_green">绿</s:String>
+	<s:String
+		x:Key="Color_yellow">黄</s:String>
+	<s:String
+		x:Key="Color_magenta">洋红</s:String>
+	<s:String
+		x:Key="Color_blue">蓝</s:String>
+	<s:String
+		x:Key="Color_cyan">青</s:String>
+	<s:String
+		x:Key="ItemProperty_Widget">控件</s:String>
+	<s:String
+		x:Key="ItemProperty_title">标题</s:String>
+	<s:String
+		x:Key="ItemProperty_text">说明</s:String>
+	<s:String
+		x:Key="ItemProperty_comment">注解</s:String>
+	<s:String
+		x:Key="ItemProperty_items">资料清单</s:String>
+	<s:String
+		x:Key="ItemProperty_case">大小写</s:String>
+	<s:String
+		x:Key="ItemProperty_noEntry">不可输入</s:String>
+	<s:String
+		x:Key="ItemProperty_notNull">不可为空</s:String>
+	<s:String
+		x:Key="ItemProperty_notEditable">不可编辑</s:String>
+	<s:String
+		x:Key="ItemProperty_invisible">资料不可视</s:String>
+	<s:String
+		x:Key="ItemProperty_action">动作</s:String>
+	<s:String
+		x:Key="ItemProperty_image">图片</s:String>
+	<s:String
+		x:Key="ItemProperty_scroll">卷动</s:String>
+	<s:String
+		x:Key="ItemProperty_step">间隔</s:String>
+	<s:String
+		x:Key="ItemProperty_sliderOrientation">滑块方向</s:String>
+	<s:String
+		x:Key="ItemProperty_valueMin">最小值</s:String>
+	<s:String
+		x:Key="ItemProperty_valueMax">最大值</s:String>
+	<s:String
+		x:Key="ItemProperty_justify">对齐</s:String>
+	<s:String
+		x:Key="ItemProperty_componentType">元件型态</s:String>
+	<s:String
+		x:Key="ItemProperty_valueChecked">选取值</s:String>
+	<s:String
+		x:Key="ItemProperty_valueUnchecked">未选取值</s:String>
+	<s:String
+		x:Key="ItemProperty_orientation">方向</s:String>
+	<s:String
+		x:Key="ItemProperty_style">样式</s:String>
+	<s:String
+		x:Key="ItemProperty_splitter">分离拖动</s:String>
+	<s:String
+		x:Key="ItemProperty_tabIndex">tab顺序</s:String>
+	<s:String
+		x:Key="ItemProperty_hidden">控件隐藏</s:String>
+	<s:String
+		x:Key="ItemProperty_rowHeight">行高</s:String>
+	<s:String
+		x:Key="ItemProperty_totalRows">总行数</s:String>
+	<s:String
+		x:Key="ItemProperty_picture">图像</s:String>
+	<s:String
+		x:Key="ItemProperty_format">显示格式</s:String>
+	<s:String
+		x:Key="ItemProperty_aggregate">聚合</s:String>
+	<s:String
+		x:Key="ItemProperty_aggregateName">聚合名称</s:String>
+	<s:String
+		x:Key="ItemProperty_aggregateText">聚合说明</s:String>
+	<s:String
+		x:Key="ItemProperty_aggregateType">聚合类型</s:String>
+	<s:String
+		x:Key="ItemProperty_unsortable">不可重排顺序</s:String>
+	<s:String
+		x:Key="ItemProperty_unmovable">不可移动位置</s:String>
+	<s:String
+		x:Key="ItemProperty_unhidable">不可隐藏</s:String>
+	<s:String
+		x:Key="ItemProperty_unsizable">不可重调大小</s:String>
+	<s:String
+		x:Key="ItemProperty_wantFixedPageSize">固定页面大小</s:String>
+	<s:String
+		x:Key="ItemProperty_doubleClick">双击</s:String>
+	<s:String
+		x:Key="ItemProperty_unsortableColumns">栏位不可重排顺序</s:String>
+	<s:String
+		x:Key="ItemProperty_unsizableColumns">栏位不可重调大小</s:String>
+	<s:String
+		x:Key="ItemProperty_unmovableColumns">栏位不可移动位置</s:String>
+	<s:String
+		x:Key="ItemProperty_unhidableColumns">栏位不可隐藏</s:String>
+	<s:String
+		x:Key="ItemProperty_idColumn">主要栏位</s:String>
+	<s:String
+		x:Key="ItemProperty_parentIdColumn">父项栏位</s:String>
+	<s:String
+		x:Key="ItemProperty_expandedColumn">展开栏位</s:String>
+	<s:String
+		x:Key="ItemProperty_isNodeColumn">节点栏位</s:String>
+	<s:String
+		x:Key="ItemProperty_imageExpanded">展开时的图片</s:String>
+	<s:String
+		x:Key="ItemProperty_imageCollapsed">折叠时的图片</s:String>
+	<s:String
+		x:Key="ItemProperty_imageLeaf">节点图片</s:String>
+	<s:String
+		x:Key="ItemProperty_imageColumn">图片栏位</s:String>
+	<s:String
+		x:Key="ItemProperty_repeat">重复</s:String>
+	<s:String
+		x:Key="ItemProperty_columnCount">栏位数量</s:String>
+	<s:String
+		x:Key="ItemProperty_rowCount">资料列数量</s:String>
+	<s:String
+		x:Key="ItemProperty_stepX">水平(X)间隔</s:String>
+	<s:String
+		x:Key="ItemProperty_stepY">垂直(Y)间隔</s:String>
+	<s:String
+		x:Key="ItemProperty_sizePolicy">尺寸策略</s:String>
+	<s:String
+		x:Key="ItemProperty_autoScale">自动缩放</s:String>
+	<s:String
+		x:Key="ItemProperty_stretch">伸缩</s:String>
+	<s:String
+		x:Key="ItemProperty_gridWidth">网格宽度</s:String>
+	<s:String
+		x:Key="ItemProperty_gridHeight">网格高度</s:String>
+	<s:String
+		x:Key="ItemProperty_minWidth">最小宽度</s:String>
+	<s:String
+		x:Key="ItemProperty_minHeight">最小高度</s:String>
+	<s:String
+		x:Key="ItemProperty_posX">水平位置</s:String>
+	<s:String
+		x:Key="ItemProperty_posY">垂直位置</s:String>
+	<s:String
+		x:Key="ItemProperty_color">字体颜色</s:String>
+	<s:String
+		x:Key="ItemProperty_scrollBars">卷轴</s:String>
+	<s:String
+		x:Key="ItemProperty_tag">标签</s:String>
+	<s:String
+		x:Key="ItemProperty_gridChildrenInParent">子项布局依据父容器对齐</s:String>
+	<s:String
+		x:Key="ItemProperty_width">宽度</s:String>
+	<s:String
+		x:Key="ItemProperty_unitWidth">宽度单位</s:String>
+	<s:String
+		x:Key="ItemProperty_height">高度</s:String>
+	<s:String
+		x:Key="ItemProperty_unitHeight">高度单位</s:String>
+	<s:String
+		x:Key="ItemProperty_wantNoReturns">不允许按下Enter键</s:String>
+	<s:String
+		x:Key="Site_SiteManagerTitle">Người quản lý Platform {0}</s:String>
+	<s:String
+		x:Key="Site_SiteSetting">Thiết lập Platform</s:String>
+	<s:String
+		x:Key="Site_CreateNewFolder">Danh mục mới</s:String>
+	<s:String
+		x:Key="Site_CreateNewSite">Kết nối mới</s:String>
+	<s:String
+		x:Key="Site_Delete">Xóa bỏ</s:String>
+	<s:String
+		x:Key="Site_Rename">Đổi tên</s:String>
+	<s:String
+		x:Key="Site_Copy">Sao chép</s:String>
+	<s:String
+		x:Key="Site_Cancel">Hủy bỏ</s:String>
+	<s:String
+		x:Key="Site_SelectTheSite">Lựa chọn</s:String>
+	<s:String
+		x:Key="Site_ConfirmModify">Lưu</s:String>
+	<s:String
+		x:Key="Site_ServerIP">Platform IP: (*)</s:String>
+	<s:String
+		x:Key="Site_Login">Tài khoản:</s:String>
+	<s:String
+		x:Key="Site_Password">Mật khẩu:</s:String>
+	<s:String
+		x:Key="Site_Workspace">Mục lục công tác: (*)</s:String>
+	<s:String
+		x:Key="Site_Area">Khu vực đăng nhập:</s:String>
+	<s:String
+		x:Key="Site_Zone">Khu vực kiểm tra phiên bản Designer:</s:String>
+	<s:String
+		x:Key="Site_Prompt">Tự động điền</s:String>
+	<s:String
+		x:Key="Site_LoginPrompt">Account:</s:String>
+	<s:String
+		x:Key="Site_PasswordPrompt">Mật khẩu:</s:String>
+	<s:String
+		x:Key="Site_AreaPrompt">Khu vực:</s:String>
+	<s:String
+		x:Key="Site_UpdateURL">Cập nhật URL:</s:String>
+	<s:String
+		x:Key="Site_CheckVersion">Kiểm tra khả năng tương thích phiên bản ...</s:String>
+	<s:String
+		x:Key="Site_CheckUpdateNow">Kiểm tra</s:String>
+	<s:String
+		x:Key="Site_IPAddressIsRequired">Địa chỉ IP bắt buộc phải điền</s:String>
+	<s:String
+		x:Key="Site_IPAddressFormatError">Format of Hot address is not correct</s:String>
+	<s:String
+		x:Key="Site_ZoneIsRequired">Zone bắt buộc phải điền</s:String>
+	<s:String
+		x:Key="Site_AreaIsRequired">Khu vực đăng nhập bắt buộc phải điền</s:String>
+	<s:String
+		x:Key="Site_WorkspaceIsUsed">Mục lục làm việc {0} chỉ định trùng lặp</s:String>
+	<s:String
+		x:Key="Site_workspaceIsRequired">Thư mục làm việc bắt buộc phải điền</s:String>
+	<s:String
+		x:Key="Site_RemoteVersion">Phiên bản Designer kết nối: (*)</s:String>
+	<s:String
+		x:Key="Site_CreateDesktopLink">Thiết lập đường dẫn Desktop</s:String>
+	<s:String
+		x:Key="Site_WorkspaceIsNotExist">Mục lục làm việc không tồn tại</s:String>
+	<s:String
+		x:Key="Site_VersionNotChecked">Chưa lấy được phiên bản Designer kết nối, xin hãy ấn "Kiểm tra" để tự động lấy, hoặc tự điền tay phiên bản chính xác vào.</s:String>
+	<s:String
+		x:Key="Site_ExportSettings">Xuất thiết lập</s:String>
+	<s:String
+		x:Key="Site_ImportSettings">Nhập thiết lập</s:String>
+	<s:String
+		x:Key="Site_Others">Thiết lập nâng cao</s:String>
+	<s:String
+		x:Key="Site_ExtraCommand">Sau khi đăng nhập, thực hiện mệnh lệnh:</s:String>
+	<s:String
+		x:Key="Site_UpdateSetting">Thiết lập cập nhật Designer</s:String>
+	<s:String
+		x:Key="Site_UpdateSettingWarning">Nếu bạn có thắc mắc về thông số cài đặt, liên hệ với quản trị hệ thống của bạn để thực hiện thay đổi.</s:String>
+	<s:String
+		x:Key="Site_ModifyPrompt">Kiến nghị: không phải thay đổi, không thể đăng nhập.</s:String>
+	<s:String
+		x:Key="Site_ModifyPromptWarning">Tôi xác thực đã hiểu những rủi ro và đã xác nhận các nội dung sửa đổi với quản trị hệ thống  
+ 
+ bắt đầu chỉnh sửa?</s:String>
+	<s:String
+		x:Key="Site_ModifyPromptConfirm">Xác nhận thay đổi</s:String>
+	<s:String
+		x:Key="Site_ConnectionList">联机清单</s:String>
+	<s:String
+		x:Key="Connect_topstdLoggedIn">已经取得 topstd 编辑权限</s:String>
+	<s:String
+		x:Key="Connect_topstdUnloggedIn">尚未取得 topstd 编辑权限</s:String>
+	<s:String
+		x:Key="Preference_ProgramName">Mã thao tác</s:String>
+	<s:String
+		x:Key="Preference_ProgramDesc">Mô tả thao tác</s:String>
+	<s:String
+		x:Key="Preference_ProgramPreview">Xem trước</s:String>
+	<s:String
+		x:Key="Preference_Enable">Khởi động</s:String>
+	<s:String
+		x:Key="Preference_Disable">Ngưng dùng</s:String>
+	<s:String
+		x:Key="Preference_Delete">Xóa bỏ</s:String>
+	<s:String
+		x:Key="Preference_RedoUndo">Giới hạn số lượt thực hiện động tác trả về/ trùng lặp</s:String>
+	<s:String
+		x:Key="Preference_RedoUndoMemo">(-1 Tức không có giới hạn)</s:String>
+	<s:String
+		x:Key="Preference_RemainUnSaved">关档与上传时若未存档，显示提示讯息</s:String>
+	<s:String
+		x:Key="Preference_SimpleDownloadDialog">畫面開發簡潔配置</s:String>
+	<s:String
+		x:Key="Preference_SimpleDownloadDialog_Change">调整画面开发简洁配置，需重启设器才会生效！</s:String>
+	<s:String
+		x:Key="Preference_MaxRecentFiles">最近使用的檔案 : 最大數量</s:String>
+	<s:String
+		x:Key="Preference_Reset">Thiết lập lại</s:String>
+	<s:String
+		x:Key="Preference_Save">Lưu</s:String>
+	<s:String
+		x:Key="Preference_Cancel">Hủy bỏ</s:String>
+	<s:String
+		x:Key="Preference_Add">Thêm mới</s:String>
+	<s:String
+		x:Key="Preference_Modify">修改</s:String>
+	<s:String
+		x:Key="Preference_TabWidth">Phím Tab đổi lại tạo ra một khoảng trống.</s:String>
+	<s:String
+		x:Key="Preference_WrapText">Tự động cuộn</s:String>
+	<s:String
+		x:Key="Preference_CodeCompletion">Bổ trợ từ ngữ</s:String>
+	<s:String
+		x:Key="Preference_Font">Định dạng văn bản</s:String>
+	<s:String
+		x:Key="Preference_FontSize">Cỡ chữ</s:String>
+	<s:String
+		x:Key="Preference_FontFamily">字型</s:String>
+	<s:String
+		x:Key="Preference_Theme">Hiển thị chủ đề</s:String>
+	<s:String
+		x:Key="Preference_Background">Màu nền</s:String>
+	<s:String
+		x:Key="Preference_Foreground">Chủ đề văn bản</s:String>
+	<s:String
+		x:Key="Preference_General">Cài đặt chung</s:String>
+	<s:String
+		x:Key="Preference_ValidateForm">提示编译错误</s:String>
+	<s:String
+		x:Key="Preference_MissingProg">请输入作业代号</s:String>
+	<s:String
+		x:Key="Preference_ProgExit">作业代号已存在</s:String>
+	<s:String
+		x:Key="Preference_ConfirmDeleteProg">确认删除设定：
+"{0}"？</s:String>
+	<s:String
+		x:Key="Preference_ConfirmDelete">删除前确认</s:String>
+	<s:String
+		x:Key="Preference_LoadFailed">偏好设定加载失败</s:String>
+	<s:String
+		x:Key="Preference_Diff">差异比对</s:String>
+	<s:String
+		x:Key="Preference_ShowHint">提示完整句子</s:String>
+	<s:String
+		x:Key="Preference_ConfirmSaveDiff">储存资料前，询问是否储存差异比对来源内容</s:String>
+	<s:String
+		x:Key="Preference_SimplifyColor">差异颜色简化</s:String>
+	<s:String
+		x:Key="Preference_HorizontalArrangement">水平排列</s:String>
+	<s:String
+		x:Key="Preference_DiffComment">比对注解差异</s:String>
+	<s:String
+		x:Key="Preference_ViMode">Vi编辑模式</s:String>
+	<s:String
+		x:Key="Preference_TopstdEditPermission">预设topstd编辑权限</s:String>
+	<s:String
+		x:Key="Preference_Language">Language</s:String>
+	<s:String
+		x:Key="Preference_LanguageSettings">Language Settings</s:String>
+	<s:String
+		x:Key="Preference_DiffWithoutSection">不显示section区块差异</s:String>
+	<s:String
+		x:Key="Preference_DiffWithANSI">显示ansi语法差异</s:String>
+	<s:String
+		x:Key="Preference_Welcome">欢迎画面</s:String>
+	<s:String
+		x:Key="Preference_StartShowWelcome">在启动时显示欢迎画面</s:String>
+	<s:String
+		x:Key="Preference_DisplayOpenedFiles">显示最近开启之规格档与程序档</s:String>
+	<s:String
+		x:Key="Preference_MaxQuantity">　　最大数量各</s:String>
+	<s:String
+		x:Key="Preference_Each">个</s:String>
+	<s:String
+		x:Key="Preference_MostDisplayFiles">(每个站台最多30个)</s:String>
+	<s:String
+		x:Key="Preference_ClearHistory">清除所有站台纪录</s:String>
+	<s:String
+		x:Key="Preference_CodeEditor">Code Editor</s:String>
+	<s:String
+		x:Key="Preference_FormDesigner">Spec Designer</s:String>
+	<s:String
+		x:Key="Preference_Lite">简易规格设计器</s:String>
+	<s:String
+		x:Key="Preference_ShowHintTabIndexSort">不提示TabIndex是否重新排序讯息</s:String>
+	<s:String
+		x:Key="Preference_LocalizedProperty">属性本地化</s:String>
+	<s:String
+		x:Key="Update_Title">Cập nhật phần mềm</s:String>
+	<s:String
+		x:Key="Update_Available">{0} có phiên bản mới: {1}</s:String>
+	<s:String
+		x:Key="Update_Confirm">{0} có một phiên bản mới có sẵn để tải về (phiên bản hiện đang được cài đặt là {1}). Bây giờ tải về và cài đặt phiên bản mới?</s:String>
+	<s:String
+		x:Key="Update_NotUpdate">Cập nhật sau</s:String>
+	<s:String
+		x:Key="Update_UpdateNow">Bắt đầu cập nhật</s:String>
+	<s:String
+		x:Key="Update_ReleaseNote">Chi tiết cập nhật:</s:String>
+	<s:String
+		x:Key="ProcessList_Title">T100Designer - Đóng Designer để tiếp tục</s:String>
+	<s:String
+		x:Key="ProcessList_MainTitle">Đóng thiết kế để tiếp tục</s:String>
+	<s:String
+		x:Key="ProcessList_Message">Hãy lưu công việc của bạn, sau đó nhấn nút [Đóng Designer, và sau đó tiếp tục]</s:String>
+	<s:String
+		x:Key="ProcessList_CloseBeforeStart">Bạn có Designer khác đang mở, phải đóng lại trước, mới có thể tiến hành cập nhật.</s:String>
+	<s:String
+		x:Key="ProcessList_Continue">Đóng Designer, sau đó tiếp tục</s:String>
+	<s:String
+		x:Key="CodeSpec_Setting">Thiết lập thông số kỹ thuật nguyên kiện</s:String>
+	<s:String
+		x:Key="CodeSpec_ComponentID">Mã nguyên kiện</s:String>
+	<s:String
+		x:Key="CodeSpec_ComponentDescription">Giải thích</s:String>
+	<s:String
+		x:Key="CodeSpec_ComponentDB">Kho dữ liệu thích hợp sử dụng</s:String>
+	<s:String
+		x:Key="CodeSpec_ComponentPurpose">Mục đích</s:String>
+	<s:String
+		x:Key="CodeSpec_ComponentParameter">Tham số</s:String>
+	<s:String
+		x:Key="CodeSpec_ComponentOrder">Tuần tự</s:String>
+	<s:String
+		x:Key="CodeSpec_ComponentIn">Giá trị chuyển nhập</s:String>
+	<s:String
+		x:Key="CodeSpec_ComponentTable">Biểu cách</s:String>
+	<s:String
+		x:Key="CodeSpec_ComponentColumn">Ô (trường)</s:String>
+	<s:String
+		x:Key="CodeSpec_ParameterPurpose">Hướng dẫn sử dụng</s:String>
+	<s:String
+		x:Key="CodeSpec_ComponentReturn">Giá trị trả về</s:String>
+	<s:String
+		x:Key="CodeSpec_Keyword">Đóng từ khóa</s:String>
+	<s:String
+		x:Key="CodeSpec_FrontComponent">Nguyên kiện trước</s:String>
+	<s:String
+		x:Key="CodeSpec_Dimension">Kích thước</s:String>
+	<s:String
+		x:Key="CodeSpec_DimensionID">Mã số</s:String>
+	<s:String
+		x:Key="CodeSpec_DimensionClass">Mã số phân loại</s:String>
+	<s:String
+		x:Key="CodeSpec_DimensionClassValue">Giá trị phân loại</s:String>
+	<s:String
+		x:Key="CodeSpec_Test">Kiểm tra trọng điểm</s:String>
+	<s:String
+		x:Key="CodeSpec_TestID">Mục hạng</s:String>
+	<s:String
+		x:Key="CodeSpec_TestDescription">Mô tả tình hình</s:String>
+	<s:String
+		x:Key="CodeSpec_TestIn">Giá trị chuyển nhập</s:String>
+	<s:String
+		x:Key="CodeSpec_TestReturn">Giá trị dự kiến trả về</s:String>
+	<s:String
+		x:Key="CodeSpec_TestPosNeg">Kiểm tra âm/dương</s:String>
+	<s:String
+		x:Key="CodeSpec_TestErrorCode">Mã lỗi nhập xuất</s:String>
+	<s:String
+		x:Key="CodeSpec_TestErrDescription">Mô tả lỗi</s:String>
+	<s:String
+		x:Key="CodeSpec_TestMemo">Ghi chú</s:String>
+	<s:String
+		x:Key="DBStructure_Container">Dung lượng</s:String>
+	<s:String
+		x:Key="DBStructure_FieldsAndLabels">Ô và nhãn</s:String>
+	<s:String
+		x:Key="DBStructure_FieldLabelProperties">Thuộc tính của ô và nhãn</s:String>
+	<s:String
+		x:Key="DBStructure_MaximumWidth">Chiều rộng tối đa:</s:String>
+	<s:String
+		x:Key="DBStructure_NumberOfFields">Số ô giá trị dọc:</s:String>
+	<s:String
+		x:Key="DBStructure_ScrollRepeatHeader">ScrollGrid Repeat</s:String>
+	<s:String
+		x:Key="DBStructure_RepeatRowCount">Số giá trị dọc trùng lặp:</s:String>
+	<s:String
+		x:Key="DBStructure_RepeatColumnCount">Số mức độ trùng lặp:</s:String>
+	<s:String
+		x:Key="DBStructure_Label">Mô tả nhãn</s:String>
+	<s:String
+		x:Key="DBStructure_Table">Mã Table</s:String>
+	<s:String
+		x:Key="DBStructure_Column">Mã Column</s:String>
+	<s:String
+		x:Key="DBStructure_WidgetType">Loại hình kiện quản lý</s:String>
+	<s:String
+		x:Key="DBStructure_WidgetLength">Chiều rộng kiện quản lý</s:String>
+	<s:String
+		x:Key="DBStructure_Filter">Phạm vi chọn lựa:</s:String>
+	<s:String
+		x:Key="DBStructure_Description">Giải thích</s:String>
+	<s:String
+		x:Key="DBStructure_Module">Module</s:String>
+	<s:String
+		x:Key="DBStructure_Back"> &lt; Trước một bước </s:String>
+	<s:String
+		x:Key="DBStructure_Next"> Bước tiếp theo &gt;  </s:String>
+	<s:String
+		x:Key="DBStructure_Cancel"> Hủy bỏ </s:String>
+	<s:String
+		x:Key="DBStructure_Finish"> Hoàn thành </s:String>
+	<s:String
+		x:Key="ProgramInformation_Title">Thông tin tập tin ofline</s:String>
+	<s:String
+		x:Key="ProgramInformation_Prog">Tên chương trình</s:String>
+	<s:String
+		x:Key="ProgramInformation_Std_Prog">Tên chương trình tiêu chuẩn</s:String>
+	<s:String
+		x:Key="ProgramInformation_ErpVer">Phiên bản sản phẩm</s:String>
+	<s:String
+		x:Key="ProgramInformation_Ver">Phiên bản</s:String>
+	<s:String
+		x:Key="ProgramInformation_Module">Module</s:String>
+	<s:String
+		x:Key="ProgramInformation_Type">Loai hình kết cấu kiến lập</s:String>
+	<s:String
+		x:Key="ProgramInformation_Booking">Có kiểm xuất không</s:String>
+	<s:String
+		x:Key="ProgramInformation_Class">Loại hình chương trình</s:String>
+	<s:String
+		x:Key="ProgramInformation_Env">Môi trường phát triển (khai phá)</s:String>
+	<s:String
+		x:Key="ProgramInformation_Zone">Khu vực phát triển</s:String>
+	<s:String
+		x:Key="ProgramInformation_Identity">Dấu hiệu loại chức năng</s:String>
+	<s:String
+		x:Key="ProgramInformation_SectionFlag">Section có thay đổi qua không</s:String>
+	<s:String
+		x:Key="ProgramInformation_Template">Bản mẫu chương trình</s:String>
+	<s:String
+		x:Key="ProgramInformation_FreeStyle">Có là FreeStyle không</s:String>
+	<s:String
+		x:Key="FunctionList_Title">Bổ trợ chương trình</s:String>
+	<s:String
+		x:Key="FunctionList_Delete">Xóa bỏ</s:String>
+	<s:String
+		x:Key="FunctionList_Copy">Sao chép</s:String>
+	<s:String
+		x:Key="FunctionList_Insert">Chèn vào mã chương trình</s:String>
+	<s:String
+		x:Key="PK">PK(主键字段)</s:String>
+	<s:String
+		x:Key="FK_table">外来键表格</s:String>
+	<s:String
+		x:Key="FkMaster">FkMaster(外来键字段)</s:String>
+	<s:String
+		x:Key="FkDetail">FkDetail(键值字段)</s:String>
+	<s:String
+		x:Key="VI_CommandList">vi指令清单</s:String>
+	<s:String
+		x:Key="VI_GeneralMode">一般模式:</s:String>
+	<s:String
+		x:Key="VI_MoveOneLeft">向左移一个字符 (h)</s:String>
+	<s:String
+		x:Key="VI_MoveNLeft">向左移n个字符 (nh)</s:String>
+	<s:String
+		x:Key="VI_MoveOneUp">向上移一个字符 (k)</s:String>
+	<s:String
+		x:Key="VI_MoveNUp">向上移n个字符 (nk)</s:String>
+	<s:String
+		x:Key="VI_MoveOneDown">向下移一个字符 (j)</s:String>
+	<s:String
+		x:Key="VI_MoveNDown">向下移n个字符 (nj)</s:String>
+	<s:String
+		x:Key="VI_MoveOneRight">向右移一个字符 (l)</s:String>
+	<s:String
+		x:Key="VI_MoveNRight">向右移n个字符 (nl)</s:String>
+	<s:String
+		x:Key="VI_MoveToLastLine">移至该档案的最后一列 (G)</s:String>
+	<s:String
+		x:Key="VI_MoveToNLine">移至该档案的第n列 (nG)</s:String>
+	<s:String
+		x:Key="VI_ScrollDown">视窗往下翻一页 (Ctrl + f)</s:String>
+	<s:String
+		x:Key="VI_ScrollUp">视窗往上翻一页 (Ctrl + b)</s:String>
+	<s:String
+		x:Key="VI_DelCharAtCursor">删除光标处的字符 (x)</s:String>
+	<s:String
+		x:Key="VI_DelCharBeforeCursor">删除光标前的字符 (X)</s:String>
+	<s:String
+		x:Key="VI_DelEntireLine">删除整行 (dd)</s:String>
+	<s:String
+		x:Key="VI_DelNLines">删除n行 (ndd)</s:String>
+	<s:String
+		x:Key="VI_CopyEntireLine">复制整行 (yy)</s:String>
+	<s:String
+		x:Key="VI_CopyNLine">复制n行 (nyy)</s:String>
+	<s:String
+		x:Key="VI_PasteBeforeCursor">粘贴在前 (p)</s:String>
+	<s:String
+		x:Key="VI_PasteAfterCursor">粘贴在后 (P)</s:String>
+	<s:String
+		x:Key="VI_Undo">撤销 (u)</s:String>
+	<s:String
+		x:Key="VI_SearchDown">向下搜索 (/)</s:String>
+	<s:String
+		x:Key="VI_SearchUpwards">向上搜索 (?)</s:String>
+	<s:String
+		x:Key="VI_MoveUpToNextSearchString">向上移至搜索字串 (n)</s:String>
+	<s:String
+		x:Key="VI_MoveDownToNextSearchString">向下移至搜索字串 (N)</s:String>
+	<s:String
+		x:Key="VI_EditMode">编辑模式:</s:String>
+	<s:String
+		x:Key="VI_AddDataBeforeCursor">在光标位置前插入资料 (i)</s:String>
+	<s:String
+		x:Key="VI_AddDataBeforeLine">光标移至行首插入资料 (I)</s:String>
+	<s:String
+		x:Key="VI_AddDataAfterCursor">在光标位置后插入资料 (a)</s:String>
+	<s:String
+		x:Key="VI_AddDataAfterLine">光标移至行尾插入资料 (A)</s:String>
+	<s:String
+		x:Key="VI_AddLineBelowLine">光标所在行下新增一行，并将光标移至新行首 (o)</s:String>
+	<s:String
+		x:Key="VI_AddLineAboveLine">光标所在行上新增一行，并将光标移至新行首 (O)</s:String>
+	<s:String
+		x:Key="VI_LeaveEditModeEnterGeneralMode">离开输入模式，进入一般模式 (ESC)</s:String>
+	<s:String
+		x:Key="VI_ReplaceMode">取代模式:</s:String>
+	<s:String
+		x:Key="VI_EnterReplaceModeUntilESC">进入取代模式，直到ESC为止 (R)</s:String>
+	<s:String
+		x:Key="VI_CommandMode">命令模式:</s:String>
+	<s:String
+		x:Key="VI_EnterCommandModeUntilESC">进入命令模式，直到ESC为止 (:)</s:String>
+	<s:String
+		x:Key="VI_ReplaceTextFromMToNLine">第m到n型整批取代，old置换为new，m&gt;=1 (:m,n/old/new/g)</s:String>
+	<s:String
+		x:Key="VI_ReplaceTextInWholeContext">整批取代，old置换为new (:1,$s/old/new/g)</s:String>
+	<s:String
+		x:Key="VI_Save">保存档案 (：w)</s:String>
+	<s:String
+		x:Key="VI_SearchCurrentWord">查找光标位置的单字（shift+8(*)）</s:String>
+	<s:String
+		x:Key="VI_Redo">恢复（ctrl+r）</s:String>
+	<s:String
+		x:Key="VI_SelectLineMode">进入整行选取模式（shift+v）</s:String>
+	<s:String
+		x:Key="VI_SelectBlockMode">进入区域选取模式（ctrl+v）</s:String>
+	<s:String
+		x:Key="VI_ExecuteLastCommand">重复上一个指令 (.)</s:String>
+	<s:String
+		x:Key="Key_HotkeyList">快速键清单</s:String>
+	<s:String
+		x:Key="Key_OpenFile">开启档案 (Ctrl + O)</s:String>
+	<s:String
+		x:Key="Key_SaveFile">储存档案 (Ctrl + S)</s:String>
+	<s:String
+		x:Key="Key_CloseFile">关闭档案 (Ctrl + W)</s:String>
+	<s:String
+		x:Key="Key_Upload">上传 (F6)</s:String>
+	<s:String
+		x:Key="Key_Precompile">预编译 (Shift + F6)</s:String>
+	<s:String
+		x:Key="Key_Exit">离开 (Alt + F4)</s:String>
+	<s:String
+		x:Key="Key_ExportSpec">汇出规格 (Ctrl + E)</s:String>
+	<s:String
+		x:Key="Key_Search">搜寻 (Ctrl + F)</s:String>
+	<s:String
+		x:Key="Key_Replace">取代 (Ctrl + H)</s:String>
+	<s:String
+		x:Key="Key_About">关于 (Ctrl + F1)</s:String>
+	<s:String
+		x:Key="Key_CutComponet">剪下控件 (Ctrl + X)</s:String>
+	<s:String
+		x:Key="Key_PasteComponet">贴上控件 (Ctrl + V)</s:String>
+	<s:String
+		x:Key="Key_MultiSelectComponetsInRegion">圈选控件 (Shift + 按住滑鼠左键圈选)</s:String>
+	<s:String
+		x:Key="Key_MultiSelectComponets">多选控件 (Ctrl + 左键点选)</s:String>
+	<s:String
+		x:Key="Key_Cut">剪下 (Ctrl + X)</s:String>
+	<s:String
+		x:Key="Key_Paste">贴上 (Ctrl + V)</s:String>
+	<s:String
+		x:Key="Key_MarkSelectedArea">注解区块 (Ctrl + K)</s:String>
+	<s:String
+		x:Key="Key_UnmarkSelectedArea">取消注解区块 (Ctrl + Shift + K)</s:String>
+	<s:String
+		x:Key="Key_RefreshScreens">画面重新整理 (F5)</s:String>
+	<s:String
+		x:Key="Key_ChangeGeneroKeywordsToUppercase">关键字转大写 (Ctrl + B)</s:String>
+	<s:String
+		x:Key="Key_TermAssistance">字词辅助 (Ctrl + Return/Enter)</s:String>
+	<s:String
+		x:Key="Key_CheckFunctions">查看函式 (Ctrl + I)</s:String>
+	<s:String
+		x:Key="Key_GoToAssignedLineNo">跳至指定行号 (Ctrl + G)</s:String>
+	<s:String
+		x:Key="Key_DisplaySelfbuildKeywordList">显示偏好字词辅助清单 (Ctrl + P)</s:String>
+	<s:String
+		x:Key="Key_DisplayDBColumnsList">显示资料库栏位辅助清单 (Ctrl + Q)</s:String>
+	<s:String
+		x:Key="Key_DiffRefersh">差异行数刷新 (Ctrl + D)</s:String>
+	<s:String
+		x:Key="Key_BlockMoveLeft">区块左移 (Shift + Tab)</s:String>
+	<s:String
+		x:Key="Key_BlockMoveRight">区块右移 (Tab)</s:String>
+	<s:String
+		x:Key="Diff_ListTitle">Patch后新元件清单</s:String>
+	<s:String
+		x:Key="Diff_ListItemName">栏位名称</s:String>
+	<s:String
+		x:Key="Diff_ListItemType">栏位类型</s:String>
+	<s:String
+		x:Key="Diff_Memo">(双击项目可检视栏位资讯)</s:String>
+	<s:String
+		x:Key="SQLType">SQL类型</s:String>
+	<s:String
+		x:Key="SQLDisplay">呈现方式</s:String>
+	<s:String
+		x:Key="SQLString">字串</s:String>
+	<s:String
+		x:Key="SQLVariable">变数名称</s:String>
+	<s:String
+		x:Key="SQLTableSetting">表格设定</s:String>
+	<s:String
+		x:Key="SQLMainTable">主要表格</s:String>
+	<s:String
+		x:Key="SQLJoinTable">JOIN表格</s:String>
+	<s:String
+		x:Key="SQLTableName">表格名称</s:String>
+	<s:String
+		x:Key="SQLJoinType">类型</s:String>
+	<s:String
+		x:Key="SQLPreview">SQL预览</s:String>
+	<s:String
+		x:Key="SQLCopy">SQL复制</s:String>
+	<s:String
+		x:Key="SQLTest">SQL测试</s:String>
+	<s:String
+		x:Key="SQLAdd">新增</s:String>
+	<s:String
+		x:Key="SQLDelete">删除</s:String>
+	<s:String
+		x:Key="SQLFinish">完成</s:String>
+	<s:String
+		x:Key="SimpleForm_QuickHide">快速隐藏</s:String>
+	<s:String
+		x:Key="SimpleForm_QuickShow">快速显示</s:String>
+	<s:String
+		x:Key="SimpleForm_HideAll">全部隐藏</s:String>
+	<s:String
+		x:Key="SimpleForm_ShowAll">全部显示</s:String>
+	<s:String
+		x:Key="SimpleForm_HintCantShow">提示: 标准画面该控件已隐藏, 不可设为显示</s:String>
+	<s:String
+		x:Key="Welcome_Layout">欢迎光临</s:String>
+	<s:String
+		x:Key="Welcome_RecentFiles">最近开启</s:String>
+	<s:String
+		x:Key="Welcome_SpecificationFiles">规格档案</s:String>
+	<s:String
+		x:Key="Welcome_ProgramFiles">程式档案</s:String>
+	<s:String
+		x:Key="Welcome_ClearHistory">清除纪录</s:String>
+	<s:String
+		x:Key="Welcome_ClearAllHistory">清除所有纪录</s:String>
+	<s:String
+		x:Key="Welcome_NeedToConnect">需要连线</s:String>
+	<s:String
+		x:Key="Welcome_SelectPlatform">请选择站台</s:String>
+	<s:String
+		x:Key="Welcome_SignOutAndDownloadSpec">签出/下载规格</s:String>
+	<s:String
+		x:Key="Welcome_SignOutAndDownloadProg">签出/下载程式</s:String>
+	<s:String
+		x:Key="Welcome_SignOutAndDownloadGRTemplate">签出/下载GR报表样板</s:String>
+	<s:String
+		x:Key="Welcome_DownloadBasicDataAndUpdate">下载现有 Server 端基础资料并更新</s:String>
+	<s:String
+		x:Key="Welcome_RebuildBasicDataAndDownloadUpdate">重新产生并下载基础资料</s:String>
+	<s:String
+		x:Key="Welcome_ViewHowDevelopT100Program">查看T100程式如何开发</s:String>
+	<s:String
+		x:Key="Welcome_ViewCommonTool">查看T100程式开发常用工具</s:String>
+	<s:String
+		x:Key="Welcome_AlreadyDownloaded">已经下载</s:String>
+	<s:String
+		x:Key="Welcome_OpenSpecification">开启规格</s:String>
+	<s:String
+		x:Key="Welcome_OpenProgram">开启程式</s:String>
+	<s:String
+		x:Key="Welcome_TipsForOpenGR">备注：请透过 Genero Studio 开启 GR 报表</s:String>
+	<s:String
+		x:Key="Welcome_OpenDownloadedSpecification">开启已下载规格</s:String>
+	<s:String
+		x:Key="Welcome_OpenDownloadedProgram">开启已下载程式</s:String>
+	<s:String
+		x:Key="Welcome_RecentOpenedSpecification">最近开启规格</s:String>
+	<s:String
+		x:Key="Welcome_RecentOpenedProgram">最近开启程式</s:String>
+	<s:String
+		x:Key="Welcome_ClearThisPlatformHistory">清除此站台之规格与程式开启纪录</s:String>
+	<s:String
+		x:Key="Welcome_OpenSpecificationExample">开启规格范例</s:String>
+	<s:String
+		x:Key="Welcome_OpenProgramExample">开启程式范例</s:String>
+	<s:String
+		x:Key="Welcome_ViewDownloadedBasicData">查看下载后之基础资料</s:String>
+	<s:String
+		x:Key="Welcome_StartShowWelcome">在启动时显示欢迎画面</s:String>
+	<s:String
+		x:Key="MouseLeft_GroupInto">加入到容器</s:String>
+	<s:String
+		x:Key="MouseLeft_BreakLayout">移除 Layout</s:String>
+	<s:String
+		x:Key="MouseLeft_ConvertWidget">转换控件类型</s:String>
+	<s:String
+		x:Key="MouseLeft_ConvertContainer">转换容器类型</s:String>
+	<s:String
+		x:Key="MouseLeft_Delete">删除</s:String>
+	<s:String
+		x:Key="MouseLeft_Copy">复制</s:String>
+	<s:String
+		x:Key="MouseLeft_Paste">贴上</s:String>
+	<s:String
+		x:Key="MouseLeft_BindingSelection">控件绑定</s:String>
+	<s:String
+		x:Key="MouseLeft_UnbindingSelection">控件解除绑定</s:String>
+	<s:String
+		x:Key="MouseLeft_AddPageBefore">往前新增页签</s:String>
+	<s:String
+		x:Key="MouseLeft_AddPageAfter">往后新增页签</s:String>
+	<s:String
+		x:Key="MouseLeft_DeletePage">删除页签</s:String>
+	<s:String
+		x:Key="MouseLeft_InsertBefore">往前新增栏位</s:String>
+	<s:String
+		x:Key="MouseLeft_InsertAfter">往后新增栏位</s:String>
+	<s:String
+		x:Key="MouseLeft_DeleteTableOrTree">删除栏位</s:String>
+	<s:String
+		x:Key="MouseLeft_InsertReference">新增参考栏位</s:String>
+	<s:String
+		x:Key="MouseLeft_InsertMultiLanguage">新增多语言栏位</s:String>
+	<s:String
+		x:Key="MouseLeft_InsertQuery">新增串查栏位</s:String>
+	<s:String
+		x:Key="MouseLeft_GeneralFunction">简易公式设定（客制专用）</s:String>
+	<s:String
+		x:Key="MouseLeft_GeneralValueFunc">简易带值设定（客制专用）</s:String>
+</ResourceDictionary>

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 4,
+  "listen": "127.0.0.1:28670",
+  "hosts": {
+    "activeEnv": "",
+    "sshs": []
+  },
+  "query": {
+    "source": "auto"
+  },
+  "skills": {
+    "externals": []
+  },
+  "tzs": {
+    "serverExe": ""
+  }
+}

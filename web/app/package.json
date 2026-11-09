@@ -1,0 +1,46 @@
+{
+  "name": "app",
+  "private": true,
+  "version": "0.5.2",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "postbuild": "node scripts/gitkeep.mjs",
+    "preview": "vite preview",
+    "check:tokens": "esbuild scripts/fgltokens.test.mjs --bundle --format=esm --platform=node --external:monaco-editor/* --outfile=scripts/.tmp-tokens.mjs && node scripts/.tmp-tokens.mjs",
+    "check:outline": "esbuild scripts/fgloutline.fixtures.mjs --bundle --format=esm --platform=node --outfile=scripts/.tmp-outline.mjs && node scripts/.tmp-outline.mjs",
+    "check:store": "esbuild scripts/store.test.mjs --bundle --format=esm --platform=node --outfile=scripts/.tmp-store.mjs && node scripts/.tmp-store.mjs"
+  },
+  "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
+    "@radix-ui/react-accordion": "^1.2.20",
+    "@radix-ui/react-alert-dialog": "^1.1.23",
+    "@radix-ui/react-checkbox": "^1.3.11",
+    "@radix-ui/react-dialog": "^1.1.23",
+    "@radix-ui/react-popover": "^1.1.23",
+    "@radix-ui/react-progress": "^1.2.1",
+    "@radix-ui/react-select": "^2.3.7",
+    "@radix-ui/react-slot": "^1.3.3",
+    "@radix-ui/react-tabs": "^1.2.1",
+    "@radix-ui/react-toast": "^1.3.1",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.37.0",
+    "monaco-editor": "^0.52.2",
+    "react": "^18.3.1",
+    "react-day-picker": "^10.0.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^3.6.0",
+    "zustand": "^5.0.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "tailwindcss": "^4.0.0",
+    "typescript": "~5.6.3",
+    "vite": "^6.0.3"
+  }
+}

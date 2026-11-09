@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="ASCII"?>
+<Form name="onlycols" build="3.21.03" width="10" height="2">
+  <ScrollGrid>
+    <Table name="demo_t">
+      <TableColumn name="demo_t.demo101" colName="demo101" fieldId="7" sqlType="CHAR" tabIndex="1" text="lbl_demo101">
+        <Edit width="4" posX="1" posY="1"/>
+      </TableColumn>
+      <PhantomColumn name="demo_t.demo102" colName="demo102" fieldId="8">
+        <Edit width="2"/>
+      </PhantomColumn>
+    </Table>
+  </ScrollGrid>
+</Form>

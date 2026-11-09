@@ -1,0 +1,30 @@
+<Window
+	x:Class="SpecDesigner.CodeEditWindow.View.LibrarySelectionWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:f="clr-namespace:SpecDesigner.FormDataEditor;assembly=SpecDesigner.FormDataEditor"
+	xmlns:view="clr-namespace:SpecDesigner.CodeEditWindow.View">
+	<Grid>
+		<DockPanel
+			x:Name="mainPanel">
+			<GroupBox
+				DockPanel.Dock="Top"
+				Header="資料來源">
+				<StackPanel
+					Orientation="Horizontal">
+					<RadioButton
+						Content="Library"
+						Margin="5 0 5 0"
+						Tag="Library"
+						IsChecked="True" />
+					<RadioButton
+						Content="SubRoutines"
+						Margin="5 0 5 0"
+						Tag="SubRoutines" />
+				</StackPanel>
+			</GroupBox>
+		</DockPanel>
+	</Grid>
+</Window>

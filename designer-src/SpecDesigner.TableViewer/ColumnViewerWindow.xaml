@@ -1,0 +1,382 @@
+<Window
+	x:Class="SpecDesigner.TableViewer.ColumnViewerWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:h="clr-namespace:SpecDesigner.TableViewer.Helper"
+	xmlns:l="clr-namespace:SpecDesigner.TableViewer">
+	<FrameworkElement.Resources>
+		<ResourceDictionary>
+			<h:BooleanConverter
+				x:Key="booleanConverter" />
+			<h:DataTypeConverter
+				x:Key="dataTypeConverter" />
+			<ContextMenu
+				x:Key="TableContextMenu">
+				<MenuItem
+					Command="l:TableColumnCommands.CopyAllColumnsToRecordCommand"
+					Header="{StaticResource columnView_CopyAllColumnsToRecord}"
+					CommandParameter="{Binding Attribute[name].Value, Mode=OneWay}" />
+				<MenuItem
+					Command="l:TableColumnCommands.CopyAllColumnsNameCommand"
+					Header="{StaticResource columnView_CopyColumnsName}"
+					CommandParameter="{Binding Attribute[name].Value, Mode=OneWay}" />
+			</ContextMenu>
+			<ContextMenu
+				x:Key="ColumnContextMenu">
+				<MenuItem
+					Command="l:TableColumnCommands.CopyContentCommand"
+					Header="{StaticResource columnView_CopyName}"
+					CommandParameter="{Binding Attribute[name].Value, Mode=OneWay}" />
+			</ContextMenu>
+		</ResourceDictionary>
+	</FrameworkElement.Resources>
+	<Grid
+		Margin="5">
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition
+				Width="45*" />
+			<ColumnDefinition
+				Width="55*" />
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition
+				Height="Auto" />
+			<RowDefinition
+				Height="Auto" />
+			<RowDefinition />
+			<RowDefinition
+				Height="Auto" />
+		</Grid.RowDefinitions>
+		<Grid
+			ColumnSpan="2"
+			VerticalAlignment="Top"
+			Margin="0 0 0 5">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition
+					Width="Auto" />
+				<ColumnDefinition
+					Width="Auto" />
+				<ColumnDefinition />
+			</Grid.ColumnDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition
+					Height="Auto" />
+				<RowDefinition
+					Height="Auto" />
+			</Grid.RowDefinitions>
+			<Label
+				Content="{StaticResource tableView_ModuleTitle}" />
+			<ComboBox
+				x:Name="moduleCombo"
+				Grid.Row="0"
+				Grid.Column="1"
+				Grid.ColumnSpan="2"
+				IsEditable="True"
+				Width="150"
+				HorizontalAlignment="Left"
+				ItemsSource="{Binding}" />
+			<Label
+				Content="{StaticResource tableView_SearchTitle}"
+				Grid.Row="1"
+				Grid.Column="0" />
+			<TextBox
+				x:Name="searchBox"
+				Grid.Row="1"
+				Grid.Column="1"
+				Width="150" />
+			<Button
+				Content="Go"
+				Grid.Row="1"
+				Grid.Column="2"
+				Margin="5 0 5 0"
+				HorizontalAlignment="Left"
+				Width="50"
+				Visibility="Collapsed"
+				Click="Button_Click" />
+		</Grid>
+		<DataGrid
+			x:Name="tableView"
+			Grid.Row="2"
+			Margin="0 0 5 0"
+			ItemsSource="{Binding}">
+			<DataGrid.Columns>
+				<DataGridTextColumn
+					Header="{StaticResource tableView_TableModule}"
+					IsReadOnly="True"
+					Binding="{Binding Path=Attribute[module].Value}" />
+				<DataGridTextColumn
+					Header="{StaticResource tableView_TableName}"
+					IsReadOnly="True"
+					Binding="{Binding Path=Attribute[name].Value}">
+					<DataGridColumn.CellStyle>
+						<Style
+							TargetType="{x:Type DataGridCell}">
+							<Setter
+								Property="FrameworkElement.ContextMenu"
+								Value="{StaticResource TableContextMenu}" />
+						</Style>
+					</DataGridColumn.CellStyle>
+				</DataGridTextColumn>
+				<DataGridTextColumn
+					Header="{StaticResource tableView_TableDesc}"
+					IsReadOnly="True"
+					Binding="{Binding Path=Attribute[desc].Value}" />
+			</DataGrid.Columns>
+		</DataGrid>
+		<GridSplitter
+			Width="5"
+			Grid.Row="2" />
+		<Grid
+			Column="1"
+			Row="2">
+			<Grid.RowDefinitions>
+				<RowDefinition
+					Height="Auto" />
+				<RowDefinition />
+			</Grid.RowDefinitions>
+			<TextBlock
+				x:Name="tableLabel"
+				Visibility="Collapsed" />
+			<TabControl
+				Grid.Row="1">
+				<TabItem
+					Header="{StaticResource columnView_ColumnSpec}">
+					<DataGrid
+						x:Name="columnView"
+						ItemsSource="{Binding Elements[field]}">
+						<DataGrid.Columns>
+							<DataGridTextColumn
+								Header="{StaticResource tableView_ColumnName}"
+								Width="Auto"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[name].Value}">
+								<DataGridColumn.CellStyle>
+									<Style
+										TargetType="{x:Type DataGridCell}">
+										<Setter
+											Property="FrameworkElement.ContextMenu"
+											Value="{StaticResource ColumnContextMenu}" />
+									</Style>
+								</DataGridColumn.CellStyle>
+							</DataGridTextColumn>
+							<DataGridTextColumn
+								Header="{StaticResource tableView_ColumnText}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[text].Value}" />
+							<DataGridTemplateColumn
+								Header="{StaticResource tableView_ColumnReq}"
+								IsReadOnly="True">
+								<DataGridTemplateColumn.CellTemplate>
+									<DataTemplate>
+										<CheckBox
+											HorizontalAlignment="Center"
+											IsEnabled="False"
+											IsChecked="{Binding Path=Attribute[req].Value, Converter='{StaticResource booleanConverter}'}" />
+									</DataTemplate>
+								</DataGridTemplateColumn.CellTemplate>
+							</DataGridTemplateColumn>
+							<DataGridTextColumn
+								Header="{StaticResource columnView_Width}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[widget_width].Value}" />
+							<DataGridTextColumn
+								Header="{StaticResource columnView_Widget}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[widget].Value}" />
+							<DataGridTextColumn
+								Header="{StaticResource columnView_Items}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[items].Value}" />
+							<DataGridTextColumn
+								Header="{StaticResource columnView_Default}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[default].Value}" />
+							<DataGridTextColumn
+								Header="{StaticResource columnView_Max}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[max].Value}" />
+							<DataGridTextColumn
+								Header="{StaticResource columnView_Min}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[min].Value}" />
+							<DataGridTextColumn
+								Header="{StaticResource columnView_IZoom}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[i_zoom].Value}" />
+							<DataGridTextColumn
+								Header="{StaticResource columnView_CZoom}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[c_zoom].Value}" />
+							<DataGridTextColumn
+								Header="{StaticResource columnView_ChkRef}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[chk_ref].Value}" />
+							<DataGridTextColumn
+								Header="{StaticResource columnView_ProgRel}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[prog_rel].Value}" />
+							<DataGridTextColumn
+								Header="{StaticResource columnView_Format}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[format].Value}" />
+							<DataGridTextColumn
+								Header="case"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[case].Value}" />
+						</DataGrid.Columns>
+					</DataGrid>
+				</TabItem>
+				<TabItem
+					Header="{StaticResource columnView_Ref}">
+					<DataGrid
+						x:Name="refView"
+						ItemsSource="{Binding}">
+						<DataGrid.Columns>
+							<DataGridTextColumn
+								Header="{StaticResource columnView_DepField}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[depend_field].Value}" />
+							<DataGridTextColumn
+								Header="{StaticResource columnView_CorresponKey}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[correspon_key].Value}" />
+							<DataGridTextColumn
+								Header="{StaticResource columnView_CorresponTable}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[ref_table].Value}" />
+							<DataGridTextColumn
+								Header="{StaticResource columnView_CorresponFK}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[ref_fk].Value}" />
+							<DataGridTextColumn
+								Header="{StaticResource columnView_CorresponLang}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[ref_dlang].Value}" />
+							<DataGridTextColumn
+								Header="{StaticResource columnView_CorresponReturn}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[ref_rtn].Value}" />
+						</DataGrid.Columns>
+					</DataGrid>
+				</TabItem>
+				<TabItem
+					Header="{StaticResource columnView_Help}"
+					Visibility="Collapsed">
+					<DataGrid
+						x:Name="helpView"
+						ItemsSource="{Binding}">
+						<DataGrid.Columns>
+							<DataGridTextColumn
+								Header="{StaticResource columnView_HelpDepField}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[depend_field].Value}" />
+							<DataGridTextColumn
+								Header="{StaticResource columnView_HelpCorresponKey}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[correspon_key].Value}" />
+							<DataGridTextColumn
+								Header="{StaticResource columnView_HelpTable}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[help_table].Value}" />
+							<DataGridTextColumn
+								Header="{StaticResource columnView_HelpFK}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[help_fk].Value}" />
+							<DataGridTextColumn
+								Header="{StaticResource columnView_HelpDLang}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[help_dlang].Value}" />
+							<DataGridTextColumn
+								Header="{StaticResource columnView_HelpReturn}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[help_rtn].Value}" />
+						</DataGrid.Columns>
+					</DataGrid>
+				</TabItem>
+				<TabItem
+					Header="{StaticResource columnView_MultiLang}">
+					<DataGrid
+						x:Name="langView"
+						ItemsSource="{Binding}">
+						<DataGrid.Columns>
+							<DataGridTextColumn
+								Header="{StaticResource columnView_DepField}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[depend_field].Value}" />
+							<DataGridTextColumn
+								Header="{StaticResource columnView_CorresponKey}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[correspon_key].Value}" />
+							<DataGridTextColumn
+								Header="{StaticResource columnView_MultiLangTable}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[lang_table].Value}" />
+							<DataGridTextColumn
+								Header="{StaticResource columnView_MultiLangFK}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[lang_fk].Value}" />
+							<DataGridTextColumn
+								Header="{StaticResource columnView_MultiLangLang}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[lang_dlang].Value}" />
+							<DataGridTextColumn
+								Header="{StaticResource columnView_MultiLangReturn}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[lang_rtn].Value}" />
+						</DataGrid.Columns>
+					</DataGrid>
+				</TabItem>
+				<TabItem
+					Header="{StaticResource columnView_Tree}">
+					<DataGrid
+						x:Name="treeView"
+						ItemsSource="{Binding Elements}">
+						<DataGrid.Columns>
+							<DataGridTextColumn
+								Header="{StaticResource columnView_No}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[no].Value}" />
+							<DataGridTextColumn
+								Header="{StaticResource columnView_Type}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Name}" />
+							<DataGridTextColumn
+								Header="{StaticResource tableView_TableDesc}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[table].Value}" />
+							<DataGridTextColumn
+								Header="{StaticResource tableView_ColumnText}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[col].Value}" />
+						</DataGrid.Columns>
+					</DataGrid>
+				</TabItem>
+				<TabItem
+					Header="{StaticResource columnView_Status}">
+					<DataGrid
+						x:Name="statusView"
+						ItemsSource="{Binding}">
+						<DataGrid.Columns>
+							<DataGridTextColumn
+								Header="{StaticResource columnView_StatusType}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[value].Value}" />
+							<DataGridTextColumn
+								Header="{StaticResource columnView_Desc}"
+								IsReadOnly="True"
+								Binding="{Binding Path=Attribute[desc].Value}" />
+						</DataGrid.Columns>
+					</DataGrid>
+				</TabItem>
+			</TabControl>
+		</Grid>
+		<StatusBar
+			Grid.Row="3"
+			Grid.ColumnSpan="2">
+			<StatusBarItem
+				x:Name="statusItem" />
+		</StatusBar>
+	</Grid>
+</Window>

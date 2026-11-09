@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TT — T100 人机协同调试</title>
+    <script>
+      // 首屏防闪色:渲染前按持久化主题挂 dark class(默认暗色;支持 亮色/暗色/跟随系统)
+      // 键名必须与 src/theme.ts 的 THEME_KEY('tt.theme')一致 —— 对不上首屏就会闪一下。
+      ;(function () {
+        try {
+          var m = localStorage.getItem('tt.theme') || 'dark'
+          var dark = m === 'dark' || (m !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+          document.documentElement.classList.toggle('dark', dark)
+        } catch (e) { /* 读不到就保持默认暗色 */ }
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

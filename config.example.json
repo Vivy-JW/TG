@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 3,
+  "listen": "127.0.0.1:28670",
+
+  "hosts": {
+    "sshs": [
+      {
+        "name": "开发环境",
+        "host": "10.0.0.1",
+        "port": 22,
+        "user": "tiptop",
+        "password": "换成真实口令",
+        "zone": "31",
+        "workspace": "D:\\t100_wrok_dir\\某客户\\dev",
+        "db": {
+          "type": "oracle",
+          "host": "10.0.0.2",
+          "port": 1521,
+          "service": "t100dev",
+          "readonlySql": true,
+          "viaSsh": {
+            "host": "10.0.0.1",
+            "port": 22,
+            "user": "tiptop",
+            "password": "换成真实口令",
+            "bindPort": 0,
+            "remoteHost": "",
+            "remotePort": 0
+          },
+          "accounts": [
+            { "account": "ds", "password": "换成真实口令" },
+            { "account": "dsdemo", "password": "换成真实口令" }
+          ]
+        }
+      },
+      {
+        "name": "正式环境",
+        "host": "10.0.1.1",
+        "port": 22,
+        "user": "tiptop",
+        "password": "换成真实口令",
+        "zone": "36",
+        "workspace": "D:\\t100_wrok_dir\\某客户\\prd",
+        "db": {
+          "type": "kingbase",
+          "host": "10.0.1.2",
+          "port": 54321,
+          "database": "topprd",
+          "accounts": [
+            { "account": "ds", "password": "换成真实口令" }
+          ]
+        }
+      }
+    ]
+  },
+
+  "debug": {
+    "launchArgs": "BBDL512840855a 2 12345 'N' {prog}",
+    "watchdogSeconds": 1800,
+    "fglserver": "",
+    "termWidth": 200,
+    "termHeight": 50,
+    "printElements": 1000,
+    "persistBreakpoints": true
+  },
+
+  "query": {
+    "source": "auto"
+  },
+
+  "mirror": {
+    "dir": ""
+  },
+
+  "sync": {
+    "target": ""
+  },
+  "net": {
+    "proxy": ""
+  },
+
+  "tdev": {
+    "workspaceSuffix": "-ws",
+    "defaultOut": ""
+  },
+
+  "skills": {
+    "externals": [
+      { "path": "D:\\我的技能库\\kb-faq", "label": "kb-faq" }
+    ]
+  },
+
+  "tzs": {
+    "serverExe": ""
+  }
+}

@@ -1,0 +1,531 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{472D80D5-9ABC-4E27-AC88-B8516E27EFCC}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>SpecDesignerCommon</RootNamespace>
+    <AssemblyName>SpecDesignerCommon</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60DC8134-EBA5-43B8-BCC9-BB4BC16C2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="AppLimit.NetSparkle.Net40">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\AppLimit.NetSparkle.Net40.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.SharpZipLib">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\ICSharpCode.SharpZipLib.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.Practices.Prism">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\Microsoft.Practices.Prism.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="Renci.SshNet">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\Renci.SshNet.dll</HintPath>
+    </Reference>
+    <Reference Include="SpecDesigner.Controls">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\SpecDesigner.Controls.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Windows.Interactivity">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\System.Windows.Interactivity.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="Xceed.Wpf.Toolkit">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\Xceed.Wpf.Toolkit.dll</HintPath>
+    </Reference>
+    <Reference Include="mscorlib" />
+    <Reference Include="Microsoft.Expression.Drawing" />
+    <Reference Include="Microsoft.Expression.Interactions" />
+  </ItemGroup>
+  <ItemGroup>
+    <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AttrDictionary.cs" />
+    <Compile Include="Bookmark\IBookmark.cs" />
+    <Compile Include="Bookmark\IBookmarkMargin.cs" />
+    <Compile Include="ComponentDeletedArgs.cs" />
+    <Compile Include="Connection\Adorner\AdornerExtensions.cs" />
+    <Compile Include="Connection\Adorner\PasswordBoxWatermarkBehavior.cs" />
+    <Compile Include="Connection\Adorner\WaterMarkeAdorner.cs" />
+    <Compile Include="Connection\CheckGDCWindow.xaml.cs">
+      <DependentUpon>CheckGDCWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Connection\CheckOptionEnum.cs" />
+    <Compile Include="Connection\ConnectionInfo.cs" />
+    <Compile Include="Connection\ConnectionManager.cs" />
+    <Compile Include="Connection\DataReceivedEventArgs.cs" />
+    <Compile Include="Connection\Helper\PasswordHelper.cs" />
+    <Compile Include="Connection\InputValidation.cs" />
+    <Compile Include="Connection\ITTNetwork.cs" />
+    <Compile Include="Connection\LogData.cs" />
+    <Compile Include="Connection\LoginWindow.xaml.cs">
+      <DependentUpon>LoginWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Connection\MessageEventArgs.cs" />
+    <Compile Include="Connection\ServerLog.xaml.cs">
+      <DependentUpon>ServerLog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Connection\ServerLogCommands.cs" />
+    <Compile Include="Connection\ServiceCloudLoginWindow.xaml.cs">
+      <DependentUpon>ServiceCloudLoginWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Connection\SshNetwork.cs" />
+    <Compile Include="Connection\Telnet.cs" />
+    <Compile Include="Connection\TOPSTDLoginWindow.xaml.cs">
+      <DependentUpon>TOPSTDLoginWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="EventAggregatorManager.cs" />
+    <Compile Include="Events\ActiveDocumentChangedEvent.cs" />
+    <Compile Include="Events\ClosedSearchBoxEvent.cs" />
+    <Compile Include="Events\CodeChangedEvent.cs" />
+    <Compile Include="Events\CodeSpecChangedEvent.cs" />
+    <Compile Include="Events\CompareResult.cs" />
+    <Compile Include="Events\ComponentSelectedEvent.cs" />
+    <Compile Include="Events\ConnectionStatusChangedEvent.cs" />
+    <Compile Include="Events\ConnectionStatusChangedEventArgs.cs" />
+    <Compile Include="Events\DefinitionType.cs" />
+    <Compile Include="Events\DiffBlockCopyContentEvent.cs" />
+    <Compile Include="Events\DiffCopyInfo.cs" />
+    <Compile Include="Events\DiffFunctionSyncEvent.cs" />
+    <Compile Include="Events\DiffLineCopyContentEvent.cs" />
+    <Compile Include="Events\DiffNormalizationSearchEvent.cs" />
+    <Compile Include="Events\DiffTreeSortInfo.cs" />
+    <Compile Include="Events\DiffType.cs" />
+    <Compile Include="Events\DocumentErrorsEvent.cs" />
+    <Compile Include="Events\DocumentErrorsEventArgs.cs" />
+    <Compile Include="Events\ErrorsType.cs" />
+    <Compile Include="Events\FormPropertyChangedEvent.cs" />
+    <Compile Include="Events\FormPropertyChangedEventArgs.cs" />
+    <Compile Include="Events\FunctionSelectedEvent.cs" />
+    <Compile Include="Events\FunctionSelectedModel.cs" />
+    <Compile Include="Events\FunctionSyncInfo.cs" />
+    <Compile Include="Events\HideSpecPropertiesEvent.cs" />
+    <Compile Include="Events\HideTabIndexEvent.cs" />
+    <Compile Include="Events\InsertionCodeEvent.cs" />
+    <Compile Include="Events\InsertionCodeEventArgs.cs" />
+    <Compile Include="Events\LoadedSettingIncludingCodeEvent.cs" />
+    <Compile Include="Events\LoadedSettingIncludingCodeSpecEvent.cs" />
+    <Compile Include="Events\LoadedSettingIncludingFormEvent.cs" />
+    <Compile Include="Events\LoadedSettingIncludingReportSpecEvent.cs" />
+    <Compile Include="Events\LoadSettingEvent.cs" />
+    <Compile Include="Events\LoadSpecReferFilesEvent.cs" />
+    <Compile Include="Events\MultiComponentSelectedEvent.cs" />
+    <Compile Include="Events\MultiSelectionArgs.cs" />
+    <Compile Include="Events\NormalizationSearchResult.cs" />
+    <Compile Include="Events\ProgramSelectionChangedEvent.cs" />
+    <Compile Include="Events\RefreshDiffResultEvent.cs" />
+    <Compile Include="Events\ReplaceAllEvent.cs" />
+    <Compile Include="Events\ReplaceAllFromCaret.cs" />
+    <Compile Include="Events\ReplaceAllKeywordEventArgs.cs" />
+    <Compile Include="Events\ReplaceEvent.cs" />
+    <Compile Include="Events\ReplaceKeywordEvent.cs" />
+    <Compile Include="Events\ReplaceResultEvent.cs" />
+    <Compile Include="Events\ReportSpecChangedEvent.cs" />
+    <Compile Include="Events\RunCommandEvent.cs" />
+    <Compile Include="Events\SaveDiffBaseOnStandardResultEvent.cs" />
+    <Compile Include="Events\SaveSettingEvent.cs" />
+    <Compile Include="Events\SaveSqlResultEvent.cs" />
+    <Compile Include="Events\SearchCodeEvent.cs" />
+    <Compile Include="Events\SearchCodeFromFormEvent.cs" />
+    <Compile Include="Events\SearchFromCaret.cs" />
+    <Compile Include="Events\SearchFromFocusEvent.cs" />
+    <Compile Include="Events\SearchKeywordEvent.cs" />
+    <Compile Include="Events\SearchKeywordEventArgs.cs" />
+    <Compile Include="Events\SearchKeywordResultEvent.cs" />
+    <Compile Include="Events\SearchResultInfoSelectedEvent.cs" />
+    <Compile Include="Events\ShowReplaceBoxEvent.cs" />
+    <Compile Include="Events\ShowSearchBoxEvent.cs" />
+    <Compile Include="Events\ShowTabIndexEvent.cs" />
+    <Compile Include="Events\SpecPropertiesChangedEvent.cs" />
+    <Compile Include="Events\SpecPropertiesChangedEventArgs.cs" />
+    <Compile Include="Events\TzpFileClose.cs" />
+    <Compile Include="Events\TzpFileLoaded.cs" />
+    <Compile Include="Exceptions\ComplexException.cs" />
+    <Compile Include="Exceptions\NameAlreadyInUseException.cs" />
+    <Compile Include="Exceptions\NotInCurrentWorkspaceException.cs" />
+    <Compile Include="Exceptions\VersionIncompatibleException.cs" />
+    <Compile Include="Extension\StringBuilderExtension.cs" />
+    <Compile Include="FieldArgs.cs" />
+    <Compile Include="FJSObject.cs" />
+    <Compile Include="Helpers\BusyIndicatorExtension.cs" />
+    <Compile Include="Helpers\CodeLibrariesHelper.cs" />
+    <Compile Include="Helpers\ColsConverter.cs" />
+    <Compile Include="Helpers\ComponentFactory.cs" />
+    <Compile Include="Helpers\ComponentHelper.cs" />
+    <Compile Include="Helpers\ComponentPropertyTypeEnum.cs" />
+    <Compile Include="Helpers\ComponentType.cs" />
+    <Compile Include="Helpers\DataGridHelper.cs" />
+    <Compile Include="Helpers\DimensionClassConverter.cs" />
+    <Compile Include="Helpers\ForDBValueConverter.cs" />
+    <Compile Include="Helpers\FormCommands.cs" />
+    <Compile Include="Helpers\FormDesignSetting.cs" />
+    <Compile Include="Helpers\GridSize.cs" />
+    <Compile Include="Helpers\InvertBoolConverter.cs" />
+    <Compile Include="Helpers\MessageBoxImageConverter.cs" />
+    <Compile Include="Helpers\MoveDirection.cs" />
+    <Compile Include="Helpers\PosXY.cs" />
+    <Compile Include="Helpers\ReflectionHelpers.cs" />
+    <Compile Include="Helpers\TabIndexSortHelper.cs" />
+    <Compile Include="Helpers\TableColumnHelper.cs" />
+    <Compile Include="ISearchResult.cs" />
+    <Compile Include="LocalizedStringChangedEventArgs.cs" />
+    <Compile Include="Logger\DSCLogger.cs" />
+    <Compile Include="MemoType.cs" />
+    <Compile Include="ObjectBindings.cs" />
+    <Compile Include="PackageKey.cs" />
+    <Compile Include="PackageManager.cs" />
+    <Compile Include="PakageType.cs" />
+    <Compile Include="ProgramSelectionChangedEventArgs.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RelayCommand.cs" />
+    <Compile Include="ReplaceResultInfo.cs" />
+    <Compile Include="SearchDirection.cs" />
+    <Compile Include="SearchEventArgs.cs" />
+    <Compile Include="SearchFromFocusEventArgs.cs" />
+    <Compile Include="SearchMode.cs" />
+    <Compile Include="SearchResultInfo.cs" />
+    <Compile Include="SearchTarget.cs" />
+    <Compile Include="SettingFileHelper.cs" />
+    <Compile Include="SettingManager.cs" />
+    <Compile Include="SimpleFormSetupType.cs" />
+    <Compile Include="Site\Behaviors\AllowDropAdorner.cs" />
+    <Compile Include="Site\Behaviors\IDragable.cs" />
+    <Compile Include="Site\Behaviors\IDropable.cs" />
+    <Compile Include="Site\Behaviors\SiteDragBehavrior.cs" />
+    <Compile Include="Site\Behaviors\SiteDropBehavior.cs" />
+    <Compile Include="Site\CheckVersionArgs.cs" />
+    <Compile Include="Site\Converters\FirstLeafLineMarginConverter.cs" />
+    <Compile Include="Site\Converters\LineVisibilityConverter.cs" />
+    <Compile Include="Site\Converters\NameLabelConverter.cs" />
+    <Compile Include="Site\Converters\TreeViewItemToLineTranslateTransformFactor.cs" />
+    <Compile Include="Site\Converters\VersionEnabledConverter.cs" />
+    <Compile Include="Site\Converters\Visual_ExtensionMethods.cs" />
+    <Compile Include="Site\Finish.cs" />
+    <Compile Include="Site\RegistryReader.cs" />
+    <Compile Include="Site\RelayCommand.cs" />
+    <Compile Include="Site\SiteFileHelper.cs" />
+    <Compile Include="Site\SiteManager.xaml.cs">
+      <DependentUpon>SiteManager.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Site\SiteManagerCommand.cs" />
+    <Compile Include="Site\UpdateManager.cs" />
+    <Compile Include="Site\ViewModels\ConnectionSetting.cs" />
+    <Compile Include="Site\ViewModels\IShellLink.cs" />
+    <Compile Include="Site\ViewModels\SettingFolderModel.cs" />
+    <Compile Include="Site\ViewModels\SettingModel.cs" />
+    <Compile Include="Site\ViewModels\SettingModelBase.cs" />
+    <Compile Include="Site\ViewModels\SettingModelCollection.cs" />
+    <Compile Include="Site\ViewModels\ShellLink.cs" />
+    <Compile Include="Site\ViewModels\SiteManagerModel.cs" />
+    <Compile Include="Site\ViewModels\TOPSTDSettingModel.cs" />
+    <Compile Include="Site\ViewModels\UriExtensions.cs" />
+    <Compile Include="Site\Views\BlockArrow.xaml.cs">
+      <DependentUpon>BlockArrow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Site\Views\PasswordHelper.cs" />
+    <Compile Include="SpecArgs.cs" />
+    <Compile Include="SpecBindingInfo.cs" />
+    <Compile Include="SpecDesignerPreference\CommonUsedElement.cs" />
+    <Compile Include="SpecDesignerPreference\CommonUsedShortcut.cs" />
+    <Compile Include="SpecDesignerPreference\Helper\ContentConverter.cs" />
+    <Compile Include="SpecDesignerPreference\LanguageModel.cs" />
+    <Compile Include="SpecDesignerPreference\MaxRecentFilesModel.cs" />
+    <Compile Include="SpecDesignerPreference\PreferenceCommands.cs" />
+    <Compile Include="SpecDesignerPreference\PreferenceCommonUsedWindow.xaml.cs">
+      <DependentUpon>PreferenceCommonUsedWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SpecDesignerPreference\PreferenceManager.cs" />
+    <Compile Include="SpecDesignerPreference\PreferenceModel.cs" />
+    <Compile Include="SpecDesignerPreference\PreferenceWindow.xaml.cs">
+      <DependentUpon>PreferenceWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SpecDesignerPreference\RecentFilesModel.cs" />
+    <Compile Include="SpecDesignerPreference\ThemeOptions.cs" />
+    <Compile Include="SpecificationInfo.cs" />
+    <Compile Include="SpecOperationTypeEnum.cs" />
+    <Compile Include="SpecPropertiesEventArgs.cs" />
+    <Compile Include="TBinding.cs" />
+    <Compile Include="TblUpdate\Lang.cs" />
+    <Compile Include="TblUpdate\TblUpdateCastItem.cs" />
+    <Compile Include="TblUpdate\TblUpdateGroup.cs" />
+    <Compile Include="TblUpdate\TblUpdateItem.cs" />
+    <Compile Include="TblUpdate\TblUpdateManager.cs" />
+    <Compile Include="TzpManager.cs" />
+    <Compile Include="TzpSavedEventArgs.cs" />
+    <Compile Include="TzpType.cs" />
+    <Compile Include="UndoRedoCommands\ActLocalStringUndoRedoCommand.cs" />
+    <Compile Include="UndoRedoCommands\ExcludedUndoRedoCommand.cs" />
+    <Compile Include="UndoRedoCommands\FormPosUndoRedoCommand.cs" />
+    <Compile Include="UndoRedoCommands\FormSizeComplexUndoRedoCommand.cs" />
+    <Compile Include="UndoRedoCommands\ProgRelProgramAttributeUndoRedoCommand.cs" />
+    <Compile Include="UndoRedoCommands\SDSpecUndoRedoCommand.cs" />
+    <Compile Include="UndoRedoCommands\SpecCitedUndoRedoCommand.cs" />
+    <Compile Include="UndoRedo\AbstractUndoRedoCommand.cs" />
+    <Compile Include="UndoRedo\AddComponetsUndoRedoCommand.cs" />
+    <Compile Include="UndoRedo\AddToContainerUndoRedoCommand.cs" />
+    <Compile Include="UndoRedo\AlignUndoRedoCommand.cs" />
+    <Compile Include="UndoRedo\BooleanAttributeValue.cs" />
+    <Compile Include="UndoRedo\BreakLayoutUndoRedoCommand.cs" />
+    <Compile Include="UndoRedo\ChangeChildIndexUndoRedoCommand.cs" />
+    <Compile Include="UndoRedo\ChangeProgRelProgramUndoRedoCommand.cs" />
+    <Compile Include="UndoRedo\ChangeSizeUndoRedoCommand.cs" />
+    <Compile Include="UndoRedo\ConvertContainerTypeUndoRedoCommand.cs" />
+    <Compile Include="UndoRedo\ConvertWidgetTypeUndoRedoCommand.cs" />
+    <Compile Include="UndoRedo\CutComponentUndoRedoCommand.cs" />
+    <Compile Include="UndoRedo\DeleteActUndoRedoCommand.cs" />
+    <Compile Include="UndoRedo\DeleteComponentsUndoRedoCommand.cs" />
+    <Compile Include="UndoRedo\DesignerClipboardData.cs" />
+    <Compile Include="UndoRedo\DragComponentsUndoRedoCommand.cs" />
+    <Compile Include="UndoRedo\FormAttributesUndoRedoCommand.cs" />
+    <Compile Include="UndoRedo\FormSizeUndoRedoCommand.cs" />
+    <Compile Include="UndoRedo\MoveComponentsUndoRedoCommand.cs" />
+    <Compile Include="UndoRedo\MultiFormAttributesUndoRedoCommand.cs" />
+    <Compile Include="UndoRedo\MultiHideUndoRedoCommand.cs" />
+    <Compile Include="UndoRedo\PasteComponentUndoRedoCommand.cs" />
+    <Compile Include="UndoRedo\RenameUndoRedoCommand.cs" />
+    <Compile Include="UndoRedo\SpecAttributeUndoRedoCommand.cs" />
+    <Compile Include="UndoRedo\SpecTreeAttributeUndoRedoCommand.cs" />
+    <Compile Include="ViewModel\AbstractSpecNode.cs" />
+    <Compile Include="ViewModel\AbstractStringNode.cs" />
+    <Compile Include="ViewModel\AlignOptions.cs" />
+    <Compile Include="ViewModel\AvalonOptions.cs" />
+    <Compile Include="ViewModel\CiteEnum.cs" />
+    <Compile Include="ViewModel\CodeSpecStatus.cs" />
+    <Compile Include="ViewModel\CodeSpecStatusToString.cs" />
+    <Compile Include="ViewModel\ContainerMapManager.cs" />
+    <Compile Include="ViewModel\DatabaseSourceViewModel.cs" />
+    <Compile Include="ViewModel\DBOptions.cs" />
+    <Compile Include="ViewModel\DimensionClassOption.cs" />
+    <Compile Include="ViewModel\DimensionOption.cs" />
+    <Compile Include="ViewModel\DSColumnModel.cs" />
+    <Compile Include="ViewModel\DSColumnViewModel.cs" />
+    <Compile Include="ViewModel\DSTableModel.cs" />
+    <Compile Include="ViewModel\EnumCited.cs" />
+    <Compile Include="ViewModel\FglBaseNode.cs" />
+    <Compile Include="ViewModel\FglBaseObject.cs" />
+    <Compile Include="ViewModel\FglComponent.cs" />
+    <Compile Include="ViewModel\FglDimension.cs" />
+    <Compile Include="ViewModel\FglDimensionNode.cs" />
+    <Compile Include="ViewModel\FglFrontComp.cs" />
+    <Compile Include="ViewModel\FglFrontCompNode.cs" />
+    <Compile Include="ViewModel\FglKeyword.cs" />
+    <Compile Include="ViewModel\FglKeywordNode.cs" />
+    <Compile Include="ViewModel\FglParameter.cs" />
+    <Compile Include="ViewModel\FglParameterNode.cs" />
+    <Compile Include="ViewModel\FglSpecContent.cs" />
+    <Compile Include="ViewModel\FglSpecification.cs" />
+    <Compile Include="ViewModel\FglTest.cs" />
+    <Compile Include="ViewModel\FglTestNode.cs" />
+    <Compile Include="ViewModel\FormSpecDictionary.cs" />
+    <Compile Include="ViewModel\FormSpecModel.cs" />
+    <Compile Include="ViewModel\IAvalonCodeSpecEditorLayout.cs" />
+    <Compile Include="ViewModel\IAvalonCodeStructureLayout.cs" />
+    <Compile Include="ViewModel\IAvalonFormPropertiesLayout.cs" />
+    <Compile Include="ViewModel\IAvalonFormSpecEditorLayout.cs" />
+    <Compile Include="ViewModel\IAvalonFormStructureLayout.cs" />
+    <Compile Include="ViewModel\IAvalonLayout.cs" />
+    <Compile Include="ViewModel\IMainCodeMenu.cs" />
+    <Compile Include="ViewModel\IMainEditMenu.cs" />
+    <Compile Include="ViewModel\IMainSpecMenu.cs" />
+    <Compile Include="ViewModel\ISpecSearchable.cs" />
+    <Compile Include="ViewModel\ModFdInfo.cs" />
+    <Compile Include="ViewModel\ProgRelProgram.cs" />
+    <Compile Include="ViewModel\ProgRelType.cs" />
+    <Compile Include="ViewModel\ProgressBarModel.cs" />
+    <Compile Include="ViewModel\ProgressBarViewModel.cs" />
+    <Compile Include="ViewModel\ReportSpecification.cs" />
+    <Compile Include="ViewModel\ResizeDirectionEnum.cs" />
+    <Compile Include="ViewModel\ScreenRecordManager.cs" />
+    <Compile Include="ViewModel\SortPosition.cs" />
+    <Compile Include="ViewModel\SortStatusComparison.cs" />
+    <Compile Include="ViewModel\SpecActionNode.cs" />
+    <Compile Include="ViewModel\SpecActStringNode.cs" />
+    <Compile Include="ViewModel\SpecExcludeNode.cs" />
+    <Compile Include="ViewModel\SpecFieldNode.cs" />
+    <Compile Include="ViewModel\SpecFieldStringNode.cs" />
+    <Compile Include="ViewModel\SpecHelpCodeNode.cs" />
+    <Compile Include="ViewModel\SpecMultiLangNode.cs" />
+    <Compile Include="ViewModel\SpecNodeTransform.cs" />
+    <Compile Include="ViewModel\SpecNodeType.cs" />
+    <Compile Include="ViewModel\SpecProgram.cs" />
+    <Compile Include="ViewModel\SpecProgramAll.cs" />
+    <Compile Include="ViewModel\SpecProgramDB.cs" />
+    <Compile Include="ViewModel\SpecProgramDI.cs" />
+    <Compile Include="ViewModel\SpecProgramMI.cs" />
+    <Compile Include="ViewModel\SpecProgRelNode.cs" />
+    <Compile Include="ViewModel\SpecReferenceNode.cs" />
+    <Compile Include="ViewModel\SpecStatus.cs" />
+    <Compile Include="ViewModel\SpecTreeNode.cs" />
+    <Compile Include="ViewModel\TableAssociationModel.cs" />
+    <Compile Include="ViewModel\TBLModel.cs" />
+    <Compile Include="ViewModel\TBLSRModel.cs" />
+    <Compile Include="ViewModel\WidgetCommands.cs" />
+    <Compile Include="ViewModel\XmlElement.cs" />
+    <Compile Include="Views\AutoCloseDialog.xaml.cs">
+      <DependentUpon>AutoCloseDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\DetailsMessageBox.xaml.cs">
+      <DependentUpon>DetailsMessageBox.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\LocalItemsSelectionWindow.xaml.cs">
+      <DependentUpon>LocalItemsSelectionWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ProgressBar.xaml.cs">
+      <DependentUpon>ProgressBar.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Watermark.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CustomException\CustomException.csproj">
+      <Project>{472D80D5-9ABC-4E27-AC88-B8516E27EFC2}</Project>
+      <Name>CustomException</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\UndoRedoFramework\UndoRedoFramework.csproj">
+      <Project>{472D80D5-9ABC-4E27-AC88-B8516E27EFCD}</Project>
+      <Name>UndoRedoFramework</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="Connection\CheckGDCWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Connection\LoginWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Connection\ServerLog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Connection\ServiceCloudLoginWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Connection\TOPSTDLoginWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Langs\Vi-Vn.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Site\SiteManager.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Site\Views\BlockArrow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SpecDesignerPreference\PreferenceCommonUsedWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SpecDesignerPreference\PreferenceWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\AutoCloseDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\DetailsMessageBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\LocalItemsSelectionWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\ProgressBar.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="images\conn.ico" />
+    <Resource Include="images\error.png" />
+    <Resource Include="images\folder.ico" />
+    <Resource Include="images\information.png" />
+    <Resource Include="images\installed.ico" />
+    <Resource Include="images\notinstalled.ico" />
+    <Resource Include="images\question.png" />
+    <Resource Include="images\site_con.png" />
+    <Resource Include="images\site_con_dark.png" />
+    <Resource Include="images\site_con_gray.png" />
+    <Resource Include="images\site_copy.png" />
+    <Resource Include="images\site_copy_dark.png" />
+    <Resource Include="images\site_copy_gray.png" />
+    <Resource Include="images\site_delete.png" />
+    <Resource Include="images\site_delete_dark.png" />
+    <Resource Include="images\site_delete_gray.png" />
+    <Resource Include="images\site_export.png" />
+    <Resource Include="images\site_export_dark.png" />
+    <Resource Include="images\site_export_gray.png" />
+    <Resource Include="images\site_folder.png" />
+    <Resource Include="images\site_import.png" />
+    <Resource Include="images\site_import_dark.png" />
+    <Resource Include="images\site_import_gray.png" />
+    <Resource Include="images\site_newcon.png" />
+    <Resource Include="images\site_newcon_dark.png" />
+    <Resource Include="images\site_newcon_gray.png" />
+    <Resource Include="images\site_newfolder.png" />
+    <Resource Include="images\site_newfolder_dark.png" />
+    <Resource Include="images\site_newfolder_gray.png" />
+    <Resource Include="images\site_rename.png" />
+    <Resource Include="images\site_rename_dark.png" />
+    <Resource Include="images\site_rename_gray.png" />
+    <Resource Include="images\site_shortcut.png" />
+    <Resource Include="images\site_shortcut_dark.png" />
+    <Resource Include="images\site_shortcut_gray.png" />
+    <Resource Include="images\warning.png" />
+    <Resource Include="langs\en-us.xaml" />
+    <Resource Include="langs\zh-cn.xaml" />
+    <Resource Include="langs\zh-tw.xaml" />
+    <Resource Include="preference\images\navigate_left.png" />
+    <Resource Include="preference\images\navigate_right.png" />
+    <Resource Include="site\themes\generic.xaml" />
+    <Resource Include="site\themes\generic_zh-cn.xaml" />
+    <Resource Include="site\themes\generic_zh-tw.xaml" />
+    <Resource Include="themes\generic.xaml" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

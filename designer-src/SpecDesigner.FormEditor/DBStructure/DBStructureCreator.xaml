@@ -1,0 +1,379 @@
+<Window
+	x:Class="SpecDesigner.FormEditor.DBStructure.DBStructureCreator"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:sys="clr-namespace:System;assembly=mscorlib"
+	xmlns:local="clr-namespace:SpecDesigner.FormEditor.DBStructure"
+	x:Name="dbStructureWin"
+	Title="Create From DB Structure"
+	Width="750">
+	<FrameworkElement.Resources>
+		<ResourceDictionary>
+			<CollectionViewSource
+				x:Key="tablesSource" />
+			<CollectionViewSource
+				x:Key="SelectedColumnSource" />
+			<Storyboard
+				x:Key="NextStoryboard">
+				<BooleanAnimationUsingKeyFrames
+					Storyboard.TargetProperty="(UIElement.IsEnabled)"
+					Storyboard.TargetName="backButton">
+					<DiscreteBooleanKeyFrame
+						KeyTime="0"
+						Value="True" />
+				</BooleanAnimationUsingKeyFrames>
+				<BooleanAnimationUsingKeyFrames
+					Storyboard.TargetProperty="(UIElement.IsEnabled)"
+					Storyboard.TargetName="nextButton">
+					<DiscreteBooleanKeyFrame
+						KeyTime="0"
+						Value="False" />
+				</BooleanAnimationUsingKeyFrames>
+				<ObjectAnimationUsingKeyFrames
+					Storyboard.TargetProperty="(UIElement.Visibility)"
+					Storyboard.TargetName="grid1">
+					<DiscreteObjectKeyFrame
+						KeyTime="0"
+						Value="{x:Static Visibility.Collapsed}" />
+				</ObjectAnimationUsingKeyFrames>
+				<ObjectAnimationUsingKeyFrames
+					Storyboard.TargetProperty="(UIElement.Visibility)"
+					Storyboard.TargetName="grid2">
+					<DiscreteObjectKeyFrame
+						KeyTime="0"
+						Value="{x:Static Visibility.Visible}" />
+				</ObjectAnimationUsingKeyFrames>
+			</Storyboard>
+			<Storyboard
+				x:Key="BackStoryboard">
+				<BooleanAnimationUsingKeyFrames
+					Storyboard.TargetProperty="(UIElement.IsEnabled)"
+					Storyboard.TargetName="backButton">
+					<DiscreteBooleanKeyFrame
+						KeyTime="0"
+						Value="False" />
+				</BooleanAnimationUsingKeyFrames>
+				<BooleanAnimationUsingKeyFrames
+					Storyboard.TargetProperty="(UIElement.IsEnabled)"
+					Storyboard.TargetName="nextButton">
+					<DiscreteBooleanKeyFrame
+						KeyTime="0"
+						Value="True" />
+				</BooleanAnimationUsingKeyFrames>
+				<ObjectAnimationUsingKeyFrames
+					Storyboard.TargetProperty="(UIElement.Visibility)"
+					Storyboard.TargetName="grid1">
+					<DiscreteObjectKeyFrame
+						KeyTime="0"
+						Value="{x:Static Visibility.Visible}" />
+				</ObjectAnimationUsingKeyFrames>
+				<ObjectAnimationUsingKeyFrames
+					Storyboard.TargetProperty="(UIElement.Visibility)"
+					Storyboard.TargetName="grid2">
+					<DiscreteObjectKeyFrame
+						KeyTime="0"
+						Value="{x:Static Visibility.Collapsed}" />
+				</ObjectAnimationUsingKeyFrames>
+			</Storyboard>
+		</ResourceDictionary>
+	</FrameworkElement.Resources>
+	<FrameworkElement.Triggers>
+		<EventTrigger
+			RoutedEvent="ButtonBase.Click"
+			SourceName="nextButton">
+			<BeginStoryboard
+				Storyboard="{StaticResource NextStoryboard}" />
+		</EventTrigger>
+		<EventTrigger
+			RoutedEvent="ButtonBase.Click"
+			SourceName="backButton">
+			<BeginStoryboard
+				Storyboard="{StaticResource BackStoryboard}" />
+		</EventTrigger>
+	</FrameworkElement.Triggers>
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition
+				Height="*" />
+			<RowDefinition
+				Height="Auto" />
+		</Grid.RowDefinitions>
+		<Grid
+			x:Name="grid1"
+			Visibility="Visible"
+			Margin="0 0 0 0">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition
+					Width="250"
+					MinWidth="200" />
+				<ColumnDefinition
+					Width="225"
+					MinWidth="100" />
+				<ColumnDefinition
+					MinWidth="100" />
+			</Grid.ColumnDefinitions>
+			<Grid
+				Column="0">
+				<Grid.RowDefinitions>
+					<RowDefinition
+						Height="Auto" />
+					<RowDefinition
+						Height="*" />
+				</Grid.RowDefinitions>
+				<DockPanel>
+					<TextBlock
+						Text="{DynamicResource DBStructure_Filter}"
+						DockPanel.Dock="Left"
+						VerticalAlignment="Center"
+						Margin="5" />
+					<TextBox
+						x:Name="tableFilterTB"
+						DockPanel.Dock="Right"
+						Margin="5"
+						TextChanged="tableFilterTB_TextChanged" />
+				</DockPanel>
+				<DataGrid
+					x:Name="TableDataGrid"
+					Grid.Row="1"
+					SelectionMode="Single"
+					SelectionUnit="FullRow"
+					AutoGenerateColumns="False"
+					Margin="5"
+					IsReadOnly="True"
+					CanUserAddRows="False"
+					CanUserDeleteRows="False"
+					VerticalAlignment="Stretch"
+					ItemsSource="{Binding Source='{StaticResource tablesSource}'}"
+					SelectionChanged="TableDataGrid_SelectionChanged">
+					<DataGrid.Columns>
+						<DataGridTextColumn
+							Header="{StaticResource DBStructure_Table}"
+							IsReadOnly="True"
+							Binding="{Binding Path=Attribute[name].Value}" />
+						<DataGridTextColumn
+							Width="150"
+							Header="{DynamicResource DBStructure_Description}"
+							IsReadOnly="True"
+							Binding="{Binding Path=Attribute[desc].Value}" />
+						<DataGridTextColumn
+							Header="{DynamicResource DBStructure_Module}"
+							IsReadOnly="True"
+							Width="*"
+							Binding="{Binding Path=Attribute[module].Value}" />
+					</DataGrid.Columns>
+				</DataGrid>
+			</Grid>
+			<GridSplitter
+				Width="5"
+				VerticalAlignment="Stretch"
+				HorizontalAlignment="Right"
+				Grid.Column="0" />
+			<DataGrid
+				x:Name="ColumnDataGrid"
+				Grid.Column="1"
+				Margin="5"
+				IsReadOnly="True"
+				SelectionMode="Extended"
+				SelectionUnit="FullRow"
+				AutoGenerateColumns="False"
+				CanUserAddRows="False"
+				CanUserDeleteRows="False"
+				VerticalAlignment="Stretch"
+				MouseDoubleClick="ColumnDataGrid_MouseDoubleClick">
+				<DataGrid.Columns>
+					<DataGridTextColumn
+						Header="{StaticResource DBStructure_Column}"
+						Binding="{Binding Path=Attribute[name].Value}" />
+					<DataGridTextColumn
+						Header="{DynamicResource DBStructure_Description}"
+						Width="*"
+						Binding="{Binding Path=Attribute[text].Value}" />
+				</DataGrid.Columns>
+			</DataGrid>
+			<GridSplitter
+				Width="5"
+				VerticalAlignment="Stretch"
+				HorizontalAlignment="Right"
+				Grid.Column="1" />
+			<Grid
+				Column="2"
+				Margin="5">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition
+						Width="Auto" />
+					<ColumnDefinition />
+					<ColumnDefinition
+						Width="Auto" />
+				</Grid.ColumnDefinitions>
+				<StackPanel
+					VerticalAlignment="Center">
+					<Button
+						x:Name="AddAllBtn"
+						Margin="5"
+						Click="AddAllBtn_Click">
+						<Image
+							Source="images/navigate_doubleRight.png" />
+					</Button>
+					<Button
+						x:Name="AddBtn"
+						Margin="5"
+						Click="AddBtn_Click">
+						<Image
+							Source="images/navigate_right.png" />
+						<FrameworkElement.Style>
+							<Style
+								BasedOn="{StaticResource {x:Type Button}}"
+								TargetType="{x:Type Button}">
+								<Style.Triggers>
+									<DataTrigger
+										Value="0"
+										Binding="{Binding SelectedItems.Count, ElementName=ColumnDataGrid}">
+										<Setter
+											Property="IsEnabled"
+											Value="False" />
+									</DataTrigger>
+								</Style.Triggers>
+							</Style>
+						</FrameworkElement.Style>
+					</Button>
+					<Button
+						x:Name="RemoveBtn"
+						Margin="5"
+						Click="RemoveBtn_Click">
+						<Image
+							Source="images/navigate_left.png" />
+						<FrameworkElement.Style>
+							<Style
+								BasedOn="{StaticResource {x:Type Button}}"
+								TargetType="{x:Type Button}">
+								<Style.Triggers>
+									<DataTrigger
+										Value="0"
+										Binding="{Binding SelectedItems.Count, ElementName=SelectionDataGrid}">
+										<Setter
+											Property="IsEnabled"
+											Value="False" />
+									</DataTrigger>
+								</Style.Triggers>
+							</Style>
+						</FrameworkElement.Style>
+					</Button>
+					<Button
+						x:Name="RemoveAllBtn"
+						Margin="5"
+						Click="RemoveAllBtn_Click">
+						<Image
+							Source="images/navigate_doubleLeft.png" />
+					</Button>
+				</StackPanel>
+				<DataGrid
+					x:Name="SelectionDataGrid"
+					Grid.Column="1"
+					AutoGenerateColumns="False"
+					IsReadOnly="True"
+					SelectionUnit="FullRow"
+					VerticalAlignment="Stretch"
+					ItemsSource="{Binding Source='{StaticResource SelectedColumnSource}'}"
+					SelectionChanged="SelectionDataGrid_SelectionChanged">
+					<DataGrid.RowStyle>
+						<Style
+							TargetType="{x:Type DataGridRow}">
+							<Setter
+								Property="DataGridRow.IsSelected"
+								Value="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+						</Style>
+					</DataGrid.RowStyle>
+					<DataGrid.Columns>
+						<DataGridTextColumn
+							Header="{StaticResource DBStructure_Table}"
+							Binding="{Binding Table}" />
+						<DataGridTextColumn
+							Header="{StaticResource DBStructure_Column}"
+							Binding="{Binding Column}" />
+						<DataGridTextColumn
+							Header="{StaticResource DBStructure_Description}"
+							Binding="{Binding Description}" />
+						<DataGridTextColumn
+							Header="{StaticResource DBStructure_WidgetType}"
+							Binding="{Binding Widget}" />
+						<DataGridTextColumn
+							Header="{StaticResource DBStructure_WidgetLength}"
+							Width="*"
+							Binding="{Binding Width}" />
+					</DataGrid.Columns>
+				</DataGrid>
+				<StackPanel
+					Grid.Column="2"
+					VerticalAlignment="Center">
+					<Button
+						x:Name="TopButton"
+						Margin="5"
+						Focusable="False"
+						Click="TopButton_Click">
+						<Image
+							Source="images/navigate_2up.png" />
+					</Button>
+					<Button
+						x:Name="UpButton"
+						Margin="5"
+						Focusable="False"
+						Click="UpButton_Click">
+						<Image
+							Source="images/navigate_up.png" />
+					</Button>
+					<Button
+						x:Name="DownButton"
+						Margin="5"
+						Focusable="False"
+						Click="DownButton_Click">
+						<Image
+							Source="images/navigate_down.png" />
+					</Button>
+					<Button
+						x:Name="BottomButton"
+						Margin="5"
+						Focusable="False"
+						Click="BottomButton_Click">
+						<Image
+							Source="images/navigate_2down.png" />
+					</Button>
+				</StackPanel>
+			</Grid>
+		</Grid>
+		<Grid
+			x:Name="grid2"
+			Visibility="Collapsed">
+			<local:DBStructureUISelector
+				x:Name="uiSelector"
+				SelectedFields="{StaticResource SelectedColumnSource}" />
+		</Grid>
+		<Separator
+			Grid.Row="1"
+			VerticalAlignment="Top" />
+		<StackPanel
+			Grid.Row="1"
+			Orientation="Horizontal"
+			HorizontalAlignment="Right"
+			Margin="7">
+			<Button
+				x:Name="backButton"
+				Content="{StaticResource DBStructure_Back}"
+				Margin="5"
+				IsEnabled="False" />
+			<Button
+				x:Name="nextButton"
+				Content="{StaticResource DBStructure_Next}"
+				Margin="5" />
+			<Button
+				x:Name="CancelButton"
+				Content="{StaticResource DBStructure_Cancel}"
+				Margin="5"
+				Click="CancelButton_Click" />
+			<Button
+				x:Name="FinishButton"
+				Content="{StaticResource DBStructure_Finish}"
+				Margin="5"
+				Click="FinishButton_Click" />
+		</StackPanel>
+	</Grid>
+</Window>

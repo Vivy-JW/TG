@@ -1,0 +1,1181 @@
+﻿<ResourceDictionary
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:s="clr-namespace:System;assembly=mscorlib"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    
+    <!-- 主画面菜单 -->
+    <s:String x:Key="menu_File">File</s:String>
+    <s:String x:Key="menu_FileOpen">Open</s:String>
+    <s:String x:Key="menu_FileSave">Save</s:String>
+    <s:String x:Key="menu_FileClose">Close</s:String>
+    <s:String x:Key="menu_FileCloseAll">Close all</s:String>
+    <s:String x:Key="menu_FileExit">Exit</s:String>
+    <s:String x:Key="menu_RecentFiles">Latest opened file list</s:String>
+    <s:String x:Key="menu_ClearRecentFiles">Delete Latest opened file list</s:String>
+    <s:String x:Key="menu_RecentSpecFiles">最近開啟畫面檔(tzs)</s:String>
+    <s:String x:Key="menu_RecentCodeFiles">最近開啟程式檔(tzc)</s:String>
+    <s:String x:Key="menu_Bookmarks">Bookmark</s:String>
+    <s:String x:Key="menu_ToogleBookmark">Add/Cancel Bookmark</s:String>
+    <s:String x:Key="BookmarkLines">Line No.</s:String>
+    <s:String x:Key="menu_ToNextDiffLine">下一个差异点</s:String>
+    <s:String x:Key="menu_ToPreviousDiffLine">前一个差异点</s:String>
+    <s:String x:Key="menu_Diff">差异比对</s:String>
+    <s:String x:Key="menu_InsertIndFunIntoStandard">标准程式插入行业函式设定</s:String>
+    <s:String x:Key="menu_Upload">Upload</s:String>
+    <s:String x:Key="menu_Precompile">Precompiled(not update)</s:String>
+    <s:String x:Key="menu_Specification">Specification</s:String>
+    <s:String x:Key="menu_SpecificationDownload">Download (Version control)</s:String>
+    <s:String x:Key="menu_SpecificationUpload">Upload</s:String>
+    <s:String x:Key="Message_UploadAndGenAll" xml:space="preserve">Re-generate other related programs in multi-language</s:String>
+    <s:String x:Key="menu_SpecificationUploadResetTAP">Delete Program Slices</s:String>
+    <s:String x:Key="menu_SpecificationView">View Specifications</s:String>
+    <s:String x:Key="menu_UncitedSpecificationView">View Uncited Specifications</s:String>
+    <s:String x:Key="menu_PatchComponentListView">Check new component list</s:String>
+    <s:String x:Key="menu_PreviewForm">Preview</s:String>
+    <s:String x:Key="menu_SimpleFormSetup">Simple Form Setting</s:String>
+    <s:String x:Key="menu_SimpleFormDownload">Download Simple Form</s:String>
+    <s:String x:Key="menu_SimpleFormUpload">Upload Simple Form</s:String>
+    <s:String x:Key="menu_SpecificationExport">Export Specifications</s:String>
+    <s:String x:Key="menu_SCOImport">Import SA Storyboarding</s:String>
+    <s:String x:Key="menu_UploadAndRC3">上传规格并产生程式</s:String>
+    <s:String x:Key="menu_Program">Program</s:String>
+    <s:String x:Key="menu_ProgramDownload">Download (version control)</s:String>
+    <s:String x:Key="menu_ProgramUpload">Upload</s:String>
+    <s:String x:Key="menu_ProgramTest">Test</s:String>
+    <s:String x:Key="menu_ProgramDebug">Debug</s:String>
+    <s:String x:Key="menu_ProgramErrorCheck">逻辑结构除错</s:String>
+    <s:String x:Key="menu_ShowProgramRegen">Re-generate Programs</s:String>
+    <s:String x:Key="menu_ShowProgramUncited">View Uncited Add-Points</s:String>
+    <s:String x:Key="menu_ShowProgramSectionUncited">View Uncited Section</s:String>
+    <s:String x:Key="menu_ShowProgramCustomAdpList">View Customized Add-Points</s:String>
+    <s:String x:Key="menu_EnableViMode">Vi Mode</s:String>
+    <s:String x:Key="menu_Undo">Undo</s:String>
+    <s:String x:Key="menu_Redo">Redo</s:String>
+    <s:String x:Key="menu_Edit">Edit</s:String>
+    <s:String x:Key="menu_AutoComplete">Auto-Complete</s:String>
+    <s:String x:Key="menu_ShowKeyword">Display Genero Keywords</s:String>
+    <s:String x:Key="menu_ShowSelfKeyword">Display Self-build Keywords</s:String>
+    <s:String x:Key="menu_ShowDBKeyword">Display DB Fields</s:String>
+    <s:String x:Key="menu_Report">GR</s:String>
+    <s:String x:Key="menu_Report_Download">Download (Version control)</s:String>
+    <s:String x:Key="menu_Report_Upload">Upload</s:String>
+    <s:String x:Key="menu_Report_Open">Open</s:String>
+    <s:String x:Key="menu_Component">Component</s:String>
+    <s:String x:Key="menu_ComponentDownload">Download (Version control)</s:String>
+    <s:String x:Key="menu_ComponentUpload">Upload</s:String>
+    <s:String x:Key="menu_SiteManager">SiteManager</s:String>
+    <s:String x:Key="menu_BasicData">Basic Data</s:String>
+    <s:String x:Key="menu_ReGenerateBasicData">Regenerate Basic Data</s:String>
+    <s:String x:Key="menu_BasicDataUpdate">Update Basic Data</s:String>
+    <s:String x:Key="menu_BasicDataView">Find for Basic Data</s:String>
+    <s:String x:Key="menu_SelectBasicDataUpdate">Select Update Basic Data</s:String>
+    <s:String x:Key="menu_Tools">CommonTools</s:String>
+    <s:String x:Key="menu_azzi900">Set Basic Program Data（azzi900）</s:String>
+    <s:String x:Key="menu_azzi901">Set Sub-Program and Component Basic Data（azzi901）</s:String>
+    <s:String x:Key="menu_azzi910">Maintain Operation Basic Data（azzi910）</s:String>
+    <s:String x:Key="menu_azzi920">Maintain Error Messages（azzi920）</s:String>
+    <s:String x:Key="menu_azzi998">画面组件排除功能</s:String>
+    <s:String x:Key="menu_azzi600">Maintain System Classification code (SCC)（azzi600）</s:String>
+    <s:String x:Key="menu_azzi650">Maintain Application Category Codes (ACC)（azzi650）</s:String>
+    <s:String x:Key="menu_adzi140">Data Table Designer（r.t：adzi140）</s:String>
+    <s:String x:Key="menu_adzi150">Maintain Field Specification Design（adzi150）</s:String>
+    <s:String x:Key="menu_adzp168">Form Generator（r.a：adzp168）</s:String>
+    <s:String x:Key="menu_adzi220">Set Calibration with Values Design Table（r.v：adzi220）</s:String>
+    <s:String x:Key="menu_adzq255">View Server Design File（r.b：adzq255）</s:String>
+    <s:String x:Key="menu_adzi210">Popup Designer（r.q：adzi210）</s:String>
+    <s:String x:Key="menu_adzi400">Maintain Components （adzi400）</s:String>
+    <s:String x:Key="menu_adzq490">维度组件查询作业（adzq490）</s:String>
+    <s:String x:Key="menu_adzp188">Report Component Designer（adzp188）</s:String>
+    <s:String x:Key="menu_azzi301">Set Voucher Report Templates（azzi301）</s:String>
+    <s:String x:Key="menu_azzi300">Set Query Report Format （azzi300）</s:String>
+    <s:String x:Key="menu_adzp600">Industry Spec and Program Generating Tools（adzp600）</s:String>
+    <s:String x:Key="menu_adzp270">Copy Cpecifications and Programs（adzp270）</s:String>
+    <s:String x:Key="menu_queryTitle">Check Reference Program Codes</s:String>
+    <s:String x:Key="menu_AddElementTitle">Add Items</s:String>
+    <s:String x:Key="menu_adzp990Exp">Export Design Data（adzp990 Export）</s:String>
+    <s:String x:Key="menu_adzp990Imp">Import Design Data（adzp990 Import）</s:String>
+    <s:String x:Key="menu_CommonUsed">Shortcut</s:String>
+    <s:String x:Key="menu_Preference">Preferences</s:String>
+    <s:String x:Key="menu_TOPSTD">Grant TOPSTD Access</s:String>
+    <s:String x:Key="menu_AdvancedTools">Advanced</s:String>
+    <s:String x:Key="menu_adzp150">Read tab to generated tgl</s:String>
+    <s:String x:Key="menu_azzi908">Change to Free Style</s:String>
+    <s:String x:Key="menu_changeProgramTemplate">Change Program Template</s:String>
+    <s:String x:Key="menu_QSetting">Set Upper-Level Linked Inquiry for Q Category</s:String>
+    <s:String x:Key="menu_SearchKeySetting">正规化搜寻条件设定</s:String>
+    <s:String x:Key="menu_ServiceCloudSetting">服务云帐号密码设定</s:String>
+    <s:String x:Key="menu_Help">Help</s:String>
+    <s:String x:Key="menu_About">About</s:String>
+    <s:String x:Key="menu_AboutProgram">Program Information</s:String>
+    <s:String x:Key="menu_AboutSpec">Spec. Information</s:String>
+    <s:String x:Key="menu_Shortcut">Hot Keys</s:String>
+    <s:String x:Key="menu_ViCommandList">Vi Command List</s:String>
+    <s:String x:Key="menu_ThisVersionProgramModify">Update and Adjustment of Current Program Version</s:String>
+    <s:String x:Key="menu_ThisVersionSpecModify">Update and Adjustment of Current Specification Version</s:String>
+    <s:String x:Key="menu_Connection">Connection Information</s:String>
+    <s:String x:Key="menu_ShowLog">Connection History</s:String>
+    <s:String x:Key="menu_View">Window</s:String>
+    <s:String x:Key="menu_ViewCodeStructure">Program Structure</s:String>
+    <s:String x:Key="menu_ViewFormDesigner">Screen View</s:String>
+    <s:String x:Key="menu_ViewSpecPropertyEditor">Field Attribute</s:String>
+    <s:String x:Key="menu_ViewSpecEditor">Specification</s:String>
+    <s:String x:Key="menu_ViewErrorList">Errors</s:String>
+    <s:String x:Key="menu_FormStructure">Form Structure</s:String>
+    <s:String x:Key="menu_ViewFormSpecification">Field Specification</s:String>
+    <s:String x:Key="menu_SwitchLite">Switch Lite Spec Designer</s:String>
+    <s:String x:Key="menu_SwitchFormal">Switch Formal Spec Designer</s:String>
+    <s:String x:Key="menu_Welcome">欢迎光临</s:String>
+    <s:String x:Key="menu_Find">Search</s:String>
+    <s:String x:Key="menu_FindTarget">Target</s:String>
+    <s:String x:Key="menu_FindRange">Range</s:String>
+    <s:String x:Key="menu_FindPrevios">Find Previous</s:String>
+    <s:String x:Key="menu_FindNext">Find Next</s:String>
+    <s:String x:Key="menu_FindPrevious">Find Previous</s:String>
+    <s:String x:Key="menu_Replace">Replace</s:String>
+    <s:String x:Key="menu_ReplaceAs">Replace As</s:String>
+    <s:String x:Key="menu_ReplaceAll">Replace All</s:String>
+    <s:String x:Key="menu_Time">Time</s:String>
+    <s:String x:Key="menu_Description">Description</s:String>
+    <s:String x:Key="menu_TableSchemaAssocSetting">Set Data-Table Associations</s:String>
+    <s:String x:Key="menu_MoveToFirst">Move Column to Beginning</s:String>
+    <s:String x:Key="menu_MoveToPrevious">Move Column to Pevious</s:String>
+    <s:String x:Key="menu_MoveToNext">Move to Next</s:String>
+    <s:String x:Key="menu_MoveToLast">Move to End</s:String>
+    <s:String x:Key="menu_Cascade">Synchronous</s:String>
+    <s:String x:Key="menu_CreateNewTBL">Add</s:String>
+    <s:String x:Key="menu_UploadIndFunctionSetup">上传行业函式设定</s:String>
+    <s:String x:Key="menu_AdjustContainerBlankArea">缩小容器空白区块</s:String>
+    <s:String x:Key="menu_ToggleStandardAndLite">畫面開發簡潔配置</s:String>
+    <s:String x:Key="menu_ForConsultant">畫面開發</s:String>
+    <s:String x:Key="menu_SpecOpen">開啟規格</s:String>
+    <s:String x:Key="menu_TableBasicDataUpdate">快速下载基础资料</s:String>
+    <s:String x:Key="menu_DatabaseSource">資料庫來源</s:String>
+    <s:String x:Key="menu_SpecificationDownload_2">簽出與下載畫面</s:String>
+    <s:String x:Key="menu_UploadAndRC3_2">上傳畫面並產生程式</s:String>
+    <s:String x:Key="menu_SpecCheckIn">簽入畫面</s:String>
+    <s:String x:Key="menu_ProgramDevelopDataExport">程式开发资料导出（adzi888 导出）</s:String>
+    <s:String x:Key="menu_ProgramDevelopDataImport">程式开发资料汇入（adzi888 汇入）</s:String>
+
+    <!-- 规格设计器 -->
+    <s:String x:Key="specProperty_SpecFieldExcludeSetting">Setup for control item exclusion</s:String>
+    <s:String x:Key="specProperty_SpecFieldExcude">Excluded</s:String>
+    <s:String x:Key="specProperty_SpecFieldExcudeList">Excluded list of controlling items</s:String>
+    <s:String x:Key="specProperty_SpecAttirbuteSetting">Set Field Specifications</s:String>
+    <s:String x:Key="specProperty_SpecOtherSetting">Other Field Settings</s:String>
+    <s:String x:Key="specProperty_SpecActionSetting">Action Settings</s:String>
+    <s:String x:Key="specProperty_SpecControlSetting">Spec. Settings</s:String>
+    <s:String x:Key="specProperty_GeneroComponentAttrSetting">Form Settings</s:String>
+    <s:String x:Key="specProperty_ReferenceFieldSetting">Reference Field Settings</s:String>
+    <s:String x:Key="specProperty_MultiLangSetting">Multi-language Field Settings</s:String>
+    <s:String x:Key="specProperty_TreeSetting">Data Source for Tree</s:String>
+    <s:String x:Key="column_attr">Attribute</s:String>
+    <s:String x:Key="codeEditor_Header">Edit programs</s:String>
+    <s:String x:Key="button_ViewProgramSpec">Specification for Program</s:String>
+    <s:String x:Key="specProperty_table">Table No.</s:String>
+    <s:String x:Key="specProperty_table_name">Table Name</s:String>
+    <s:String x:Key="specProperty_column">Field No.</s:String>
+    <s:String x:Key="specProperty_column_name">Field Name</s:String>
+    <s:String x:Key="specProperty_column_comment">Field Description</s:String>
+    <s:String x:Key="specProperty_attribute">Field Attribute</s:String>
+    <s:String x:Key="specProperty_type">Field Type</s:String>
+    <s:String x:Key="specProperty_req">Required Field</s:String>
+    <s:String x:Key="specProperty_i_zoom">Popup When Editing</s:String>
+    <s:String x:Key="specProperty_c_zoom">Popup When Querying</s:String>
+    <s:String x:Key="specProperty_chk_ref">Set Calibration with Values</s:String>
+    <s:String x:Key="specProperty_prog_rel">Program linked query code</s:String>
+    <s:String x:Key="specProperty_name">Components</s:String>
+    <s:String x:Key="specProperty_isCust">Customized</s:String>
+    <s:String x:Key="specProperty_items">System Category</s:String>
+    <s:String x:Key="specProperty_default">Default</s:String>
+    <s:String x:Key="specProperty_max">Maximum</s:String>
+    <s:String x:Key="specProperty_min">Minimum</s:String>
+    <s:String x:Key="specProperty_percentage">Percentage Field</s:String>
+    <s:String x:Key="specProperty_format">Display Format</s:String>
+    <s:String x:Key="specProperty_ver">Design Point Version</s:String>
+    <s:String x:Key="specProperty_spec">SD Specification Description</s:String>
+    <s:String x:Key="specProperty_id">Action Code</s:String>
+    <s:String x:Key="specProperty_text">Action Description</s:String>
+    <s:String x:Key="specProperty_comment">Hint Description</s:String>
+    <s:String x:Key="specProperty_action_status">Action Status</s:String>
+    <s:String x:Key="specProperty_action_invalid">Invalid</s:String>
+    <s:String x:Key="specProperty_formonly_name">Name</s:String>
+    <s:String x:Key="specProperty_formonly_text">Description</s:String>
+    <s:String x:Key="specProperty_formonly_comment">Comment</s:String>
+    <s:String x:Key="specProperty_ref_rtn_setting">Reference Field</s:String>
+    <s:String x:Key="specProperty_multi_lang">Multi-language Field</s:String>
+    <s:String x:Key="specProperty_ref">Reference Field</s:String>
+    <s:String x:Key="specProperty_chk_exists_table">Check Existing Table</s:String>
+    <s:String x:Key="specProperty_chk_exists_column">Check Existing Column</s:String>
+    <s:String x:Key="specProperty_ProgRelFieldGroupSetting">Set Linked Query Fields</s:String>
+    <s:String x:Key="specProperty_ProgRelFieldWarning">(Settings required for related controlled items and linked query programs)</s:String>
+    <s:String x:Key="specProperty_widget">Controlled Item Type</s:String>
+    <s:String x:Key="specProperty_ref_key">Set Reference Primary Key</s:String>
+    <s:String x:Key="specProperty_Disable">Invalid</s:String>
+    <s:String x:Key="specProperty_citeStd">Quote Standard Program Settings</s:String>
+    <s:String x:Key="specProperty_SpecTBActionSetting">ToolBar Action settings</s:String>
+    <s:String x:Key="specProperty_di">Edit Action</s:String>
+    <s:String x:Key="specProperty_db">Browse Action</s:String>
+    <s:String x:Key="specProperty_all">Overall Action</s:String>
+    <s:String x:Key="specProperty_mi">Edit Action in header</s:String>
+    <s:String x:Key="specProperty_canEdit">Edit or not</s:String>
+    <s:String x:Key="specProperty_canQuery">Query or not</s:String>
+    <s:String x:Key="specProperty_canQueryEdit">Searching Criteria</s:String>
+    <s:String x:Key="specProperty_TreeKind">Tree structure type</s:String>
+    <s:String x:Key="specProperty_gencode">Generate Permission Check Sections</s:String>
+    <s:String x:Key="specProperty_noQuery">Do not generate querying syntax</s:String>
+    <s:String x:Key="specMessage_createFail">Errors when calling {0} construction</s:String>
+
+    <!-- 助记码 -->
+    <s:String x:Key="specProperty_help_code">Mnemonic Code Settings</s:String>
+    <s:String x:Key="specProperty_depend_field">Depended control item</s:String>
+    <s:String x:Key="specProperty_correspon_key">Set Mapped Values</s:String>
+    <s:String x:Key="specProperty_help_table">Mnemonic Code Table</s:String>
+    <s:String x:Key="specProperty_help_find">Mnemonic Code Searching field</s:String>
+    <s:String x:Key="specProperty_help_field">Mnemonic Code Field</s:String>
+    <s:String x:Key="specProperty_help_dlang">Mnemonic Code Language field</s:String>
+    <s:String x:Key="specProperty_mapping_widget">Return Mapped Controlled item</s:String>
+    <s:String x:Key="specProperty_returning_table_field">助记码Table回传字段</s:String>
+    <s:String x:Key="specProperty_CountDiffMappingWidgetAndTableField">回傳對應控件與助記碼Table回傳欄位個數不同</s:String>
+    <s:String x:Key="specProperty_help_wc">Other Conditions</s:String>
+
+    <!-- 多语言 -->
+    <s:String x:Key="specProperty_multi_lang_setting">Multi-language Field Settings</s:String>
+    <s:String x:Key="specProperty_multi_lang_name">Controlled Item</s:String>
+    <s:String x:Key="specProperty_lang_table">Multi-language Table</s:String>
+    <s:String x:Key="specProperty_lang_column">Multi-language Column</s:String>
+    <s:String x:Key="specProperty_lang_fk">Multi-Language FK</s:String>
+    <s:String x:Key="specProperty_lang_rtn">Return Multi-language Field</s:String>
+    <s:String x:Key="specProperty_lang_dlang">Multiple languages</s:String>
+
+    <!-- 字段参考 -->
+    <s:String x:Key="specProperty_ref_field_title">Set Field References</s:String>
+    <s:String x:Key="specProperty_ref_name">Controlled Item</s:String>
+    <s:String x:Key="specProperty_ref_table">Data Reference Table</s:String>
+    <s:String x:Key="specProperty_ref_fk">Data Reference FK</s:String>
+    <s:String x:Key="specProperty_ref_dlang">Data Reference language</s:String>
+    <s:String x:Key="specProperty_ref_rtn">Return Data reference</s:String>
+
+    <!-- 串查字段 -->
+    <s:String x:Key="specProperty_prog_rel_name">Controlled Item</s:String>
+    <s:String x:Key="specProperty_prog_rel_program">Link to query program codes</s:String>
+    <s:String x:Key="specProperty_prog_rel_type">Linked query type</s:String>
+    <s:String x:Key="specProperty_prog_rel_type1">General</s:String>
+    <s:String x:Key="specProperty_prog_rel_type2">Others</s:String>
+    <s:String x:Key="specProperty_table_association_setting">Set Table Associations</s:String>
+
+    <!-- 程序样版-->
+    <s:String x:Key="specProperty_SelectCodeTemplate">Program Template Code:</s:String>
+    <s:String x:Key="specProperty_F_CodeTemplateText">F. Maintenance</s:String>
+    <s:String x:Key="specProperty_P_CodeTemplateText">P. Batch Processing</s:String>
+    <s:String x:Key="specProperty_Q_CodeTemplateText">Q. Queries</s:String>
+    <s:String x:Key="Menu_SetCodeStartArg">Set Reserved Parameters</s:String>
+    <s:String x:Key="codeProperty_StartArg">Please enter number of parameters to be reserved:</s:String>
+
+    <!-- 规格汇入 -->
+    <s:String x:Key="specImport_title">Import Local Items</s:String>
+    <s:String x:Key="specImport_Confirm" xml:space="preserve">请检查以下多语言项目汇入项目
+*注意!!若目的端已有同名项目，汇入后会被覆盖</s:String>
+    <s:String x:Key="specImport_importOrNot">Import or Not</s:String>
+    <s:String x:Key="specImport_exist">Exist</s:String>
+    <s:String x:Key="specImport_Name">Name</s:String>
+    <s:String x:Key="specImport_Content">Content</s:String>
+    <s:String x:Key="specImport_Import">Import</s:String>
+
+    <!-- 程式編輯器 -->
+    <s:String x:Key="codeEditor_ViewDifferentWithStanard">View</s:String>
+    <s:String x:Key="codeEditor_CustomedAddPoint">客制过的 add point</s:String>
+    <s:String x:Key="codeEditor_UncitedAddPoint">断开引用的 add point</s:String>
+    <s:String x:Key="codeEditor_NotCoveredWhenMergeAddPoint">patch没有覆盖的标准add point(topstd)</s:String>
+    <s:String x:Key="codeEditor_SynchronousScroll">同时卷动</s:String>
+    <s:String x:Key="codeEditor_Diff">差异行数刷新</s:String>
+    <s:String x:Key="codeEditor_topstdMode">切换为 topstd 编辑</s:String>
+
+    <!-- 字段规格描述 -->
+    <s:String x:Key="specEditor_AllSpec">Specification overall description</s:String>
+    <s:String x:Key="specEditor_MiAllSpec">Edit specification description in header</s:String>
+    <s:String x:Key="specEditor_DbAllSpec">Browse specification description in details</s:String>
+    <s:String x:Key="specEditor_DiAllSpec">Edit specification description in details</s:String>
+    <s:String x:Key="specEditor_SDSpec">SD specification description</s:String>
+    <s:String x:Key="specEditor_refStdSpec">Quote standard specification</s:String>
+    <s:String x:Key="specEditor_previewSpec">Preview specifications</s:String>
+    <s:String x:Key="specEditor_confirmCopyTsd">This will be replaced by the standard settings! Are you sure to quote [{0}]?</s:String>
+    <s:String x:Key="specEditor_confirmCancelCopyTsd">Are you sure to cancel quoting [{0}]?</s:String>
+    <s:String x:Key="specEditor_saSpecViewCB">View SA specifications</s:String>
+
+    <!-- 程序与数据表关联设定 -->
+    <s:String x:Key="tableRlation_layerDisplay">Set 3 Levels and 2 Display</s:String>
+    <s:String x:Key="tableRlation_upperTable">Upper level Table:</s:String>
+    <s:String x:Key="tableRlation_upperKey">Set Upper-level Key Values:</s:String>
+    <s:String x:Key="tableRlation_thisKey">Set Current Level Mapped Key Values:</s:String>
+
+    <!-- 基础组件查询 -->
+    <s:String x:Key="dataView_WindowTitle">Query Basic Data</s:String>
+    <s:String x:Key="dataView_Items">Data Item</s:String>
+    <s:String x:Key="dataView_Messages">Hint</s:String>
+    <s:String x:Key="dataView_Zooms">Popup design</s:String>
+    <s:String x:Key="dataView_Checks">Calibration with Values</s:String>
+    <s:String x:Key="dataView_ProgRel">Linked Query for Programs</s:String>
+    <s:String x:Key="dataView_Subroutines">Application Components</s:String>
+    <s:String x:Key="dataView_Libraries">System Components</s:String>
+    <s:String x:Key="dataView_Spec">Set Field Specifications</s:String>
+
+   <!-- 表格查看器 -->
+    <s:String x:Key="tableView_WindowTitle">Table Design Data</s:String>
+    <s:String x:Key="tableView_ColumnTitle">Current view table: {0} - {1}</s:String>
+    <s:String x:Key="tableView_ModuleTitle">Module:</s:String>
+    <s:String x:Key="tableView_TableModule">Module</s:String>
+    <s:String x:Key="tableView_TableName">Table Code</s:String>
+    <s:String x:Key="tableView_TableDesc">Table Name</s:String>
+    <s:String x:Key="tableView_TableType">Table Type</s:String>
+    <s:String x:Key="tableView_ColumnName">Field Code</s:String>
+    <s:String x:Key="tableView_ColumnText">Field Name</s:String>
+    <s:String x:Key="tableView_ColumnPK">Primary Key</s:String>
+    <s:String x:Key="tableView_ColumnReq">Mandatory Field</s:String>
+    <s:String x:Key="tableView_ColumnAttr">Field Attribute</s:String>
+    <s:String x:Key="tableView_ColumnAttrName">Attribute Name</s:String>
+    <s:String x:Key="tableView_ColumnType">Data Type</s:String>
+    <s:String x:Key="tableView_SearchTitle">Search:</s:String>
+
+   <!-- 字段查看器 -->
+    <s:String x:Key="columnView_WindowTitle">Field Design Data</s:String>
+    <s:String x:Key="columnView_ColumnSpec">Field Specification</s:String>
+    <s:String x:Key="columnView_Width">Display Width</s:String>
+    <s:String x:Key="columnView_Widget">Data Item</s:String>
+    <s:String x:Key="columnView_Items">System Category Code</s:String>
+    <s:String x:Key="columnView_Default">Default Value</s:String>
+    <s:String x:Key="columnView_Max">Maximum</s:String>
+    <s:String x:Key="columnView_Min">Minimum</s:String>
+    <s:String x:Key="columnView_IZoom">Popup When Editing</s:String>
+    <s:String x:Key="columnView_CZoom">Popup When Querying</s:String>
+    <s:String x:Key="columnView_ChkRef">Calibration with Values</s:String>
+    <s:String x:Key="columnView_ProgRel">Linked Query for Programs</s:String>
+    <s:String x:Key="columnView_Format">Display formats</s:String>
+    <s:String x:Key="columnView_Ref">Field Reference</s:String>
+    <s:String x:Key="columnView_DepField">Depended Field Name</s:String>
+    <s:String x:Key="columnView_CorresponKey">Mapped value Passed</s:String>
+    <s:String x:Key="columnView_CorresponTable">Data Reference Table</s:String>
+    <s:String x:Key="columnView_CorresponFK">Data reference FK</s:String>
+    <s:String x:Key="columnView_CorresponLang">Data reference language</s:String>
+    <s:String x:Key="columnView_CorresponReturn">Return data reference</s:String>
+    <s:String x:Key="columnView_MultiLang">Data in multi-Language</s:String>
+    <s:String x:Key="columnView_MultiLangTable">Table in multi-language</s:String>
+    <s:String x:Key="columnView_MultiLangFK">Multi-Language FK</s:String>
+    <s:String x:Key="columnView_MultiLangLang">Multiple languages</s:String>
+    <s:String x:Key="columnView_MultiLangReturn">Return in multi-language</s:String>
+    <s:String x:Key="columnView_Tree">Tree Structure</s:String>
+    <s:String x:Key="columnView_No">Serial No</s:String>
+    <s:String x:Key="columnView_Type">Category</s:String>
+    <s:String x:Key="columnView_Status">Status Code</s:String>
+    <s:String x:Key="columnView_StatusType">System Category Value</s:String>
+    <s:String x:Key="columnView_Desc">Description</s:String>
+    <s:String x:Key="columnView_Help">Mnemonic Code</s:String>
+    <s:String x:Key="columnView_HelpDepField">Mapped Field</s:String>
+    <s:String x:Key="columnView_HelpCorresponKey">Mnemonic Code Table</s:String>
+    <s:String x:Key="columnView_HelpTable">Mnemonic Code Searching Field</s:String>
+    <s:String x:Key="columnView_HelpFK">Mnemonic Code Field</s:String>
+    <s:String x:Key="columnView_HelpDLang">Mnemonic Code Language</s:String>
+    <s:String x:Key="columnView_HelpReturn">Other Criteria</s:String>
+    <s:String x:Key="columnView_CopyName">Copy Codes</s:String>
+    <s:String x:Key="columnView_CopyColumnsName">Copy Field Codes</s:String>
+    <s:String x:Key="columnView_CopyAllColumnsToRecord">Copy Field Declaration</s:String>
+
+    <!-- ActionDefaults -->
+    <s:String x:Key="ads_all">Overall Action</s:String>
+    <s:String x:Key="ads_mi">Edit Header</s:String>
+    <s:String x:Key="ads_di">Edit Details</s:String>
+    <s:String x:Key="ads_db">Browse Details</s:String>
+    <s:String x:Key="ads_detail">Action Settings</s:String>
+    <s:String x:Key="ads_ActionDelConfirm">Confirm to Delete {0}?</s:String>
+
+    <!-- 241021 14910 add Widget Box 要求簡易畫面的控件需要中文說明 -->
+    <s:String x:Key="Widget_TabIndex">Tab order specification</s:String>
+    <s:String x:Key="Widget_Label">Label</s:String>
+    <s:String x:Key="Widget_ButtonEdit">ButtonEdit</s:String>
+    <s:String x:Key="Widget_CheckBox">CheckBox</s:String>
+    <s:String x:Key="Widget_ComboBox">ComboBox</s:String>
+    <s:String x:Key="Widget_DateEdit">DateEdit</s:String>
+    <s:String x:Key="Widget_Edit">Edit</s:String>
+    <s:String x:Key="Widget_TextEdit">TextEdit</s:String>
+
+    <!-- TT Widget Box -->
+    <s:String x:Key="tt_ReferenceLabel">Reference Field</s:String>
+    <s:String x:Key="tt_MultiLangButtonEdit">Multi-language Data Field</s:String>
+    <s:String x:Key="tt_ButtonQuery">Linked to Query Fields</s:String>
+
+    <!-- CodeEditor -->
+    <s:String x:Key="CE_ShowParameter">Visible Variables</s:String>
+    <s:String x:Key="CE_ModuleVariableTitle">[Module Variables]</s:String>
+    <s:String x:Key="CE_LocalVariableTitle">[Region Variables]</s:String>
+    <s:String x:Key="CE_FunctionInfo">Function Information</s:String>
+    <s:String x:Key="CE_AddFunction">Add Functions</s:String>
+    <s:String x:Key="CE_CopyFunction">Copy Functions</s:String>
+    <s:String x:Key="CE_DeleteFunction">Delete Functions</s:String>
+    <s:String x:Key="CE_ShowField">Display Field Information</s:String>
+    <s:String x:Key="CE_CopyContent">Copy Content</s:String>
+    <s:String x:Key="CE_FunctionName">Function Name</s:String>
+    <s:String x:Key="CE_FunctionType">Type</s:String>
+    <s:String x:Key="CE_FunctionDescription">Function Description</s:String>
+    <s:String x:Key="CE_FunctionScope">Access Level</s:String>
+    <s:String x:Key="CE_FunctionStructure">Program Structure</s:String>
+    <s:String x:Key="CE_InputMessage">Please Enter content Here…</s:String>
+    <s:String x:Key="CE_ShowGlobals">Global Variables</s:String>
+    <s:String x:Key="CE_Cite">Reference standard Program</s:String>
+    <s:String x:Key="CE_UnCite">Cancel Reference</s:String>
+    <s:String x:Key="CE_Delete">Delete Content</s:String>
+    <s:String x:Key="CE_UnDelete">Cancel Deletion</s:String>
+    <s:String x:Key="CE_Cut">Cut</s:String>
+    <s:String x:Key="CE_Copy">Copy</s:String>
+    <s:String x:Key="CE_Paste">Paste</s:String>
+    <s:String x:Key="CE_Block">Mark Selected Area</s:String>
+    <s:String x:Key="CE_UnBlock">Remove Mark on the selected area</s:String>
+    <s:String x:Key="CE_KeywordConvert">Change Genero Keywords to Uppercase</s:String>
+    <s:String x:Key="CE_ProgramStructure">Structure</s:String>
+    <s:String x:Key="CE_RefreshList">Refresh List</s:String>
+    <s:String x:Key="CE_FunctionOrder">Enable to Change Function Order</s:String>
+    <s:String x:Key="CE_Refresh">Refresh Content</s:String>
+    <s:String x:Key="CE_ToogleDiffEditable">Toogel Diff Edit Mode</s:String>
+    <s:String x:Key="CE_ModifyFunction">Modify Function Information</s:String>
+    <s:String x:Key="CE_CodeCompletion">Term Assistance</s:String>
+    <s:String x:Key="CE_ShowFunction">Check Functions</s:String>
+    <s:String x:Key="CE_OftenUsed">Frequently Used Functions for Components</s:String>
+    <s:String x:Key="CE_MarkFrame">Mark Rigid Region</s:String>
+    <s:String x:Key="CE_TGLIsEmpty">TGL not found or the content is blank</s:String>
+    <s:String x:Key="CE_GoToLineTitle">To…</s:String>
+    <s:String x:Key="CE_LineLimit">Assigned Line No.: (1 ~ {0})</s:String>
+    <s:String x:Key="CE_CodeSample">Insert Program Section "{0}"</s:String>
+    <s:String x:Key="CE_CiteOrNot">Quote</s:String>
+    <s:String x:Key="CE_ChageSessionTitle">Modify Program Frames</s:String>
+    <s:String x:Key="CE_AfterChangeSession">You will now unlock the frame of the program! After changed, no more mapped program code will be generated for any adjustment made to specification, are you sure to change?</s:String>
+    <s:String x:Key="CE_SelfKey">Self-Built Terms</s:String>
+    <s:String x:Key="CE_GeneroKey">Genero Keywords</s:String>
+    <s:String x:Key="CE_ReturnToStandard">客制还原标准</s:String>
+    <s:String x:Key="CE_DiffSource">差异比对来源</s:String>
+    <s:String x:Key="CE_DiffTarget">差异比对目标</s:String>
+    <s:String x:Key="CE_DiffSingleContent">单一内容差异比对</s:String>
+    <s:String x:Key="CE_DiffOldAndNewStandardContent">新旧标准内容差异</s:String>
+    <s:String x:Key="CE_SuggestReturnToStandard">建议还原标准</s:String>
+    <s:String x:Key="CE_BeforePath">Before Patch</s:String>
+    <s:String x:Key="CE_AfterPath">After Patch</s:String>
+    <s:String x:Key="CE_ConfirmDiffSave">Save Diff Content？</s:String>
+    <s:String x:Key="CE_DiffBlockCopyContent">区块差异复制</s:String>
+    <s:String x:Key="CE_DiffLineCopyContent">单行差异复制</s:String>
+    <s:String x:Key="CE_DiffCopyNewFunction">同步function</s:String>
+    <s:String x:Key="CE_DiffSearchToNext">下一个搜寻点</s:String>
+    <s:String x:Key="CE_DiffSearchToPrevious">前一个搜寻点</s:String>
+    <s:String x:Key="CE_DiffBaseOnStandard">以标准为基础重客制</s:String>
+    <s:String x:Key="CE_DiffSourceCustom">差异比对来源(客制)</s:String>
+    <s:String x:Key="CE_DiffTargetStandars">差异比对目标(标准)</s:String>
+    <s:String x:Key="CE_FullTextKeywordConvert">全文关键字转为大写</s:String>
+    <s:String x:Key="CE_GenerateSqlTemplate">产生简易SQL框架</s:String>
+
+    <!-- 组件规格 -->
+    <s:String x:Key="FGL_AddItem">Add Items</s:String>
+    <s:String x:Key="FGL_CreateFunction">Generate Programs</s:String>
+
+    <!-- ClientEXEC4GL -->
+    <s:String x:Key="Con_Login">Connect to T100</s:String>
+
+    <!-- 通用 -->
+    <s:String x:Key="Button_Close">Close</s:String>
+    <s:String x:Key="Button_OK">OK</s:String>
+    <s:String x:Key="Button_Cancel">Cancel</s:String>
+    <s:String x:Key="Button_Apply">Apply</s:String>
+    <s:String x:Key="Button_ConnectionTest">Connection Test</s:String>
+    <s:String x:Key="Button_Clear">Clear</s:String>
+
+    <!-- 讯息 -->
+    <s:String x:Key="Message_Error">Errors</s:String>
+    <s:String x:Key="Message_Message">Message</s:String>
+    <s:String x:Key="Message_Inform">Hint</s:String>
+    <s:String x:Key="Message_Warning">Warning</s:String>
+    <s:String x:Key="Message_ConfirmExit">The data not saved will be missing if the window closed, are you sure to close?</s:String>
+    <s:String x:Key="Message_ConfirmExitTitle">Exit Program</s:String>
+    <s:String x:Key="Message_AfterUpdateBasicData">Finish to Update Basic Data</s:String>
+    <s:String x:Key="Message_BasicDataNotFound">Basic Data not found</s:String>
+    <s:String x:Key="Message_BasicDataUnzipFailed">Failed to unzip</s:String>
+    <s:String x:Key="Message_BasicDataVersionNotFound">Lack of basic data version information!</s:String>
+    <s:String x:Key="Message_BasicDataVersionNotMatch">Basic Data Version {0} and Designer Version {1}.{2} are different!</s:String>
+    <s:String x:Key="Message_BasicDataNotComplete">Incomplete basic data, please download again</s:String>
+    <s:String x:Key="Message_BasicDataLoadFailed" xml:space="preserve">Failed to load the basic data: &#x0A;"{0}"</s:String>
+    <s:String x:Key="Message_BasicDataUpdateFailed" xml:space="preserve">Errors when updating basic data: &#x0A;"{0}"</s:String>
+    <s:String x:Key="Message_BasicDataRedownloading" xml:space="preserve">{0}, will be downloaded again</s:String>
+    <s:String x:Key="Message_BeforeRedownloadingBasicData">Errors when reading basic data, it will be download again</s:String>
+    <s:String x:Key="Message_MissBasicData" xml:space="preserve">Field data not found, please download the basic data again. &#x0A; If the error happens again, please contact the administrator.</s:String>
+    <s:String x:Key="Message_AfterUpdateBasicDataFailed">Failed to update basic data, please download manually</s:String>
+    <s:String x:Key="Message_UpdateBasicDataOrNot">Basic data generated, download or not?</s:String>
+    <s:String x:Key="Message_ApplicationErrorMessage" xml:space="preserve">Program error! If the error happens again, please close the program. &#x0A; Select Y to continue and N to close the program</s:String>
+    <s:String x:Key="Message_ApplicationErrorTitle">Application error!</s:String>
+    <s:String x:Key="Message_ExitBeforeSave" xml:space="preserve">Warning: The program will be closed, all changes not saved will not be reserved, sure to close?</s:String>
+    <s:String x:Key="Message_FileNotExist" xml:space="preserve">Please place the file ( '{0}' ) under the pah C：\TT</s:String>
+    <s:String x:Key="Message_MissingContent" xml:space="preserve">Necessary content ( '{0}' ) not found, please download again., &#x0A; If the situation happens again, please notify the administrator</s:String>
+    <s:String x:Key="Message_DownloadDataBeforeCoding">Please download basic data before development</s:String>
+    <s:String x:Key="Message_NameAlreadyInUse">Code: {0} now in use, please rename.</s:String>
+    <s:String x:Key="Message_SaveFile">{0} changed, please save files before closed</s:String>
+    <s:String x:Key="Message_SaveBeforeClose">Close files</s:String>
+    <s:String x:Key="Message_SaveBeforeUpload">Do you wish to save before uploaded?</s:String>
+    <s:String x:Key="Message_ConfirmBeforeUpload_SD">Sure to upload the program: {0}?</s:String>
+    <s:String x:Key="Message_ConfirmBeforeUpload_PR">Sure to upload the specification: {0}?</s:String>
+    <s:String x:Key="Message_ConfirmBeforePrecompile_SD">Sure to precompile the program: {0}?</s:String>
+    <s:String x:Key="Message_ConfirmBeforePrecompile_PR">Sure to precompile the specification: {0}?</s:String>
+    <s:String x:Key="Message_UploadWarning">*Note:</s:String>
+    <s:String x:Key="Message_FreeStyle">The program is FreeStyle</s:String>
+    <s:String x:Key="Message_SectionBreak">The program is SectionBreak</s:String>
+    <s:String x:Key="Message_CodeUploaWarning" xml:space="preserve">If Function is added or adjusted,
+Please run r.l {0} ALL manually after developed,
+to make related program function normally</s:String>
+    <s:String x:Key="Message_FormUploaWarning" xml:space="preserve" >The multi-language for sub-program/sub-screen/popup must include in the primary program, so it will be effective:
+1. To test single primary program running result, please run r.f $ primary program manually
+2. To finish test for the overall system, please run r.f $ sub-program/sub-screen and popup screen manually</s:String>
+    <s:String x:Key="Message_FormUploaWarning2">The specification changes will affect the program structure. Please re-download the program</s:String>
+    <s:String x:Key="Confirm_DownloadBaseData">Basic data insufficient, do you wish to download it now?</s:String>
+    <s:String x:Key="Message_BaseDataVersionNotMatch">The versions for the basic data are different, do you wish to download again?</s:String>
+    <s:String x:Key="Message_ConfirmRebuild">Sure to delete program ?</s:String>
+    <s:String x:Key="Message_WriteTzpFail">Unable to write {0} ! Please make sure the file with accessing permission!</s:String>
+    <s:String x:Key="Message_NotConnect">Disconnected</s:String>
+    <s:String x:Key="Message_ConnectInfo" xml:space="preserve">[User: {0}]&#9;[Region: {1}]&#9;[Server：{2}]</s:String>
+    <s:String x:Key="Message_NoCitedProg" xml:space="preserve">Failed to find quoted file: {0}!&#x0A; Please contact the administrator to solve the problem to continue</s:String>
+    <s:String x:Key="Message_ZipFileNotEnough" xml:space="preserve">{0} lack the necessary file: {1}{2}{3} please contact the administrator to solve the program to continue</s:String>
+    <s:String x:Key="Message_SameFileNameAlreadyOpened">A file with the same name {0} opened</s:String>
+    <s:String x:Key="Message_LoadingFailed">Loading Failure</s:String>
+    <s:String x:Key="Message_StructureError">Errors when processing program structure: {0}</s:String>
+    <s:String x:Key="Message_SetProgTypeError">Unable to set program template attributes</s:String>
+    <s:String x:Key="Message_ParsingUnFinish">Parsing not yet finished, please run later</s:String>
+    <s:String x:Key="Message_UnexpectedTreeItem">Non-expected TreeItem Type</s:String>
+    <s:String x:Key="Message_NodeMoveError" xml:space="preserve">Errors when moving program structure: &#x0A;{0}</s:String>
+    <s:String x:Key="Message_BasicDataForCode" xml:space="preserve">An error occurs when reading basic data, the assisted function might not run normally. Please update the basic data. (If the error occurs again, please contact the system administrator)</s:String>
+    <s:String x:Key="Message_ExportSpecError">Unable to write to the file, please confirm the writing permission of {0}</s:String>
+    <s:String x:Key="Message_ExportSaveSpecError">Failed to write {0}</s:String>
+    <s:String x:Key="Message_ExportSucess">{0} output finished</s:String>
+    <s:String x:Key="Message_ParseError">程序结构解析时发生错误，请联络系统管理员</s:String>
+    <s:String x:Key="Message_CantNull">The field cannot be blank!</s:String>
+    <s:String x:Key="Message_CantEmpty">The field cannot be in blank string!</s:String>
+    <s:String x:Key="Message_NotExist">Not found</s:String>
+    <s:String x:Key="Message_NameAlreadyExist">Duplicate name</s:String>
+    <s:String x:Key="Message_NameAlreadyExistInTemplate">A function with the same name found in the template</s:String>
+    <s:String x:Key="Message_CantEmptyOrNull">The field cannot be blank and blank string!</s:String>
+    <s:String x:Key="Message_CantContainDot">“.” cannot be included!</s:String>
+    <s:String x:Key="Message_FunctionNameFormat">Naming template: xxx()</s:String>
+    <s:String x:Key="Message_FunctionNameFormat_1">Special symbol not allowed</s:String>
+    <s:String x:Key="Message_MustContainParameter">Parameter definitions must be included! (For example, axmt410(), axmt410(p_flag)</s:String>
+    <s:String x:Key="Message_NameMustUnique">The function cannot be duplicate!</s:String>
+    <s:String x:Key="Message_NameStartRule">Self-defined function must use the initial “Program Name”!</s:String>
+    <s:String x:Key="Message_NameMaxLengthRule">The defined function name length must be less than 50 characters!</s:String>
+    <s:String x:Key="Message_NameNoBlackSpace">Self-defined function name cannot be blank!</s:String>
+    <s:String x:Key="Message_ConfirmBeforeClose">The data will be lost if closing the window directly, sure to close?</s:String>
+    <s:String x:Key="Message_MustContainPoundBeforeLine">The note must use # as initial</s:String>
+    <s:String x:Key="Message_ProgRelAlreadyExists">The Action belongs to {0} linked query field, please delete from the screen!</s:String>
+    <s:String x:Key="Message_DependFieldAlreadyUsedByOther">{0} has been used by other reference field! Cannot set the same dependent control item with other reference field!</s:String>
+    <s:String x:Key="Message_ConfirmUploadTsdEvenValidationFail" xml:space="preserve">The specification inspection failed, the editing will be failed after uploaded! &#x0A; Click Yes to continue unloading. &#x0A; Click “No” to check the error list and modify all errors.</s:String>
+    <s:String x:Key="Message_NotSetTableAssociation">{0} ： Table Schema associations not set!</s:String>
+    <s:String x:Key="Message_IncludeCantDelComponent">[{0}] include Widget control item or template control item, unable to delete directly!</s:String>
+    <s:String x:Key="Message_DuplicateFieldName">{0} ： Duplicate control item code, please delete and add and rename!</s:String>
+    <s:String x:Key="Message_CantDeleteFormComponent">Main container for the screen cannot be deleted</s:String>
+    <s:String x:Key="Message_CantDeleteStdComponent">Standard program component cannot be deleted</s:String>
+    <s:String x:Key="Message_DetailFieldNamePrefix">The field should use the initial ""b_""</s:String>
+    <s:String x:Key="Message_FieldNameFormat">:Non TABLE_COLUMN field, the name suggestion is  l_xxx or xxx_desc, or the name after baselines will be filtered after program output</s:String>
+    <s:String x:Key="Message_ReferenceFieldNameFormat">Field format name should be ended with “_desc”</s:String>
+    <s:String x:Key="Message_VersionInCompatible" xml:space="preserve">File {0} not compatible with current version. &#x0A; File version: {1}&#x0A; Designer version: {2}</s:String>
+    <s:String x:Key="Message_NotInstalled">The designer compatible to the remote version not installed</s:String>
+    <s:String x:Key="Message_TzpNotInWorkspace">{0} not under the work category, unable to open it.</s:String>
+    <s:String x:Key="Message_ConfirmCreateDirectory">{0} not found, create it or not?</s:String>
+    <s:String x:Key="Message_NotInstallCurrentVersionSpecDesigner">The designer matched with the version {0} not installed</s:String>
+    <s:String x:Key="Message_RemoteVersionNotMatchWorkspaceVersion">Version {0} not matched with current work category</s:String>
+    <s:String x:Key="Message_VersionNotFound">Unable to access the remote version</s:String>
+    <s:String x:Key="Message_GetRemoteVersion">Access the remote version</s:String>
+    <s:String x:Key="Message_RemoteHasNewVersion">A remote new version found, updating will be run after connected</s:String>
+    <s:String x:Key="Message_VersionNotFoundInTZS">No version info found in the specification file!</s:String>
+    <s:String x:Key="Message_GetVersionButError">An error occurs when accessing the remote version:</s:String>
+    <s:String x:Key="Message_VersionInCompatibleWarning" xml:space="preserve">The designer version v{1} opened not matched with the remote designer version v{0}, &#x0A; Errors might occur if uploading specification and programs</s:String>
+    <s:String x:Key="Message_ContinueAndIgnoreConnectionError">Errors occur when checking update, to ignore the check, click [Yes], to modify, click [No]</s:String>
+    <s:String x:Key="Message_ConnectionIsNotValidate">Errors found in settings, please try again after modified!</s:String>
+    <s:String x:Key="Message_ActionHasType">Unable to set type on the ToolBar</s:String>
+    <s:String x:Key="Message_MainTableCantChangeName">Renaming not allowed for primary table</s:String>
+    <s:String x:Key="Message_NotSupportCutContainer">“Cut” not supported for the container</s:String>
+    <s:String x:Key="Message_NotSupportCutCantDel">“Cut” not allowed for CantDel attribute component</s:String>
+    <s:String x:Key="Message_NotSupportCopyContainer">“Copy” not supported for the container</s:String>
+    <s:String x:Key="Message_SessionErrorCantSave">Problems found for the Section mark, unable to save it!</s:String>
+    <s:String x:Key="Message_SessionErrorCantRead">Problems found for the Section mark, unable to open it, please contact the system administrator!</s:String>
+    <s:String x:Key="Message_TapErrorCantRead">Incorrect content {0}, please contact the system administrator!</s:String>
+    <s:String x:Key="Message_CantFindSession">Unable to find Section data: {0}</s:String>
+    <s:String x:Key="Message_SaveError">Errors when writing {0}</s:String>
+    <s:String x:Key="Message_ADPNameExist">Duplicate Add Point name ('{0}')!</s:String>
+    <s:String x:Key="Message_DelteFailed">Failed to delete the content {0}</s:String>
+    <s:String x:Key="Message_FunctionNotFound">Unable to find {0}</s:String>
+    <s:String x:Key="Message_RegFormatError">Incorrect Regular Expression syntax, please enter again</s:String>
+    <s:String x:Key="Message_IllegalInput">Illegal entry</s:String>
+    <s:String x:Key="Message_InputRange">The range of entry must be between {0} – {1}</s:String>
+    <s:String x:Key="Message_ConfirmDelete" xml:space="preserve">Confirm to delete: &#x0A;"{0}"?</s:String>
+    <s:String x:Key="Message_CantGetFunction">Unable to access the function</s:String>
+    <s:String x:Key="Message_CreateFailed">Failed to add {0}</s:String>
+    <s:String x:Key="Message_NotProduce">Unable to auto-generate</s:String>
+    <s:String x:Key="Message_CantInput">Editing not allowed for the location the cursor placed, unable to insert the program code</s:String>
+    <s:String x:Key="Message_DuplicatedTag">Duplicate setting for TGL Tag {0}</s:String>
+    <s:String x:Key="Message_SetArgError">Unable to set for receiving parameter start sequence</s:String>
+    <s:String x:Key="Message_SetFreeStyleError">Unable to set the attribute FreeStyle</s:String>
+    <s:String x:Key="Message_CheckUpdateFailed">Failed to check the update!</s:String>
+    <s:String x:Key="Message_CheckerStartFailed">Unable to activate the updater:</s:String>
+    <s:String x:Key="Message_CancelUpdate">Undo Update</s:String>
+    <s:String x:Key="Message_UpdateFailed" xml:space="preserve">Errors when downloading update! Please run later. &#x0A; If the situation happens again, please contact the system administrator &#x0A;&#x0A;(Error Message: {0})</s:String>
+    <s:String x:Key="Message_StartError">Unable to activate the primary program:</s:String>
+    <s:String x:Key="Message_UpdateFinished">Finished to update!</s:String>
+    <s:String x:Key="Message_Number">Values</s:String>
+    <s:String x:Key="Message_MustHave">Mandatory</s:String>
+    <s:String x:Key="Message_NotEmpty">Non blank</s:String>
+    <s:String x:Key="Message_OnlyAllowNumber">Only numeric allowed</s:String>
+    <s:String x:Key="Message_ActionNameSyntaxIncorrent">Only letters, numbers and underlines allowed</s:String>
+    <s:String x:Key="Message_FieldNameSyntaxIncorrent">Only letters, numbers, underlines and dots(.) allowed</s:String>
+    <s:String x:Key="Message_PathFormatIncorrent">Only letters, numbers, underlines(_) and horizontal lines(-) allowed</s:String>
+    <s:String x:Key="Message_ValueMustStartWith">Attribute {0} must be initial with {1}</s:String>
+    <s:String x:Key="Message_CreateLinkFinish">Desk shortcut created</s:String>
+    <s:String x:Key="Message_ReorderTabIndex">Do you wish to rearrange tabIndex?</s:String>
+    <s:String x:Key="Message_SetFreeStyleWarning"  xml:space="preserve">You will change the design method for the program as Free Style! After changed, no more mapped program code will be generated for any change </s:String>
+    <s:String x:Key="Message_CodeTemplateFileNotFound" xml:space="preserve">Unable to find the program template list, the default one will be used.
+It is suggested to run the update from the function table -> Basic Data -> Update Basic Data.</s:String>
+    <s:String x:Key="Message_CheckGDCFailedTitle">GDC not detected</s:String>
+    <s:String x:Key="Message_CheckGDCFailed" xml:space="preserve">Please activate GDC to run the assigned operation properly.</s:String>
+    <s:String x:Key="Message_CheckGDCAgain">Re-check now?</s:String>
+    <s:String x:Key="Message_CancelExecute">Cancel Running</s:String>
+    <s:String x:Key="Message_KeepExecute">Force to Run</s:String>
+    <s:String x:Key="Message_TryAgain">Re-check</s:String>
+    <s:String x:Key="Message_NotBooking">Not Signed Out</s:String>
+    <s:String x:Key="Message_PropertyChange">Note: After changed, the program should be uploaded to take effect.</s:String>
+    <s:String x:Key="Message_ChageTableRelation">It is suggested not to set PK and FK, unless the setting is different from r.t</s:String>
+    <s:String x:Key="Message_QSetting" xml:space="preserve">Are you sure to run “Settings for Q type upper level querying”? &#x0A;(Note: After </s:String>
+    <s:String x:Key="Message_LoginAccountException">Incorrect Username or Password</s:String>
+    <s:String x:Key="Message_SocketException" xml:space="preserve">Connection failure, please try again later.
+If the following message shows repeatedly, please contact system administrator.</s:String>
+    <s:String x:Key="Message_SocketTimeoutException">Connection timeout, please connect again</s:String>
+    <s:String x:Key="Message_ProgInfoFreeStyleAndSectionFlag">Program Infomation: Section has been modified and transferred to FreeStyle</s:String>
+    <s:String x:Key="Message_ProgInfoFreeStyle">Program Infomation: Transferred FreeStyle</s:String>
+    <s:String x:Key="Message_ProgInfoSectionFlag">Program Infomation: Section has been modified</s:String>
+    <s:String x:Key="Message_RegenComfirm" xml:space="preserve">Do you wish to re-generate the program “{0}”? &#x0A;&#x0A; After regenerating, please download the program again</s:String>
+    <s:String x:Key="Message_PreviewForm" xml:space="preserve">If the preview result is not as predicted, please update specification and review again.
+If the preview screen not showed, please check the connection record.</s:String>
+    <s:String x:Key="Message_ThisVersionModifyConfirm" xml:space="preserve">Notices:
+  1. The function is for debugging of standard add-point during the customizing process if needed. For general situation, please just use the general function for uploading
+  2. If the add-point modified for standard sign-out is of the Client, the customized add-point will be used after updated.
+  3. The purpose of standard sign-out is for excluding problems of standard programs. It is suggested that you do not add screen control items to prevent from difference between the screen and program after updates uploaded.
+  4. If you upload the patch after a standard sign-out process, the update will be blocked since the versions are different.
+  Do you wish to continue [Current Version Adjustment/Update]?</s:String>
+    <s:String x:Key="Message_TopstdCantSetFreestyle">topstd cannot convert this program as freestyle</s:String>
+    <s:String x:Key="Message_TopstdCantChangeProgramTemplate">topstd cannot change program template</s:String>
+    <s:String x:Key="Message_TopstdCantChangeStartarg">topstd不 cannot set the reserved argument</s:String>
+    <s:String x:Key="Message_Saved">Finish to save: {0}</s:String>
+    <s:String x:Key="Message_UnknownFileType">Unknown file type</s:String>
+    <s:String x:Key="Message_NecessaryFileMssing">Lack of necessary information for the operation, please download again or contact the administrator</s:String>
+    <s:String x:Key="Message_CitedFileMssing">Lack of quoting source file: {0}</s:String>
+    <s:String x:Key="Message_FileMssing" xml:space="preserve">Lack of File: {0}&#x0A;please download the basic data again or contact the administrator</s:String>
+    <s:String x:Key="Message_FileContentError">Incorrect data, please download again or contact the administrator</s:String>
+    <s:String x:Key="Message_CitedFileContentError">Incorrect reference source, please download again or contact the administrator</s:String>
+    <s:String x:Key="Message_TreeNameIllegal">s_browse name is always used by tree structure in the template</s:String>
+    <s:String x:Key="Message_RepeatInScrollGrid">Located in ScrollGrid, repeat must be true</s:String>
+    <s:String x:Key="Message_DiffCopyUnEditable">复制目的区域包含不可编辑区域，请重新选择复制来源范围</s:String>
+    <s:String x:Key="Message_SpecPKNotNull">此栏位为Key值, 建议设定为必要栏位(not null), 请问是否确定要取消勾选?</s:String>
+    <s:String x:Key="Message_SpecReqNotNull">此栏位为必要栏位(not null), 请问是否确定要取消勾选?</s:String>
+    <s:String x:Key="Message_KeyWordNotNull">请输入搜寻内容。</s:String>
+    <s:String x:Key="Message_noError">检核无逻辑结构错误</s:String>
+    <s:String x:Key="Message_CannotFindEndIF">第{0}行IF找不到對應的END IF</s:String>
+    <s:String x:Key="Message_CannotFindIF">第{0}行END IF找不到對應的IF</s:String>
+    <s:String x:Key="Message_ConnectionOK">Successful connection</s:String>
+    <s:String x:Key="Message_InvalidReferenceFieldNameSuffix">参考字段的控件名称结尾若不是"_desc", 则参考字段的设置无作用</s:String>
+    <s:String x:Key="Message_ChangeLanguageWarning">温馨提示: 变更语言别请依下列步骤进行</s:String>
+    <s:String x:Key="Message_ChangeLanguageWarning1">1.请到Windows控制面板[地区与语言]确认已安装目标语言包</s:String>
+    <s:String x:Key="Message_ChangeLanguageWarning2">2.请到[用户数据设置作业(azzi800)]变更使用语言</s:String>
+    <s:String x:Key="Message_ChangeLanguageWarning3">3.重启设计器</s:String>
+    <s:String x:Key="Message_ChangeLanguageWarning4">4.到设计器中更新基础数据</s:String>
+    <s:String x:Key="Message_UnsupportedLanguage">警告: 设计器未支持此语言别，将以英文显示!!!</s:String>
+    <s:String x:Key="Message_TableIsExist">表格已存在</s:String>
+    <s:String x:Key="Message_SectionVerify">您没有解开此程式框架的授权，请找有权限的主管透过adzi052(解开程式框架授权作业)进行授权</s:String>
+    <s:String x:Key="Message_SectionVerifyWarning">注意:取得解开程式框架授权后，必须重新下载程式才会生效</s:String>
+    <s:String x:Key="Message_CodeNotBooking">程式未签出，请先签出程式后再点选上传规格并产生程式功能</s:String>
+    <s:String x:Key="Message_AdjustContainerBlankArea">确认要缩小额外的空白区域？</s:String>
+    <s:String x:Key="Message_TapSrcIsNull">此函式不存在tap.src中，請至4gl.src來源區域取得tap，重命名為tap.src檔，更新至客戶環境tap目錄下後，重新下載差異比對檔案</s:String>
+    <s:String x:Key="Message_FunctionIsExistCanNotSync">Function已存在，不可同步</s:String>
+    <s:String x:Key="Message_FunctionIsExistCanNotCopy">Function不存在，無法複製</s:String>
+    <s:String x:Key="Message_BindSelection">選擇的控件已被其它控件綁定，是否要取代原先的綁定？</s:String>
+    <s:String x:Key="Message_TableNotFound">您开启的 {0} 规格档找不到所需要的表格基础资料：{1}，请重新更新基础资料。</s:String>
+    <s:String x:Key="Message_BasicDataUpdating">基础资料更新中...</s:String>
+
+    <!-- 窗口标题 -->
+    <s:String x:Key="WinTitle_TextStringSetting">Multi-language setting</s:String>
+    <s:String x:Key="WinTitle_PreviewSpec">Preview specifications</s:String>
+    <s:String x:Key="WinTitle_Delete">Delete</s:String>
+    <s:String x:Key="WinTitle_SearchBoxTitle">Search</s:String>
+    <s:String x:Key="WinTitle_MainTitle">T100Designer ({0}) Station: {1} Connection Infomation:{2}</s:String>
+    <s:String x:Key="WinTitle_Close">Close</s:String>
+    <s:String x:Key="WinTitle_SearchKeySettingTitle">正规化搜寻条件设定</s:String>
+
+    <!-- 搜寻 -->
+    <s:String x:Key="Search_BeginSearch">Find</s:String>
+    <s:String x:Key="Search_CurrentDocument">Current document</s:String>
+    <s:String x:Key="Search_AllOpenDocument">Activated documents</s:String>
+    <s:String x:Key="Search_Previous">Previous</s:String>
+    <s:String x:Key="Search_Next">Next</s:String>
+    <s:String x:Key="Search_ProgramName">Process Code</s:String>
+    <s:String x:Key="Search_Source">Source</s:String>
+    <s:String x:Key="Search_Match">Matched</s:String>
+    <s:String x:Key="Search_MatchCase">Match the capital/lowercase</s:String>
+    <s:String x:Key="Search_Reg">Regular Expression</s:String>
+    <s:String x:Key="Search_Spec">Specifications included for searching</s:String>
+    <s:String x:Key="Search_EditableOnly">Located in the editable area</s:String>
+    <s:String x:Key="Replace_Notice">Note: '{0}' can only be effective to the editable area!</s:String>
+
+    <!-- 4fd items属性编辑 -->
+    <s:String x:Key="Items_Add">Add</s:String>
+    <s:String x:Key="Items_Delete">Delete</s:String>
+    <s:String x:Key="Items_Modify">Modify</s:String>
+    <s:String x:Key="Items_MoveUp">Move Up</s:String>
+    <s:String x:Key="Items_MoveDown">Move Down</s:String>
+
+    <!-- 4fd color屬性 -->
+    <s:String x:Key="Color_black">black</s:String>
+    <s:String x:Key="Color_white">white</s:String>
+    <s:String x:Key="Color_red">red</s:String>
+    <s:String x:Key="Color_green">green</s:String>
+    <s:String x:Key="Color_yellow">yellow</s:String>
+    <s:String x:Key="Color_magenta">magenta</s:String>
+    <s:String x:Key="Color_blue">blue</s:String>
+    <s:String x:Key="Color_cyan">cyan</s:String>
+
+    <!-- 4fd 屬性 -->
+    <s:String x:Key="ItemProperty_Widget">Widget</s:String>
+    <s:String x:Key="ItemProperty_title">Title</s:String>
+    <s:String x:Key="ItemProperty_text">Text</s:String>
+    <s:String x:Key="ItemProperty_comment">Comment</s:String>
+    <s:String x:Key="ItemProperty_items">Items</s:String>
+    <s:String x:Key="ItemProperty_case">Case</s:String>
+    <s:String x:Key="ItemProperty_noEntry">No Entry</s:String>
+    <s:String x:Key="ItemProperty_notNull">Not Null</s:String>
+    <s:String x:Key="ItemProperty_notEditable">Not Editable</s:String>
+    <s:String x:Key="ItemProperty_invisible">Data Invisible</s:String>
+    <s:String x:Key="ItemProperty_action">Action</s:String>
+    <s:String x:Key="ItemProperty_image">Image</s:String>
+    <s:String x:Key="ItemProperty_scroll">Scroll</s:String>
+    <s:String x:Key="ItemProperty_step">Step</s:String>
+    <s:String x:Key="ItemProperty_sliderOrientation">Slider Orientation</s:String>
+    <s:String x:Key="ItemProperty_valueMin">Value Min</s:String>
+    <s:String x:Key="ItemProperty_valueMax">Value Max</s:String>
+    <s:String x:Key="ItemProperty_justify">Justify</s:String>
+    <s:String x:Key="ItemProperty_componentType">Component Type</s:String>
+    <s:String x:Key="ItemProperty_valueChecked">Value Checked</s:String>
+    <s:String x:Key="ItemProperty_valueUnchecked">Value Unchecked</s:String>
+    <s:String x:Key="ItemProperty_orientation">Orientation</s:String>
+    <s:String x:Key="ItemProperty_style">Style</s:String>
+    <s:String x:Key="ItemProperty_splitter">Splitter</s:String>
+    <s:String x:Key="ItemProperty_tabIndex">Tab Index</s:String>
+    <s:String x:Key="ItemProperty_hidden">Widget Hidden</s:String>
+    <s:String x:Key="ItemProperty_rowHeight">Row Height</s:String>
+    <s:String x:Key="ItemProperty_totalRows">Total Rows</s:String>
+    <s:String x:Key="ItemProperty_picture">Picture</s:String>
+    <s:String x:Key="ItemProperty_format">Show Format</s:String>
+    <s:String x:Key="ItemProperty_aggregate">Aggregate</s:String>
+    <s:String x:Key="ItemProperty_aggregateName">Aggregate Name</s:String>
+    <s:String x:Key="ItemProperty_aggregateText">Aggregate Text</s:String>
+    <s:String x:Key="ItemProperty_aggregateType">Aggregate Type</s:String>
+    <s:String x:Key="ItemProperty_unsortable">Unsortable</s:String>
+    <s:String x:Key="ItemProperty_unmovable">Unmovable</s:String>
+    <s:String x:Key="ItemProperty_unhidable">Unhidable</s:String>
+    <s:String x:Key="ItemProperty_unsizable">Unsizable</s:String>
+    <s:String x:Key="ItemProperty_wantFixedPageSize">Want Fixed Page Size</s:String>
+    <s:String x:Key="ItemProperty_doubleClick">Double Click</s:String>
+    <s:String x:Key="ItemProperty_unsortableColumns">Unsortable Columns</s:String>
+    <s:String x:Key="ItemProperty_unsizableColumns">Unsizable Columns</s:String>
+    <s:String x:Key="ItemProperty_unmovableColumns">Unmovable Columns</s:String>
+    <s:String x:Key="ItemProperty_unhidableColumns">Unhidable Columns</s:String>
+    <s:String x:Key="ItemProperty_idColumn">Id Column</s:String>
+    <s:String x:Key="ItemProperty_parentIdColumn">Parent Id Column</s:String>
+    <s:String x:Key="ItemProperty_expandedColumn">Expanded Column</s:String>
+    <s:String x:Key="ItemProperty_isNodeColumn">Is Node Column</s:String>
+    <s:String x:Key="ItemProperty_imageExpanded">Image Expanded</s:String>
+    <s:String x:Key="ItemProperty_imageCollapsed">Image Collapsed</s:String>
+    <s:String x:Key="ItemProperty_imageLeaf">Image Leaf</s:String>
+    <s:String x:Key="ItemProperty_imageColumn">Image Column</s:String>
+    <s:String x:Key="ItemProperty_repeat">Repeat</s:String>
+    <s:String x:Key="ItemProperty_columnCount">Column Count</s:String>
+    <s:String x:Key="ItemProperty_rowCount">Row Count</s:String>
+    <s:String x:Key="ItemProperty_stepX">Step X</s:String>
+    <s:String x:Key="ItemProperty_stepY">Step Y</s:String>
+    <s:String x:Key="ItemProperty_sizePolicy">Size Policy</s:String>
+    <s:String x:Key="ItemProperty_autoScale">Auto Scale</s:String>
+    <s:String x:Key="ItemProperty_stretch">Stretch</s:String>
+    <s:String x:Key="ItemProperty_gridWidth">Grid Width</s:String>
+    <s:String x:Key="ItemProperty_gridHeight">Grid Height</s:String>
+    <s:String x:Key="ItemProperty_minWidth">Min Width</s:String>
+    <s:String x:Key="ItemProperty_minHeight">Min Height</s:String>
+    <s:String x:Key="ItemProperty_posX">Pos X</s:String>
+    <s:String x:Key="ItemProperty_posY">Pos Y</s:String>
+    <s:String x:Key="ItemProperty_color">Font Color</s:String>
+    <s:String x:Key="ItemProperty_scrollBars">ScrollBars</s:String>
+    <s:String x:Key="ItemProperty_tag">Tag</s:String>
+    <s:String x:Key="ItemProperty_gridChildrenInParent">Grid Children In Parent</s:String>
+    <s:String x:Key="ItemProperty_width">Width</s:String>
+    <s:String x:Key="ItemProperty_unitWidth">Unit Width</s:String>
+    <s:String x:Key="ItemProperty_height">Height</s:String>
+    <s:String x:Key="ItemProperty_unitHeight">Unit Height</s:String>
+    <s:String x:Key="ItemProperty_wantNoReturns">Want No Returns</s:String>
+
+    <!-- 站台管理员 -->
+    <s:String x:Key="Site_SiteManagerTitle">SiteManager {0}</s:String>
+    <s:String x:Key="Site_SiteSetting">Site</s:String>
+    <s:String x:Key="Site_CreateNewFolder">Add Folder</s:String>
+    <s:String x:Key="Site_CreateNewSite">New Site</s:String>
+    <s:String x:Key="Site_Delete">Delete</s:String>
+    <s:String x:Key="Site_Rename">Rename</s:String>
+    <s:String x:Key="Site_Copy">Copy</s:String>
+    <s:String x:Key="Site_Cancel">Cancel</s:String>
+    <s:String x:Key="Site_SelectTheSite">Select</s:String>
+    <s:String x:Key="Site_ConfirmModify">Save</s:String>
+    <s:String x:Key="Site_ServerIP">Host:</s:String>
+    <s:String x:Key="Site_Login">User:</s:String>
+    <s:String x:Key="Site_Password">Password:</s:String>
+    <s:String x:Key="Site_Workspace">Working Directory:</s:String>
+    <s:String x:Key="Site_Area">Area:</s:String>
+    <s:String x:Key="Site_Zone">Designer Version Checking Area:</s:String>
+    <s:String x:Key="Site_Prompt">Prompt</s:String>
+    <s:String x:Key="Site_LoginPrompt">Account Prompt:</s:String>
+    <s:String x:Key="Site_PasswordPrompt">Password Prompt:</s:String>
+    <s:String x:Key="Site_AreaPrompt">Region Prompt:</s:String>
+    <s:String x:Key="Site_UpdateURL">Update Url:</s:String>
+    <s:String x:Key="Site_CheckVersion">Checking the Version Compatibility</s:String>
+    <s:String x:Key="Site_CheckUpdateNow">Check</s:String>
+    <s:String x:Key="Site_IPAddressIsRequired">IP address is mandatory</s:String>
+    <s:String x:Key="Site_IPAddressFormatError">Format of Hot address is not correct</s:String>
+    <s:String x:Key="Site_ZoneIsRequired">Zone is mandatory</s:String>
+    <s:String x:Key="Site_AreaIsRequired">Logon area is mandatory</s:String>
+    <s:String x:Key="Site_WorkspaceIsUsed">Working directory {0} has been assigned</s:String>
+    <s:String x:Key="Site_workspaceIsRequired">Working directory is mandatory</s:String>
+    <s:String x:Key="Site_RemoteVersion">Remote designer version:</s:String>
+    <s:String x:Key="Site_CreateDesktopLink">Create Desktop shortcut</s:String>
+    <s:String x:Key="Site_WorkspaceIsNotExist">Working directory not found</s:String>
+    <s:String x:Key="Site_VersionNotChecked">Remote designer version not yet retrieved, please click “Check” to auto-retrieve, or fill the correct version manually.</s:String>
+    <s:String x:Key="Site_ExportSettings">Export</s:String>
+    <s:String x:Key="Site_ImportSettings">Import</s:String>
+    <s:String x:Key="Site_Others">Advanced</s:String>
+    <s:String x:Key="Site_ExtraCommand">Run command after login:</s:String>
+    <s:String x:Key="Site_UpdateSetting">Update</s:String>
+    <s:String x:Key="Site_UpdateSettingWarning">If any question for setting parameters, please contact the system administrator and do not make any change</s:String>
+    <s:String x:Key="Site_ModifyPrompt">It is suggested you do not change it in case of login failure</s:String>
+    <s:String x:Key="Site_ModifyPromptWarning" xml:space="preserve">I have learned the risk and confirm the contents changed with the system administrator&#x0A;&#x0A; Now start to modify?</s:String>
+    <s:String x:Key="Site_ModifyPromptConfirm">Confirm to Modify</s:String>
+    <s:String x:Key="Site_ConnectionList">Sites</s:String>
+    <s:String x:Key="Connect_topstdLoggedIn">已经取得 topstd 编辑权限</s:String>
+    <s:String x:Key="Connect_topstdUnloggedIn">尚未取得 topstd 编辑权限</s:String>
+
+    <!-- 偏好設定 -->
+    <s:String x:Key="Preference_ProgramName">Program ID</s:String>
+    <s:String x:Key="Preference_ProgramDesc">Description</s:String>
+    <s:String x:Key="Preference_ProgramPreview">Preview</s:String>
+    <s:String x:Key="Preference_Enable">Enabled</s:String>
+    <s:String x:Key="Preference_Disable">Disabled</s:String>
+    <s:String x:Key="Preference_Delete">Delete</s:String>
+    <s:String x:Key="Preference_RedoUndo">Limit of times for running recovering/repeating actions</s:String>
+    <s:String x:Key="Preference_RedoUndoMemo">(-1 indicates no limitation)</s:String>
+    <s:String x:Key="Preference_RemainUnSaved">Show Message if Unsaved</s:String>
+    <s:String x:Key="Preference_SimpleDownloadDialog">畫面開發簡潔配置</s:String> <!-- 20240321 by 02632 SIMPLE -->
+    <s:String x:Key="Preference_SimpleDownloadDialog_Change">调整画面开发简洁配置，需重启设器才会生效！</s:String> <!-- 20240701 by 14910 -->
+    <s:String x:Key="Preference_MaxRecentFiles">最近使用的檔案 : 最大數量</s:String> <!-- 20240301 by 02632-->
+    <s:String x:Key="Preference_Reset">Reset</s:String>
+    <s:String x:Key="Preference_Save">Save</s:String>
+    <s:String x:Key="Preference_Cancel">Cancel</s:String>
+    <s:String x:Key="Preference_Add">Add</s:String>
+    <s:String x:Key="Preference_Modify">Modify</s:String>
+    <s:String x:Key="Preference_TabWidth">Replace Tab for space</s:String>
+    <s:String x:Key="Preference_WrapText">Auto Wrap</s:String>
+    <s:String x:Key="Preference_CodeCompletion">Term Assistance</s:String>
+    <s:String x:Key="Preference_Font">Font Type</s:String>
+    <s:String x:Key="Preference_FontSize">Font Size</s:String>
+    <s:String x:Key="Preference_FontFamily">Font</s:String>
+    <s:String x:Key="Preference_Theme">Theme</s:String>
+    <s:String x:Key="Preference_Background">Background Color</s:String>
+    <s:String x:Key="Preference_Foreground">Text Theme</s:String>
+    <s:String x:Key="Preference_General">General Setting</s:String>
+    <s:String x:Key="Preference_ValidateForm">Editing errors for hint</s:String>
+    <s:String x:Key="Preference_MissingProg">Please enter the operation code</s:String>
+    <s:String x:Key="Preference_ProgExit">The operation code exists</s:String>
+    <s:String x:Key="Preference_ConfirmDeleteProg" xml:space="preserve">Sure to delete the setting: &#x0A;"{0}"?</s:String>
+    <s:String x:Key="Preference_ConfirmDelete">Confirm before deleting</s:String>
+    <s:String x:Key="Preference_LoadFailed">Failed to load the preferences</s:String>
+    <s:String x:Key="Preference_Diff">差异比对</s:String>
+    <s:String x:Key="Preference_ShowHint">提示完整句子</s:String>
+    <s:String x:Key="Preference_ConfirmSaveDiff">储存资料前，询问是否储存差异比对来源内容</s:String>
+    <s:String x:Key="Preference_SimplifyColor">差异颜色简化</s:String>
+    <s:String x:Key="Preference_HorizontalArrangement">水平排列</s:String>
+    <s:String x:Key="Preference_DiffComment">比对注解差异</s:String>
+    <s:String x:Key="Preference_ViMode">vi Mode</s:String>
+    <s:String x:Key="Preference_TopstdEditPermission">预设topstd编辑权限</s:String>
+    <s:String x:Key="Preference_Language">Language</s:String>
+    <s:String x:Key="Preference_LanguageSettings">Language Settings</s:String>
+    <s:String x:Key="Preference_DiffWithoutSection">不显示section区块差异</s:String>
+    <s:String x:Key="Preference_DiffWithANSI">显示ansi语法差异</s:String>
+    <s:String x:Key="Preference_Welcome">Welcom</s:String>
+    <s:String x:Key="Preference_StartShowWelcome">在启动时显示欢迎画面</s:String>
+    <s:String x:Key="Preference_DisplayOpenedFiles">显示最近开启之规格档与程式档</s:String>
+    <s:String x:Key="Preference_MaxQuantity">　　最大数量各</s:String>
+    <s:String x:Key="Preference_Each">个</s:String>
+    <s:String x:Key="Preference_MostDisplayFiles">(每个站台最多30个)</s:String>
+    <s:String x:Key="Preference_ClearHistory">清除所有站台纪录</s:String>
+    <s:String x:Key="Preference_CodeEditor">Code Editor</s:String>
+    <s:String x:Key="Preference_FormDesigner">Spec Designer</s:String>
+    <s:String x:Key="Preference_Lite">Lite Spec Designer</s:String>
+    <s:String x:Key="Preference_ShowHintTabIndexSort">不提示TabIndex是否重新排序讯息</s:String>
+    <s:String x:Key="Preference_LocalizedProperty">属性本地化</s:String>
+
+    <!-- 自动更新 -->
+    <s:String x:Key="Update_Title">Software Update</s:String>
+    <s:String x:Key="Update_Available" xml:space="preserve">{0} with newer version: {1}</s:String>
+    <s:String x:Key="Update_Confirm">{0} newer version provided (Current version is {1}), do you wish to download and install the new version?</s:String>
+    <s:String x:Key="Update_NotUpdate">Update later</s:String>
+    <s:String x:Key="Update_UpdateNow">Start to Update</s:String>
+    <s:String x:Key="Update_ReleaseNote">Description:</s:String>
+    <s:String x:Key="ProcessList_Title">T100Designer – Close the designer to continue</s:String>
+    <s:String x:Key="ProcessList_MainTitle">Close the designer to continue</s:String>
+    <s:String x:Key="ProcessList_Message">Please save you work and press [Close the designer to continue]</s:String>
+    <s:String x:Key="ProcessList_CloseBeforeStart">If there are other designer now opened, please close it to run update</s:String>
+    <s:String x:Key="ProcessList_Continue">Close the designer to continue</s:String>
+
+    <!-- 组件规格 -->
+    <s:String x:Key="CodeSpec_Setting">Set Component Specifications</s:String>
+    <s:String x:Key="CodeSpec_ComponentID">Component No.</s:String>
+    <s:String x:Key="CodeSpec_ComponentDescription">Description</s:String>
+    <s:String x:Key="CodeSpec_ComponentDB">Applicable DB</s:String>
+    <s:String x:Key="CodeSpec_ComponentPurpose">Purpose</s:String>
+    <s:String x:Key="CodeSpec_ComponentParameter">Parameter</s:String>
+    <s:String x:Key="CodeSpec_ComponentOrder">Sequence</s:String>
+    <s:String x:Key="CodeSpec_ComponentIn">Passed values</s:String>
+    <s:String x:Key="CodeSpec_ComponentTable">Table</s:String>
+    <s:String x:Key="CodeSpec_ComponentColumn">Field</s:String>
+    <s:String x:Key="CodeSpec_ParameterPurpose">Usage description</s:String>
+    <s:String x:Key="CodeSpec_ComponentReturn">Returned value</s:String>
+    <s:String x:Key="CodeSpec_Keyword">Key value</s:String>
+    <s:String x:Key="CodeSpec_FrontComponent">Lead component</s:String>
+    <s:String x:Key="CodeSpec_Dimension">Dimension</s:String>
+    <s:String x:Key="CodeSpec_DimensionID">No.</s:String>
+    <s:String x:Key="CodeSpec_DimensionClass">Category Code</s:String>
+    <s:String x:Key="CodeSpec_DimensionClassValue">Category value</s:String>
+    <s:String x:Key="CodeSpec_Test">Key point test</s:String>
+    <s:String x:Key="CodeSpec_TestID">Line No.</s:String>
+    <s:String x:Key="CodeSpec_TestDescription">Scenery Description</s:String>
+    <s:String x:Key="CodeSpec_TestIn">Passed values</s:String>
+    <s:String x:Key="CodeSpec_TestReturn">Expected returned value</s:String>
+    <s:String x:Key="CodeSpec_TestPosNeg">Positive/Negative inspection</s:String>
+    <s:String x:Key="CodeSpec_TestErrorCode">Output incorrect code</s:String>
+    <s:String x:Key="CodeSpec_TestErrDescription">Error description</s:String>
+    <s:String x:Key="CodeSpec_TestMemo">Notes</s:String>
+
+    <!-- DB Structure Creator-->
+    <s:String x:Key="DBStructure_Container">Container Type</s:String>
+    <s:String x:Key="DBStructure_FieldsAndLabels">Field and Label</s:String>
+    <s:String x:Key="DBStructure_FieldLabelProperties">Field and Label Setting</s:String>
+    <s:String x:Key="DBStructure_MaximumWidth">Maximum Width:</s:String>
+    <s:String x:Key="DBStructure_NumberOfFields">Vertical Field:</s:String>
+    <s:String x:Key="DBStructure_ScrollRepeatHeader">ScrollGrid Repeat</s:String>
+    <s:String x:Key="DBStructure_RepeatRowCount">Repeated Quantity Vertically:</s:String>
+    <s:String x:Key="DBStructure_RepeatColumnCount">Repeated Quantity Horizontally:</s:String>
+    <s:String x:Key="DBStructure_Label">Label</s:String>
+    <s:String x:Key="DBStructure_Table">Table</s:String>
+    <s:String x:Key="DBStructure_Column">Column</s:String>
+    <s:String x:Key="DBStructure_WidgetType">Component Type</s:String>
+    <s:String x:Key="DBStructure_WidgetLength">Component Width</s:String>
+    <s:String x:Key="DBStructure_Filter">Filter:</s:String>
+    <s:String x:Key="DBStructure_Description">Description</s:String>
+    <s:String x:Key="DBStructure_Module">Modules</s:String>
+    <s:String x:Key="DBStructure_Back" xml:space="preserve"> &lt; Previous</s:String>
+    <s:String x:Key="DBStructure_Next" xml:space="preserve">Next &gt;</s:String>
+    <s:String x:Key="DBStructure_Cancel" xml:space="preserve"> Cancel </s:String>
+    <s:String x:Key="DBStructure_Finish" xml:space="preserve">  Finished </s:String>
+
+    <!-- 离线档案信息 -->
+    <s:String x:Key="ProgramInformation_Title">Offline file Information</s:String>
+    <s:String x:Key="ProgramInformation_Prog">Program Name</s:String>
+    <s:String x:Key="ProgramInformation_Std_Prog">Std. Program Name</s:String>
+    <s:String x:Key="ProgramInformation_ErpVer">Product Version</s:String>
+    <s:String x:Key="ProgramInformation_Ver">Version</s:String>
+    <s:String x:Key="ProgramInformation_Module">Modules</s:String>
+    <s:String x:Key="ProgramInformation_Type">Institution Type</s:String>
+    <s:String x:Key="ProgramInformation_Booking">Sign out or not</s:String>
+    <s:String x:Key="ProgramInformation_Class">Program Type</s:String>
+    <s:String x:Key="ProgramInformation_Env">Development environment</s:String>
+    <s:String x:Key="ProgramInformation_Zone">Development area</s:String>
+    <s:String x:Key="ProgramInformation_Identity">Identification mark</s:String>
+    <s:String x:Key="ProgramInformation_SectionFlag">If the section has been modified</s:String>
+    <s:String x:Key="ProgramInformation_Template">Program template</s:String>
+    <s:String x:Key="ProgramInformation_FreeStyle">If its FreeStyle</s:String>
+
+    <!-- FunctionList -->
+    <s:String x:Key="FunctionList_Title">Program Assistance</s:String>
+    <s:String x:Key="FunctionList_Delete">Delete</s:String>
+    <s:String x:Key="FunctionList_Copy">Copy</s:String>
+    <s:String x:Key="FunctionList_Insert">Insert into Editor</s:String>
+
+    <!-- 数据表关联设定 -->
+    <s:String x:Key="PK">PK (Primary Key)</s:String>
+    <s:String x:Key="FK_table">Foreign Key Table</s:String>
+    <s:String x:Key="FkMaster">FkMaster</s:String>
+    <s:String x:Key="FkDetail">FkDetail</s:String>
+
+    <!-- VI指令清單 -->
+    <s:String x:Key="VI_CommandList">vi Command List</s:String>
+    <s:String x:Key="VI_GeneralMode">General Mode:</s:String>
+    <s:String x:Key="VI_MoveOneLeft">Move one character to the left (h)</s:String>
+    <s:String x:Key="VI_MoveNLeft">Move n characters to the left (nh)</s:String>
+    <s:String x:Key="VI_MoveOneUp">Move one character up (k)</s:String>
+    <s:String x:Key="VI_MoveNUp">Move n characters up (nk)</s:String>
+    <s:String x:Key="VI_MoveOneDown">Move one character down (j)</s:String>
+    <s:String x:Key="VI_MoveNDown">Move n characters down (nj)</s:String>
+    <s:String x:Key="VI_MoveOneRight">Move one character to the right (l)</s:String>
+    <s:String x:Key="VI_MoveNRight">Move n characters to the right (nl)</s:String>
+    <s:String x:Key="VI_MoveToLastLine">Move to the last line of the file (G)</s:String>
+    <s:String x:Key="VI_MoveToNLine">Move to line n of the file (nG)</s:String>
+    <s:String x:Key="VI_ScrollDown">Scroll down one page (Ctrl + f)</s:String>
+    <s:String x:Key="VI_ScrollUp">Scroll up one page (Ctrl + b)</s:String>
+    <s:String x:Key="VI_DelCharAtCursor">Delete a character at the cursor (x)</s:String>
+    <s:String x:Key="VI_DelCharBeforeCursor">Delete a character before the cursor (X)</s:String>
+    <s:String x:Key="VI_DelEntireLine">Delete entire line (dd)</s:String>
+    <s:String x:Key="VI_DelNLines">Delete n lines (ndd)</s:String>
+    <s:String x:Key="VI_CopyEntireLine">Copy entire line (yy)</s:String>
+    <s:String x:Key="VI_CopyNLine">Copy n lines (nyy)</s:String>
+    <s:String x:Key="VI_PasteBeforeCursor">Paste before cursor (p)</s:String>
+    <s:String x:Key="VI_PasteAfterCursor">Paste after cursor (P)</s:String>
+    <s:String x:Key="VI_Undo">Undo (u)</s:String>
+    <s:String x:Key="VI_SearchDown">Search down (/)</s:String>
+    <s:String x:Key="VI_SearchUpwards">Search upwards (?)</s:String>
+    <s:String x:Key="VI_MoveUpToNextSearchString">Move up to next search string (n)</s:String>
+    <s:String x:Key="VI_MoveDownToNextSearchString">Move down to next search string (N)</s:String>
+    <s:String x:Key="VI_EditMode">Edit Mode:</s:String>
+    <s:String x:Key="VI_AddDataBeforeCursor">Add data before the cursor (i)</s:String>
+    <s:String x:Key="VI_AddDataBeforeLine">Add data before the line (I)</s:String>
+    <s:String x:Key="VI_AddDataAfterCursor">Add data after the cursor (a)</s:String>
+    <s:String x:Key="VI_AddDataAfterLine">Add data after the line (A)</s:String>
+    <s:String x:Key="VI_AddLineBelowLine">Add a new line below the line (o)</s:String>
+    <s:String x:Key="VI_AddLineAboveLine">Add a new line above the line (O)</s:String>
+    <s:String x:Key="VI_LeaveEditModeEnterGeneralMode">Leave Edit Mode, enter General Mode (ESC)</s:String>
+    <s:String x:Key="VI_ReplaceMode">Replace Mode:</s:String>
+    <s:String x:Key="VI_EnterReplaceModeUntilESC">Enter Replace Mode until ESC (R)</s:String>
+    <s:String x:Key="VI_CommandMode">Command Mode:</s:String>
+    <s:String x:Key="VI_EnterCommandModeUntilESC">Enter Command Mode until ESC (:)</s:String>
+    <s:String x:Key="VI_ReplaceTextFromMToNLine">Replace text from m to n line (:m,n/old/new/g)</s:String>
+    <s:String x:Key="VI_ReplaceTextInWholeContext">Replace text in whole context (:1,$s/old/new/g)</s:String>
+    <s:String x:Key="VI_Save">Save file (: w)</s:String>
+    <s:String x:Key="VI_SearchCurrentWord">Search for the exact word at the cursor (shift + 8 (*))</s:String>
+    <s:String x:Key="VI_Redo">Redo (ctrl + r)</s:String>
+    <s:String x:Key="VI_SelectLineMode">Visual Line Mode (shift + v)</s:String>
+    <s:String x:Key="VI_SelectBlockMode">Visual Mode (ctrl + v)</s:String>
+    <s:String x:Key="VI_ExecuteLastCommand">Execute Last Command (.)</s:String>
+
+    <!-- 快速鍵清單 -->
+    <s:String x:Key="Key_HotkeyList">Hotkey List</s:String>
+    <s:String x:Key="Key_OpenFile">Open file (Ctrl + O)</s:String>
+    <s:String x:Key="Key_SaveFile">Save file (Ctrl + S)</s:String>
+    <s:String x:Key="Key_CloseFile">Close file (Ctrl + W)</s:String>
+    <s:String x:Key="Key_Upload">Upload (F6)</s:String>
+    <s:String x:Key="Key_Precompile">Precompile (Shift + F6)</s:String>
+    <s:String x:Key="Key_Exit">Exit (Alt + F4)</s:String>
+    <s:String x:Key="Key_ExportSpec">Export Spec. (Ctrl + E)</s:String>
+    <s:String x:Key="Key_Search">Search (Ctrl + F)</s:String>
+    <s:String x:Key="Key_Replace">Replace (Ctrl + H)</s:String>
+    <s:String x:Key="Key_About">About (Ctrl + F1)</s:String>
+    <s:String x:Key="Key_CutComponet">Cut componet (Ctrl + X)</s:String>
+    <s:String x:Key="Key_PasteComponet">Paste componet (Ctrl + V)</s:String>
+    <s:String x:Key="Key_MultiSelectComponetsInRegion">Multi-select componets  in region (Shift + Left Click)</s:String>
+    <s:String x:Key="Key_MultiSelectComponets">Multi-select componets (Ctrl + Left Click)</s:String>
+    <s:String x:Key="Key_Cut">Cut (Ctrl + X)</s:String>
+    <s:String x:Key="Key_Paste">Paste (Ctrl + V)</s:String>
+    <s:String x:Key="Key_MarkSelectedArea">Mark selected area (Ctrl + K)</s:String>
+    <s:String x:Key="Key_UnmarkSelectedArea">Unmark selected area (Ctrl + Shift + K)</s:String>
+    <s:String x:Key="Key_RefreshScreens">Refresh screens (F5)</s:String>
+    <s:String x:Key="Key_ChangeGeneroKeywordsToUppercase">Change Genero Keywords to Uppercase (Ctrl + B)</s:String>
+    <s:String x:Key="Key_TermAssistance">Term assistance (Ctrl + Return/Enter)</s:String>
+    <s:String x:Key="Key_CheckFunctions">Check functions (Ctrl + I)</s:String>
+    <s:String x:Key="Key_GoToAssignedLineNo">Go to assigned line no. (Ctrl + G)</s:String>
+    <s:String x:Key="Key_DisplaySelfbuildKeywordList">Display self-build keyword list (Ctrl + P)</s:String>
+    <s:String x:Key="Key_DisplayDBColumnsList">Display DB columns list (Ctrl + Q)</s:String>
+    <s:String x:Key="Key_DiffRefersh">差异行数刷新 (Ctrl + D)</s:String>
+    <s:String x:Key="Key_BlockMoveLeft">區塊左移 (Shift + Tab)</s:String>
+    <s:String x:Key="Key_BlockMoveRight">區塊右移 (Tab)</s:String>
+
+    <!-- 其他 -->
+    <s:String x:Key="Diff_ListTitle">Patch后新元件清单</s:String>
+    <s:String x:Key="Diff_ListItemName">Name</s:String>
+    <s:String x:Key="Diff_ListItemType">Field Type</s:String>
+    <s:String x:Key="Diff_Memo">(双击项目可检视栏位资讯)</s:String>
+
+    <!-- 產生簡易SQL框架-->
+    <s:String x:Key="SQLType">SQL Type</s:String>
+    <s:String x:Key="SQLDisplay">Display Type</s:String>
+    <s:String x:Key="SQLString">String</s:String>
+    <s:String x:Key="SQLVariable">Variable</s:String>
+    <s:String x:Key="SQLTableSetting">Table Setting</s:String>
+    <s:String x:Key="SQLMainTable">Main Table</s:String>
+    <s:String x:Key="SQLJoinTable">Join Table</s:String>
+    <s:String x:Key="SQLTableName">Table Name</s:String>
+    <s:String x:Key="SQLJoinType">Join Type</s:String>
+    <s:String x:Key="SQLPreview">SQL Preview</s:String>
+    <s:String x:Key="SQLCopy">SQL Copy</s:String>
+    <s:String x:Key="SQLTest">SQL Test</s:String>
+    <s:String x:Key="SQLAdd">Add</s:String>
+    <s:String x:Key="SQLDelete">Delete</s:String>
+    <s:String x:Key="SQLFinish">Finish</s:String>
+
+    <!-- 簡易畫面設定 -->
+    <s:String x:Key="SimpleForm_QuickHide">Quick hide</s:String>
+    <s:String x:Key="SimpleForm_QuickShow">Quick show</s:String>
+    <s:String x:Key="SimpleForm_HideAll">Hide all</s:String>
+    <s:String x:Key="SimpleForm_ShowAll">Show all</s:String>
+    <s:String x:Key="SimpleForm_HintCantShow">提示: 标准画面该控件已隐藏, 不可设为显示</s:String>
+
+    <!-- 欢迎光临画面 -->
+    <s:String x:Key="Welcome_Layout">欢迎光临</s:String>
+    <s:String x:Key="Welcome_RecentFiles">最近开启</s:String>
+    <s:String x:Key="Welcome_SpecificationFiles">规格档案</s:String>
+    <s:String x:Key="Welcome_ProgramFiles">程式档案</s:String>
+    <s:String x:Key="Welcome_ClearHistory">清除纪录</s:String>
+    <s:String x:Key="Welcome_ClearAllHistory">清除所有纪录</s:String>
+    <s:String x:Key="Welcome_NeedToConnect">需要连线</s:String>
+    <s:String x:Key="Welcome_SelectPlatform">请选择站台</s:String>
+    <s:String x:Key="Welcome_SignOutAndDownloadSpec">签出/下载规格</s:String>
+    <s:String x:Key="Welcome_SignOutAndDownloadProg">签出/下载程式</s:String>
+    <s:String x:Key="Welcome_SignOutAndDownloadGRTemplate">签出/下载GR报表样板</s:String>
+    <s:String x:Key="Welcome_DownloadBasicDataAndUpdate">下载现有 Server 端基础资料并更新</s:String>
+    <!--<s:String x:Key="Welcome_RebuildBasicDataAndDownloadUpdate">重产 Server 端基础资料并下载更新</s:String>-->
+    <s:String x:Key="Welcome_RebuildBasicDataAndDownloadUpdate">重新产生并下载基础资料</s:String>
+    <s:String x:Key="Welcome_ViewHowDevelopT100Program">查看T100程式如何开发</s:String>
+    <s:String x:Key="Welcome_ViewCommonTool">查看T100程式开发常用工具</s:String>
+    <s:String x:Key="Welcome_AlreadyDownloaded">已经下载</s:String>
+    <s:String x:Key="Welcome_OpenSpecification">开启规格</s:String>
+    <s:String x:Key="Welcome_OpenProgram">开启程式</s:String>
+    <s:String x:Key="Welcome_TipsForOpenGR">备注：请透过 Genero Studio 开启 GR 报表</s:String>
+
+    <s:String x:Key="Welcome_OpenDownloadedSpecification">开启已下载规格</s:String>
+    <s:String x:Key="Welcome_OpenDownloadedProgram">开启已下载程式</s:String>
+    <s:String x:Key="Welcome_RecentOpenedSpecification">最近开启规格</s:String>
+    <s:String x:Key="Welcome_RecentOpenedProgram">最近开启程式</s:String>
+    <s:String x:Key="Welcome_ClearThisPlatformHistory">清除此站台之规格与程式开启纪录</s:String>
+    <s:String x:Key="Welcome_OpenSpecificationExample">开启规格范例</s:String>
+    <s:String x:Key="Welcome_OpenProgramExample">开启程式范例</s:String>
+    <s:String x:Key="Welcome_ViewDownloadedBasicData">查看下载后之基础资料</s:String>
+    <s:String x:Key="Welcome_StartShowWelcome">在启动时显示欢迎画面</s:String>
+
+    <!-- 滑鼠右鍵 -->
+    <s:String x:Key="MouseLeft_GroupInto">加入到容器</s:String>
+    <s:String x:Key="MouseLeft_BreakLayout">移除 Layout</s:String>
+    <s:String x:Key="MouseLeft_ConvertWidget">转换控件类型</s:String>
+    <s:String x:Key="MouseLeft_ConvertContainer">转换容器类型</s:String>
+    <s:String x:Key="MouseLeft_Delete">删除</s:String>
+    <s:String x:Key="MouseLeft_Copy">复制</s:String>
+    <s:String x:Key="MouseLeft_Paste">贴上</s:String>
+    <s:String x:Key="MouseLeft_BindingSelection">控件绑定</s:String>
+    <s:String x:Key="MouseLeft_UnbindingSelection">控件解除绑定</s:String>
+    <s:String x:Key="MouseLeft_AddPageBefore">往前新增页签</s:String>
+    <s:String x:Key="MouseLeft_AddPageAfter">往后新增页签</s:String>
+    <s:String x:Key="MouseLeft_DeletePage">删除页签</s:String>
+    <s:String x:Key="MouseLeft_InsertBefore">往前新增栏位</s:String>
+    <s:String x:Key="MouseLeft_InsertAfter">往后新增栏位</s:String>
+    <s:String x:Key="MouseLeft_DeleteTableOrTree">删除栏位</s:String>
+    <s:String x:Key="MouseLeft_InsertReference">新增参考栏位</s:String>
+    <s:String x:Key="MouseLeft_InsertMultiLanguage">新增多语言栏位</s:String>
+    <s:String x:Key="MouseLeft_InsertQuery">新增串查栏位</s:String>
+    <s:String x:Key="MouseLeft_GeneralFunction">简易公式设定（客制专用）</s:String>
+    <s:String x:Key="MouseLeft_GeneralValueFunc">简易带值设定（客制专用）</s:String>
+
+</ResourceDictionary>

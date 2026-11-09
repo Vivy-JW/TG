@@ -1,0 +1,768 @@
+<UserControl
+	x:Class="SpecDesigner.CodeEditWindow.View.CodeSpecificationMainWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:h="clr-namespace:SpecDesigner.CodeEditWindow.Helper"
+	xmlns:ch="clr-namespace:SpecDesignerCommon.Helpers;assembly=SpecDesignerCommon"
+	xmlns:common="clr-namespace:SpecDesignerCommon;assembly=SpecDesignerCommon"
+	xmlns:this="clr-namespace:SpecDesigner.CodeEditWindow.View"
+	x:Name="thisWin">
+	<FrameworkElement.Resources>
+		<ResourceDictionary>
+			<Style
+				x:Key="commandButton"
+				TargetType="{x:Type Button}">
+				<Setter
+					Property="Width"
+					Value="60" />
+				<Setter
+					Property="HorizontalAlignment"
+					Value="Left" />
+			</Style>
+			<Style
+				x:Key="{x:Type DataGridRow}"
+				TargetType="{x:Type DataGridRow}">
+				<Setter
+					Property="DataGridRow.ValidationErrorTemplate">
+					<Setter.Value>
+						<ControlTemplate>
+							<Image
+								Source="pack://application:,,,/CodeEditWindow;component/Images/Error.png"
+								Margin="0"
+								Width="11"
+								Height="11"
+								ToolTip="{Binding Path=(Validation.Errors)[0].ErrorContent, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type DataGridRow}}}" />
+						</ControlTemplate>
+					</Setter.Value>
+				</Setter>
+			</Style>
+			<Style
+				x:Key="errorStyle"
+				TargetType="{x:Type TextBlock}">
+				<Style.Triggers>
+					<Trigger
+						Property="Validation.HasError"
+						Value="True">
+						<Setter
+							Property="FrameworkElement.ToolTip"
+							Value="{Binding ErrorContent}" />
+					</Trigger>
+				</Style.Triggers>
+			</Style>
+			<Style
+				x:Key="{x:Type GridSplitter}"
+				TargetType="{x:Type GridSplitter}">
+				<Setter
+					Property="Background"
+					Value="#FFD3D3D3" />
+			</Style>
+			<ch:DimensionClassConverter
+				x:Key="dimensionClassConverter" />
+			<ch:ColsConverter
+				x:Key="colsConverter" />
+			<h:CellBackgroundConverter
+				x:Key="cellBackgroundConverter" />
+			<ch:ForDBValueConverter
+				x:Key="forDBValueConverter" />
+		</ResourceDictionary>
+	</FrameworkElement.Resources>
+	<Grid>
+		<common:Watermark
+			x:Name="notBookingWatermark" />
+		<TabControl>
+			<TabItem
+				Header="{StaticResource CodeSpec_Setting}">
+				<Grid>
+					<Grid.RowDefinitions>
+						<RowDefinition
+							Height="Auto" />
+						<RowDefinition
+							Height="50*" />
+						<RowDefinition
+							Height="Auto" />
+						<RowDefinition
+							Height="50*" />
+					</Grid.RowDefinitions>
+					<StackPanel
+						Orientation="Horizontal">
+						<Button
+							Content="{StaticResource FGL_AddItem}"
+							Style="{StaticResource commandButton}"
+							Command="h:CodeSpecificationCommands.AddItemCommand"
+							CommandParameter="FglComponent" />
+						<Button
+							Content="{StaticResource FGL_CreateFunction}"
+							Style="{StaticResource commandButton}"
+							Command="h:CodeSpecificationCommands.CreateFunctionCommand" />
+					</StackPanel>
+					<DataGrid
+						x:Name="componentList"
+						Grid.ColumnSpan="2"
+						Grid.Row="1"
+						AutoGenerateColumns="False"
+						SelectedIndex="0"
+						ItemsSource="{Binding}">
+						<DataGrid.Columns>
+							<DataGridTemplateColumn>
+								<DataGridTemplateColumn.CellTemplate>
+									<DataTemplate>
+										<Button
+											Command="h:CodeSpecificationCommands.DeleteCommand"
+											ToolTip="Delete"
+											CommandParameter="{Binding}">
+											<Image
+												Source="/CodeEditWindow;component/Images/delete.png"
+												Height="16"
+												Width="16" />
+										</Button>
+									</DataTemplate>
+								</DataGridTemplateColumn.CellTemplate>
+							</DataGridTemplateColumn>
+							<DataGridTemplateColumn>
+								<DataGridTemplateColumn.CellTemplate>
+									<DataTemplate>
+										<Button
+											Command="h:CodeSpecificationCommands.FocusFunctionCommand"
+											ToolTip="View Function"
+											CommandParameter="{Binding}">
+											<Image
+												Source="pack://application:,,,/T100Designer;component/Images/document_4gl.png"
+												Height="16"
+												Width="16" />
+										</Button>
+									</DataTemplate>
+								</DataGridTemplateColumn.CellTemplate>
+							</DataGridTemplateColumn>
+							<DataGridTextColumn
+								Header="{StaticResource CodeSpec_ComponentID}"
+								ElementStyle="{StaticResource errorStyle}"
+								Binding="{Binding Path=ID, Mode=TwoWay, ValidatesOnExceptions=True}" />
+							<DataGridTextColumn
+								Header="{StaticResource CodeSpec_ComponentDescription}"
+								Binding="{Binding Path=Description, Mode=TwoWay, ValidatesOnExceptions=True}" />
+							<DataGridTemplateColumn
+								Header="{StaticResource CodeSpec_ComponentDB}">
+								<DataGridTemplateColumn.CellTemplate>
+									<DataTemplate>
+										<TextBlock
+											Text="{Binding Path=ForDB, Mode=OneWay, Converter='{StaticResource forDBValueConverter}'}" />
+									</DataTemplate>
+								</DataGridTemplateColumn.CellTemplate>
+								<DataGridTemplateColumn.CellEditingTemplate>
+									<DataTemplate>
+										<ComboBox
+											ItemsSource="{DynamicResource ForDBs}"
+											DisplayMemberPath="Description"
+											SelectedValuePath="Description"
+											SelectedValue="{Binding Path=ForDB, Mode=TwoWay, Converter='{StaticResource forDBValueConverter}', UpdateSourceTrigger=LostFocus}" />
+									</DataTemplate>
+								</DataGridTemplateColumn.CellEditingTemplate>
+							</DataGridTemplateColumn>
+							<DataGridTemplateColumn
+								Header="{StaticResource CodeSpec_ComponentPurpose}"
+								Width="*">
+								<DataGridTemplateColumn.CellTemplate>
+									<DataTemplate>
+										<TextBlock
+											Text="{Binding Path=Purpose, Mode=OneWay}" />
+									</DataTemplate>
+								</DataGridTemplateColumn.CellTemplate>
+								<DataGridTemplateColumn.CellEditingTemplate>
+									<DataTemplate>
+										<TextBox
+											AcceptsReturn="True"
+											Text="{Binding Path=Purpose, Mode=TwoWay, ValidatesOnExceptions=True}" />
+									</DataTemplate>
+								</DataGridTemplateColumn.CellEditingTemplate>
+							</DataGridTemplateColumn>
+						</DataGrid.Columns>
+					</DataGrid>
+					<GridSplitter
+						HorizontalAlignment="Stretch"
+						Height="5"
+						Grid.Row="2" />
+					<TabControl
+						Grid.Row="3">
+						<TabItem
+							Header="{StaticResource CodeSpec_ComponentParameter}">
+							<Grid>
+								<Grid.RowDefinitions>
+									<RowDefinition
+										Height="Auto" />
+									<RowDefinition />
+								</Grid.RowDefinitions>
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition />
+									<ColumnDefinition />
+								</Grid.ColumnDefinitions>
+								<StackPanel
+									Orientation="Horizontal">
+									<Button
+										Content="{StaticResource FGL_AddItem}"
+										Style="{StaticResource commandButton}"
+										Command="h:CodeSpecificationCommands.AddItemCommand"
+										CommandParameter="input" />
+								</StackPanel>
+								<DataGrid
+									x:Name="inputList"
+									Margin="0 0 4 0"
+									Grid.Row="2"
+									AutoGenerateColumns="False"
+									ItemsSource="{Binding}">
+									<DataGrid.Columns>
+										<DataGridTemplateColumn>
+											<DataGridTemplateColumn.CellTemplate>
+												<DataTemplate>
+													<Button
+														Command="h:CodeSpecificationCommands.DeleteCommand"
+														CommandParameter="{Binding}">
+														<Image
+															Source="/CodeEditWindow;component/Images/delete.png"
+															Height="16"
+															Width="16" />
+													</Button>
+												</DataTemplate>
+											</DataGridTemplateColumn.CellTemplate>
+										</DataGridTemplateColumn>
+										<DataGridTextColumn
+											Header="{StaticResource CodeSpec_ComponentOrder}"
+											Binding="{Binding Path=Order, Mode=TwoWay, ValidatesOnExceptions=True}" />
+										<DataGridTextColumn
+											Header="{StaticResource CodeSpec_ComponentIn}"
+											Binding="{Binding Path=Name, Mode=TwoWay, ValidatesOnExceptions=True, ValidatesOnDataErrors=True}" />
+										<DataGridTemplateColumn
+											Header="{StaticResource CodeSpec_ComponentTable}">
+											<DataGridTemplateColumn.CellTemplate>
+												<DataTemplate>
+													<TextBlock
+														Text="{Binding Path=DB}" />
+												</DataTemplate>
+											</DataGridTemplateColumn.CellTemplate>
+											<DataGridTemplateColumn.CellEditingTemplate>
+												<DataTemplate>
+													<ComboBox
+														ItemsSource="{DynamicResource DBs}"
+														IsEditable="True"
+														Text="{Binding Path=DB, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+												</DataTemplate>
+											</DataGridTemplateColumn.CellEditingTemplate>
+										</DataGridTemplateColumn>
+										<DataGridTemplateColumn
+											Header="{StaticResource CodeSpec_ComponentColumn}">
+											<DataGridTemplateColumn.CellTemplate>
+												<DataTemplate>
+													<TextBlock
+														Text="{Binding Path=Col}" />
+												</DataTemplate>
+											</DataGridTemplateColumn.CellTemplate>
+											<DataGridTemplateColumn.CellEditingTemplate>
+												<DataTemplate>
+													<ComboBox
+														SelectedValue="{Binding Path=Col, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+														ItemsSource="{Binding Converter='{StaticResource colsConverter}'}">
+														<FrameworkElement.Style>
+															<Style
+																TargetType="{x:Type ComboBox}">
+																<Setter
+																	Property="IsEnabled"
+																	Value="True" />
+																<Style.Triggers>
+																	<DataTrigger
+																		Binding="{Binding ItemsSource, RelativeSource={RelativeSource Self}}"
+																		Value="{x:Null}">
+																		<Setter
+																			Property="IsEnabled"
+																			Value="False" />
+																	</DataTrigger>
+																	<DataTrigger
+																		Value="0"
+																		Binding="{Binding ItemsSource.Count, RelativeSource={RelativeSource Self}}">
+																		<Setter
+																			Property="IsEnabled"
+																			Value="False" />
+																	</DataTrigger>
+																</Style.Triggers>
+															</Style>
+														</FrameworkElement.Style>
+													</ComboBox>
+												</DataTemplate>
+											</DataGridTemplateColumn.CellEditingTemplate>
+										</DataGridTemplateColumn>
+										<DataGridTemplateColumn
+											Header="{StaticResource CodeSpec_ComponentDescription}">
+											<DataGridTemplateColumn.CellTemplate>
+												<DataTemplate>
+													<TextBlock
+														Text="{Binding Path=Purpose, Mode=OneWay}" />
+												</DataTemplate>
+											</DataGridTemplateColumn.CellTemplate>
+											<DataGridTemplateColumn.CellEditingTemplate>
+												<DataTemplate>
+													<TextBox
+														AcceptsReturn="True"
+														Text="{Binding Path=Purpose, Mode=TwoWay, ValidatesOnExceptions=True}" />
+												</DataTemplate>
+											</DataGridTemplateColumn.CellEditingTemplate>
+										</DataGridTemplateColumn>
+										<DataGridTemplateColumn
+											Header="{StaticResource CodeSpec_ParameterPurpose}"
+											Width="*">
+											<DataGridTemplateColumn.CellTemplate>
+												<DataTemplate>
+													<TextBlock
+														Text="{Binding Path=Description, Mode=OneWay}" />
+												</DataTemplate>
+											</DataGridTemplateColumn.CellTemplate>
+											<DataGridTemplateColumn.CellEditingTemplate>
+												<DataTemplate>
+													<TextBox
+														AcceptsReturn="True"
+														Text="{Binding Path=Description, Mode=TwoWay, ValidatesOnExceptions=True}" />
+												</DataTemplate>
+											</DataGridTemplateColumn.CellEditingTemplate>
+										</DataGridTemplateColumn>
+									</DataGrid.Columns>
+								</DataGrid>
+								<GridSplitter
+									Width="4"
+									Grid.Row="1" />
+								<StackPanel
+									Orientation="Horizontal"
+									Grid.Column="1">
+									<Button
+										Content="{StaticResource FGL_AddItem}"
+										Style="{StaticResource commandButton}"
+										Command="h:CodeSpecificationCommands.AddItemCommand"
+										CommandParameter="return" />
+								</StackPanel>
+								<DataGrid
+									x:Name="returnList"
+									Grid.Column="1"
+									Grid.Row="1"
+									AutoGenerateColumns="False"
+									ItemsSource="{Binding}">
+									<DataGrid.Columns>
+										<DataGridTemplateColumn>
+											<DataGridTemplateColumn.CellTemplate>
+												<DataTemplate>
+													<Button
+														Command="h:CodeSpecificationCommands.DeleteCommand"
+														CommandParameter="{Binding}">
+														<Image
+															Source="/CodeEditWindow;component/Images/delete.png"
+															Height="16"
+															Width="16" />
+													</Button>
+												</DataTemplate>
+											</DataGridTemplateColumn.CellTemplate>
+										</DataGridTemplateColumn>
+										<DataGridTextColumn
+											Header="{StaticResource CodeSpec_ComponentOrder}"
+											Binding="{Binding Path=Order, Mode=TwoWay, ValidatesOnExceptions=True}" />
+										<DataGridTextColumn
+											Header="{StaticResource CodeSpec_ComponentReturn}"
+											Binding="{Binding Path=Name, Mode=TwoWay, ValidatesOnExceptions=True, ValidatesOnDataErrors=True}" />
+										<DataGridTemplateColumn
+											Header="{StaticResource CodeSpec_ComponentTable}">
+											<DataGridTemplateColumn.CellTemplate>
+												<DataTemplate>
+													<TextBlock
+														Text="{Binding Path=DB}" />
+												</DataTemplate>
+											</DataGridTemplateColumn.CellTemplate>
+											<DataGridTemplateColumn.CellEditingTemplate>
+												<DataTemplate>
+													<ComboBox
+														ItemsSource="{DynamicResource DBs}"
+														IsEditable="True"
+														Text="{Binding Path=DB, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+												</DataTemplate>
+											</DataGridTemplateColumn.CellEditingTemplate>
+										</DataGridTemplateColumn>
+										<DataGridTemplateColumn
+											Header="{StaticResource CodeSpec_ComponentColumn}">
+											<DataGridTemplateColumn.CellTemplate>
+												<DataTemplate>
+													<TextBlock
+														Text="{Binding Path=Col}" />
+												</DataTemplate>
+											</DataGridTemplateColumn.CellTemplate>
+											<DataGridTemplateColumn.CellEditingTemplate>
+												<DataTemplate>
+													<ComboBox
+														SelectedValue="{Binding Path=Col, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+														ItemsSource="{Binding Converter='{StaticResource colsConverter}'}">
+														<FrameworkElement.Style>
+															<Style
+																TargetType="{x:Type ComboBox}">
+																<Setter
+																	Property="IsEnabled"
+																	Value="True" />
+																<Style.Triggers>
+																	<DataTrigger
+																		Binding="{Binding ItemsSource, RelativeSource={RelativeSource Self}}"
+																		Value="{x:Null}">
+																		<Setter
+																			Property="IsEnabled"
+																			Value="False" />
+																	</DataTrigger>
+																	<DataTrigger
+																		Value="0"
+																		Binding="{Binding ItemsSource.Count, RelativeSource={RelativeSource Self}}">
+																		<Setter
+																			Property="IsEnabled"
+																			Value="False" />
+																	</DataTrigger>
+																</Style.Triggers>
+															</Style>
+														</FrameworkElement.Style>
+													</ComboBox>
+												</DataTemplate>
+											</DataGridTemplateColumn.CellEditingTemplate>
+										</DataGridTemplateColumn>
+										<DataGridTemplateColumn
+											Header="{StaticResource CodeSpec_ComponentDescription}">
+											<DataGridTemplateColumn.CellTemplate>
+												<DataTemplate>
+													<TextBlock
+														Text="{Binding Path=Purpose, Mode=OneWay}" />
+												</DataTemplate>
+											</DataGridTemplateColumn.CellTemplate>
+											<DataGridTemplateColumn.CellEditingTemplate>
+												<DataTemplate>
+													<TextBox
+														AcceptsReturn="True"
+														Text="{Binding Path=Purpose, Mode=TwoWay, ValidatesOnExceptions=True}" />
+												</DataTemplate>
+											</DataGridTemplateColumn.CellEditingTemplate>
+										</DataGridTemplateColumn>
+										<DataGridTemplateColumn
+											Header="{StaticResource CodeSpec_ParameterPurpose}"
+											Width="*">
+											<DataGridTemplateColumn.CellTemplate>
+												<DataTemplate>
+													<TextBlock
+														Text="{Binding Path=Description, Mode=OneWay}" />
+												</DataTemplate>
+											</DataGridTemplateColumn.CellTemplate>
+											<DataGridTemplateColumn.CellEditingTemplate>
+												<DataTemplate>
+													<TextBox
+														AcceptsReturn="True"
+														Text="{Binding Path=Description, Mode=TwoWay, ValidatesOnExceptions=True}" />
+												</DataTemplate>
+											</DataGridTemplateColumn.CellEditingTemplate>
+										</DataGridTemplateColumn>
+									</DataGrid.Columns>
+								</DataGrid>
+							</Grid>
+						</TabItem>
+						<TabItem
+							Header="{StaticResource CodeSpec_Keyword}">
+							<Grid>
+								<Grid.RowDefinitions>
+									<RowDefinition
+										Height="Auto" />
+									<RowDefinition />
+								</Grid.RowDefinitions>
+								<StackPanel
+									Orientation="Horizontal">
+									<Button
+										Content="{StaticResource FGL_AddItem}"
+										Style="{StaticResource commandButton}"
+										Command="h:CodeSpecificationCommands.AddItemCommand"
+										CommandParameter="FglKeyword" />
+								</StackPanel>
+								<DataGrid
+									x:Name="keywordList"
+									Margin="0 0 4 0"
+									Grid.Row="2"
+									AutoGenerateColumns="False"
+									ItemsSource="{Binding}">
+									<DataGrid.Columns>
+										<DataGridTemplateColumn>
+											<DataGridTemplateColumn.CellTemplate>
+												<DataTemplate>
+													<Button
+														Command="h:CodeSpecificationCommands.DeleteCommand"
+														CommandParameter="{Binding}">
+														<Image
+															Source="/CodeEditWindow;component/Images/delete.png"
+															Height="16"
+															Width="16" />
+													</Button>
+												</DataTemplate>
+											</DataGridTemplateColumn.CellTemplate>
+										</DataGridTemplateColumn>
+										<DataGridTextColumn
+											Header="{StaticResource CodeSpec_ComponentOrder}"
+											Binding="{Binding Path=Order, Mode=TwoWay, ValidatesOnExceptions=True, ValidatesOnDataErrors=True}" />
+										<DataGridTextColumn
+											Header="{StaticResource CodeSpec_Keyword}"
+											Width="*"
+											Binding="{Binding Path=String, Mode=TwoWay, ValidatesOnExceptions=True, ValidatesOnDataErrors=True}" />
+									</DataGrid.Columns>
+								</DataGrid>
+							</Grid>
+						</TabItem>
+						<TabItem
+							Header="{StaticResource CodeSpec_FrontComponent}">
+							<Grid>
+								<Grid.RowDefinitions>
+									<RowDefinition
+										Height="Auto" />
+									<RowDefinition />
+								</Grid.RowDefinitions>
+								<StackPanel
+									Orientation="Horizontal">
+									<Button
+										Content="{StaticResource FGL_AddItem}"
+										Style="{StaticResource commandButton}"
+										Command="h:CodeSpecificationCommands.AddItemCommand"
+										CommandParameter="FglFrontComp" />
+								</StackPanel>
+								<DataGrid
+									x:Name="fcompList"
+									Margin="0 0 4 0"
+									Grid.Row="2"
+									AutoGenerateColumns="False"
+									ItemsSource="{Binding}">
+									<DataGrid.Columns>
+										<DataGridTemplateColumn>
+											<DataGridTemplateColumn.CellTemplate>
+												<DataTemplate>
+													<Button
+														Command="h:CodeSpecificationCommands.DeleteCommand"
+														CommandParameter="{Binding}">
+														<Image
+															Source="/CodeEditWindow;component/Images/delete.png"
+															Height="16"
+															Width="16" />
+													</Button>
+												</DataTemplate>
+											</DataGridTemplateColumn.CellTemplate>
+										</DataGridTemplateColumn>
+										<DataGridTextColumn
+											Header="{StaticResource CodeSpec_ComponentOrder}"
+											Binding="{Binding Path=Order, Mode=TwoWay, ValidatesOnExceptions=True, ValidatesOnDataErrors=True}" />
+										<DataGridTemplateColumn
+											Header="{StaticResource CodeSpec_FrontComponent}">
+											<DataGridTemplateColumn.CellTemplate>
+												<DataTemplate>
+													<this:ButtonEdit
+														Text="{Binding Path=ID, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+												</DataTemplate>
+											</DataGridTemplateColumn.CellTemplate>
+										</DataGridTemplateColumn>
+										<DataGridTextColumn
+											Header="{StaticResource CodeSpec_ComponentDescription}"
+											Width="*"
+											Binding="{Binding Path=Description, Mode=OneWay}" />
+									</DataGrid.Columns>
+								</DataGrid>
+							</Grid>
+						</TabItem>
+						<TabItem
+							Header="{StaticResource CodeSpec_Dimension}">
+							<Grid>
+								<Grid.RowDefinitions>
+									<RowDefinition
+										Height="Auto" />
+									<RowDefinition />
+								</Grid.RowDefinitions>
+								<StackPanel
+									Orientation="Horizontal">
+									<Button
+										Content="{StaticResource FGL_AddItem}"
+										Style="{StaticResource commandButton}"
+										Command="h:CodeSpecificationCommands.AddItemCommand"
+										CommandParameter="FglDimension" />
+								</StackPanel>
+								<DataGrid
+									x:Name="dimensionList"
+									Margin="0 0 4 0"
+									Grid.Row="2"
+									AutoGenerateColumns="False"
+									ItemsSource="{Binding}">
+									<DataGrid.Columns>
+										<DataGridTemplateColumn>
+											<DataGridTemplateColumn.CellTemplate>
+												<DataTemplate>
+													<Button
+														Command="h:CodeSpecificationCommands.DeleteCommand"
+														CommandParameter="{Binding}">
+														<Image
+															Source="/CodeEditWindow;component/Images/delete.png"
+															Height="16"
+															Width="16" />
+													</Button>
+												</DataTemplate>
+											</DataGridTemplateColumn.CellTemplate>
+										</DataGridTemplateColumn>
+										<DataGridTemplateColumn
+											Header="{StaticResource CodeSpec_DimensionID}">
+											<DataGridTemplateColumn.CellTemplate>
+												<DataTemplate>
+													<TextBlock
+														Text="{Binding Path=No}">
+														<FrameworkElement.Style>
+															<Style
+																TargetType="{x:Type TextBlock}">
+																<Setter
+																	Property="Background"
+																	Value="#FFFF0000" />
+																<Style.Triggers>
+																	<DataTrigger
+																		Binding="{Binding [No]}"
+																		Value="{x:Null}">
+																		<Setter
+																			Property="Background"
+																			Value="#00FFFFFF" />
+																	</DataTrigger>
+																</Style.Triggers>
+															</Style>
+														</FrameworkElement.Style>
+													</TextBlock>
+												</DataTemplate>
+											</DataGridTemplateColumn.CellTemplate>
+											<DataGridTemplateColumn.CellEditingTemplate>
+												<DataTemplate>
+													<ComboBox
+														x:Name="dimension"
+														ItemsSource="{DynamicResource Dimensions}"
+														SelectedValuePath="No"
+														DisplayMemberPath="No"
+														SelectedValue="{Binding Path=No, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+												</DataTemplate>
+											</DataGridTemplateColumn.CellEditingTemplate>
+										</DataGridTemplateColumn>
+										<DataGridTextColumn
+											Header="{StaticResource CodeSpec_ComponentDescription}"
+											Binding="{Binding Path=Description, Mode=OneWay}" />
+										<DataGridTemplateColumn
+											Header="{StaticResource CodeSpec_DimensionClass}">
+											<DataGridTemplateColumn.CellTemplate>
+												<DataTemplate>
+													<TextBlock
+														Text="{Binding Path=Class}" />
+												</DataTemplate>
+											</DataGridTemplateColumn.CellTemplate>
+											<DataGridTemplateColumn.CellEditingTemplate>
+												<DataTemplate>
+													<ComboBox
+														SelectedValuePath="Name"
+														DisplayMemberPath="Name"
+														ItemsSource="{Binding Converter='{StaticResource dimensionClassConverter}'}"
+														SelectedValue="{Binding Path=Class, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+												</DataTemplate>
+											</DataGridTemplateColumn.CellEditingTemplate>
+										</DataGridTemplateColumn>
+										<this:DSCTextColumn
+											Header="{StaticResource CodeSpec_DimensionClassValue}"
+											IsReadOnly="True"
+											Width="*"
+											Binding="{Binding Path=ClassValue, Mode=OneWay}" />
+									</DataGrid.Columns>
+								</DataGrid>
+							</Grid>
+						</TabItem>
+						<TabItem
+							Header="{StaticResource CodeSpec_Test}">
+							<Grid>
+								<Grid.RowDefinitions>
+									<RowDefinition
+										Height="Auto" />
+									<RowDefinition />
+								</Grid.RowDefinitions>
+								<StackPanel
+									Orientation="Horizontal">
+									<Button
+										Content="{StaticResource FGL_AddItem}"
+										Style="{StaticResource commandButton}"
+										Command="h:CodeSpecificationCommands.AddItemCommand"
+										CommandParameter="FglTest" />
+								</StackPanel>
+								<DataGrid
+									x:Name="testList"
+									Grid.ColumnSpan="2"
+									Grid.Row="1"
+									AutoGenerateColumns="False"
+									ItemsSource="{Binding}">
+									<DataGrid.Columns>
+										<DataGridTemplateColumn>
+											<DataGridTemplateColumn.CellTemplate>
+												<DataTemplate>
+													<Button
+														Command="h:CodeSpecificationCommands.DeleteCommand"
+														CommandParameter="{Binding}">
+														<Image
+															Source="/CodeEditWindow;component/Images/delete.png"
+															Height="16"
+															Width="16" />
+													</Button>
+												</DataTemplate>
+											</DataGridTemplateColumn.CellTemplate>
+										</DataGridTemplateColumn>
+										<DataGridTextColumn
+											Header="{StaticResource CodeSpec_TestID}"
+											Binding="{Binding Path=Order, Mode=TwoWay, ValidatesOnExceptions=True}" />
+										<DataGridTextColumn
+											Header="{StaticResource CodeSpec_TestDescription}"
+											Binding="{Binding Path=Description, Mode=TwoWay, ValidatesOnExceptions=True}" />
+										<DataGridTextColumn
+											Header="{StaticResource CodeSpec_TestIn}"
+											Binding="{Binding Path=Input, Mode=TwoWay, ValidatesOnExceptions=True}" />
+										<DataGridTextColumn
+											Header="{StaticResource CodeSpec_TestReturn}"
+											Binding="{Binding Path=Output, Mode=TwoWay, ValidatesOnExceptions=True}" />
+										<DataGridTextColumn
+											Header="{StaticResource CodeSpec_TestPosNeg}"
+											Binding="{Binding Path=PosNeg, Mode=TwoWay, ValidatesOnExceptions=True}" />
+										<DataGridTextColumn
+											Header="{StaticResource CodeSpec_TestErrorCode}"
+											Binding="{Binding Path=ErrCode, Mode=TwoWay, ValidatesOnExceptions=True}" />
+										<DataGridTemplateColumn
+											Header="{StaticResource CodeSpec_TestErrDescription}">
+											<DataGridTemplateColumn.CellTemplate>
+												<DataTemplate>
+													<TextBlock
+														Text="{Binding Path=ErrCode, Mode=OneWay}" />
+												</DataTemplate>
+											</DataGridTemplateColumn.CellTemplate>
+											<DataGridTemplateColumn.CellEditingTemplate>
+												<DataTemplate>
+													<TextBox
+														AcceptsReturn="True"
+														Text="{Binding Path=ErrCode, Mode=TwoWay, ValidatesOnExceptions=True}" />
+												</DataTemplate>
+											</DataGridTemplateColumn.CellEditingTemplate>
+										</DataGridTemplateColumn>
+										<DataGridTemplateColumn
+											Header="{StaticResource CodeSpec_TestMemo}"
+											Width="*">
+											<DataGridTemplateColumn.CellTemplate>
+												<DataTemplate>
+													<TextBlock
+														Text="{Binding Path=Memo, Mode=OneWay}" />
+												</DataTemplate>
+											</DataGridTemplateColumn.CellTemplate>
+											<DataGridTemplateColumn.CellEditingTemplate>
+												<DataTemplate>
+													<TextBox
+														AcceptsReturn="True"
+														Text="{Binding Path=Memo, Mode=TwoWay, ValidatesOnExceptions=True}" />
+												</DataTemplate>
+											</DataGridTemplateColumn.CellEditingTemplate>
+										</DataGridTemplateColumn>
+									</DataGrid.Columns>
+								</DataGrid>
+							</Grid>
+						</TabItem>
+					</TabControl>
+				</Grid>
+			</TabItem>
+		</TabControl>
+	</Grid>
+</UserControl>

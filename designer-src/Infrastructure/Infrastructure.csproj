@@ -1,0 +1,141 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{472D80D5-9ABC-4E27-AC88-B8516E27EFC4}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Infrastructure</RootNamespace>
+    <AssemblyName>Infrastructure</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60DC8134-EBA5-43B8-BCC9-BB4BC16C2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Practices.Prism">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\Microsoft.Practices.Prism.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="SpecDesigner.Controls">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\SpecDesigner.Controls.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="CodeEditor\Infrastructure\TreeNodeFactory.cs" />
+    <Compile Include="LoadInformation.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\AttributesEventArgs.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\CDataEventArgs.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\DeclarationEventArgs.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\ElementEventArgs.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\EventController.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Event\AddNewLine.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Event\ADPStatusUpdateEvent.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Event\CreateFunctionContentArgs.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Event\CreateFunctionEvent.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Event\CreateFunctionInformation.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Event\CreateFunctionModelEvent.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Event\DeleteFunctionEvent.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Event\DiffTextViewerAddNewLineEvent.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Event\DiffTextViewerCtrlZEvent.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Event\DiffTextViewerDeleteLineEvent.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Event\FullTextRefreshScreen.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Event\LoadedSettingEvent.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Event\ModifyFunctionEvent.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Event\ModifyFunctionInformation.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Event\ModifyFunctionModelEvent.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Event\ModifyInfomation.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Event\ProgramErrorCheckEvent.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Event\RefreshDiffResult.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Event\RefreshScreen.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Event\RemoveFunctionInformation.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Event\RemoveFunctionModelEvent.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Event\SaveAddPointEvent.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Event\ToggleDiffEditableEvent.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Event\TreeItemSort.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Extension\IDragable.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Extension\IDropable.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Helper\BookmarkCommands.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Helper\CitedAddPointHelper.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Helper\CodeSampleSourceFactory.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Helper\DefinitionTypeConverter.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Helper\DiffCommands.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Helper\FunctionInfoCommands.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Helper\FunctionTypeConverter.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Helper\IntellisenseSourceFactory.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Helper\ReflectionHelpers.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Helper\TreeViewItemBehavior.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Helper\YesNoConverter.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Model\AddPointComparer.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Model\AddPointModel.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Model\ADPModel.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Model\AllowFunctionType.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Model\CodeSamepleModel.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Model\DiffColor.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Model\DiffModel.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Model\IFunctionModel.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Model\IIntellisenseModel.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Model\IMethod.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Model\IntellisenseEnum.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Model\IntellisenseModel.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Model\IParameterModel.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Model\Keyword.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Model\ParameterModel.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Model\ProgramInformation.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Model\RangeEnum.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Model\Scope.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Model\SectionModel.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Model\SelfIntellisenseModel.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Model\Status.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Model\TAPRoot.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Model\TreeFolderItem.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Model\TreeItem.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Model\UsageType.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Model\Variable.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\Model\YesNo.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\ResourceController.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\TreeItemCollection.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\ValueEventArgs.cs" />
+    <Compile Include="SpecDesigner\Infrastructure\XMLParser.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CodeEditor.FglAnalysis\CodeEditor.FglAnalysis.csproj">
+      <Project>{472D80D5-9ABC-4E27-AC88-B8516E27EFC0}</Project>
+      <Name>CodeEditor.FglAnalysis</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SpecDesignerCommon\SpecDesignerCommon.csproj">
+      <Project>{472D80D5-9ABC-4E27-AC88-B8516E27EFCC}</Project>
+      <Name>SpecDesignerCommon</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

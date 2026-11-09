@@ -1,0 +1,173 @@
+<UserControl
+	x:Class="SpecDesigner.WelcomeWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:cmds="clr-namespace:SpecDesigner.Commands"
+	xmlns:lv="clr-namespace:SpecDesigner.ViewModels"
+	xmlns:lp="clr-namespace:SpecDesignerPreference;assembly=SpecDesignerCommon"
+	xmlns:specdesigner="clr-namespace:SpecDesigner"
+	DataContext="{Binding Source='{x:Static lv:WelcomeViewModel.This}'}">
+	<FrameworkElement.Resources>
+		<ResourceDictionary>
+			<Style
+				x:Key="labelTextBlock"
+				TargetType="{x:Type TextBlock}"
+				BasedOn="{StaticResource {x:Type TextBlock}}">
+				<Setter
+					Property="Margin"
+					Value="5" />
+				<Setter
+					Property="VerticalAlignment"
+					Value="Center" />
+			</Style>
+			<Style
+				x:Key="{x:Type ComboBox}"
+				TargetType="{x:Type ComboBox}"
+				BasedOn="{StaticResource {x:Type ComboBox}}">
+				<Setter
+					Property="Margin"
+					Value="5" />
+			</Style>
+		</ResourceDictionary>
+	</FrameworkElement.Resources>
+	<Grid>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition />
+			<ColumnDefinition />
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition
+				Height="Auto" />
+			<RowDefinition
+				Height="Auto" />
+			<RowDefinition
+				Height="25" />
+			<RowDefinition
+				Height="100"
+				MinHeight="60"
+				MaxHeight="400" />
+			<RowDefinition
+				Height="Auto" />
+			<RowDefinition
+				Height="25" />
+			<RowDefinition
+				Height="*" />
+			<RowDefinition
+				Height="Auto" />
+		</Grid.RowDefinitions>
+		<Grid
+			Row="0"
+			ColumnSpan="2">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition
+					Width="Auto" />
+				<ColumnDefinition
+					Width="*" />
+				<ColumnDefinition
+					Width="Auto" />
+			</Grid.ColumnDefinitions>
+			<TextBlock
+				Grid.Column="0"
+				Text="{StaticResource Welcome_SelectPlatform}"
+				Style="{StaticResource labelTextBlock}" />
+			<TextBlock
+				Grid.Column="1"
+				Background="#FFD3D3D3"
+				Style="{StaticResource labelTextBlock}"
+				Text="{Binding CurrentPlatformName}" />
+			<Button
+				Name="PlatformButton"
+				Grid.Column="2"
+				Margin="5,5,5,5"
+				Command="cmds:MenuCommands.SiteManagerCommand">
+				<Image
+					Source="Images/settings.png"
+					Width="10" />
+			</Button>
+		</Grid>
+		<Button
+			Grid.Row="1"
+			Grid.Column="0"
+			Content="{StaticResource Welcome_SignOutAndDownloadSpec}"
+			Margin="5,5,5,5"
+			MinWidth="70"
+			Command="cmds:MenuCommands.SpecificationDownloadCommand" />
+		<Button
+			Grid.Row="1"
+			Grid.Column="1"
+			Content="{StaticResource Welcome_SignOutAndDownloadProg}"
+			Margin="5,5,5,5"
+			MinWidth="70"
+			Command="cmds:MenuCommands.ProgramDownloadCommand" />
+		<TextBlock
+			Grid.Row="2"
+			Grid.Column="0"
+			Text="{StaticResource Welcome_RecentOpenedSpecification}"
+			Style="{StaticResource labelTextBlock}" />
+		<TextBlock
+			Grid.Row="2"
+			Grid.Column="1"
+			Text="{StaticResource Welcome_RecentOpenedProgram}"
+			Style="{StaticResource labelTextBlock}" />
+		<ListBox
+			Grid.Row="3"
+			Grid.Column="0"
+			Margin="5"
+			SelectionMode="Single">
+			<ListBoxItem>axmt500(c).tzs</ListBoxItem>
+			<ListBoxItem>abmm200(s).tzs</ListBoxItem>
+		</ListBox>
+		<ListBox
+			Grid.Row="3"
+			Grid.Column="1"
+			Margin="5"
+			SelectionMode="Single">
+			<ListBoxItem>axmt500(c).tzc</ListBoxItem>
+			<ListBoxItem>abmm200(s).tzc</ListBoxItem>
+		</ListBox>
+		<GridSplitter
+			Grid.Row="4"
+			HorizontalAlignment="Center"
+			VerticalAlignment="Center"
+			ResizeDirection="Rows"
+			ResizeBehavior="PreviousAndNext"
+			Grid.ColumnSpan="2"
+			Height="5"
+			Width="600" />
+		<TextBlock
+			Grid.Row="5"
+			Grid.Column="0"
+			Text="{StaticResource Welcome_OpenDownloadedSpecification}"
+			Style="{StaticResource labelTextBlock}" />
+		<TextBlock
+			Grid.Row="5"
+			Grid.Column="1"
+			Text="{StaticResource Welcome_OpenDownloadedProgram}"
+			Style="{StaticResource labelTextBlock}" />
+		<ListBox
+			Grid.Row="6"
+			Grid.Column="0"
+			Margin="5"
+			SelectionMode="Single">
+			<ListBoxItem>axmt500(c).tzs</ListBoxItem>
+			<ListBoxItem>abmm200(s).tzs</ListBoxItem>
+		</ListBox>
+		<ListBox
+			Grid.Row="6"
+			Grid.Column="1"
+			Margin="5"
+			SelectionMode="Single">
+			<ListBoxItem>axmt500(c).tzc</ListBoxItem>
+			<ListBoxItem>abmm200(s).tzc</ListBoxItem>
+		</ListBox>
+		<Button
+			Grid.Row="7"
+			Grid.ColumnSpan="2"
+			Content="{StaticResource Welcome_SignOutAndDownloadSpec}"
+			Margin="5,5,5,5"
+			MinWidth="70"
+			Command="cmds:MenuCommands.SpecificationDownloadCommand" />
+	</Grid>
+</UserControl>

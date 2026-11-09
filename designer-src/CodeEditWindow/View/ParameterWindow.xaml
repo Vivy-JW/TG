@@ -1,0 +1,94 @@
+<Window
+	x:Class="SpecDesigner.CodeEditWindow.View.ParameterWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	x:Name="thisClass"
+	Title="{StaticResource CE_ShowParameter}"
+	ShowInTaskbar="False"
+	WindowStartupLocation="CenterOwner"
+	ResizeMode="CanResizeWithGrip"
+	WindowStyle="ToolWindow"
+	SizeToContent="Width"
+	xmlns:view="clr-namespace:SpecDesigner.CodeEditWindow.View">
+	<FrameworkElement.Resources>
+		<ResourceDictionary>
+			<Style
+				x:Key="TitleStyle"
+				TargetType="{x:Type TextBlock}">
+				<Setter
+					Property="Margin"
+					Value="5 2 0 2" />
+				<Setter
+					Property="Foreground"
+					Value="#FF3A85B0" />
+				<Setter
+					Property="FontWeight"
+					Value="Bold" />
+			</Style>
+			<Style
+				x:Key="ContetnStyle"
+				TargetType="{x:Type TextBox}"
+				BasedOn="{StaticResource {x:Type TextBox}}">
+				<Setter
+					Property="Background"
+					Value="#64EAF4F8" />
+				<Setter
+					Property="TextBoxBase.IsReadOnly"
+					Value="True" />
+			</Style>
+		</ResourceDictionary>
+	</FrameworkElement.Resources>
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition />
+			<RowDefinition
+				Height="Auto" />
+		</Grid.RowDefinitions>
+		<ScrollViewer>
+			<Grid>
+				<Grid.RowDefinitions>
+					<RowDefinition
+						Height="Auto" />
+					<RowDefinition
+						Height="Auto" />
+					<RowDefinition
+						Height="Auto" />
+					<RowDefinition
+						Height="Auto" />
+					<RowDefinition
+						Height="Auto" />
+				</Grid.RowDefinitions>
+				<TextBlock
+					Grid.Row="0"
+					Text="{StaticResource CE_LocalVariableTitle}"
+					Style="{StaticResource TitleStyle}" />
+				<TextBox
+					Grid.Row="1"
+					Style="{StaticResource ContetnStyle}"
+					Text="{Binding Local}" />
+				<TextBlock
+					Grid.Row="2"
+					Text="{StaticResource CE_ModuleVariableTitle}"
+					Style="{StaticResource TitleStyle}" />
+				<TextBox
+					Grid.Row="3"
+					Style="{StaticResource ContetnStyle}"
+					Text="{Binding SystemModule}" />
+				<TextBox
+					Grid.Row="4"
+					Style="{StaticResource ContetnStyle}"
+					Text="{Binding SelfDefVariable}" />
+			</Grid>
+		</ScrollViewer>
+		<Button
+			Grid.Row="1"
+			HorizontalAlignment="Stretch"
+			Margin="2"
+			BorderThickness="1"
+			BorderBrush="#FF000000"
+			Content="{StaticResource Button_Close}"
+			Click="Close_Click" />
+	</Grid>
+</Window>

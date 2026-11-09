@@ -1,0 +1,130 @@
+<Window
+	x:Class="SpecDesigner.SpecEditor.Views.ItemsPropertyEditor"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:helper="clr-namespace:SpecDesigner.SpecEditor.Helpers"
+	x:Name="thisControl"
+	WindowStyle="ToolWindow"
+	Height="300"
+	Width="300"
+	xmlns:views="clr-namespace:SpecDesigner.SpecEditor.Views"
+	Title="{Binding Path=[name]}">
+	<FrameworkElement.Resources>
+		<ResourceDictionary>
+			<helper:ItemTextConverter
+				x:Key="ItemTextConverter" />
+			<Style
+				x:Key="IsEnabledStyle"
+				TargetType="{x:Type Button}"
+				BasedOn="{StaticResource {x:Type Button}}">
+				<Style.Triggers>
+					<DataTrigger
+						Binding="{Binding SelectedItem, ElementName=datagrid1}"
+						Value="{x:Null}">
+						<Setter
+							Property="IsEnabled"
+							Value="False" />
+					</DataTrigger>
+				</Style.Triggers>
+			</Style>
+		</ResourceDictionary>
+	</FrameworkElement.Resources>
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition
+				Height="Auto" />
+			<RowDefinition
+				Height="*" />
+			<RowDefinition
+				Height="Auto" />
+		</Grid.RowDefinitions>
+		<Grid>
+			<StackPanel
+				Orientation="Horizontal"
+				HorizontalAlignment="Left">
+				<Button
+					x:Name="btnAdd"
+					Focusable="False"
+					Click="btnAdd_Click">
+					<Image
+						Source="/SpecDesigner.SpecEditor;component/Images/plus.png"
+						ToolTip="{StaticResource Items_Add}" />
+				</Button>
+				<Button
+					x:Name="btnDel"
+					Style="{StaticResource IsEnabledStyle}"
+					Click="btnDel_Click">
+					<Image
+						Source="/SpecDesigner.SpecEditor;component/Images/items_delete.png"
+						ToolTip="{StaticResource Items_Delete}" />
+				</Button>
+				<Button
+					x:Name="btnModify"
+					Style="{StaticResource IsEnabledStyle}"
+					ToolTip="{StaticResource Items_Modify}"
+					Click="btnModify_Click">
+					<Image
+						Source="/SpecDesigner.SpecEditor;component/Images/edit.png" />
+				</Button>
+			</StackPanel>
+			<StackPanel
+				Orientation="Horizontal"
+				HorizontalAlignment="Right">
+				<Button
+					x:Name="btnUp"
+					IsEnabled="False"
+					Click="btnUp_Click">
+					<Image
+						Source="/SpecDesigner.SpecEditor;component/Images/setting_up.png"
+						ToolTip="{StaticResource Items_MoveUp}" />
+				</Button>
+				<Button
+					x:Name="btnDown"
+					IsEnabled="False"
+					Click="btnDown_Click">
+					<Image
+						Source="/SpecDesigner.SpecEditor;component/Images/setting_down.png"
+						ToolTip="{StaticResource Items_MoveDown}" />
+				</Button>
+			</StackPanel>
+		</Grid>
+		<DataGrid
+			x:Name="datagrid1"
+			Grid.Row="1"
+			AutoGenerateColumns="False"
+			CanUserSortColumns="False"
+			CanUserAddRows="False"
+			SelectionChanged="datagrid1_SelectionChanged">
+			<DataGrid.Columns>
+				<DataGridTextColumn
+					Header="Name"
+					Binding="{Binding Name, Mode=TwoWay}" />
+				<DataGridTextColumn
+					Header="Text"
+					Binding="{Binding Text, Mode=TwoWay}" />
+				<DataGridTextColumn
+					Header="Description"
+					Binding="{Binding Description, Mode=TwoWay}" />
+			</DataGrid.Columns>
+		</DataGrid>
+		<StackPanel
+			Grid.Row="2"
+			Orientation="Horizontal"
+			HorizontalAlignment="Right"
+			Margin="5">
+			<Button
+				x:Name="btnCancel"
+				Content="{DynamicResource Button_Cancel}"
+				MinWidth="70"
+				IsTabStop="False"
+				Margin="4,0"
+				Click="btnCancel_Click" />
+			<Button
+				x:Name="btnOk"
+				Content="{DynamicResource Button_Apply}"
+				MinWidth="70"
+				Margin="4,0"
+				Click="btnOk_Click" />
+		</StackPanel>
+	</Grid>
+</Window>

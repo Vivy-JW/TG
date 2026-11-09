@@ -1,0 +1,170 @@
+<Window
+	x:Class="SpecDesigner.CustomAdpListWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:c="clr-namespace:SpecDesigner.Converters"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	WindowStartupLocation="CenterScreen"
+	xmlns:specdesigner="clr-namespace:SpecDesigner">
+	<FrameworkElement.Resources>
+		<ResourceDictionary>
+			<c:VisbilityToBooleanConverter
+				x:Key="VisbilityToBooleanConverter" />
+			<Style
+				x:Key="RowDetailToggleButtonStyle"
+				TargetType="{x:Type ToggleButton}">
+				<Setter
+					Property="Margin"
+					Value="2,0,2,0" />
+				<Setter
+					Property="Template">
+					<Setter.Value>
+						<ControlTemplate
+							TargetType="{x:Type ToggleButton}">
+							<Grid
+								HorizontalAlignment="Center"
+								VerticalAlignment="Stretch"
+								Background="#01FFFFFF">
+								<Path
+									x:Name="PlusLogo"
+									Data="M7.5,0.5 L7.5,4.5 L11.5,4.5 L11.5,7.5 L7.5,7.5 L7.5,11.5 L4.5,11.5 L4.5,7.5 L0.5,7.5 L0.5,4.5 L4.5,4.5 L4.5,0.5 Z"
+									Fill="#2C818C"
+									Height="12"
+									Width="12">
+									<FrameworkElement.Style>
+										<Style
+											TargetType="{x:Type Path}">
+											<Setter
+												Property="Visibility"
+												Value="Visible" />
+											<Style.Triggers>
+												<DataTrigger
+													Value="True"
+													Binding="{Binding IsChecked, RelativeSource={RelativeSource TemplatedParent}}">
+													<Setter
+														Property="Visibility"
+														Value="Collapsed" />
+												</DataTrigger>
+											</Style.Triggers>
+										</Style>
+									</FrameworkElement.Style>
+								</Path>
+								<Path
+									x:Name="MinusLogo"
+									Data="M0.5,0.5 L11.5,0.5 L11.5,3.5 L0.5,3.5 Z"
+									Fill="#2C818C"
+									Height="4"
+									Stretch="Fill"
+									Width="12">
+									<FrameworkElement.Style>
+										<Style
+											TargetType="{x:Type Path}">
+											<Setter
+												Property="Visibility"
+												Value="Collapsed" />
+											<Style.Triggers>
+												<DataTrigger
+													Value="True"
+													Binding="{Binding IsChecked, RelativeSource={RelativeSource TemplatedParent}}">
+													<Setter
+														Property="Visibility"
+														Value="Visible" />
+												</DataTrigger>
+											</Style.Triggers>
+										</Style>
+									</FrameworkElement.Style>
+								</Path>
+							</Grid>
+						</ControlTemplate>
+					</Setter.Value>
+				</Setter>
+			</Style>
+			<Style
+				x:Key="DataGridRowHeaderStyle"
+				TargetType="{x:Type DataGridRowHeader}"
+				BasedOn="{StaticResource {x:Type DataGridRowHeader}}">
+				<Setter
+					Property="Template">
+					<Setter.Value>
+						<ControlTemplate>
+							<Border
+								BorderBrush="{TemplateBinding Control.BorderBrush}"
+								BorderThickness="{TemplateBinding Control.BorderThickness}"
+								Background="{TemplateBinding Control.Background}"
+								HorizontalAlignment="Right">
+								<ToggleButton
+									Style="{StaticResource RowDetailToggleButtonStyle}"
+									IsChecked="{Binding Path=DetailsVisibility, Mode=TwoWay, RelativeSource={RelativeSource AncestorType=DataGridRow}, Converter={StaticResource VisbilityToBooleanConverter}}" />
+							</Border>
+						</ControlTemplate>
+					</Setter.Value>
+				</Setter>
+			</Style>
+		</ResourceDictionary>
+	</FrameworkElement.Resources>
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition
+				Height="Auto" />
+			<RowDefinition
+				Height="Auto" />
+			<RowDefinition
+				Height="Auto" />
+			<RowDefinition
+				Height="*" />
+		</Grid.RowDefinitions>
+		<TextBlock
+			x:Name="click_title"
+			Text="(雙擊項目將導向程式編輯器)"
+			Margin="5"
+			Grid.Row="1" />
+		<Grid
+			Row="2"
+			Margin="5">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition
+					Width="Auto" />
+				<ColumnDefinition />
+			</Grid.ColumnDefinitions>
+			<TextBlock
+				Text="{StaticResource tableView_SearchTitle}" />
+			<TextBox
+				x:Name="query"
+				Grid.Column="1"
+				TextChanged="query_TextChanged" />
+		</Grid>
+		<DataGrid
+			x:Name="dataGrid"
+			Grid.Row="3"
+			VerticalScrollBarVisibility="Auto"
+			HorizontalScrollBarVisibility="Auto"
+			RowHeaderStyle="{DynamicResource DataGridRowHeaderStyle}"
+			RowDetailsVisibilityMode="Collapsed"
+			ItemsSource="{Binding}"
+			MouseDoubleClick="dataGrid_MouseDoubleClick">
+			<DataGrid.RowDetailsTemplate>
+				<DataTemplate>
+					<ScrollViewer
+						Height="150"
+						VerticalScrollBarVisibility="Auto"
+						HorizontalScrollBarVisibility="Auto">
+						<TextBox
+							AcceptsReturn="True"
+							AcceptsTab="True"
+							VerticalContentAlignment="Top"
+							IsReadOnly="True"
+							Text="{Binding Content, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+					</ScrollViewer>
+				</DataTemplate>
+			</DataGrid.RowDetailsTemplate>
+			<DataGrid.Columns>
+				<DataGridTextColumn
+					Header="ID"
+					IsReadOnly="True"
+					Width="*"
+					Binding="{Binding Name}" />
+			</DataGrid.Columns>
+		</DataGrid>
+	</Grid>
+</Window>

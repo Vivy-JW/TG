@@ -1,0 +1,247 @@
+package host
+
+import (
+	"bytes"
+	"fmt"
+	"io"
+	"log"
+	"regexp"
+	"sync"
+	"time"
+
+	"github.com/pkg/sftp"
+	"golang.org/x/crypto/ssh"
+)
+
+// SSHConn 到 T100 服务器的 SSH 连接(一条连接可开多个通道:PTY/SFTP)
+type SSHConn struct {
+	cli *ssh.Client
+	cfg SSHConfig
+}
+
+// Dial 建立 SSH 连接(密码认证)
+func Dial(cfg SSHConfig) (*SSHConn, error) {
+	cliCfg := &ssh.ClientConfig{
+		User:            cfg.User,
+		Auth:            []ssh.AuthMethod{ssh.Password(cfg.Password)},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // 内网工具,与手工登录信任级别一致
+		Timeout:         20 * time.Second,
+	}
+	cli, err := ssh.Dial("tcp", cfg.Addr(), cliCfg)
+	if err != nil {
+		return nil, err
+	}
+	return &SSHConn{cli: cli, cfg: cfg}, nil
+}
+
+// StartKeepalive 每 15 秒发一次心跳,连接意外断开时回调 onDead。
+// 返回 stop 函数:主动关闭连接前先调用,避免「use of closed network connection」误报。
+func (c *SSHConn) StartKeepalive(onDead func(error)) (stop func()) {
+	stopCh := make(chan struct{})
+	var once sync.Once
+	go func() {
+		t := time.NewTicker(15 * time.Second)
+		defer t.Stop()
+		for {
+			select {
+			case <-stopCh:
+				return
+			case <-t.C:
+				_, _, err := c.cli.SendRequest("keepalive@openssh.com", true, nil)
+				if err != nil {
+					select {
+					case <-stopCh: // 主动关闭导致的失败:不刷日志不回调
+					default:
+						log.Printf("[ssh] keepalive 失败: %v", err)
+						if onDead != nil {
+							onDead(err)
+						}
+					}
+					return
+				}
+			}
+		}
+	}()
+	return func() { once.Do(func() { close(stopCh) }) }
+}
+
+
+// ExecSession 非 PTY 的交互会话：命令的 stdin/stdout 都是管道。
+//
+// 与 PTYSession 的区别很关键：没有终端就没有行编辑、没有回显、没有宽度截断。
+// 调试器（fglrun -d）这种"从 stdin 读命令、往 stdout 吐结果"的程序用它最稳 ——
+// PTY 下 ksh 的行编辑会在长命令写快时吞字符（实测过）。
+type ExecSession struct {
+	sess *ssh.Session
+	in   io.WriteCloser
+	out  io.Reader
+}
+
+// ExecWithStdin 在服务器上起一条命令并拿到它的 stdin/stdout。
+func (c *SSHConn) ExecWithStdin(cmd string) (*ExecSession, error) {
+	sess, err := c.cli.NewSession()
+	if err != nil {
+		return nil, err
+	}
+	in, err := sess.StdinPipe()
+	if err != nil {
+		sess.Close()
+		return nil, err
+	}
+	out, err := sess.StdoutPipe()
+	if err != nil {
+		sess.Close()
+		return nil, err
+	}
+	// stderr 并进 stdout：调试器的报错也要能读到
+	sess.Stderr = sess.Stdout
+	if err := sess.Start(cmd); err != nil {
+		sess.Close()
+		return nil, err
+	}
+	return &ExecSession{sess: sess, in: in, out: out}, nil
+}
+
+// Write 往命令的 stdin 写（命令自己带换行）。
+func (e *ExecSession) Write(s string) error {
+	_, err := io.WriteString(e.in, s)
+	return err
+}
+
+// Read 读命令的 stdout。
+func (e *ExecSession) Read(b []byte) (int, error) { return e.out.Read(b) }
+
+// Close 关掉会话（远端进程随之退出）。
+func (e *ExecSession) Close() {
+	e.in.Close()
+	e.sess.Close()
+}
+
+// NewPTY 打开交互式终端会话(T100 登录 → 区域菜单 → shell → fglrun -d 都在这里面)
+func (c *SSHConn) NewPTY(width, height int) (*PTYSession, error) {
+	sess, err := c.cli.NewSession()
+	if err != nil {
+		return nil, err
+	}
+	// 保持与手工验证一致的默认终端模式(ECHO 开启,解析器已适配回显)
+	if err := sess.RequestPty("vt100", width, height, ssh.TerminalModes{}); err != nil {
+		sess.Close()
+		return nil, err
+	}
+	stdin, err := sess.StdinPipe()
+	if err != nil {
+		sess.Close()
+		return nil, err
+	}
+	stdout, err := sess.StdoutPipe()
+	if err != nil {
+		sess.Close()
+		return nil, err
+	}
+	// PTY 模式下 stderr 自动汇入同一终端,无需单独接管
+	if err := sess.Shell(); err != nil {
+		sess.Close()
+		return nil, err
+	}
+	return &PTYSession{sess: sess, stdin: stdin, stdout: stdout}, nil
+}
+
+// SFTP 打开文件传输通道(拉取 .4gl 源码)
+func (c *SSHConn) SFTP() (*sftp.Client, error) {
+	return sftp.NewClient(c.cli)
+}
+
+// Output 执行一次性命令并返回合并输出(模块解析等轻量查询用;
+// exec 通道不经过登录 profile,不能用于依赖 T100 环境变量的操作)
+func (c *SSHConn) Output(cmd string, timeout time.Duration) (string, error) {
+	return c.run(cmd, nil, timeout)
+}
+
+// OutputStdin 同 Output,额外把 data 从 **stdin** 喂给远端命令。
+//
+// 存在的理由:凡是"数据"(SQL 脚本、报文…)都不该拼进命令行 —— 命令行会被服务器上的
+// shell 再解析一遍,数据里的 $()/反引号/引号都会在那里展开(以前 sqlplus 那条路就是
+// echo "<SQL>" 再套一层 bash -lc,是完整的命令注入)。走 stdin 之后,命令串里只剩本工具
+// 自己控制的常量,这一类问题从根上不存在。
+func (c *SSHConn) OutputStdin(cmd string, stdin []byte, timeout time.Duration) (string, error) {
+	return c.run(cmd, bytes.NewReader(stdin), timeout)
+}
+
+// run 执行/超时的公共实现。输出与错误经 channel 传出 —— 原实现直接写外层变量,
+// 超时分支返回后 goroutine 仍在写它,是一处数据竞争(go test -race 能报)。
+func (c *SSHConn) run(cmd string, stdin io.Reader, timeout time.Duration) (string, error) {
+	sess, err := c.cli.NewSession()
+	if err != nil {
+		return "", err
+	}
+	defer sess.Close()
+	if stdin != nil {
+		sess.Stdin = stdin
+	}
+	type res struct {
+		out []byte
+		err error
+	}
+	done := make(chan res, 1)
+	go func() {
+		out, err := sess.CombinedOutput(cmd)
+		done <- res{out, err}
+	}()
+	select {
+	case r := <-done:
+		if r.err != nil {
+			return string(r.out), r.err
+		}
+		return string(r.out), nil
+	case <-time.After(timeout):
+		return "", fmt.Errorf("命令超时: %s", redactCmd(cmd))
+	}
+}
+
+// 口令抹除用的两套形态 —— 命令行里凭据只有这两种拼法(见 SqlplusCmd / KbCmd)。
+var (
+	// oracle: `账号/口令@//host:port/service`(整串被 shQuote 包在单引号里)
+	reOraCred = regexp.MustCompile(`([A-Za-z0-9_$#.]+)/[^@'\s]+@`)
+	// 金仓: `KINGBASE_PASSWORD='口令'`
+	reKbPass = regexp.MustCompile(`(KINGBASE_PASSWORD=)('[^']*'|\S+)`)
+)
+
+// redactCmd 回报命令行之前先把口令抹掉。
+//
+// 为什么必须过这一道:这些命令**超时是常事**(库慢、表大、网络抖),而命令行里带着
+// `账号/口令` —— 原样打出去就等于把口令写进终端、服务日志,以及 AI 的上下文里。
+// 凡是"回报整条命令行"的地方都要过这里。
+//
+// 只抹口令,保留账号、主机、工具路径:那些正是排障时要看的。
+func redactCmd(cmd string) string {
+	cmd = reOraCred.ReplaceAllString(cmd, "$1/****@")
+	return reKbPass.ReplaceAllString(cmd, "$1****")
+}
+
+// Close 关闭连接
+func (c *SSHConn) Close() error { return c.cli.Close() }
+
+// Cfg 返回本连接的目标配置(供外部判断连接归属)
+func (c *SSHConn) Cfg() SSHConfig { return c.cfg }
+
+// PTYSession 交互式终端会话
+type PTYSession struct {
+	sess   *ssh.Session
+	stdin  io.WriteCloser
+	stdout io.Reader
+}
+
+// Write 写入终端(命令须自带 \r 结尾)
+func (p *PTYSession) Write(s string) error {
+	_, err := io.WriteString(p.stdin, s)
+	return err
+}
+
+// Read 供输出泵读取;返回 n=0 且 err==nil 不应出现
+func (p *PTYSession) Read(b []byte) (int, error) { return p.stdout.Read(b) }
+
+// Close 关闭会话(远端子进程随之被回收)
+func (p *PTYSession) Close() {
+	p.stdin.Close()
+	p.sess.Close()
+}

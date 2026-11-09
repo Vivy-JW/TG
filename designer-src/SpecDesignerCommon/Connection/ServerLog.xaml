@@ -1,0 +1,36 @@
+<Window
+	x:Class="SpecDesignerCommon.Connection.ServerLog"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:l="clr-namespace:SpecDesignerCommon.Connection"
+	Title="Server Log"
+	Height="440"
+	Width="549">
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition
+				Height="Auto" />
+			<RowDefinition
+				Height="*" />
+		</Grid.RowDefinitions>
+		<Menu>
+			<MenuItem
+				Header="Clear"
+				Command="l:ServerLogCommands.ClearCommand" />
+			<MenuItem
+				Header="Save"
+				Command="l:ServerLogCommands.SaveCommand" />
+		</Menu>
+		<TextBox
+			x:Name="tb_ServerLog"
+			Grid.Row="1"
+			Background="#FF000000"
+			Foreground="#FFFFFFFF"
+			IsReadOnly="True"
+			VerticalScrollBarVisibility="Auto"
+			HorizontalScrollBarVisibility="Auto"
+			Text="{Binding Data, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
+	</Grid>
+</Window>

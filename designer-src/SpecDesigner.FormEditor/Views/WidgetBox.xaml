@@ -1,0 +1,322 @@
+<UserControl
+	x:Class="SpecDesigner.FormEditor.Views.WidgetBox"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:views="clr-namespace:SpecDesigner.FormEditor.Views"
+	xmlns:h="clr-namespace:SpecDesigner.FormEditor.Helpers"
+	xmlns:pf="clr-namespace:SpecDesignerPreference;assembly=SpecDesignerCommon"
+	xmlns:sh="clr-namespace:SpecDesigner.SpecEditor.Helpers;assembly=SpecDesigner.SpecEditor"
+	x:Name="me">
+	<FrameworkElement.Resources>
+		<ResourceDictionary>
+			<sh:BoolToVisibilityConverter
+				x:Key="BoolToVisibilityConverter" />
+			<LinearGradientBrush
+				x:Key="backgroundBrush"
+				EndPoint="0.5,1"
+				StartPoint="0.5,0">
+				<GradientStop
+					Color="#f7f7f7"
+					Offset="0" />
+				<GradientStop
+					Color="#eaeaea"
+					Offset="1" />
+			</LinearGradientBrush>
+		</ResourceDictionary>
+	</FrameworkElement.Resources>
+	<Grid
+		x:Name="LayoutRoot">
+		<Canvas />
+		<ToolBarTray
+			x:Name="itemsContainer"
+			Orientation="Horizontal"
+			Background="{StaticResource backgroundBrush}">
+			<ToolBar
+				Band="1"
+				Background="{StaticResource backgroundBrush}">
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="ReferenceLabel"
+					ToolTip="{StaticResource tt_ReferenceLabel}"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/widget_refrece.png"
+					Command="views:WidgetToolbarCommands.AddWidget"
+					CommandParameter="ReferenceLabel"
+					CommandTarget="{Binding ElementName=me}" />
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="MultiLangButtonEdit"
+					ToolTip="{StaticResource tt_MultiLangButtonEdit}"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/widget_langmodify.png"
+					Command="views:WidgetToolbarCommands.AddWidget"
+					CommandParameter="MultiLangButtonEdit"
+					CommandTarget="{Binding ElementName=me}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="ButtonQuery"
+					ToolTip="{StaticResource tt_ButtonQuery}"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/widget_buttonqry.png"
+					Command="views:WidgetToolbarCommands.AddWidget"
+					CommandParameter="ButtonQuery"
+					CommandTarget="{Binding ElementName=me}" />
+			</ToolBar>
+			<ToolBar
+				Band="1"
+				Background="{StaticResource backgroundBrush}">
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="TabIndex"
+					ToolTip="{StaticResource Widget_TabIndex}"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/tabindex.png"
+					Command="views:WidgetToolbarCommands.SetTabIndex"
+					CommandTarget="{Binding ElementName=me}" />
+				<Rectangle
+					Margin="2 2"
+					Width="1"
+					Fill="#FFAAAAAA" />
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="Folder"
+					ToolTip="Folder"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/widget_tab.png"
+					Command="views:WidgetToolbarCommands.AddWidget"
+					CommandParameter="Folder"
+					CommandTarget="{Binding ElementName=me}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="Grid"
+					ToolTip="Grid"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/widget_grid.png"
+					Command="views:WidgetToolbarCommands.AddWidget"
+					CommandParameter="Grid"
+					CommandTarget="{Binding ElementName=me}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="Group"
+					ToolTip="Group"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/widget_groupBox.png"
+					Command="views:WidgetToolbarCommands.AddWidget"
+					CommandParameter="Group"
+					CommandTarget="{Binding ElementName=me}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="ScrollGrid"
+					ToolTip="ScrollGrid"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/widget_scrollgrid.png"
+					Command="views:WidgetToolbarCommands.AddWidget"
+					CommandParameter="ScrollGrid"
+					CommandTarget="{Binding ElementName=me}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="Table"
+					ToolTip="Table"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/widget_table.png"
+					Command="views:WidgetToolbarCommands.AddWidget"
+					CommandParameter="Table"
+					CommandTarget="{Binding ElementName=me}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="Tree"
+					ToolTip="Tree"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/widget_tree.png"
+					Command="views:WidgetToolbarCommands.AddWidget"
+					CommandParameter="Tree"
+					CommandTarget="{Binding ElementName=me}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<Separator
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="DatabaseFields"
+					ToolTip="Create a structure from database columns"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/document_add_4fd_database.png"
+					Command="views:WidgetToolbarCommands.AddWidgetByDataControl"
+					CommandTarget="{Binding ElementName=me}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<Separator
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="Button"
+					ToolTip="Button"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/widget_button.png"
+					Command="views:WidgetToolbarCommands.AddWidget"
+					CommandParameter="Button"
+					CommandTarget="{Binding ElementName=me}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="Canvas"
+					ToolTip="Canvas"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/widget_canvas.png"
+					Command="views:WidgetToolbarCommands.AddWidget"
+					CommandParameter="Canvas"
+					CommandTarget="{Binding ElementName=me}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="HLine"
+					ToolTip="HLine"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/widget_hline.png"
+					Command="views:WidgetToolbarCommands.AddWidget"
+					CommandParameter="HLine"
+					CommandTarget="{Binding ElementName=me}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="Image"
+					ToolTip="Image"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/widget_image.png"
+					Command="views:WidgetToolbarCommands.AddWidget"
+					CommandParameter="Image"
+					CommandTarget="{Binding ElementName=me}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="Label"
+					ToolTip="{StaticResource Widget_Label}"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/widget_label.png"
+					Command="views:WidgetToolbarCommands.AddWidget"
+					CommandParameter="Label"
+					CommandTarget="{Binding ElementName=me}" />
+				<Separator />
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="ButtonEdit"
+					ToolTip="{StaticResource Widget_ButtonEdit}"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/widget_buttonEdit.png"
+					Command="views:WidgetToolbarCommands.AddWidget"
+					CommandParameter="ButtonEdit"
+					CommandTarget="{Binding ElementName=me}" />
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="CheckBox"
+					ToolTip="{StaticResource Widget_CheckBox}"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/widget_checkbox.png"
+					Command="views:WidgetToolbarCommands.AddWidget"
+					CommandParameter="CheckBox"
+					CommandTarget="{Binding ElementName=me}" />
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="ComboBox"
+					ToolTip="{StaticResource Widget_ComboBox}"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/widget_combobox.png"
+					Command="views:WidgetToolbarCommands.AddWidget"
+					CommandParameter="ComboBox"
+					CommandTarget="{Binding ElementName=me}" />
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="DateEdit"
+					ToolTip="{StaticResource Widget_DateEdit}"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/widget_dateEdit.png"
+					Command="views:WidgetToolbarCommands.AddWidget"
+					CommandParameter="DateEdit"
+					CommandTarget="{Binding ElementName=me}" />
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="Edit"
+					ToolTip="{StaticResource Widget_Edit}"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/widget_edit.png"
+					Command="views:WidgetToolbarCommands.AddWidget"
+					CommandParameter="Edit"
+					CommandTarget="{Binding ElementName=me}" />
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="FFImage"
+					ToolTip="FFImage"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/widget_ffimage.png"
+					Command="views:WidgetToolbarCommands.AddWidget"
+					CommandParameter="FFImage"
+					CommandTarget="{Binding ElementName=me}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="FFLabel"
+					ToolTip="FFLabel"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/widget_fflabel.png"
+					Command="views:WidgetToolbarCommands.AddWidget"
+					CommandParameter="FFLabel"
+					CommandTarget="{Binding ElementName=me}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="ProgressBar"
+					ToolTip="ProgressBar"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/widget_progressBar.png"
+					Command="views:WidgetToolbarCommands.AddWidget"
+					CommandParameter="ProgressBar"
+					CommandTarget="{Binding ElementName=me}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="RadioGroup"
+					ToolTip="RadioGroup"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/widget_buttonGroup.png"
+					Command="views:WidgetToolbarCommands.AddWidget"
+					CommandParameter="RadioGroup"
+					CommandTarget="{Binding ElementName=me}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="Slider"
+					ToolTip="Slider"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/widget_slider.png"
+					Command="views:WidgetToolbarCommands.AddWidget"
+					CommandParameter="Slider"
+					CommandTarget="{Binding ElementName=me}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="SpinEdit"
+					ToolTip="SpinEdit"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/widget_spinedit.png"
+					Command="views:WidgetToolbarCommands.AddWidget"
+					CommandParameter="SpinEdit"
+					CommandTarget="{Binding ElementName=me}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="TextEdit"
+					ToolTip="{StaticResource Widget_TextEdit}"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/widget_textEdit.png"
+					Command="views:WidgetToolbarCommands.AddWidget"
+					CommandParameter="TextEdit"
+					CommandTarget="{Binding ElementName=me}" />
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="TimeEdit"
+					ToolTip="TimeEdit"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/widget_timeedit.png"
+					Command="views:WidgetToolbarCommands.AddWidget"
+					CommandParameter="TimeEdit"
+					CommandTarget="{Binding ElementName=me}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="DateTimeEdit"
+					ToolTip="DateTimeEdit"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/widget_datetimeEdit.png"
+					Command="views:WidgetToolbarCommands.AddWidget"
+					CommandParameter="DateTimeEdit"
+					CommandTarget="{Binding ElementName=me}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<views:WidgetToolItem
+					Margin="2 0"
+					WidgetType="WebComponent"
+					ToolTip="WebComponent"
+					ToolImageSource="pack://application:,,,/SpecDesigner.FormEditor;component/Images/widget_webComponent.png"
+					Command="views:WidgetToolbarCommands.AddWidget"
+					CommandParameter="WebComponent"
+					CommandTarget="{Binding ElementName=me}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+			</ToolBar>
+		</ToolBarTray>
+	</Grid>
+</UserControl>

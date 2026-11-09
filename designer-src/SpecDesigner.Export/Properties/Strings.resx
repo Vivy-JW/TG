@@ -1,0 +1,157 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="DocxExport_ActionName" xml:space="preserve">
+    <value>Action名稱</value>
+  </data>
+  <data name="DocxExport_ActionSpecDescription" xml:space="preserve">
+    <value>Action規格描述</value>
+  </data>
+  <data name="DocxExport_CZoom" xml:space="preserve">
+    <value>查詢開窗設定</value>
+  </data>
+  <data name="DocxExport_ChkRef" xml:space="preserve">
+    <value>校驗帶值</value>
+  </data>
+  <data name="DocxExport_DataType" xml:space="preserve">
+    <value>資料型態</value>
+  </data>
+  <data name="DocxExport_DefaultValue" xml:space="preserve">
+    <value>預設值</value>
+  </data>
+  <data name="DocxExport_DetailDisplaySpec" xml:space="preserve">
+    <value>單身瀏覽規格描述</value>
+  </data>
+  <data name="DocxExport_DetailInputSpec" xml:space="preserve">
+    <value>單身編輯規格描述</value>
+  </data>
+  <data name="DocxExport_DisplayName" xml:space="preserve">
+    <value>顯示名稱</value>
+  </data>
+  <data name="DocxExport_FieldName" xml:space="preserve">
+    <value>欄位代號</value>
+  </data>
+  <data name="DocxExport_FieldSpecDescription" xml:space="preserve">
+    <value>欄位規格描述</value>
+  </data>
+  <data name="DocxExport_Footer_Comment" xml:space="preserve">
+    <value>上述規格內容經SA與SD雙方確認無誤後簽名以示同意。</value>
+  </data>
+  <data name="DocxExport_FormNotFound" xml:space="preserve">
+    <value>找不到畫面檔，暫不提供匯出規格功能</value>
+  </data>
+  <data name="DocxExport_Header_Dept" xml:space="preserve">
+    <value>未填寫部門</value>
+  </data>
+  <data name="DocxExport_Header_SA" xml:space="preserve">
+    <value>未填寫SA人員</value>
+  </data>
+  <data name="DocxExport_Header_SD" xml:space="preserve">
+    <value>未填寫SD人員</value>
+  </data>
+  <data name="DocxExport_Header_Title" xml:space="preserve">
+    <value>鼎捷集團SD規格書</value>
+  </data>
+  <data name="DocxExport_IZoom" xml:space="preserve">
+    <value>開窗設定</value>
+  </data>
+  <data name="DocxExport_Items" xml:space="preserve">
+    <value>資料項目</value>
+  </data>
+  <data name="DocxExport_MasterInputSpec" xml:space="preserve">
+    <value>單頭編輯規格描述</value>
+  </data>
+  <data name="DocxExport_MasterTable" xml:space="preserve">
+    <value>資料主檔</value>
+  </data>
+  <data name="DocxExport_MaxValue" xml:space="preserve">
+    <value>最大值</value>
+  </data>
+  <data name="DocxExport_MinValue" xml:space="preserve">
+    <value>最小值</value>
+  </data>
+  <data name="DocxExport_PK" xml:space="preserve">
+    <value>主鍵</value>
+  </data>
+  <data name="DocxExport_ProgramCapture" xml:space="preserve">
+    <value>程式畫面</value>
+  </data>
+  <data name="DocxExport_ProgramDescription" xml:space="preserve">
+    <value>程序規格描述</value>
+  </data>
+  <data name="DocxExport_ProgramID" xml:space="preserve">
+    <value>程序代號</value>
+  </data>
+  <data name="DocxExport_RealName" xml:space="preserve">
+    <value>實際名稱</value>
+  </data>
+  <data name="DocxExport_Required" xml:space="preserve">
+    <value>必要欄位</value>
+  </data>
+  <data name="DocxExport_SpecDescription" xml:space="preserve">
+    <value>規格描述</value>
+  </data>
+  <data name="DocxExport_TableAttributes" xml:space="preserve">
+    <value>欄位屬性</value>
+  </data>
+  <data name="DocxExport_Widget" xml:space="preserve">
+    <value>資料控件</value>
+  </data>
+</root>

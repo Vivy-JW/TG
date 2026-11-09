@@ -1,0 +1,465 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{472D80D5-9ABC-4E27-AC88-B8516E27EFC7}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>SpecDesigner.FormEditor</RootNamespace>
+    <AssemblyName>SpecDesigner.FormEditor</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60DC8134-EBA5-43B8-BCC9-BB4BC16C2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <ApplicationIcon>SpecDesigner.FormEditor.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Expression.Drawing">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\Microsoft.Expression.Drawing.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Practices.Prism">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\Microsoft.Practices.Prism.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="SpecDesigner.Controls">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\SpecDesigner.Controls.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Windows.Interactivity">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\System.Windows.Interactivity.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="PresentationFramework.Luna" />
+    <Reference Include="mscorlib" />
+  </ItemGroup>
+  <ItemGroup>
+    <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ActionDefaults\ActionDefault.xaml.cs">
+      <DependentUpon>ActionDefault.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ActionDefaults\ActionDefaultCommands.cs" />
+    <Compile Include="ActionDefaults\ActionDefaultGroup.xaml.cs">
+      <DependentUpon>ActionDefaultGroup.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ActionDefaults\ActionDefaults.xaml.cs">
+      <DependentUpon>ActionDefaults.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Behaviors\AdornedControlBehavior.cs" />
+    <Compile Include="Behaviors\DatabaseSourceDragBehavior.cs" />
+    <Compile Include="Behaviors\DragDropBehavior.cs" />
+    <Compile Include="Behaviors\DragSelectionBehavior.cs" />
+    <Compile Include="Behaviors\DragSelectionRectAdorner.cs" />
+    <Compile Include="Behaviors\GeneroComponentSelectionBehavior.cs" />
+    <Compile Include="Behaviors\IgnoreMouseWheelBehavior.cs" />
+    <Compile Include="Behaviors\KeyBehavior.cs" />
+    <Compile Include="Behaviors\MouseWheelScaleBehavior.cs" />
+    <Compile Include="Behaviors\RepeatAdornerBehavior.cs" />
+    <Compile Include="Behaviors\TreeViewItemHelper.cs" />
+    <Compile Include="Converters\ActionVisibilityConverter.cs" />
+    <Compile Include="Converters\AggregateBackgroundConverter.cs" />
+    <Compile Include="Converters\BooleanOrConverter.cs" />
+    <Compile Include="Converters\FormVisibilityConverter.cs" />
+    <Compile Include="Converters\IsCitedForegroundConverter.cs" />
+    <Compile Include="Converters\IsEqualOrGreaterThanConverter.cs" />
+    <Compile Include="Converters\ResizeDirectionConverter.cs" />
+    <Compile Include="Converters\TabIndexBackgroundConverter.cs" />
+    <Compile Include="Converters\TabIndexVisibilityConverter.cs" />
+    <Compile Include="DBStructure\ContainerType.cs" />
+    <Compile Include="DBStructure\ContainerViewModel.cs" />
+    <Compile Include="DBStructure\DBStructureCreator.xaml.cs">
+      <DependentUpon>DBStructureCreator.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="DBStructure\DBStructureUISelector.xaml.cs">
+      <DependentUpon>DBStructureUISelector.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="DBStructure\PrepareAddColumn.cs" />
+    <Compile Include="DBStructure\UICreator.cs" />
+    <Compile Include="DragDropScrollViewer.cs" />
+    <Compile Include="Events\CancelAllActivesEvent.cs" />
+    <Compile Include="Events\ComponentMeasureChangedEventArgs.cs" />
+    <Compile Include="Events\Parse4fdEventArgs.cs" />
+    <Compile Include="FormDataTemplateSelector.cs" />
+    <Compile Include="FormEditorMainWindow.xaml.cs">
+      <DependentUpon>FormEditorMainWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Helpers\ActionStatusImageConverter.cs" />
+    <Compile Include="Helpers\AddWidgetAdornerHelper.cs" />
+    <Compile Include="Helpers\ButtonEditImageConverter.cs" />
+    <Compile Include="Helpers\CantDelOpacityConverter.cs" />
+    <Compile Include="Helpers\CheckedValueConverter.cs" />
+    <Compile Include="Helpers\ComponentNotFoundException.cs" />
+    <Compile Include="Helpers\ComponentTabIndexService.cs" />
+    <Compile Include="Helpers\DateTimeEditVisiblityConverter.cs" />
+    <Compile Include="Helpers\IconImageControlConverter.cs" />
+    <Compile Include="Helpers\IsCitedVisibilityConverter.cs" />
+    <Compile Include="Helpers\LocalStringsConverter.cs" />
+    <Compile Include="Helpers\RadioGroupItemConverter.cs" />
+    <Compile Include="Helpers\RequiredStyleToBooleanConverter.cs" />
+    <Compile Include="Helpers\VisualComponentsAdorner.cs" />
+    <Compile Include="Helpers\VisualTreeHelperEx.cs" />
+    <Compile Include="MouseUtilities.cs" />
+    <Compile Include="Petzold\Media2D\ArrowEnds.cs" />
+    <Compile Include="Petzold\Media2D\ArrowLine.cs" />
+    <Compile Include="Petzold\Media2D\ArrowLineBase.cs" />
+    <Compile Include="Petzold\Media2D\ArrowPolyline.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Relation\ConnectionType.cs" />
+    <Compile Include="Relation\IEntityControl.cs" />
+    <Compile Include="Relation\RelationshipCommands.cs" />
+    <Compile Include="Relation\RelationshipSpace.xaml.cs">
+      <DependentUpon>RelationshipSpace.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Relation\TableComboBoxItem.cs" />
+    <Compile Include="Relation\TBLControl.xaml.cs">
+      <DependentUpon>TBLControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Relation\TBLModifyBox.xaml.cs">
+      <DependentUpon>TBLModifyBox.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Relation\TBLRelation.xaml.cs">
+      <DependentUpon>TBLRelation.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Test\StringToXamlConverter.cs" />
+    <Compile Include="Test\TestPropertyWindow.xaml.cs">
+      <DependentUpon>TestPropertyWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ToolBarItem.xaml.cs">
+      <DependentUpon>ToolBarItem.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ViewModels\TabIndexMenuItemViewModel.cs" />
+    <Compile Include="Views\ColumnCanvas.cs" />
+    <Compile Include="Views\DatabaseSourceViewer.xaml.cs">
+      <DependentUpon>DatabaseSourceViewer.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\DropDirection.cs" />
+    <Compile Include="Views\FormStructureViewer.xaml.cs">
+      <DependentUpon>FormStructureViewer.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\FormZoomer.xaml.cs">
+      <DependentUpon>FormZoomer.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\HaveSpecImage.cs" />
+    <Compile Include="Views\ManagedForm.xaml.cs">
+      <DependentUpon>ManagedForm.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ResizeControl.xaml.cs">
+      <DependentUpon>ResizeControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ScreenRecordViewer.xaml.cs">
+      <DependentUpon>ScreenRecordViewer.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\SimpleFormWidgetBox.xaml.cs">
+      <DependentUpon>SimpleFormWidgetBox.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\SimpleFormWidgetToolbarCommands.cs" />
+    <Compile Include="Views\TabIndexCommands.cs" />
+    <Compile Include="Views\TabIndexControl.xaml.cs">
+      <DependentUpon>TabIndexControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ToolBar.xaml.cs">
+      <DependentUpon>ToolBar.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\WidgetAdornerView.xaml.cs">
+      <DependentUpon>WidgetAdornerView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\WidgetBox.xaml.cs">
+      <DependentUpon>WidgetBox.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\WidgetRepeatAdorner.cs" />
+    <Compile Include="Views\WidgetToolbarCommands.cs" />
+    <Compile Include="Views\WidgetToolItem.xaml.cs">
+      <DependentUpon>WidgetToolItem.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\WorkSpace.xaml.cs">
+      <DependentUpon>WorkSpace.xaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SpecDesigner.SpecEditor\SpecDesigner.SpecEditor.csproj">
+      <Project>{472D80D5-9ABC-4E27-AC88-B8516E27EFCA}</Project>
+      <Name>SpecDesigner.SpecEditor</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SpecDesignerCommon\SpecDesignerCommon.csproj">
+      <Project>{472D80D5-9ABC-4E27-AC88-B8516E27EFCC}</Project>
+      <Name>SpecDesignerCommon</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\UndoRedoFramework\UndoRedoFramework.csproj">
+      <Project>{472D80D5-9ABC-4E27-AC88-B8516E27EFCD}</Project>
+      <Name>UndoRedoFramework</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="ActionDefaults\ActionDefault.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ActionDefaults\ActionDefaultGroup.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ActionDefaults\ActionDefaults.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DBStructure\DBStructureCreator.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DBStructure\DBStructureUISelector.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="FormEditorMainWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Relation\RelationshipSpace.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Relation\TBLControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Relation\TBLModifyBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Relation\TBLRelation.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Test\TestPropertyWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Themes\Generic.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ToolBarItem.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\DatabaseSourceViewer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\FormStructureViewer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\FormZoomer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\ManagedForm.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\ResizeControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\ScreenRecordViewer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\SimpleFormWidgetBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\TabIndexControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\ToolBar.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\WidgetAdornerView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\WidgetBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\WidgetToolItem.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\WorkSpace.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="add.cur" />
+    <Resource Include="application.ico" />
+    <Resource Include="dbstructure\images\alignment_lr.png" />
+    <Resource Include="dbstructure\images\container_grid.png" />
+    <Resource Include="dbstructure\images\container_scrollgrid.png" />
+    <Resource Include="dbstructure\images\container_table.png" />
+    <Resource Include="dbstructure\images\navigate_2down.png" />
+    <Resource Include="dbstructure\images\navigate_2up.png" />
+    <Resource Include="dbstructure\images\navigate_doubleleft.png" />
+    <Resource Include="dbstructure\images\navigate_doubleright.png" />
+    <Resource Include="dbstructure\images\navigate_down.png" />
+    <Resource Include="dbstructure\images\navigate_left.png" />
+    <Resource Include="dbstructure\images\navigate_right.png" />
+    <Resource Include="dbstructure\images\navigate_up.png" />
+    <Resource Include="dbstructure\images\widget_groupbox.png" />
+    <Resource Include="dbstructure\images\widget_tree.png" />
+    <Resource Include="images\action_add.png" />
+    <Resource Include="images\action_arrowdown.png" />
+    <Resource Include="images\action_arrowup.png" />
+    <Resource Include="images\action_delete.png" />
+    <Resource Include="images\add_tbl.png" />
+    <Resource Include="images\align.png" />
+    <Resource Include="images\align_bottom.png" />
+    <Resource Include="images\align_left.png" />
+    <Resource Include="images\align_right.png" />
+    <Resource Include="images\align_stretch.png" />
+    <Resource Include="images\align_top.png" />
+    <Resource Include="images\alt_edit.png" />
+    <Resource Include="images\arrow_down.png" />
+    <Resource Include="images\arrow_left.png" />
+    <Resource Include="images\arrow_right.png" />
+    <Resource Include="images\arrow_up.png" />
+    <Resource Include="images\checkbox_unchecked.png" />
+    <Resource Include="images\containerbg.png" />
+    <Resource Include="images\del_tbl.png" />
+    <Resource Include="images\document_add_4fd_database.png" />
+    <Resource Include="images\edit_breaklayout.png" />
+    <Resource Include="images\edit_hlayout.png" />
+    <Resource Include="images\edit_hlayout_16.png" />
+    <Resource Include="images\edit_vlayout.png" />
+    <Resource Include="images\edit_vlayout_16.png" />
+    <Resource Include="images\flag.png" />
+    <Resource Include="images\folder_collapse.png" />
+    <Resource Include="images\folder_expand.png" />
+    <Resource Include="images\gwc_ajax.ico" />
+    <Resource Include="images\icon_pr.png" />
+    <Resource Include="images\icon_prsd.png" />
+    <Resource Include="images\icon_sd.png" />
+    <Resource Include="images\idea.png" />
+    <Resource Include="images\idea_disable.png" />
+    <Resource Include="images\langmodify.png" />
+    <Resource Include="images\modify_tbl.png" />
+    <Resource Include="images\openwindow.png" />
+    <Resource Include="images\over_containerbg.png" />
+    <Resource Include="images\progress.png" />
+    <Resource Include="images\refresh.png" />
+    <Resource Include="images\screenrecord.png" />
+    <Resource Include="images\screenrecord_16.png" />
+    <Resource Include="images\simpleform_invisible.png" />
+    <Resource Include="images\simpleform_visible.png" />
+    <Resource Include="images\spacer.png" />
+    <Resource Include="images\tabindex.png" />
+    <Resource Include="images\table.png" />
+    <Resource Include="images\table_column_pk.png" />
+    <Resource Include="images\treenode.png" />
+    <Resource Include="images\variable_local.png" />
+    <Resource Include="images\viewmag.png" />
+    <Resource Include="images\widget_button.png" />
+    <Resource Include="images\widget_buttonedit.png" />
+    <Resource Include="images\widget_buttonedit_16.png" />
+    <Resource Include="images\widget_buttongroup.png" />
+    <Resource Include="images\widget_buttongroup_16.png" />
+    <Resource Include="images\widget_buttonqry.png" />
+    <Resource Include="images\widget_button_16.png" />
+    <Resource Include="images\widget_calendar.png" />
+    <Resource Include="images\widget_calendargrid.png" />
+    <Resource Include="images\widget_canvas.png" />
+    <Resource Include="images\widget_canvas_16.png" />
+    <Resource Include="images\widget_checkbox.png" />
+    <Resource Include="images\widget_checkbox_16.png" />
+    <Resource Include="images\widget_combobox.png" />
+    <Resource Include="images\widget_combobox_16.png" />
+    <Resource Include="images\widget_dateedit.png" />
+    <Resource Include="images\widget_dateedit_16.png" />
+    <Resource Include="images\widget_datetimeedit.png" />
+    <Resource Include="images\widget_datetimeedit_16.png" />
+    <Resource Include="images\widget_edit.png" />
+    <Resource Include="images\widget_edit_16.png" />
+    <Resource Include="images\widget_ffimage.png" />
+    <Resource Include="images\widget_ffimage_16.png" />
+    <Resource Include="images\widget_fflabel.png" />
+    <Resource Include="images\widget_fflabel_16.png" />
+    <Resource Include="images\widget_field.png" />
+    <Resource Include="images\widget_grid.png" />
+    <Resource Include="images\widget_grid_16.png" />
+    <Resource Include="images\widget_groupbox.png" />
+    <Resource Include="images\widget_groupbox_16.png" />
+    <Resource Include="images\widget_hline.png" />
+    <Resource Include="images\widget_hline_16.png" />
+    <Resource Include="images\widget_hruler.png" />
+    <Resource Include="images\widget_image.png" />
+    <Resource Include="images\widget_image_16.png" />
+    <Resource Include="images\widget_label.png" />
+    <Resource Include="images\widget_label_16.png" />
+    <Resource Include="images\widget_langmodify.png" />
+    <Resource Include="images\widget_matrix.png" />
+    <Resource Include="images\widget_mfarray.png" />
+    <Resource Include="images\widget_page.png" />
+    <Resource Include="images\widget_page_16.png" />
+    <Resource Include="images\widget_phantom.png" />
+    <Resource Include="images\widget_phantom_16.png" />
+    <Resource Include="images\widget_progressbar.png" />
+    <Resource Include="images\widget_progressbar_16.png" />
+    <Resource Include="images\widget_refrece.png" />
+    <Resource Include="images\widget_scrollgrid.png" />
+    <Resource Include="images\widget_scrollgrid_16.png" />
+    <Resource Include="images\widget_slider.png" />
+    <Resource Include="images\widget_slider_16.png" />
+    <Resource Include="images\widget_spinarrow.png" />
+    <Resource Include="images\widget_spinedit.png" />
+    <Resource Include="images\widget_spinedit_16.png" />
+    <Resource Include="images\widget_tab.png" />
+    <Resource Include="images\widget_tabindex.png" />
+    <Resource Include="images\widget_table.png" />
+    <Resource Include="images\widget_table_16.png" />
+    <Resource Include="images\widget_tab_16.png" />
+    <Resource Include="images\widget_text.png" />
+    <Resource Include="images\widget_textedit.png" />
+    <Resource Include="images\widget_textedit_16.png" />
+    <Resource Include="images\widget_timeedit.png" />
+    <Resource Include="images\widget_timeedit_16.png" />
+    <Resource Include="images\widget_tree.png" />
+    <Resource Include="images\widget_tree_16.png" />
+    <Resource Include="images\widget_vline.png" />
+    <Resource Include="images\widget_vruler.png" />
+    <Resource Include="images\widget_webcomponent.png" />
+    <Resource Include="images\widget_webcomponent_16.png" />
+    <Resource Include="stop.cur" />
+    <Resource Include="Views\viewmag.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

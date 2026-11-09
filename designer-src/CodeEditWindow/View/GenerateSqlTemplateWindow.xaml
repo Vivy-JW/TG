@@ -1,0 +1,272 @@
+<Window
+	x:Class="SpecDesigner.CodeEditWindow.View.GenerateSqlTemplateWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	Height="600"
+	Width="500"
+	Title="{StaticResource CE_GenerateSqlTemplate}"
+	xmlns:view="clr-namespace:SpecDesigner.CodeEditWindow.View">
+	<Grid>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition
+				Width="50*" />
+			<ColumnDefinition
+				Width="50*" />
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition
+				Height="14*" />
+			<RowDefinition
+				Height="80*" />
+			<RowDefinition
+				Height="6*" />
+		</Grid.RowDefinitions>
+		<Label
+			Name="label1"
+			Content="{StaticResource SQLType}"
+			Grid.Row="0"
+			Grid.ColumnSpan="2"
+			Height="28"
+			HorizontalAlignment="Left"
+			Margin="14,12,0,0"
+			VerticalAlignment="Top"
+			Width="69" />
+		<ComboBox
+			Name="cbSQLType"
+			Height="23"
+			Grid.Row="0"
+			Grid.Column="0"
+			HorizontalAlignment="Right"
+			Margin="0,12,44,0"
+			VerticalAlignment="Top"
+			Width="120"
+			SelectionChanged="cbSQLType_SelectionChanged">
+			<ComboBoxItem
+				Content="select" />
+			<ComboBoxItem
+				Content="update" />
+			<ComboBoxItem
+				Content="delete" />
+		</ComboBox>
+		<Label
+			Name="label2"
+			Content="{StaticResource SQLDisplay}"
+			Grid.Row="0"
+			Grid.ColumnSpan="2"
+			Height="28"
+			HorizontalAlignment="Left"
+			Margin="14,47,0,0"
+			VerticalAlignment="Top"
+			Width="69" />
+		<ComboBox
+			Name="cbDisplay"
+			Height="23"
+			Grid.Row="0"
+			Grid.Column="0"
+			HorizontalAlignment="Right"
+			Margin="0,50,44,0"
+			VerticalAlignment="Top"
+			Width="120"
+			SelectionChanged="cbDisplay_SelectionChanged">
+			<ComboBoxItem
+				Content="SQL" />
+			<ComboBoxItem
+				Content="{StaticResource SQLString}" />
+		</ComboBox>
+		<Label
+			x:Name="lblvariableName"
+			Content="{StaticResource SQLVariable}"
+			Height="28"
+			Grid.Row="0"
+			Grid.Column="1"
+			HorizontalAlignment="Left"
+			Margin="10,47,0,0"
+			VerticalAlignment="Top"
+			Width="69" />
+		<TextBox
+			x:Name="txtVariableName"
+			Height="23"
+			Grid.Row="0"
+			Grid.Column="1"
+			HorizontalAlignment="Left"
+			Margin="70,50,0,0"
+			VerticalAlignment="Top"
+			Width="120"
+			Text="ls_sql" />
+		<GroupBox
+			Name="groupBox1"
+			Grid.Row="1"
+			Grid.ColumnSpan="2"
+			Header="{StaticResource SQLTableSetting}"
+			Height="Auto"
+			HorizontalAlignment="Left"
+			Margin="12,0,0,0"
+			VerticalAlignment="Top"
+			Width="454">
+			<Grid>
+				<Grid.RowDefinitions>
+					<RowDefinition
+						Height="54*" />
+					<RowDefinition
+						Height="163" />
+				</Grid.RowDefinitions>
+				<Label
+					Name="lblMainTable"
+					Content="{StaticResource SQLMainTable}"
+					Grid.Row="0"
+					Height="28"
+					HorizontalAlignment="Left"
+					Margin="15,16,0,0"
+					VerticalAlignment="Top"
+					Width="69" />
+				<ComboBox
+					Name="cbMainTable"
+					Height="23"
+					Grid.Row="0"
+					HorizontalAlignment="Right"
+					Margin="0,18,282,0"
+					VerticalAlignment="Top"
+					Width="81"
+					SelectionChanged="cbMainTable_SelectionChanged" />
+				<Label
+					Name="lblJoinTable"
+					Content="{StaticResource SQLJoinTable}"
+					Grid.Row="1"
+					Height="28"
+					HorizontalAlignment="Left"
+					VerticalAlignment="Top"
+					Width="69"
+					Margin="13,3,0,0" />
+				<ComboBox
+					Name="cbJoinTable"
+					Height="23"
+					Grid.Row="1"
+					HorizontalAlignment="Right"
+					VerticalAlignment="Top"
+					Width="81"
+					Margin="0,3,282,0" />
+				<ComboBox
+					Name="cbJoinType"
+					Height="23"
+					Grid.Row="1"
+					HorizontalAlignment="Right"
+					VerticalAlignment="Top"
+					Width="95"
+					Margin="0,3,181,0">
+					<ComboBoxItem
+						Content="LEFT JOIN"
+						IsSelected="True" />
+					<ComboBoxItem
+						Content="INNER JOIN" />
+				</ComboBox>
+				<DataGrid
+					Name="dataGrid1"
+					AutoGenerateColumns="False"
+					CanUserAddRows="False"
+					Grid.Row="1"
+					Height="109"
+					HorizontalAlignment="Left"
+					Margin="15,36,0,0"
+					VerticalAlignment="Top"
+					Width="411">
+					<DataGrid.Columns>
+						<DataGridTemplateColumn
+							Width="20*">
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<CheckBox
+										IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+						<DataGridTextColumn
+							Header="{StaticResource SQLTableName}"
+							Width="40*"
+							IsReadOnly="True"
+							Binding="{Binding Path=TableName}" />
+						<DataGridTextColumn
+							Header="{StaticResource SQLJoinType}"
+							Width="40*"
+							IsReadOnly="True"
+							Binding="{Binding Path=JoinType}" />
+					</DataGrid.Columns>
+				</DataGrid>
+				<Button
+					Name="btnAdd"
+					Content="{StaticResource SQLAdd}"
+					Height="23"
+					Grid.Row="1"
+					HorizontalAlignment="Left"
+					Margin="266,3,0,0"
+					VerticalAlignment="Top"
+					Width="75"
+					Click="btnAdd_Click" />
+				<Button
+					Name="btnDelete"
+					Content="{StaticResource SQLDelete}"
+					Height="23"
+					Grid.Row="1"
+					HorizontalAlignment="Left"
+					Margin="351,3,0,0"
+					VerticalAlignment="Top"
+					Width="75"
+					Click="btnDelete_Click" />
+			</Grid>
+		</GroupBox>
+		<GroupBox
+			Name="groupBox2"
+			Grid.Row="1"
+			Grid.ColumnSpan="2"
+			Header="{StaticResource SQLPreview}"
+			Height="Auto"
+			HorizontalAlignment="Left"
+			Margin="13,239,0,0"
+			VerticalAlignment="Top"
+			Width="454">
+			<Grid>
+				<TextBlock
+					Name="tbPreviewSQL"
+					Height="152"
+					HorizontalAlignment="Left"
+					Margin="14,15,0,0"
+					VerticalAlignment="Top"
+					Width="411" />
+			</Grid>
+		</GroupBox>
+		<Button
+			Name="copySQL"
+			Content="{StaticResource SQLCopy}"
+			Grid.Row="2"
+			Grid.ColumnSpan="2"
+			Height="23"
+			HorizontalAlignment="Left"
+			Margin="204,1,0,0"
+			VerticalAlignment="Top"
+			Width="75"
+			Click="copySQL_Click" />
+		<Button
+			Name="testSQL"
+			Content="{StaticResource SQLTest}"
+			Grid.Row="2"
+			Grid.ColumnSpan="2"
+			Height="23"
+			HorizontalAlignment="Left"
+			Margin="297,1,0,0"
+			VerticalAlignment="Top"
+			Width="75"
+			Click="testSQL_Click" />
+		<Button
+			Name="Save"
+			Content="{StaticResource SQLFinish}"
+			Grid.Row="2"
+			Grid.ColumnSpan="2"
+			Height="23"
+			HorizontalAlignment="Left"
+			Margin="391,1,0,0"
+			VerticalAlignment="Top"
+			Width="75"
+			Click="Save_Click" />
+	</Grid>
+</Window>

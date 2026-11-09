@@ -1,0 +1,179 @@
+@import "tailwindcss";
+/* 主题层(语义 token / 明暗两套 / 圆角清零 / 表格单元格 / 滚动条)已抽到共享目录,整套 SPA 共用。
+   顺序要紧:先 tailwindcss,再共享层 —— 共享层里的 @custom-variant / @theme 需要 Tailwind 处理。 */
+@import "../../shared/tokens.css";
+/* Tailwind v4 的自动扫描以项目根为界,web/shared 在调试工作台的目录之外。
+   漏扫的后果是**静默**的:只在共享组件里出现的类不会进产物,构建照样绿,界面却缺样式。 */
+@source "../../shared";
+
+/* ---- 以下为调试视图专属样式(Monaco 装饰、面板分隔条、悬浮卡片),故不放进共享层 ---- */
+
+/* Monaco 装饰:断点圆点 / 停站行 */
+.bp-dot {
+  cursor: pointer;
+  background: radial-gradient(circle, #ef4444 0 42%, transparent 46%);
+  background-size: 60%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.cur-arrow {
+  cursor: pointer;
+  background:
+    linear-gradient(to bottom right, transparent 50%, #eab308 50%) 0 0 / 50% 50% no-repeat,
+    linear-gradient(to top right, transparent 50%, #eab308 50%) 0 100% / 50% 50% no-repeat,
+    #eab308 0 50% / 100% 2px no-repeat;
+  background-size: 70% 70%, 70% 70%, 100% 2px;
+  background-position: 15% center, 15% center, 0 center;
+  background-repeat: no-repeat;
+}
+.cur-line-hl {
+  background: rgba(234, 179, 8, 0.12);
+}
+/* 运行中(单步/continue 还在途)保留的暗色版本:位置还标着,但明显比停站浅 ——
+   程序可能已经离开这一行(甚至正卡在 GDC 等人工操作),暗色表达"这是上一次的位置"。
+   两个类合写是为了不依赖书写顺序压过上面那条。 */
+.cur-line-hl.cur-line-hl-pending {
+  background: rgba(234, 179, 8, 0.06);
+}
+/* 停站行同时有断点:两个 glyph 类合在同一元素上,cur-arrow 的 background 简写
+   会整体覆盖 bp-dot 的红色渐变导致红点消失;这里把红点作为最上层叠加在黄箭头右侧 */
+.bp-dot.cur-arrow {
+  background:
+    radial-gradient(circle, #ef4444 0 42%, transparent 46%) 72% center / 62% 62% no-repeat,
+    linear-gradient(to bottom right, transparent 50%, #eab308 50%) 15% center / 70% 70% no-repeat,
+    linear-gradient(to top right, transparent 50%, #eab308 50%) 15% center / 70% 70% no-repeat,
+    linear-gradient(#eab308, #eab308) 0 center / 100% 2px no-repeat;
+}
+
+/* 面板分割条(VS Code sash):视觉上就是**一条 1px 线**,悬停/拖拽时变成主色。
+ *
+ * 为什么不是"5px 透明带 + 中间一条线":那条带子是透明的,底下的页面底色会从缝里透出来 ——
+ * 相邻两个面板之间就多出一道 5px 的灰缝,看着像"面板没接上、边缘透出下面的东西"(用户实测反馈)。
+ * 现在整条带子就 1px、颜色取 --border(与面板边线同色),接缝处只有一条线。
+ *
+ * 那"1px 怎么抓得住"交给伪元素:它向两侧各溢出 4px(共 9px 命中区),本身**没有背景**,
+ * 所以视觉上仍然只有 1px,鼠标在 ±4px 内都能拖。悬停只改颜色、不改宽度(改宽度会让布局抖 1px)。
+ *
+ * z-index 是必须的:溢出的命中区会伸进相邻面板的地盘,而**后面的兄弟**(主内容里的
+ * Monaco、下方面板)在 DOM 里排在后面、又会盖住它 —— 不给层级的话,正好压在分割线上的
+ * 那几个像素点会被它们吃掉(实测 elementFromPoint 打在线中心命中的是 Monaco 的覆盖层)。 */
+.col-resizer {
+  cursor: col-resize;
+  flex: 0 0 1px;
+  position: relative;
+  z-index: 1;
+  background: var(--border);
+}
+.col-resizer::after {
+  content: '';
+  position: absolute;
+  inset: 0 -4px;
+}
+.col-resizer:hover,
+.col-resizer.dragging {
+  background: var(--ring);
+}
+.row-resizer {
+  cursor: row-resize;
+  flex: 0 0 1px;
+  position: relative;
+  z-index: 1;
+  background: var(--border);
+}
+.row-resizer::after {
+  content: '';
+  position: absolute;
+  inset: -4px 0;
+}
+.row-resizer:hover,
+.row-resizer.dragging {
+  background: var(--ring);
+}
+
+/* ---- 工作站外壳(DSH 式) ----
+   只在外壳的暗色主题下压暗一档。取色照 DSH 截图实测:侧栏 #1b1b1c、主区 #151517、
+   选中/悬停 #2d2d2e、Tab 下划线 #7aaaff(见 2026-10-17 的两张参考图)。
+
+   写成**外壳作用域内的语义 token 覆盖**,而不是在组件里写死颜色:搬进来的旧画面
+   (编辑器、报文日志、录制面板)照旧读同一套 token,自动跟着变深 —— 两套配色不会在
+   同一条边上撞车,以后要再调深浅也只改这一处。圆角同时放宽到 8px(DSH 的观感),
+   仍然只走 --radius-ui 这一个档位。 */
+.dark .dsh-shell {
+  --background: #151517;
+  --card: #1b1b1c;
+  --popover: #232325;
+  --secondary: #262628;
+  --muted: #232325;
+  --muted-foreground: #9a9aa2;
+  --accent: #2d2d2e;
+  --accent-foreground: #ededf0;
+  --foreground: #d8d8dc;
+  --border: #2a2a2c;
+  --input: #333336;
+  --radius-ui: 8px;
+  --dsh-accent: #7aaaff;
+}
+.dsh-shell { --dsh-accent: #2f6fce; }
+
+/* Ctrl+悬停函数链接样式(类 VS Code):蓝字+下划线+手形光标 */
+.fn-link {
+  color: #005fb8 !important;
+  text-decoration: underline !important;
+  cursor: pointer !important;
+}
+.dark .fn-link {
+  color: #4daafc !important;
+}
+
+/* 变量悬浮卡片(Monaco content widget):直接显示值(无头部/变量名/分割线)。
+   自适应宽度(max-content):短值卡片收窄(复制按钮近在眼前),长值封顶换行 */
+.fgl-hover {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--border);
+  /* 圆角取设计系统那唯一一个半径 token(--radius-ui):卡片、按钮、面板都是它,
+     全站只有这一个半径(用户 2026-10-15 指出这张卡还是直角)。 */
+  border-radius: var(--radius-ui);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  width: max-content;
+  min-width: 140px;
+  max-width: min(560px, calc(100vw - 24px));
+  font-size: 12px;
+  user-select: text;
+  cursor: default;
+}
+.fgl-hover-body {
+  max-height: 320px;
+  overflow: auto;
+  padding: 6px 10px;
+}
+.fgl-hover-copy {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-ui);
+  padding: 2px 4px;
+  color: var(--muted-foreground);
+  background: var(--card);
+  border: 1px solid var(--border);
+  opacity: 0; /* 悬停卡片才浮现,平时不打扰值展示 */
+  transition: opacity 0.12s;
+}
+.fgl-hover:hover .fgl-hover-copy {
+  opacity: 1;
+}
+.fgl-hover-copy:hover:not(:disabled) {
+  color: var(--foreground);
+  background: var(--accent);
+}
+.fgl-hover-copy:disabled {
+  visibility: hidden; /* 错误态无值可复制,连同悬停也不显示 */
+}
+.fgl-hover-value {
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}

@@ -1,0 +1,30 @@
+<Window
+	x:Class="SpecDesigner.Main.SpecDesignerSplashScreen"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	Title="SpecDesignerSplashScreen"
+	Height="318"
+	Width="508"
+	AllowsTransparency="True"
+	ShowInTaskbar="False"
+	WindowStartupLocation="CenterScreen"
+	WindowStyle="None"
+	xmlns:main="clr-namespace:SpecDesigner.Main">
+	<Control.Background>
+		<ImageBrush
+			ImageSource="startup.png" />
+	</Control.Background>
+	<TextBlock
+		x:Name="proginfo"
+		Margin="230,0,0,65"
+		TextWrapping="Wrap"
+		VerticalAlignment="Bottom"
+		Foreground="#FFFFFFFF"
+		Height="14"
+		Width="230">
+		<Run
+			Text="" />
+	</TextBlock>
+</Window>

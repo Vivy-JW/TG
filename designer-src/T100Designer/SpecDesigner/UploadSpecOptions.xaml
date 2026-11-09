@@ -1,0 +1,60 @@
+<Window
+	x:Class="SpecDesigner.UploadSpecOptions"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	Title="{StaticResource menu_SpecificationUpload}"
+	SizeToContent="WidthAndHeight"
+	xmlns:specdesigner="clr-namespace:SpecDesigner">
+	<FrameworkElement.Resources>
+		<ResourceDictionary>
+			<Style
+				x:Key="{x:Type Button}"
+				TargetType="{x:Type Button}">
+				<Setter
+					Property="Margin"
+					Value="3" />
+				<Setter
+					Property="MinWidth"
+					Value="80" />
+			</Style>
+		</ResourceDictionary>
+	</FrameworkElement.Resources>
+	<Grid
+		Margin="10">
+		<Grid.RowDefinitions>
+			<RowDefinition
+				Height="60" />
+			<RowDefinition
+				Height="Auto" />
+		</Grid.RowDefinitions>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition />
+			<ColumnDefinition />
+			<ColumnDefinition
+				Width="Auto" />
+		</Grid.ColumnDefinitions>
+		<TextBlock
+			x:Name="textBlock_title"
+			Text="{StaticResource Message_ConfirmBeforeUpload_SD}"
+			Grid.ColumnSpan="3"
+			HorizontalAlignment="Center"
+			VerticalAlignment="Center" />
+		<Button
+			Content="{StaticResource Button_OK}"
+			Height="Auto"
+			Grid.Row="1"
+			Grid.Column="0"
+			Click="UploadButton_Click" />
+		<Button
+			Content="{StaticResource Button_Cancel}"
+			Grid.Row="1"
+			Grid.Column="1"
+			Click="CancelButton_Click" />
+		<Button
+			Content="{StaticResource Message_UploadAndGenAll}"
+			Width="Auto"
+			Grid.Row="1"
+			Grid.Column="2"
+			Click="UploadAndGenAllButton_Click" />
+	</Grid>
+</Window>

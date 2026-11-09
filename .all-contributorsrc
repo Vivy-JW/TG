@@ -1,0 +1,45 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "commitType": "docs",
+  "commitConvention": "angular",
+  "contributors": [
+    {
+      "login": "liuwpa",
+      "name": "liuwpa",
+      "avatar_url": "https://avatars.githubusercontent.com/u/61258913?v=4",
+      "profile": "https://github.com/liuwpa",
+      "contributions": [
+        "code",
+        "doc"
+      ]
+    },
+    {
+      "login": "songyuliang1",
+      "name": "songyuliang1",
+      "avatar_url": "https://avatars.githubusercontent.com/u/111861624?v=4",
+      "profile": "https://github.com/songyuliang1",
+      "contributions": [
+        "bug"
+      ]
+    },
+    {
+      "login": "Rainco",
+      "name": "Rainco",
+      "avatar_url": "https://avatars.githubusercontent.com/u/211707777?v=4",
+      "profile": "https://github.com/Rainco",
+      "contributions": [
+        "bug"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "skipCi": true,
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "projectName": "TT",
+  "projectOwner": "luyaogod"
+}

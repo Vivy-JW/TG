@@ -1,0 +1,16 @@
+{
+  "name": "tt-web",
+  "private": true,
+  "version": "0.5.2",
+  "type": "module",
+  "description": "TT 前端：一套 SPA（调试工作台 + 覆盖三个工具的统一设置页）+ 共享的设计系统层",
+  "workspaces": [
+    "app"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace app",
+    "build:app": "npm run build --workspace app",
+    "dev:app": "npm run dev --workspace app",
+    "check:app": "npm run check:tokens --workspace app && npm run check:outline --workspace app && npm run check:store --workspace app"
+  }
+}

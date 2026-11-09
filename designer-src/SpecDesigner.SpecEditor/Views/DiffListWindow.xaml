@@ -1,0 +1,75 @@
+<Window
+	x:Class="SpecDesigner.SpecEditor.Views.DiffListWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	ResizeMode="CanResizeWithGrip"
+	Height="300"
+	Width="300"
+	xmlns:views="clr-namespace:SpecDesigner.SpecEditor.Views">
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition
+				Height="Auto" />
+			<RowDefinition
+				Height="*" />
+		</Grid.RowDefinitions>
+		<Label
+			Content="{StaticResource Diff_Memo}" />
+		<DataGrid
+			Grid.Row="1"
+			AutoGenerateColumns="False"
+			SelectionUnit="Cell"
+			ItemsSource="{Binding Elements[field]}">
+			<FrameworkElement.Resources>
+				<ResourceDictionary>
+					<Style
+						x:Key="{x:Type DataGridRow}"
+						TargetType="{x:Type DataGridRow}">
+						<EventSetter
+							Event="MouseDoubleClick"
+							Handler="Row_DoubleClick" />
+					</Style>
+					<ContextMenu
+						x:Key="ctMenu"
+						DataContext="{Binding PlacementTarget, RelativeSource={RelativeSource Self}}">
+						<MenuItem
+							Command="ApplicationCommands.Copy"
+							Header="{StaticResource CE_CopyContent}"
+							CommandTarget="{Binding}"
+							CommandParameter="{Binding Text}" />
+					</ContextMenu>
+				</ResourceDictionary>
+			</FrameworkElement.Resources>
+			<DataGrid.Columns>
+				<DataGridTextColumn
+					Header="{StaticResource Diff_ListItemName}"
+					IsReadOnly="True"
+					Width="5*"
+					Binding="{Binding Path=Attribute[name].Value, Mode=OneTime}">
+					<DataGridColumn.CellStyle>
+						<Style
+							TargetType="{x:Type DataGridCell}">
+							<Setter
+								Property="FrameworkElement.ContextMenu"
+								Value="{StaticResource ctMenu}" />
+						</Style>
+					</DataGridColumn.CellStyle>
+				</DataGridTextColumn>
+				<DataGridTextColumn
+					Header="{StaticResource Diff_ListItemType}"
+					IsReadOnly="True"
+					Width="5*"
+					Binding="{Binding Path=Attribute[type].Value, Mode=OneTime}">
+					<DataGridColumn.CellStyle>
+						<Style
+							TargetType="{x:Type DataGridCell}">
+							<Setter
+								Property="FrameworkElement.ContextMenu"
+								Value="{StaticResource ctMenu}" />
+						</Style>
+					</DataGridColumn.CellStyle>
+				</DataGridTextColumn>
+			</DataGrid.Columns>
+		</DataGrid>
+	</Grid>
+</Window>

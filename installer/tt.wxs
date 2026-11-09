@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  TT 的用户级 MSI 安装包定义。
+
+  为什么是**用户级**(InstallScope="perUser"):
+    · 装到 %LOCALAPPDATA%\Programs\TT,不碰 Program Files —— 全程不需要管理员,
+      和这个工具一贯的取向一致(tt install path 也只动 HKCU\Environment,绝不碰系统 PATH)。
+    · PATH 写在**用户** PATH(HKCU)上,卸载时由 MSI 自己摘掉。
+    · 装完不写 .portable:配置该落在 %APPDATA%\tt\config.json(用户可写),
+      而不是程序目录(那里普通用户写不进去)。
+
+  文件清单由 heat.exe 从暂存目录采集(见 build_msi.bat),这里只管产品、目录、
+  PATH 与升级关系 —— 技能增减不需要改这个文件。
+-->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+
+  <Product Id="*"
+           Name="TT"
+           Language="2052"
+           Codepage="936"
+           Version="$(var.Version)"
+           Manufacturer="luyao"
+           UpgradeCode="7F3C1A64-9E4B-4C2D-9A18-2B6D5E0F7C31">
+
+    <Package Id="*"
+             InstallerVersion="500"
+             Compressed="yes"
+             InstallScope="perUser"
+             Description="TT — T100 调试 / 设计器包 / 数据字典统一工具"
+             Comments="用户级安装,不需要管理员权限" />
+
+    <!-- 升级:装新版会先移除旧版。ProductCode 每次构建重新生成(Id="*"),
+         UpgradeCode 固定,两者配合才能正确识别"这是同一个产品的另一个版本"。 -->
+    <MajorUpgrade DowngradeErrorMessage="已安装更新版本的 TT,请先卸载它。" />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Icon Id="AppIcon" SourceFile="$(var.IconPath)" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon" />
+
+    <!-- 用户级目录树:%LOCALAPPDATA%\Programs\TT -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="LocalAppDataFolder">
+        <Directory Id="ProgramsFolder" Name="Programs">
+          <Directory Id="INSTALLFOLDER" Name="TT" />
+        </Directory>
+      </Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="AppMenuFolder" Name="TT" />
+      </Directory>
+    </Directory>
+
+    <DirectoryRef Id="INSTALLFOLDER">
+      <!-- 把安装目录加进用户 PATH。Part="last" = 追加在后面(不挤掉已有的项);
+           Permanent="no" = 卸载时一并撤掉。System="no" 是这里的要点:写 HKCU 而不是 HKLM。 -->
+      <Component Id="UserPathEntry" Guid="{B1E4C7A2-3F5D-4E8B-9C16-7A2D4F608B93}">
+        <Environment Id="UserPath" Name="PATH" Value="[INSTALLFOLDER]"
+                     Part="last" Action="set" System="no" Permanent="no" />
+        <RemoveFolder Id="rmInstallFolder" Directory="INSTALLFOLDER" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\TT" Name="InstalledPath"
+                       Type="string" Value="[INSTALLFOLDER]" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <DirectoryRef Id="ProgramsFolder">
+      <!-- %LOCALAPPDATA%\Programs 是我们替用户建出来的一层。MSI 只在它**空了**的时候才删,
+           里面还有别的东西(VS Code 之类的用户级安装)就原样留着,所以登记它没有副作用。 -->
+      <Component Id="ProgramsFolderEntry" Guid="{8D2A5E31-6C47-42B0-9F85-3A7E1C904D62}">
+        <RemoveFolder Id="rmProgramsFolder" Directory="ProgramsFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\TT" Name="ProgramsFolder"
+                       Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <DirectoryRef Id="AppMenuFolder">
+      <!-- 开始菜单里放一个说明入口:CLI 装完没有图标可点,至少让用户找得到文档 -->
+      <Component Id="ReadmeShortcut" Guid="{5C8D2F71-4A63-4B9E-8D07-1E3F6A24C5B8}">
+        <Shortcut Id="ReadmeLink"
+                  Name="TT 使用说明"
+                  Description="TT 的 README(安装目录内)"
+                  Target="[INSTALLFOLDER]README.md" />
+        <RemoveFolder Id="RemoveAppMenuFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\TT" Name="ReadmeShortcut"
+                       Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- 安装完成后解压随包的 BDL 文档（tt install bdl）。
+         目标优先取 config.json 已有的 bdldoc.dir；没有就落 %APPDATA%	tBDL-Markdown。
+         Return="ignore"：文档解压失败不该让整个安装失败。 -->
+    <CustomAction Id="InstallBDLDocs"
+                  Directory="INSTALLFOLDER"
+                  ExeCommand="&quot;[INSTALLFOLDER]tt.exe&quot; install bdl"
+                  Execute="immediate"
+                  Return="ignore" />
+
+    <InstallExecuteSequence>
+      <Custom Action="InstallBDLDocs" After="InstallFiles">NOT REMOVE</Custom>
+    </InstallExecuteSequence>
+
+    <Feature Id="Main" Title="TT" Level="1">
+      <ComponentGroupRef Id="StagedFiles" />
+      <ComponentRef Id="UserPathEntry" />
+      <ComponentRef Id="ProgramsFolderEntry" />
+      <ComponentRef Id="ReadmeShortcut" />
+    </Feature>
+  </Product>
+</Wix>

@@ -1,0 +1,17 @@
+<UserControl
+	x:Class="SpecDesigner.ReportSpecificationWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:common="clr-namespace:SpecDesignerCommon;assembly=SpecDesignerCommon"
+	xmlns:specdesigner="clr-namespace:SpecDesigner">
+	<Grid>
+		<common:Watermark
+			x:Name="notBookingWatermark" />
+		<TextBox
+			AcceptsReturn="True"
+			AcceptsTab="True"
+			HorizontalScrollBarVisibility="Auto"
+			VerticalScrollBarVisibility="Auto"
+			Text="{Binding Content, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+	</Grid>
+</UserControl>

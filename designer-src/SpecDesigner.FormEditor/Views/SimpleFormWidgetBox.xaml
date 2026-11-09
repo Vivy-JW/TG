@@ -1,0 +1,87 @@
+<UserControl
+	x:Class="SpecDesigner.FormEditor.Views.SimpleFormWidgetBox"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:views="clr-namespace:SpecDesigner.FormEditor.Views"
+	x:Name="me">
+	<FrameworkElement.Resources>
+		<ResourceDictionary>
+			<LinearGradientBrush
+				x:Key="backgroundBrush"
+				EndPoint="0.5,1"
+				StartPoint="0.5,0">
+				<GradientStop
+					Color="#f7f7f7"
+					Offset="0" />
+				<GradientStop
+					Color="#eaeaea"
+					Offset="1" />
+			</LinearGradientBrush>
+		</ResourceDictionary>
+	</FrameworkElement.Resources>
+	<Grid
+		x:Name="LayoutRoot">
+		<Canvas />
+		<ToolBarTray
+			x:Name="itemsContainer"
+			Orientation="Horizontal"
+			Background="{StaticResource backgroundBrush}">
+			<ToolBar
+				Band="1"
+				Background="{StaticResource backgroundBrush}">
+				<CheckBox
+					x:Name="ChkBoxQHide"
+					Margin="2 0"
+					Command="views:SimpleFormWidgetToolbarCommands.QuickHide"
+					ToolTip="{StaticResource SimpleForm_QuickHide}"
+					CommandTarget="{Binding ElementName=me}">
+					<Image
+						Width="24"
+						Source="pack://application:,,,/SpecDesigner.FormEditor;component/Images/simpleform_invisible.png"
+						Stretch="Fill" />
+				</CheckBox>
+				<CheckBox
+					x:Name="ChkBoxQShow"
+					Margin="2 0"
+					Command="views:SimpleFormWidgetToolbarCommands.QuickShow"
+					ToolTip="{StaticResource SimpleForm_QuickShow}"
+					CommandTarget="{Binding ElementName=me}">
+					<Image
+						Width="24"
+						Source="pack://application:,,,/SpecDesigner.FormEditor;component/Images/simpleform_visible.png"
+						Stretch="Fill" />
+				</CheckBox>
+			</ToolBar>
+			<ToolBar
+				Band="1"
+				Background="{StaticResource backgroundBrush}">
+				<Button
+					x:Name="btnHideAll"
+					Margin="2 0"
+					Command="views:SimpleFormWidgetToolbarCommands.HideAll"
+					ToolTip="{StaticResource SimpleForm_HideAll}"
+					Background="#FF4682B4"
+					CommandTarget="{Binding ElementName=me}">
+					<Image
+						Width="24"
+						Source="pack://application:,,,/SpecDesigner.FormEditor;component/Images/simpleform_invisible.png"
+						Stretch="Fill" />
+				</Button>
+				<Button
+					x:Name="btnShowAll"
+					Margin="2 0"
+					Command="views:SimpleFormWidgetToolbarCommands.ShowAll"
+					ToolTip="{StaticResource SimpleForm_ShowAll}"
+					Background="#FF4682B4"
+					CommandTarget="{Binding ElementName=me}">
+					<Image
+						Width="24"
+						Source="pack://application:,,,/SpecDesigner.FormEditor;component/Images/simpleform_visible.png"
+						Stretch="Fill" />
+				</Button>
+			</ToolBar>
+		</ToolBarTray>
+	</Grid>
+</UserControl>

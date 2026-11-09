@@ -1,0 +1,56 @@
+<Window
+	x:Class="SpecDesigner.BaseDataViewWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:de="clr-namespace:SpecDesigner.FormDataEditor;assembly=SpecDesigner.FormDataEditor"
+	Title="{StaticResource dataView_WindowTitle}"
+	Height="500"
+	Width="600"
+	xmlns:specdesigner="clr-namespace:SpecDesigner">
+	<Grid>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition
+				Width="150" />
+			<ColumnDefinition
+				Width="*" />
+		</Grid.ColumnDefinitions>
+		<GridSplitter
+			Grid.Column="1"
+			HorizontalAlignment="Left"
+			Width="5" />
+		<StackPanel>
+			<Button
+				x:Name="itemsButton"
+				Content="{StaticResource dataView_Items}"
+				Click="itemsButton_Click" />
+			<Button
+				x:Name="messageButton"
+				Content="{StaticResource dataView_Messages}"
+				Click="messageButton_Click" />
+			<Button
+				x:Name="zoomsButton"
+				Content="{StaticResource dataView_Zooms}"
+				Click="zoomsButton_Click" />
+			<Button
+				x:Name="checksButton"
+				Content="{StaticResource dataView_Checks}"
+				Click="checksButton_Click" />
+			<Button
+				x:Name="progrelButton"
+				Content="{StaticResource dataView_ProgRel}"
+				Click="progrelButton_Click" />
+			<Button
+				x:Name="subroutinesButton"
+				Content="{StaticResource dataView_Subroutines}"
+				Click="subroutinesButton_Click" />
+			<Button
+				x:Name="librariesButton"
+				Content="{StaticResource dataView_Libraries}"
+				Click="librariesButton_Click" />
+		</StackPanel>
+		<Grid
+			x:Name="dataViewContainer"
+			Column="1"
+			Margin="5,0,0,0" />
+	</Grid>
+</Window>

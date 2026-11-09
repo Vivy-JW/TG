@@ -1,0 +1,10 @@
+<Window
+	x:Class="SpecEditor.MainWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	Title="Specification Editor"
+	Height="350"
+	Width="525"
+	xmlns:speceditor="clr-namespace:SpecEditor">
+	<Grid />
+</Window>

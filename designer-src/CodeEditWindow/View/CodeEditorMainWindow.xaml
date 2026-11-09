@@ -1,0 +1,380 @@
+<UserControl
+	x:Class="SpecDesigner.CodeEditWindow.View.CodeEditorMainWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:common="clr-namespace:SpecDesignerCommon;assembly=SpecDesignerCommon"
+	xmlns:local="clr-namespace:SpecDesigner.CodeEditWindow.View"
+	xmlns:e="http://icsharpcode.net/sharpdevelop/avalonedit"
+	xmlns:h="clr-namespace:SpecDesigner.CodeEditWindow.Helper"
+	xmlns:sys="clr-namespace:System;assembly=mscorlib"
+	xmlns:ch="clr-namespace:SpecDesigner.Controls.Controls;assembly=SpecDesigner.Controls"
+	x:Name="This"
+	Background="#FFFFFFFF">
+	<FrameworkElement.Resources>
+		<ResourceDictionary>
+			<h:SwitchAccountModeVisiblityConverter
+				x:Key="switchAccountModeVisiblityConverter" />
+			<h:SwitchAccountModeCheckedConverter
+				x:Key="switchAccountModeCheckedConverter" />
+			<h:ProgramTypeConverter
+				x:Key="programTypeConverter" />
+			<h:CheckedValueConverter
+				x:Key="checkedValueConverter" />
+			<BooleanToVisibilityConverter
+				x:Key="BoolToVis" />
+			<sys:Boolean
+				x:Key="FalseValue">False</sys:Boolean>
+			<sys:Boolean
+				x:Key="TrueValue">True</sys:Boolean>
+			<Style
+				x:Key="DataGridCellStyle1"
+				TargetType="{x:Type DataGridCell}">
+				<Setter
+					Property="Background"
+					Value="#00FFFFFF" />
+				<Setter
+					Property="BorderBrush"
+					Value="#00FFFFFF" />
+				<Setter
+					Property="BorderThickness"
+					Value="0" />
+				<Style.Triggers>
+					<Trigger
+						Property="DataGridCell.IsSelected"
+						Value="True">
+						<Setter
+							Property="Background"
+							Value="#FFE0EEFF" />
+						<Setter
+							Property="Foreground"
+							Value="#FF000000" />
+						<Setter
+							Property="BorderBrush"
+							Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" />
+						<Setter
+							Property="FontWeight"
+							Value="Bold" />
+					</Trigger>
+					<Trigger
+						Property="UIElement.IsKeyboardFocusWithin"
+						Value="True">
+						<Setter
+							Property="BorderBrush"
+							Value="{DynamicResource {x:Static DataGrid.FocusBorderBrushKey}}" />
+					</Trigger>
+				</Style.Triggers>
+			</Style>
+		</ResourceDictionary>
+	</FrameworkElement.Resources>
+	<Grid>
+		<common:Watermark
+			x:Name="notBookingWatermark" />
+		<Grid
+			Name="mainGrid">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition
+					Width=".20*" />
+				<ColumnDefinition
+					Width="*" />
+			</Grid.ColumnDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition
+					Height="*" />
+				<RowDefinition
+					Height="50*" />
+			</Grid.RowDefinitions>
+			<local:TreeView
+				x:Name="treeView"
+				Grid.Column="0"
+				Grid.RowSpan="2"
+				Margin="0 0 10 0" />
+			<Grid
+				Name="aptGrid"
+				Column="0"
+				RowSpan="2"
+				Margin="0 0 10 0">
+				<Grid.RowDefinitions>
+					<RowDefinition
+						Height="Auto" />
+					<RowDefinition
+						Height="Auto" />
+					<RowDefinition
+						Height="Auto" />
+					<RowDefinition
+						Height="*" />
+				</Grid.RowDefinitions>
+				<DataGrid
+					Name="customDataGrid"
+					Grid.Row="1"
+					Margin="5,0,5,0"
+					VerticalScrollBarVisibility="Auto"
+					HorizontalScrollBarVisibility="Auto"
+					HorizontalAlignment="Stretch"
+					AutoGenerateColumns="False"
+					CanUserResizeColumns="True"
+					CanUserAddRows="False"
+					CellStyle="{StaticResource DataGridCellStyle1}"
+					ItemsSource="{Binding DiffModel.Customs}"
+					MouseDoubleClick="custom_MouseDoubleClick">
+					<DataGrid.Columns>
+						<DataGridTemplateColumn
+							Header="{StaticResource CE_DiffOldAndNewStandardContent}">
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<Button
+										Content="{StaticResource codeEditor_ViewDifferentWithStanard}"
+										Click="viewAdpDiffButton_Click">
+										<FrameworkElement.Style>
+											<Style
+												TargetType="{x:Type Button}">
+												<Style.Triggers>
+													<DataTrigger
+														Value="{StaticResource TrueValue}"
+														Binding="{Binding IsDiff}">
+														<Setter
+															Property="IsEnabled"
+															Value="True" />
+													</DataTrigger>
+													<DataTrigger
+														Value="{StaticResource FalseValue}"
+														Binding="{Binding IsDiff}">
+														<Setter
+															Property="IsEnabled"
+															Value="False" />
+													</DataTrigger>
+												</Style.Triggers>
+											</Style>
+										</FrameworkElement.Style>
+									</Button>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+						<DataGridTextColumn
+							Header="{StaticResource CE_SuggestReturnToStandard}"
+							Width="Auto"
+							IsReadOnly="True">
+							<DataGridBoundColumn.ElementStyle>
+								<Style
+									TargetType="{x:Type TextBlock}">
+									<Setter
+										Property="HorizontalAlignment"
+										Value="Center" />
+									<Style.Triggers>
+										<MultiDataTrigger>
+											<MultiDataTrigger.Conditions>
+												<Condition
+													Value="{StaticResource TrueValue}"
+													Binding="{Binding CusToStd}" />
+											</MultiDataTrigger.Conditions>
+											<Setter
+												Property="Text"
+												Value="*" />
+										</MultiDataTrigger>
+										<MultiDataTrigger>
+											<MultiDataTrigger.Conditions>
+												<Condition
+													Value="{StaticResource FalseValue}"
+													Binding="{Binding CusToStd}" />
+											</MultiDataTrigger.Conditions>
+											<Setter
+												Property="Text"
+												Value="" />
+										</MultiDataTrigger>
+									</Style.Triggers>
+								</Style>
+							</DataGridBoundColumn.ElementStyle>
+						</DataGridTextColumn>
+						<DataGridTextColumn
+							Header="{StaticResource codeEditor_CustomedAddPoint}"
+							Width="Auto"
+							IsReadOnly="True"
+							Binding="{Binding Name}" />
+					</DataGrid.Columns>
+				</DataGrid>
+				<GridSplitter
+					Name="listGridSplitter"
+					Grid.Row="2"
+					Height="10"
+					HorizontalAlignment="Stretch"
+					ShowsPreview="True"
+					Style="{StaticResource HorizontalGridSplitterStyle}" />
+				<DataGrid
+					x:Name="standardDataGrid"
+					Grid.Row="3"
+					Margin="5,0,5,0"
+					VerticalScrollBarVisibility="Auto"
+					HorizontalScrollBarVisibility="Auto"
+					HorizontalAlignment="Stretch"
+					VerticalAlignment="Stretch"
+					AutoGenerateColumns="False"
+					CanUserResizeColumns="True"
+					CellStyle="{StaticResource DataGridCellStyle1}"
+					ItemsSource="{Binding DiffModel.Merge.Elements}"
+					MouseDoubleClick="merge_MouseDoubleClick">
+					<DataGrid.Columns>
+						<DataGridTextColumn
+							Header="{StaticResource codeEditor_NotCoveredWhenMergeAddPoint}"
+							Width="Auto"
+							IsReadOnly="True"
+							Binding="{Binding Path=Attribute[name].Value, Mode=OneTime}" />
+					</DataGrid.Columns>
+				</DataGrid>
+			</Grid>
+			<GridSplitter
+				Name="mainGridSplitter"
+				Grid.RowSpan="2"
+				Width="10"
+				ShowsPreview="True"
+				Style="{StaticResource VerticalGridSplitterStyle}" />
+			<Grid
+				Column="2"
+				RowSpan="2">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition
+						Width="33*" />
+					<ColumnDefinition
+						Width="33*" />
+					<ColumnDefinition
+						Width="33*" />
+				</Grid.ColumnDefinitions>
+				<Grid.RowDefinitions>
+					<RowDefinition
+						Height="Auto" />
+					<RowDefinition
+						Height="Auto" />
+					<RowDefinition
+						Height="*" />
+				</Grid.RowDefinitions>
+				<CheckBox
+					x:Name="checkBox"
+					Grid.Column="0"
+					Grid.Row="1"
+					Content="{StaticResource CE_ChageSessionTitle}"
+					PreviewMouseLeftButtonDown="checkBox_PreviewMouseLeftButtonDown" />
+				<CheckBox
+					x:Name="SwichToTopstd"
+					Grid.Column="1"
+					Grid.Row="1"
+					Content="{StaticResource codeEditor_topstdMode}"
+					Visibility="{Binding Path=ProgramKey, Converter='{StaticResource switchAccountModeVisiblityConverter}', Mode=OneWay, ElementName=This}"
+					IsChecked="{Binding Path=ProgramKey, Converter='{StaticResource switchAccountModeCheckedConverter}', Mode=OneWay, ElementName=This}"
+					PreviewMouseLeftButtonDown="SwichToTopstd_PreviewMouseLeftButtonDown" />
+				<CheckBox
+					x:Name="checkBox1"
+					Grid.Column="0"
+					Grid.Row="0"
+					Content="{StaticResource codeEditor_SynchronousScroll}"
+					IsChecked="True"
+					Visibility="{Binding IsDiff, Converter='{StaticResource BoolToVis}'}"
+					PreviewMouseLeftButtonDown="checkBox1_PreviewMouseLeftButtonDown" />
+				<Button
+					x:Name="button"
+					Grid.Column="2"
+					Grid.Row="0"
+					Content="{StaticResource codeEditor_Diff}"
+					Width="100"
+					HorizontalAlignment="Right"
+					Visibility="{Binding IsDiff, Converter='{StaticResource BoolToVis}'}"
+					Click="button_Click" />
+				<Label
+					x:Name="label"
+					Grid.Column="2"
+					Grid.Row="1"
+					HorizontalAlignment="Right">
+					<FrameworkElement.Style>
+						<Style
+							TargetType="{x:Type Label}">
+							<Style.Triggers>
+								<MultiDataTrigger>
+									<MultiDataTrigger.Conditions>
+										<Condition
+											Value="{StaticResource TrueValue}"
+											Binding="{Binding IsFreeStyle}" />
+										<Condition
+											Value="{StaticResource TrueValue}"
+											Binding="{Binding IsSectionModify}" />
+										<Condition
+											Value="{StaticResource TrueValue}"
+											Binding="{Binding Type, Converter='{StaticResource programTypeConverter}'}" />
+									</MultiDataTrigger.Conditions>
+									<Setter
+										Property="Content"
+										Value="{StaticResource Message_ProgInfoFreeStyleAndSectionFlag}" />
+									<Setter
+										Property="Visibility"
+										Value="Visible" />
+								</MultiDataTrigger>
+								<MultiDataTrigger>
+									<MultiDataTrigger.Conditions>
+										<Condition
+											Value="{StaticResource TrueValue}"
+											Binding="{Binding IsFreeStyle}" />
+										<Condition
+											Value="{StaticResource FalseValue}"
+											Binding="{Binding IsSectionModify}" />
+										<Condition
+											Value="{StaticResource TrueValue}"
+											Binding="{Binding Type, Converter='{StaticResource programTypeConverter}'}" />
+									</MultiDataTrigger.Conditions>
+									<Setter
+										Property="Content"
+										Value="{StaticResource Message_ProgInfoFreeStyle}" />
+									<Setter
+										Property="Visibility"
+										Value="Visible" />
+								</MultiDataTrigger>
+								<MultiDataTrigger>
+									<MultiDataTrigger.Conditions>
+										<Condition
+											Value="{StaticResource FalseValue}"
+											Binding="{Binding IsFreeStyle}" />
+										<Condition
+											Value="{StaticResource TrueValue}"
+											Binding="{Binding IsSectionModify}" />
+										<Condition
+											Value="{StaticResource TrueValue}"
+											Binding="{Binding Type, Converter='{StaticResource programTypeConverter}'}" />
+									</MultiDataTrigger.Conditions>
+									<Setter
+										Property="Content"
+										Value="{StaticResource Message_ProgInfoSectionFlag}" />
+									<Setter
+										Property="Visibility"
+										Value="Visible" />
+								</MultiDataTrigger>
+								<MultiDataTrigger>
+									<MultiDataTrigger.Conditions>
+										<Condition
+											Value="{StaticResource FalseValue}"
+											Binding="{Binding IsFreeStyle}" />
+										<Condition
+											Value="{StaticResource FalseValue}"
+											Binding="{Binding IsSectionModify}" />
+									</MultiDataTrigger.Conditions>
+									<Setter
+										Property="Visibility"
+										Value="Collapsed" />
+								</MultiDataTrigger>
+							</Style.Triggers>
+						</Style>
+					</FrameworkElement.Style>
+				</Label>
+				<DockPanel
+					Grid.ColumnSpan="3"
+					Grid.Row="2">
+					<TextBlock
+						x:Name="viModeBlock"
+						DockPanel.Dock="Bottom"
+						Foreground="#FFFFFFFF"
+						Background="#FF000000"
+						Visibility="Collapsed"
+						Text="{Binding Message}" />
+					<Grid
+						x:Name="dockPanel" />
+				</DockPanel>
+			</Grid>
+		</Grid>
+	</Grid>
+</UserControl>

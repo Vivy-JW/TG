@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="ASCII"?>
+<Form name="dupform" build="3.21.03" width="10" height="2">
+  <ScrollGrid>
+    <Table name="demo_t">
+      <TableColumn name="demo_t.demo201" colName="demo201" fieldId="5" sqlType="CHAR">
+        <Edit width="4" posX="1" posY="0"/>
+      </TableColumn>
+      <TableColumn name="demo_u.demo201" colName="demo201" fieldId="6" sqlType="CHAR">
+        <Edit width="4" posX="1" posY="1"/>
+      </TableColumn>
+    </Table>
+  </ScrollGrid>
+</Form>

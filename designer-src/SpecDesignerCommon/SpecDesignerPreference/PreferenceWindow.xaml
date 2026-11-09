@@ -1,0 +1,457 @@
+<Window
+	x:Class="SpecDesignerPreference.PreferenceWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:System="clr-namespace:System;assembly=mscorlib"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:l="clr-namespace:SpecDesignerPreference"
+	xmlns:componentModel="clr-namespace:System.ComponentModel;assembly=WindowsBase"
+	xmlns:ch="clr-namespace:SpecDesigner.Controls.Controls;assembly=SpecDesigner.Controls"
+	xmlns:b="clr-namespace:SpecDesigner.Controls.Controls.BrushEditor;assembly=SpecDesigner.Controls"
+	x:Name="this"
+	Title="{StaticResource menu_Preference}"
+	WindowStartupLocation="CenterOwner"
+	WindowStyle="SingleBorderWindow"
+	ResizeMode="CanResizeWithGrip"
+	Height="400"
+	Width="600"
+	UseLayoutRounding="True">
+	<FrameworkElement.Resources>
+		<ResourceDictionary>
+			<CollectionViewSource
+				x:Key="myFonts"
+				Source="{Binding Source='{x:Static Fonts.SystemFontFamilies}'}">
+				<CollectionViewSource.SortDescriptions>
+					<componentModel:SortDescription
+						PropertyName="Source" />
+				</CollectionViewSource.SortDescriptions>
+			</CollectionViewSource>
+			<ObjectDataProvider
+				x:Key="themeOption"
+				MethodName="GetValues"
+				ObjectType="{x:Type System:Enum}">
+				<ObjectDataProvider.MethodParameters>
+					<x:TypeExtension
+						TypeName="l:ThemeOptions" />
+				</ObjectDataProvider.MethodParameters>
+			</ObjectDataProvider>
+			<Style
+				x:Key="labelTextBlock"
+				TargetType="{x:Type TextBlock}"
+				BasedOn="{StaticResource {x:Type TextBlock}}">
+				<Setter
+					Property="Margin"
+					Value="5" />
+				<Setter
+					Property="VerticalAlignment"
+					Value="Center" />
+			</Style>
+			<Style
+				x:Key="{x:Type ComboBox}"
+				TargetType="{x:Type ComboBox}"
+				BasedOn="{StaticResource {x:Type ComboBox}}">
+				<Setter
+					Property="Margin"
+					Value="5" />
+			</Style>
+			<Style
+				x:Key="inputTexBox"
+				TargetType="{x:Type TextBox}"
+				BasedOn="{StaticResource {x:Type TextBox}}">
+				<Setter
+					Property="Margin"
+					Value="5" />
+				<Setter
+					Property="HorizontalAlignment"
+					Value="Stretch" />
+			</Style>
+			<b:BrushConverter
+				x:Key="BrushConverter" />
+		</ResourceDictionary>
+	</FrameworkElement.Resources>
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition
+				Height="*" />
+			<RowDefinition
+				Height="Auto" />
+		</Grid.RowDefinitions>
+		<TabControl
+			DockPanel.Dock="Top">
+			<TabItem
+				Header="{StaticResource Preference_General}">
+				<StackPanel
+					Grid.IsSharedSizeScope="True">
+					<Grid>
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition
+								Width="Auto"
+								SharedSizeGroup="Header" />
+							<ColumnDefinition
+								Width="*" />
+						</Grid.ColumnDefinitions>
+						<TextBlock
+							Text="{StaticResource Preference_RedoUndo}"
+							Style="{StaticResource labelTextBlock}" />
+						<TextBox
+							Grid.Column="1"
+							Style="{StaticResource inputTexBox}"
+							Text="{Binding UndoTimes, UpdateSourceTrigger=PropertyChanged}" />
+					</Grid>
+					<TextBlock
+						Text="{StaticResource Preference_RedoUndoMemo}"
+						Foreground="#FFFF0000"
+						Style="{StaticResource labelTextBlock}" />
+					<CheckBox
+						Content="{StaticResource Preference_RemainUnSaved}"
+						Margin="5"
+						IsChecked="{Binding RemaindSave, UpdateSourceTrigger=PropertyChanged}" />
+					<GroupBox
+						Name="LangGrp"
+						Header="{StaticResource Preference_LanguageSettings}"
+						Margin="0 5 0 0">
+						<StackPanel
+							Orientation="Vertical">
+							<Grid>
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition
+										Width="Auto"
+										SharedSizeGroup="Header" />
+									<ColumnDefinition
+										Width="*" />
+								</Grid.ColumnDefinitions>
+								<TextBlock
+									Text="{StaticResource Preference_Language}"
+									Style="{StaticResource labelTextBlock}" />
+								<ComboBox
+									x:Name="langlist"
+									Grid.Column="1"
+									SelectedValue="{Binding UILang, UpdateSourceTrigger=PropertyChanged}" />
+							</Grid>
+						</StackPanel>
+					</GroupBox>
+					<CheckBox
+						Name="SimpleDownload"
+						Content="{StaticResource Preference_SimpleDownloadDialog}"
+						Margin="5"
+						IsChecked="{Binding SimpleDownloadDialog, UpdateSourceTrigger=PropertyChanged}"
+						Click="SimpleDownload_Click" />
+					<StackPanel
+						Orientation="Vertical"
+						Visibility="Collapsed">
+						<Grid>
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition
+									Width="Auto"
+									SharedSizeGroup="Header" />
+								<ColumnDefinition
+									Width="*" />
+							</Grid.ColumnDefinitions>
+							<TextBlock
+								Text="{StaticResource Preference_MaxRecentFiles}"
+								Style="{StaticResource labelTextBlock}" />
+							<ComboBox
+								x:Name="cboMaxRecentList"
+								Grid.Column="1"
+								SelectedValue="{Binding MaxRecentFiles, UpdateSourceTrigger=PropertyChanged}" />
+						</Grid>
+					</StackPanel>
+				</StackPanel>
+			</TabItem>
+			<TabItem
+				Header="{StaticResource Preference_CodeEditor}">
+				<ScrollViewer
+					VerticalScrollBarVisibility="Auto"
+					HorizontalScrollBarVisibility="Auto">
+					<StackPanel
+						Grid.IsSharedSizeScope="True"
+						Margin="2 0 2 0">
+						<Grid>
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition
+									Width="Auto"
+									SharedSizeGroup="Header" />
+								<ColumnDefinition
+									Width="*" />
+							</Grid.ColumnDefinitions>
+							<TextBlock
+								Text="{StaticResource Preference_TabWidth}"
+								Style="{StaticResource labelTextBlock}" />
+							<TextBox
+								Grid.Column="1"
+								Style="{StaticResource inputTexBox}"
+								Text="{Binding TabWidth, UpdateSourceTrigger=PropertyChanged}" />
+						</Grid>
+						<CheckBox
+							Content="{StaticResource Preference_WrapText}"
+							Margin="5"
+							IsChecked="{Binding WordWrap, UpdateSourceTrigger=PropertyChanged}" />
+						<CheckBox
+							Content="{StaticResource Preference_CodeCompletion}"
+							Margin="5"
+							IsChecked="{Binding CodeCompletion, UpdateSourceTrigger=PropertyChanged}" />
+						<CheckBox
+							Content="{StaticResource Preference_ViMode}"
+							Margin="5"
+							IsChecked="{Binding ViMode, UpdateSourceTrigger=PropertyChanged}" />
+						<GroupBox
+							Header="{StaticResource Preference_Font}"
+							Margin="0 5 0 0">
+							<StackPanel>
+								<Grid
+									Margin="0 2 0 0">
+									<Grid.ColumnDefinitions>
+										<ColumnDefinition
+											Width="Auto"
+											SharedSizeGroup="Header" />
+										<ColumnDefinition
+											Width="*" />
+									</Grid.ColumnDefinitions>
+									<TextBlock
+										Text="{StaticResource Preference_FontSize}"
+										Style="{StaticResource labelTextBlock}" />
+									<TextBox
+										Grid.Column="1"
+										Style="{StaticResource inputTexBox}"
+										Text="{Binding FontSize, UpdateSourceTrigger=PropertyChanged}" />
+								</Grid>
+								<Grid>
+									<Grid.ColumnDefinitions>
+										<ColumnDefinition
+											Width="Auto"
+											SharedSizeGroup="Header" />
+										<ColumnDefinition
+											Width="*" />
+									</Grid.ColumnDefinitions>
+									<TextBlock
+										Text="{StaticResource Preference_FontFamily}"
+										Style="{StaticResource labelTextBlock}" />
+									<ComboBox
+										x:Name="fontlist"
+										Grid.Column="1"
+										ItemsSource="{Binding Source='{StaticResource myFonts}'}"
+										SelectedValue="{Binding FontFamily, UpdateSourceTrigger=PropertyChanged}" />
+								</Grid>
+							</StackPanel>
+						</GroupBox>
+						<GroupBox
+							Header="{StaticResource Preference_Theme}"
+							Margin="0 5 0 0">
+							<StackPanel>
+								<Grid
+									Margin="0 2 0 0">
+									<Grid.ColumnDefinitions>
+										<ColumnDefinition
+											Width="Auto"
+											SharedSizeGroup="Header" />
+										<ColumnDefinition
+											Width="*" />
+									</Grid.ColumnDefinitions>
+									<TextBlock
+										Text="{StaticResource Preference_Background}"
+										Style="{StaticResource labelTextBlock}" />
+									<b:BrushEditorControl
+										Grid.Column="1"
+										Margin="5"
+										Width="45"
+										HorizontalAlignment="Left"
+										Brush="{Binding Background, Mode=TwoWay, Converter='{StaticResource BrushConverter}'}" />
+								</Grid>
+								<Grid>
+									<Grid.ColumnDefinitions>
+										<ColumnDefinition
+											Width="Auto"
+											SharedSizeGroup="Header" />
+										<ColumnDefinition
+											Width="*" />
+									</Grid.ColumnDefinitions>
+									<TextBlock
+										Text="{StaticResource Preference_Foreground}"
+										Style="{StaticResource labelTextBlock}" />
+									<ComboBox
+										Grid.Column="1"
+										ItemsSource="{Binding Source='{StaticResource themeOption}'}"
+										SelectedValue="{Binding Theme}" />
+								</Grid>
+							</StackPanel>
+						</GroupBox>
+						<GroupBox
+							Header="{StaticResource Preference_Diff}"
+							Margin="0 5 0 0">
+							<StackPanel>
+								<CheckBox
+									Content="{StaticResource Preference_ShowHint}"
+									Margin="5"
+									IsChecked="{Binding ShowHint, UpdateSourceTrigger=PropertyChanged}" />
+								<CheckBox
+									Content="{StaticResource Preference_ConfirmSaveDiff}"
+									Margin="5"
+									IsChecked="{Binding RemaindDiffSave, UpdateSourceTrigger=PropertyChanged}" />
+								<CheckBox
+									Content="{StaticResource Preference_SimplifyColor}"
+									Margin="5"
+									IsChecked="{Binding SimplifyColor, UpdateSourceTrigger=PropertyChanged}" />
+								<CheckBox
+									Content="{StaticResource Preference_HorizontalArrangement}"
+									Margin="5"
+									IsChecked="{Binding HorizontalArrangement, UpdateSourceTrigger=PropertyChanged}" />
+								<CheckBox
+									Content="{StaticResource Preference_DiffComment}"
+									Margin="5"
+									IsChecked="{Binding DiffComment, UpdateSourceTrigger=PropertyChanged}" />
+								<CheckBox
+									Content="{StaticResource Preference_TopstdEditPermission}"
+									Margin="5"
+									IsChecked="{Binding TopstdEditPermission, UpdateSourceTrigger=PropertyChanged}" />
+								<CheckBox
+									Content="{StaticResource Preference_DiffWithoutSection}"
+									Margin="5"
+									IsChecked="{Binding DiffWithoutSection, UpdateSourceTrigger=PropertyChanged}" />
+								<CheckBox
+									Content="{StaticResource Preference_DiffWithANSI}"
+									Margin="5"
+									IsChecked="{Binding DiffWithANSI, UpdateSourceTrigger=PropertyChanged}" />
+							</StackPanel>
+						</GroupBox>
+					</StackPanel>
+				</ScrollViewer>
+			</TabItem>
+			<TabItem
+				Header="{StaticResource Preference_FormDesigner}">
+				<ScrollViewer
+					VerticalScrollBarVisibility="Auto"
+					HorizontalScrollBarVisibility="Auto">
+					<StackPanel
+						Grid.IsSharedSizeScope="True"
+						Margin="2 0 2 0">
+						<CheckBox
+							Content="{StaticResource Preference_ValidateForm}"
+							Margin="5"
+							IsChecked="{Binding ValidateForm, UpdateSourceTrigger=PropertyChanged}" />
+						<CheckBox
+							Content="{StaticResource Preference_ShowHintTabIndexSort}"
+							Margin="5"
+							IsChecked="{Binding TabIndexSort, UpdateSourceTrigger=PropertyChanged}" />
+						<CheckBox
+							Content="{StaticResource Preference_LocalizedProperty}"
+							Margin="5"
+							IsChecked="{Binding LocalizedProperty, UpdateSourceTrigger=PropertyChanged}" />
+					</StackPanel>
+				</ScrollViewer>
+			</TabItem>
+			<TabItem
+				Header="{StaticResource menu_CommonUsed}">
+				<l:PreferenceCommonUsedWindow
+					x:Name="CommonUsedWindow"
+					Margin="5" />
+			</TabItem>
+			<TabItem
+				Header="{StaticResource Preference_Welcome}"
+				Visibility="Collapsed">
+				<ScrollViewer
+					VerticalScrollBarVisibility="Auto"
+					HorizontalScrollBarVisibility="Auto">
+					<StackPanel
+						Grid.IsSharedSizeScope="True"
+						Margin="2 0 2 0"
+						HorizontalAlignment="Left">
+						<CheckBox
+							x:Name="chkShowWelcome"
+							Content="{StaticResource Preference_StartShowWelcome}"
+							Margin="5"
+							IsChecked="{Binding StartShowWelcome, UpdateSourceTrigger=PropertyChanged}" />
+						<StackPanel
+							Grid.IsSharedSizeScope="True"
+							Background="#F0F0F0"
+							Orientation="Horizontal"
+							Width="{Binding ElementName=gridHistory, Path=ActualWidth}">
+							<Grid
+								x:Name="gridHistory"
+								Width="Auto">
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition
+										Width="Auto" />
+									<ColumnDefinition
+										Width="Auto" />
+									<ColumnDefinition
+										Width="Auto" />
+									<ColumnDefinition
+										Width="*" />
+								</Grid.ColumnDefinitions>
+								<Grid.RowDefinitions>
+									<RowDefinition />
+									<RowDefinition />
+									<RowDefinition />
+								</Grid.RowDefinitions>
+								<CheckBox
+									Grid.Row="0"
+									Grid.ColumnSpan="4"
+									Content="{StaticResource Preference_DisplayOpenedFiles}"
+									Margin="5"
+									IsChecked="{Binding DisplayOpenedFiles, UpdateSourceTrigger=PropertyChanged}" />
+								<TextBlock
+									Grid.Row="1"
+									Grid.Column="0"
+									Text="{StaticResource Preference_MaxQuantity}"
+									Style="{StaticResource labelTextBlock}" />
+								<TextBox
+									Grid.Row="1"
+									Grid.Column="1"
+									Style="{StaticResource inputTexBox}"
+									Text="{Binding MaxAmount, UpdateSourceTrigger=PropertyChanged}" />
+								<TextBlock
+									Grid.Row="1"
+									Grid.Column="2"
+									Text="{StaticResource Preference_Each}"
+									Style="{StaticResource labelTextBlock}" />
+								<TextBlock
+									Grid.Row="1"
+									Grid.Column="3"
+									Text="{StaticResource Preference_MostDisplayFiles}"
+									Style="{StaticResource labelTextBlock}" />
+								<Button
+									Grid.Row="2"
+									Grid.ColumnSpan="4"
+									Content="{StaticResource Preference_ClearHistory}"
+									Margin="35 5 35 5"
+									Width="Auto"
+									Background="#E1E1E1" />
+							</Grid>
+						</StackPanel>
+					</StackPanel>
+				</ScrollViewer>
+			</TabItem>
+		</TabControl>
+		<Grid
+			HorizontalAlignment="Right"
+			Row="1"
+			Margin="7">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition
+					Width="Auto" />
+				<ColumnDefinition
+					Width="Auto" />
+				<ColumnDefinition
+					Width="Auto" />
+			</Grid.ColumnDefinitions>
+			<Button
+				Content="{StaticResource Preference_Reset}"
+				Margin="4,0"
+				MinWidth="70"
+				Click="ReloadButton_Click" />
+			<Button
+				Content="{StaticResource Preference_Save}"
+				Grid.Column="1"
+				Margin="4,0"
+				MinWidth="70"
+				Click="SaveButton_Click" />
+			<Button
+				Content="{StaticResource Preference_Cancel}"
+				Grid.Column="2"
+				Margin="4,0"
+				MinWidth="70"
+				Click="CancelButton_Click" />
+		</Grid>
+	</Grid>
+</Window>

@@ -1,0 +1,1180 @@
+﻿<ResourceDictionary
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:s="clr-namespace:System;assembly=mscorlib"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- 主畫面功能表 -->
+    <s:String x:Key="menu_File">檔案</s:String>
+    <s:String x:Key="menu_FileOpen">開啟檔案</s:String>
+    <s:String x:Key="menu_FileSave">儲存檔案</s:String>
+    <s:String x:Key="menu_FileClose">關閉檔案</s:String>
+    <s:String x:Key="menu_FileCloseAll">關閉所有檔案</s:String>
+    <s:String x:Key="menu_FileExit">離開</s:String>
+    <s:String x:Key="menu_RecentFiles">最近開啟檔案清單</s:String>
+    <s:String x:Key="menu_ClearRecentFiles">清除最近開啟檔案清單</s:String>
+    <s:String x:Key="menu_RecentSpecFiles">最近開啟畫面檔(tzs)</s:String>
+    <s:String x:Key="menu_RecentCodeFiles">最近開啟程式檔(tzc)</s:String>
+    <s:String x:Key="menu_Bookmarks">書籤</s:String>
+    <s:String x:Key="menu_ToogleBookmark">新增/取消書籤</s:String>
+    <s:String x:Key="BookmarkLines">行號</s:String>
+    <s:String x:Key="menu_ToNextDiffLine">下一個差異點</s:String>
+    <s:String x:Key="menu_ToPreviousDiffLine">前一個差異點</s:String>
+    <s:String x:Key="menu_Diff">差異比對</s:String>
+    <s:String x:Key="menu_InsertIndFunIntoStandard">標準程式插入行業函式設定</s:String>
+    <s:String x:Key="menu_Upload">上傳</s:String>
+    <s:String x:Key="menu_Precompile">預編譯(非實際更新)</s:String>
+    <s:String x:Key="menu_Specification">規格</s:String>
+    <s:String x:Key="menu_SpecificationDownload">下載規格（版本控制）</s:String>
+    <s:String x:Key="menu_SpecificationUpload">上傳規格</s:String>
+    <s:String x:Key="Message_UploadAndGenAll" xml:space="preserve">同時重產其他關聯程式的多語言</s:String>
+    <s:String x:Key="menu_SpecificationUploadResetTAP">刪除程式切片</s:String>
+    <s:String x:Key="menu_SpecificationView">表列式規格設定</s:String>
+    <s:String x:Key="menu_UncitedSpecificationView">檢視斷開引用規格</s:String>
+    <s:String x:Key="menu_PatchComponentListView">檢視Patch後新元件清單</s:String>
+    <s:String x:Key="menu_PreviewForm">預覽畫面</s:String>
+    <s:String x:Key="menu_SimpleFormSetup">簡易畫面設定</s:String>
+    <s:String x:Key="menu_SimpleFormDownload">下載簡易畫面設定</s:String>
+    <s:String x:Key="menu_SimpleFormUpload">上傳簡易畫面設定</s:String>
+    <s:String x:Key="menu_SpecificationExport">匯出規格</s:String>
+    <s:String x:Key="menu_SCOImport">匯入SA分鏡規格</s:String>
+    <s:String x:Key="menu_UploadAndRC3">上傳規格並產生程式</s:String>
+    <s:String x:Key="menu_Program">程式</s:String>
+    <s:String x:Key="menu_ProgramDownload">下載程式（版本控制）</s:String>
+    <s:String x:Key="menu_ProgramUpload">上傳程式</s:String>
+    <s:String x:Key="menu_ProgramTest">測試程式</s:String>
+    <s:String x:Key="menu_ProgramDebug">程式除錯</s:String>
+    <s:String x:Key="menu_ProgramErrorCheck">邏輯結構除錯</s:String>
+    <s:String x:Key="menu_ShowProgramRegen">程式重新產生</s:String>
+    <s:String x:Key="menu_ShowProgramUncited">檢視斷開引用程式</s:String>
+    <s:String x:Key="menu_ShowProgramSectionUncited">檢視Section斷開引用程式</s:String>
+    <s:String x:Key="menu_ShowProgramCustomAdpList">檢視客製程式清單</s:String>
+    <s:String x:Key="menu_EnableViMode">切換Vi編輯模式</s:String>
+    <s:String x:Key="menu_Undo">還原</s:String>
+    <s:String x:Key="menu_Redo">重作</s:String>
+    <s:String x:Key="menu_Edit">編輯</s:String>
+    <s:String x:Key="menu_AutoComplete">自動完成</s:String>
+    <s:String x:Key="menu_ShowKeyword">顯示關鍵字字庫</s:String>
+    <s:String x:Key="menu_ShowSelfKeyword">顯示自建字庫</s:String>
+    <s:String x:Key="menu_ShowDBKeyword">顯示資料庫欄位字庫</s:String>
+    <s:String x:Key="menu_Report">GR樣版</s:String>
+    <s:String x:Key="menu_Report_Download">下載報表樣版（版本控制）</s:String>
+    <s:String x:Key="menu_Report_Upload">上傳報表樣版</s:String>
+    <s:String x:Key="menu_Report_Open">開啟報表樣版</s:String>
+    <s:String x:Key="menu_Component">元件</s:String>
+    <s:String x:Key="menu_ComponentDownload">下載元件（版本控制）</s:String>
+    <s:String x:Key="menu_ComponentUpload">上傳元件</s:String>
+    <s:String x:Key="menu_SiteManager">站臺管理員</s:String>
+    <s:String x:Key="menu_BasicData">基礎資料</s:String>
+    <s:String x:Key="menu_ReGenerateBasicData">重新產生基礎資料</s:String>
+    <s:String x:Key="menu_BasicDataUpdate">更新基礎資料</s:String>
+    <s:String x:Key="menu_BasicDataView">查詢基礎資料</s:String>
+    <s:String x:Key="menu_SelectBasicDataUpdate">挑選更新基礎資料</s:String>
+    <s:String x:Key="menu_Tools">常用工具</s:String>
+    <s:String x:Key="menu_azzi900">程式基本資料設定作業（azzi900）</s:String>
+    <s:String x:Key="menu_azzi901">子程式及元件基本資料設定作業（azzi901）</s:String>
+    <s:String x:Key="menu_azzi910">系統可執行作業設定（azzi910）</s:String>
+    <s:String x:Key="menu_azzi920">錯誤訊息維護作業（azzi920）</s:String>
+    <s:String x:Key="menu_azzi998">畫面元件排除功能</s:String>
+    <s:String x:Key="menu_azzi600">系統分類碼維護作業（azzi600）</s:String>
+    <s:String x:Key="menu_azzi650">應用分類維護作業（azzi650）</s:String>    
+    <s:String x:Key="menu_adzi140">表格設計器（r.t：adzi140）</s:String>
+    <s:String x:Key="menu_adzi150">欄位規格設計資料維護（adzi150）</s:String>    
+    <s:String x:Key="menu_adzp168">畫面產生器（r.a：adzp168）</s:String>
+    <s:String x:Key="menu_adzi220">校驗帶值設計器（r.v：adzi220）</s:String>
+    <s:String x:Key="menu_adzq255">規格設計資料查詢作業（r.b：adzq255）</s:String>
+    <s:String x:Key="menu_adzi210">開窗設計器（r.q：adzi210）</s:String>
+    <s:String x:Key="menu_adzi400">元件維護作業（adzi400）</s:String>
+    <s:String x:Key="menu_adzq490">維度元件查詢作業（adzq490）</s:String>
+    <s:String x:Key="menu_adzp188">報表元件設計器（adzp188）</s:String>
+    <s:String x:Key="menu_azzi301">GR樣版設定作業（azzi301）</s:String>
+    <s:String x:Key="menu_azzi300">XtraGrid報表格式設定作業（azzi300）</s:String>
+    <s:String x:Key="menu_adzp600">行業規格與程式產生工具（adzp600）</s:String>
+    <s:String x:Key="menu_adzp270">複製規格與程式（adzp270）</s:String>
+    <s:String x:Key="menu_queryTitle">查看參考程式碼</s:String>
+    <s:String x:Key="menu_AddElementTitle">新增項目</s:String>
+    <s:String x:Key="menu_adzp990Exp">匯出設計資料（adzp990 匯出）</s:String>
+    <s:String x:Key="menu_adzp990Imp">匯入設計資料（adzp990 匯入）</s:String>
+    <s:String x:Key="menu_CommonUsed">自訂捷徑</s:String>
+    <s:String x:Key="menu_Preference">偏好設定</s:String>
+    <s:String x:Key="menu_TOPSTD">取得topstd編輯權限</s:String>
+    <s:String x:Key="menu_AdvancedTools">進階功能</s:String>
+    <s:String x:Key="menu_adzp150">讀取tab產生tgl工具</s:String>
+    <s:String x:Key="menu_azzi908">斷開樣版配置改採Free Style開發</s:String>
+    <s:String x:Key="menu_changeProgramTemplate">變更程式樣版</s:String>
+    <s:String x:Key="menu_QSetting">Q類上階串查設定</s:String>
+    <s:String x:Key="menu_SearchKeySetting">正規化搜尋條件設定</s:String>
+    <s:String x:Key="menu_ServiceCloudSetting">服務雲帳號密碼設定</s:String>
+    <s:String x:Key="menu_Help">說明</s:String>
+    <s:String x:Key="menu_About">關於</s:String>
+    <s:String x:Key="menu_AboutProgram">程式資訊</s:String>
+    <s:String x:Key="menu_AboutSpec">規格資訊</s:String>
+    <s:String x:Key="menu_Shortcut">快速鍵</s:String>
+    <s:String x:Key="menu_ViCommandList">Vi指令清單</s:String>
+    <s:String x:Key="menu_ThisVersionProgramModify">程式本版次調整更新</s:String>
+    <s:String x:Key="menu_ThisVersionSpecModify">規格本版次調整更新</s:String>
+    <s:String x:Key="menu_Connection">連線資訊</s:String>
+    <s:String x:Key="menu_ShowLog">連線記錄</s:String>
+    <s:String x:Key="menu_View">視窗</s:String>
+    <s:String x:Key="menu_ViewCodeStructure">程式結構</s:String>
+    <s:String x:Key="menu_ViewFormDesigner">畫面檢視</s:String>
+    <s:String x:Key="menu_ViewSpecPropertyEditor">欄位屬性</s:String>
+    <s:String x:Key="menu_ViewSpecEditor">欄位規格</s:String>
+    <s:String x:Key="menu_ViewErrorList">錯誤清單</s:String>
+    <s:String x:Key="menu_FormStructure">畫面結構</s:String>
+    <s:String x:Key="menu_ViewFormSpecification">欄位規格</s:String>
+    <s:String x:Key="menu_SwitchLite">切換簡易規格設計器</s:String>
+    <s:String x:Key="menu_SwitchFormal">切換標準規格設計器</s:String>
+    <s:String x:Key="menu_Welcome">歡迎光臨</s:String>
+    <s:String x:Key="menu_Find">搜尋</s:String>
+    <s:String x:Key="menu_FindTarget">搜尋目標</s:String>
+    <s:String x:Key="menu_FindRange">搜尋範圍</s:String>
+    <s:String x:Key="menu_FindPrevios">找上一個</s:String>
+    <s:String x:Key="menu_FindNext">找下一個</s:String>
+    <s:String x:Key="menu_FindPrevious">找上一個</s:String>
+    <s:String x:Key="menu_Replace">取代</s:String>
+    <s:String x:Key="menu_ReplaceAs">取代成</s:String>
+    <s:String x:Key="menu_ReplaceAll">取代全部</s:String>    
+    <s:String x:Key="menu_Time">時間</s:String>
+    <s:String x:Key="menu_Description">描述</s:String>
+    <s:String x:Key="menu_TableSchemaAssocSetting">資料表關聯設定</s:String>
+    <s:String x:Key="menu_MoveToFirst">移到最前</s:String>
+    <s:String x:Key="menu_MoveToPrevious">移到前一個</s:String>
+    <s:String x:Key="menu_MoveToNext">移到下一個</s:String>
+    <s:String x:Key="menu_MoveToLast">移到最後</s:String>
+    <s:String x:Key="menu_Cascade">連動</s:String>
+    <s:String x:Key="menu_CreateNewTBL">加入資料表</s:String>
+    <s:String x:Key="menu_UploadIndFunctionSetup">上傳行業函式設定</s:String>
+    <s:String x:Key="menu_AdjustContainerBlankArea">縮小容器空白區塊</s:String>
+    <s:String x:Key="menu_ToggleStandardAndLite">畫面開發簡潔配置</s:String>
+    <s:String x:Key="menu_ForConsultant">畫面開發</s:String>
+    <s:String x:Key="menu_SpecOpen">開啟規格</s:String>
+    <s:String x:Key="menu_TableBasicDataUpdate">快速下載基礎資料</s:String>
+    <s:String x:Key="menu_DatabaseSource">資料庫來源</s:String>
+    <s:String x:Key="menu_SpecificationDownload_2">簽出與下載畫面</s:String>
+    <s:String x:Key="menu_UploadAndRC3_2">上傳畫面並產生程式</s:String>
+    <s:String x:Key="menu_SpecCheckIn">簽入畫面</s:String>
+    <s:String x:Key="menu_ProgramDevelopDataExport">程式開發資料匯出（adzi888 匯出）</s:String>
+    <s:String x:Key="menu_ProgramDevelopDataImport">程式開發資料匯入（adzi888 匯入）</s:String>
+
+    <!-- 規格設計器 -->
+    <s:String x:Key="specProperty_SpecFieldExcludeSetting">控件排除設定</s:String>
+    <s:String x:Key="specProperty_SpecFieldExcude">排除控件</s:String>
+    <s:String x:Key="specProperty_SpecFieldExcudeList">已排除控件清單</s:String>
+    <s:String x:Key="specProperty_SpecAttirbuteSetting">欄位規格設定</s:String>
+    <s:String x:Key="specProperty_SpecOtherSetting">欄位其他設定</s:String>
+    <s:String x:Key="specProperty_SpecActionSetting">Action設定</s:String>
+    <s:String x:Key="specProperty_SpecControlSetting">控件規格設定</s:String>
+    <s:String x:Key="specProperty_GeneroComponentAttrSetting">控件屬性設定</s:String>
+    <s:String x:Key="specProperty_ReferenceFieldSetting">參考欄位設定</s:String>
+    <s:String x:Key="specProperty_MultiLangSetting">多語言欄位設定</s:String>
+    <s:String x:Key="specProperty_TreeSetting">Tree資料來源設定</s:String>
+    <s:String x:Key="column_attr">屬性</s:String>
+    <s:String x:Key="codeEditor_Header">程式編輯</s:String>
+    <s:String x:Key="button_ViewProgramSpec">規格整體描述</s:String>
+    <s:String x:Key="specProperty_table">表格編號</s:String>
+    <s:String x:Key="specProperty_table_name">表格名稱</s:String>
+    <s:String x:Key="specProperty_column">欄位編號</s:String>
+    <s:String x:Key="specProperty_column_name">欄位名稱</s:String>
+    <s:String x:Key="specProperty_column_comment">欄位說明</s:String>
+    <s:String x:Key="specProperty_attribute">欄位屬性</s:String>
+    <s:String x:Key="specProperty_type">欄位型態</s:String>
+    <s:String x:Key="specProperty_req">必要欄位</s:String>
+    <s:String x:Key="specProperty_i_zoom">編輯時開窗</s:String>
+    <s:String x:Key="specProperty_c_zoom">查詢時開窗</s:String>
+    <s:String x:Key="specProperty_chk_ref">校驗帶值設定</s:String>
+    <s:String x:Key="specProperty_prog_rel">程式串查編號</s:String>
+    <s:String x:Key="specProperty_name">控件編號</s:String>
+    <s:String x:Key="specProperty_isCust">客制否</s:String>
+    <s:String x:Key="specProperty_items">系統分類碼</s:String>
+    <s:String x:Key="specProperty_default">預設值</s:String>
+    <s:String x:Key="specProperty_max">最大值</s:String>
+    <s:String x:Key="specProperty_min">最小值</s:String>
+    <s:String x:Key="specProperty_percentage">百分比欄位</s:String>
+    <s:String x:Key="specProperty_format">顯示格式</s:String>
+    <s:String x:Key="specProperty_ver">設計點版本</s:String>
+    <s:String x:Key="specProperty_spec">SD規格敘述</s:String>
+    <s:String x:Key="specProperty_id">Action編號</s:String>    
+    <s:String x:Key="specProperty_text">Action說明</s:String>
+    <s:String x:Key="specProperty_comment">提示說明</s:String>
+    <s:String x:Key="specProperty_action_status">Action狀態</s:String>
+    <s:String x:Key="specProperty_action_invalid">失效</s:String>
+    <s:String x:Key="specProperty_formonly_name">控件編號</s:String>
+    <s:String x:Key="specProperty_formonly_text">控件說明</s:String>
+    <s:String x:Key="specProperty_formonly_comment">提示說明</s:String>
+    <s:String x:Key="specProperty_ref_rtn_setting">參考欄位設定</s:String>
+    <s:String x:Key="specProperty_multi_lang">多語言欄位</s:String>
+    <s:String x:Key="specProperty_ref">參考欄位</s:String>
+    <s:String x:Key="specProperty_chk_exists_table">檢查存在的表格</s:String>
+    <s:String x:Key="specProperty_chk_exists_column">檢查存在的欄位</s:String>
+    <s:String x:Key="specProperty_ProgRelFieldGroupSetting">串查欄位設定</s:String>
+    <s:String x:Key="specProperty_ProgRelFieldWarning">(依附控件與串查程式皆需設定)</s:String>
+    <s:String x:Key="specProperty_widget">控件類型</s:String>
+    <s:String x:Key="specProperty_ref_key">設定參考主鍵</s:String>
+    <s:String x:Key="specProperty_Disable">失效</s:String>
+    <s:String x:Key="specProperty_citeStd">引用標準程式設定</s:String>
+    <s:String x:Key="specProperty_SpecTBActionSetting">ToolBar Action設定</s:String>
+    <s:String x:Key="specProperty_di"> 編輯Action</s:String>
+    <s:String x:Key="specProperty_db"> 流覽Action</s:String>
+    <s:String x:Key="specProperty_all">整體Action</s:String>
+    <s:String x:Key="specProperty_mi">單頭編輯Action</s:String>
+    <s:String x:Key="specProperty_canEdit">是否可編輯</s:String>
+    <s:String x:Key="specProperty_canQuery">是否可查詢</s:String>
+    <s:String x:Key="specProperty_canQueryEdit">查詢條件</s:String>
+    <s:String x:Key="specProperty_TreeKind">樹狀結構類別</s:String>
+    <s:String x:Key="specProperty_gencode">產生許可權檢查段</s:String>
+    <s:String x:Key="specProperty_noQuery">不產生查詢語法</s:String>
+    <s:String x:Key="specMessage_createFail">{0} 建構呼叫錯誤</s:String>
+
+    <!-- 助記碼 -->
+    <s:String x:Key="specProperty_help_code">助記碼設定</s:String>
+    <s:String x:Key="specProperty_depend_field">依附控件名稱</s:String>
+    <s:String x:Key="specProperty_correspon_key">對應傳值設定</s:String>
+    <s:String x:Key="specProperty_help_table">助記碼表格</s:String>
+    <s:String x:Key="specProperty_help_find">助記碼搜尋欄位</s:String>
+    <s:String x:Key="specProperty_help_field">助記碼欄位</s:String>
+    <s:String x:Key="specProperty_help_dlang">助記碼語系欄位</s:String>
+    <s:String x:Key="specProperty_mapping_widget">回傳對應控件</s:String>
+    <s:String x:Key="specProperty_returning_table_field">助記碼表格回傳欄位</s:String>
+    <s:String x:Key="specProperty_CountDiffMappingWidgetAndTableField">回傳對應控件與助記碼表格回傳欄位個數不同</s:String>
+    <s:String x:Key="specProperty_help_wc">其他條件</s:String>
+
+    <!-- 多語言 -->
+    <s:String x:Key="specProperty_multi_lang_setting">多語言欄位設定</s:String>
+    <s:String x:Key="specProperty_multi_lang_name">控件名稱</s:String>
+    <s:String x:Key="specProperty_lang_table">多語言表格</s:String>
+    <s:String x:Key="specProperty_lang_column">多語言欄位n</s:String>
+    <s:String x:Key="specProperty_lang_fk">多語言外鍵</s:String>
+    <s:String x:Key="specProperty_lang_rtn">回傳多語言欄位</s:String>
+    <s:String x:Key="specProperty_lang_dlang">多語言語系</s:String>
+
+    <!-- 欄位參考 -->
+    <s:String x:Key="specProperty_ref_field_title">欄位參考設定</s:String>
+    <s:String x:Key="specProperty_ref_name">控件名稱</s:String>
+    <s:String x:Key="specProperty_ref_table">資料參考表格</s:String>
+    <s:String x:Key="specProperty_ref_fk">資料參考外鍵</s:String>
+    <s:String x:Key="specProperty_ref_dlang">資料參考語系</s:String>
+    <s:String x:Key="specProperty_ref_rtn">資料參考回傳</s:String>
+
+    <!-- 串查欄位 -->
+    <s:String x:Key="specProperty_prog_rel_name">控件名稱</s:String>
+    <s:String x:Key="specProperty_prog_rel_program">串查程式編號</s:String>
+    <s:String x:Key="specProperty_prog_rel_type">串查型態</s:String>
+    <s:String x:Key="specProperty_prog_rel_type1">一般</s:String>
+    <s:String x:Key="specProperty_prog_rel_type2">其他</s:String>
+    <s:String x:Key="specProperty_table_association_setting">表格關聯設定</s:String>
+
+    <!-- 程式樣版-->
+    <s:String x:Key="specProperty_SelectCodeTemplate">程式樣版編號：</s:String>
+    <s:String x:Key="specProperty_F_CodeTemplateText">F.維護作業</s:String>
+    <s:String x:Key="specProperty_P_CodeTemplateText">P.批次作業</s:String>
+    <s:String x:Key="specProperty_Q_CodeTemplateText">Q.查詢作業</s:String>
+    <s:String x:Key="Menu_SetCodeStartArg">設定'保留參數個數'</s:String>
+    <s:String x:Key="codeProperty_StartArg">請輸入要保留的參數個數：</s:String>
+
+    <!-- 規格匯入 -->
+    <s:String x:Key="specImport_title">匯入多語言</s:String>
+    <s:String x:Key="specImport_Confirm" xml:space="preserve">請檢查以下多語言專案匯入專案
+*注意!!若目的端已有同名專案，匯入後會被覆蓋</s:String>
+    <s:String x:Key="specImport_importOrNot">是否新增</s:String>
+    <s:String x:Key="specImport_exist">已存在</s:String>
+    <s:String x:Key="specImport_Name">名稱</s:String>
+    <s:String x:Key="specImport_Content">內容</s:String>
+    <s:String x:Key="specImport_Import">匯入</s:String>
+    
+    <!-- 程式編輯器 -->
+    <s:String x:Key="codeEditor_ViewDifferentWithStanard">檢視</s:String>
+    <s:String x:Key="codeEditor_CustomedAddPoint">客製過的 add point</s:String>
+    <s:String x:Key="codeEditor_UncitedAddPoint">斷開引用的 add point</s:String>
+    <s:String x:Key="codeEditor_NotCoveredWhenMergeAddPoint">patch沒有覆蓋的標準add point(topstd)</s:String>
+    <s:String x:Key="codeEditor_SynchronousScroll">同時捲動</s:String>
+    <s:String x:Key="codeEditor_Diff">差異行數刷新</s:String>
+    <s:String x:Key="codeEditor_topstdMode">切換為 topstd 編輯</s:String>
+
+    <!-- 欄位規格描述 -->
+    <s:String x:Key="specEditor_AllSpec">規格整體描述</s:String>
+    <s:String x:Key="specEditor_MiAllSpec">單頭編輯規格描述</s:String>
+    <s:String x:Key="specEditor_DbAllSpec">單身瀏覽規格描述</s:String>
+    <s:String x:Key="specEditor_DiAllSpec">單身編輯規格描述</s:String>
+    <s:String x:Key="specEditor_SDSpec">SD規格描述</s:String>
+    <s:String x:Key="specEditor_refStdSpec">引用標準規格</s:String>
+    <s:String x:Key="specEditor_previewSpec">預覽規格</s:String>
+    <s:String x:Key="specEditor_confirmCopyTsd">將以標準設定取代!確定引用 [{0}]？</s:String>
+    <s:String x:Key="specEditor_confirmCancelCopyTsd">確定取消引用 [{0}]？</s:String>
+    <s:String x:Key="specEditor_saSpecViewCB">檢視SA規格</s:String>
+    
+    <!-- 程式與資料表關聯設定 -->
+    <s:String x:Key="tableRlation_layerDisplay">三層二顯設定</s:String>
+    <s:String x:Key="tableRlation_upperTable">上階表格：</s:String>
+    <s:String x:Key="tableRlation_upperKey">上階鍵值設定：</s:String>
+    <s:String x:Key="tableRlation_thisKey">本階對應鍵值設定：</s:String>
+
+    <!-- 基礎元件查詢 -->
+    <s:String x:Key="dataView_WindowTitle">基礎資料查詢</s:String>
+    <s:String x:Key="dataView_Items">資料項目</s:String>
+    <s:String x:Key="dataView_Messages">提示訊息</s:String>
+    <s:String x:Key="dataView_Zooms">開窗設計</s:String>
+    <s:String x:Key="dataView_Checks">校驗帶值</s:String>
+    <s:String x:Key="dataView_ProgRel">程式串查</s:String>
+    <s:String x:Key="dataView_Subroutines">應用元件</s:String>
+    <s:String x:Key="dataView_Libraries">系統元件</s:String>
+    <s:String x:Key="dataView_Spec">欄位規格設定</s:String>
+    
+    <!-- 表格檢視器 -->
+    <s:String x:Key="tableView_WindowTitle">檢視表格設計資料</s:String>
+    <s:String x:Key="tableView_ColumnTitle">目前檢視表格：{0} - {1}</s:String>
+    <s:String x:Key="tableView_ModuleTitle">模組別：</s:String>
+    <s:String x:Key="tableView_TableModule">模組編號</s:String>
+    <s:String x:Key="tableView_TableName">表格編號</s:String>
+    <s:String x:Key="tableView_TableDesc">表格名稱</s:String>
+    <s:String x:Key="tableView_TableType">表格型態</s:String>
+    <s:String x:Key="tableView_ColumnName">欄位代號</s:String>
+    <s:String x:Key="tableView_ColumnText">欄位名稱</s:String>
+    <s:String x:Key="tableView_ColumnPK">主鍵</s:String>
+    <s:String x:Key="tableView_ColumnReq">必要欄位</s:String>
+    <s:String x:Key="tableView_ColumnAttr">欄位屬性</s:String>
+    <s:String x:Key="tableView_ColumnAttrName">屬性名稱</s:String>
+    <s:String x:Key="tableView_ColumnType">資料型態</s:String>
+    <s:String x:Key="tableView_SearchTitle">搜尋：</s:String>
+
+    <!-- 欄位檢視器 -->
+    <s:String x:Key="columnView_WindowTitle">檢視欄位設計資料</s:String>
+    <s:String x:Key="columnView_ColumnSpec">欄位規格</s:String>
+    <s:String x:Key="columnView_Width">顯示寬度</s:String>
+    <s:String x:Key="columnView_Widget">資料控件</s:String>
+    <s:String x:Key="columnView_Items">系統分類碼</s:String>
+    <s:String x:Key="columnView_Default">預設值</s:String>
+    <s:String x:Key="columnView_Max">最大值</s:String>
+    <s:String x:Key="columnView_Min">最小值</s:String>
+    <s:String x:Key="columnView_IZoom">編輯時開窗</s:String>
+    <s:String x:Key="columnView_CZoom">查詢時開窗</s:String>
+    <s:String x:Key="columnView_ChkRef">校驗帶值</s:String>
+    <s:String x:Key="columnView_ProgRel">程式串查</s:String>
+    <s:String x:Key="columnView_Format">顯示格式</s:String>
+    <s:String x:Key="columnView_Ref">欄位參考</s:String>
+    <s:String x:Key="columnView_DepField">依附欄位名稱</s:String>
+    <s:String x:Key="columnView_CorresponKey">對應傳值</s:String>
+    <s:String x:Key="columnView_CorresponTable">資料參考表格</s:String>
+    <s:String x:Key="columnView_CorresponFK">資料參考外鍵</s:String>
+    <s:String x:Key="columnView_CorresponLang">資料參考語系</s:String>
+    <s:String x:Key="columnView_CorresponReturn">資料參考回傳</s:String>
+    <s:String x:Key="columnView_MultiLang">資料多語言</s:String>
+    <s:String x:Key="columnView_MultiLangTable">多語言表格</s:String>
+    <s:String x:Key="columnView_MultiLangFK">多語言外鍵</s:String>
+    <s:String x:Key="columnView_MultiLangLang">多語言語系</s:String>
+    <s:String x:Key="columnView_MultiLangReturn">多語言回傳</s:String>
+    <s:String x:Key="columnView_Tree">樹狀結構</s:String>
+    <s:String x:Key="columnView_No">序號</s:String>
+    <s:String x:Key="columnView_Type">類別</s:String>
+    <s:String x:Key="columnView_Status">狀態碼</s:String>
+    <s:String x:Key="columnView_StatusType">系統分類值</s:String>
+    <s:String x:Key="columnView_Desc">說明</s:String>
+    <s:String x:Key="columnView_Help">助記碼</s:String>
+    <s:String x:Key="columnView_HelpDepField">對應欄位</s:String>
+    <s:String x:Key="columnView_HelpCorresponKey">助記碼表格</s:String>
+    <s:String x:Key="columnView_HelpTable">助記碼搜尋欄位</s:String>
+    <s:String x:Key="columnView_HelpFK">助記碼欄位</s:String>
+    <s:String x:Key="columnView_HelpDLang">助記碼語系</s:String>
+    <s:String x:Key="columnView_HelpReturn">其他條件</s:String>
+    <s:String x:Key="columnView_CopyName">複製編號</s:String>
+    <s:String x:Key="columnView_CopyColumnsName">複製欄位編號</s:String>
+    <s:String x:Key="columnView_CopyAllColumnsToRecord">複製欄位宣告</s:String>
+    
+    <!-- ActionDefaults -->
+    <s:String x:Key="ads_all">整體Action</s:String>
+    <s:String x:Key="ads_mi">單頭編輯</s:String>
+    <s:String x:Key="ads_di">單身編輯</s:String>
+    <s:String x:Key="ads_db">單身瀏覽</s:String>
+    <s:String x:Key="ads_detail">Action設定</s:String>
+    <s:String x:Key="ads_ActionDelConfirm">確定刪除 {0} ？</s:String>
+
+    <!-- 241021 14910 add Widget Box 要求簡易畫面的控件需要中文說明 -->
+    <s:String x:Key="Widget_TabIndex">Tab order specification(控件順序)</s:String>
+    <s:String x:Key="Widget_Label">Label(標籤)</s:String>
+    <s:String x:Key="Widget_ButtonEdit">ButtonEdit(編輯開窗)</s:String>
+    <s:String x:Key="Widget_CheckBox">CheckBox(多選)</s:String>
+    <s:String x:Key="Widget_ComboBox">ComboBox(下拉選單)</s:String>
+    <s:String x:Key="Widget_DateEdit">DateEdit(日期)</s:String>
+    <s:String x:Key="Widget_Edit">Edit(文字編輯)</s:String>
+    <s:String x:Key="Widget_TextEdit">TextEdit(多行文字)</s:String>
+
+    <!-- TT Widget Box -->
+    <s:String x:Key="tt_ReferenceLabel">參考欄位</s:String>
+    <s:String x:Key="tt_MultiLangButtonEdit">多語言資料欄位</s:String>
+    <s:String x:Key="tt_ButtonQuery">串查欄位</s:String>
+
+    <!-- CodeEditor -->
+    <s:String x:Key="CE_ShowParameter">顯示變數</s:String>
+    <s:String x:Key="CE_ModuleVariableTitle">[模組變數]</s:String>
+    <s:String x:Key="CE_LocalVariableTitle">[區域變數]</s:String>
+    <s:String x:Key="CE_FunctionInfo">函式資訊</s:String>
+    <s:String x:Key="CE_AddFunction">新增函式</s:String>
+    <s:String x:Key="CE_CopyFunction">複製函式</s:String>
+    <s:String x:Key="CE_DeleteFunction">刪除函式</s:String>
+    <s:String x:Key="CE_ShowField">顯示欄位資訊</s:String>
+    <s:String x:Key="CE_CopyContent">複製內容</s:String>
+    <s:String x:Key="CE_FunctionName">函式名稱</s:String>
+    <s:String x:Key="CE_FunctionType">類型</s:String>
+    <s:String x:Key="CE_FunctionDescription">函式說明</s:String>
+    <s:String x:Key="CE_FunctionScope">存取層級</s:String>
+    <s:String x:Key="CE_FunctionStructure">程式結構</s:String>
+    <s:String x:Key="CE_InputMessage">請在此輸入內容...</s:String>
+    <s:String x:Key="CE_ShowGlobals">全域變數</s:String>
+    <s:String x:Key="CE_Cite">參照標準程式</s:String>
+    <s:String x:Key="CE_UnCite">取消參照</s:String>
+    <s:String x:Key="CE_Delete">刪除內容</s:String>
+    <s:String x:Key="CE_UnDelete">取消刪除</s:String>
+    <s:String x:Key="CE_Cut">剪下</s:String>
+    <s:String x:Key="CE_Copy">複製</s:String>
+    <s:String x:Key="CE_Paste">貼上</s:String>
+    <s:String x:Key="CE_Block">執行選取區域註解</s:String>
+    <s:String x:Key="CE_UnBlock">移除選取區域註解</s:String>
+    <s:String x:Key="CE_KeywordConvert">關鍵字轉為大寫</s:String>
+    <s:String x:Key="CE_ProgramStructure">程式結構</s:String>
+    <s:String x:Key="CE_RefreshList">重整函式清單</s:String>
+    <s:String x:Key="CE_FunctionOrder">開啟函式調整順序功能</s:String>
+    <s:String x:Key="CE_Refresh">畫面重新整理</s:String>
+    <s:String x:Key="CE_ToogleDiffEditable">切換差異比對編輯模式</s:String>
+    <s:String x:Key="CE_ModifyFunction">修改函式資訊</s:String>
+    <s:String x:Key="CE_CodeCompletion">字詞輔助</s:String>
+    <s:String x:Key="CE_ShowFunction">查看函式</s:String>
+    <s:String x:Key="CE_OftenUsed">元件常用功能</s:String>
+    <s:String x:Key="CE_MarkFrame">剛性結構區塊註解</s:String>
+    <s:String x:Key="CE_TGLIsEmpty">找不到TGL或內容為空</s:String>
+    <s:String x:Key="CE_GoToLineTitle">到...</s:String>
+    <s:String x:Key="CE_LineLimit">指定行號：(1 ~ {0})</s:String>
+    <s:String x:Key="CE_CodeSample">插入"{0}"程式段</s:String>
+    <s:String x:Key="CE_CiteOrNot">引用</s:String>
+    <s:String x:Key="CE_ChageSessionTitle">修改程式框架</s:String>
+    <s:String x:Key="CE_AfterChangeSession">您即將解開此程式的框架! 變更後，規格的任何調整都不會再產生對應的程式碼，請問是否確定要變更？</s:String>
+    <s:String x:Key="CE_SelfKey">自定義字庫</s:String>
+    <s:String x:Key="CE_GeneroKey">Genero關鍵字</s:String>
+    <s:String x:Key="CE_ReturnToStandard">客製還原標準</s:String>
+    <s:String x:Key="CE_DiffSource">差異比對來源</s:String>
+    <s:String x:Key="CE_DiffTarget">差異比對目標</s:String>
+    <s:String x:Key="CE_DiffSingleContent">單一內容差異比對</s:String>
+    <s:String x:Key="CE_DiffOldAndNewStandardContent">新舊標準內容差異</s:String>
+    <s:String x:Key="CE_SuggestReturnToStandard">建議還原標準</s:String>
+    <s:String x:Key="CE_BeforePath">Patch前標準內容</s:String>
+    <s:String x:Key="CE_AfterPath">Patch後標準內容</s:String>
+    <s:String x:Key="CE_ConfirmDiffSave">是否要儲存差異比對內容？</s:String>
+    <s:String x:Key="CE_DiffBlockCopyContent">區塊差異複製</s:String>
+    <s:String x:Key="CE_DiffLineCopyContent">單行差異複製</s:String>
+    <s:String x:Key="CE_DiffCopyNewFunction">同步function</s:String>
+    <s:String x:Key="CE_DiffSearchToNext">下一個搜尋點</s:String>
+    <s:String x:Key="CE_DiffSearchToPrevious">前一個搜尋點</s:String>
+    <s:String x:Key="CE_DiffBaseOnStandard">以標準為基礎重客製</s:String>
+    <s:String x:Key="CE_DiffSourceCustom">差異比對來源(客製)</s:String>
+    <s:String x:Key="CE_DiffTargetStandars">差異比對目標(標準)</s:String>
+    <s:String x:Key="CE_FullTextKeywordConvert">全文關鍵字轉為大寫</s:String>
+    <s:String x:Key="CE_GenerateSqlTemplate">產生簡易SQL框架</s:String>
+
+    <!-- 元件規格 -->
+    <s:String x:Key="FGL_AddItem">新增項目</s:String>
+    <s:String x:Key="FGL_CreateFunction">產生程式</s:String>
+    
+    <!-- ClientEXEC4GL -->
+    <s:String x:Key="Con_Login">連線至T100</s:String>
+
+    <!-- 通用 -->
+    <s:String x:Key="Button_Close">關閉</s:String>
+    <s:String x:Key="Button_OK">確認</s:String>
+    <s:String x:Key="Button_Cancel">取消</s:String>
+    <s:String x:Key="Button_Apply">套用</s:String>
+    <s:String x:Key="Button_ConnectionTest">連線測試</s:String>
+    <s:String x:Key="Button_Clear">清除</s:String>
+
+    <!-- 訊息 -->
+    <s:String x:Key="Message_Error">錯誤</s:String>
+    <s:String x:Key="Message_Message">訊息</s:String>
+    <s:String x:Key="Message_Inform">提示</s:String>
+    <s:String x:Key="Message_Warning">警告</s:String>
+    <s:String x:Key="Message_ConfirmExit">關閉視窗將導致未儲存的資料遺失，確定關閉？</s:String>
+    <s:String x:Key="Message_ConfirmExitTitle">關閉程式</s:String>
+    <s:String x:Key="Message_AfterUpdateBasicData">基礎資料更新完成</s:String>
+    <s:String x:Key="Message_BasicDataNotFound">基礎資料不存在</s:String>
+    <s:String x:Key="Message_BasicDataUnzipFailed">解壓縮失敗</s:String>
+    <s:String x:Key="Message_BasicDataVersionNotFound">缺少基礎資料版本資訊！</s:String>
+    <s:String x:Key="Message_BasicDataVersionNotMatch">基礎資料版本 {0} 與設計器版本 {1}.{2} 不同！</s:String>
+    <s:String x:Key="Message_BasicDataNotComplete">基礎資料不完整，請重新下載</s:String>
+    <s:String x:Key="Message_BasicDataLoadFailed" xml:space="preserve">基礎資料載入失敗：&#x0A;"{0}"</s:String>
+    <s:String x:Key="Message_BasicDataUpdateFailed" xml:space="preserve">更新基礎資料發生錯誤：&#x0A;"{0}"</s:String>
+    <s:String x:Key="Message_BasicDataRedownloading" xml:space="preserve">{0}，&#x0A;即將重新下載</s:String>
+    <s:String x:Key="Message_BeforeRedownloadingBasicData">讀取基礎資料發生錯誤，即將重新下載</s:String>
+    <s:String x:Key="Message_MissBasicData" xml:space="preserve">缺少欄位資料，請重新下載基礎資料。&#x0A;如果此錯誤重複發生，請聯絡管理員</s:String>
+    <s:String x:Key="Message_AfterUpdateBasicDataFailed">基礎資料更新失敗，請手動下載</s:String>
+    <s:String x:Key="Message_UpdateBasicDataOrNot">已重新產生基礎資料，是否下載？</s:String>
+    <s:String x:Key="Message_ApplicationErrorMessage" xml:space="preserve">程式發生錯誤!! 如果此錯誤重複發生，請關閉此程式。&#x0A;繼續執行請選 (Y) ，關閉程式請選 (N)</s:String>
+    <s:String x:Key="Message_ApplicationErrorTitle">應用程式發生錯誤</s:String>
+    <s:String x:Key="Message_ExitBeforeSave" xml:space="preserve">警告： 本程式即將關閉，所有未存檔變更將無法保留!&#x0A;確定關閉?</s:String>
+    <s:String x:Key="Message_FileNotExist" xml:space="preserve">請將檔案( '{0}' )放置在 C：\TT 路徑下</s:String>
+    <s:String x:Key="Message_MissingContent" xml:space="preserve">缺少必要內容( '{0}' )，請重新下載。&#x0A;若此情況重複發生，請通知管理員</s:String>
+    <s:String x:Key="Message_DownloadDataBeforeCoding">開發前須下載基礎資料</s:String>
+    <s:String x:Key="Message_NameAlreadyInUse">編號： {0} 已在使用中!請重新命名。</s:String>
+    <s:String x:Key="Message_SaveFile">"{0}"內容修改過，關閉前先儲存檔案?</s:String>
+    <s:String x:Key="Message_SaveBeforeClose">關閉檔案</s:String>
+    <s:String x:Key="Message_SaveBeforeUpload">是否先存檔?</s:String>
+    <s:String x:Key="Message_ConfirmBeforeUpload_SD">確認上傳規格：{0}？</s:String>
+    <s:String x:Key="Message_ConfirmBeforeUpload_PR">確認上傳程式：{0}？</s:String>
+    <s:String x:Key="Message_ConfirmBeforePrecompile_SD">確認預編譯規格：{0}？</s:String>
+    <s:String x:Key="Message_ConfirmBeforePrecompile_PR">確認預編譯程式：{0}？</s:String>
+    <s:String x:Key="Message_UploadWarning">* 注意：</s:String>
+    <s:String x:Key="Message_FreeStyle">此程式為 FreeStyle</s:String>
+    <s:String x:Key="Message_SectionBreak">此程式為 SectionBreak</s:String>
+    <s:String x:Key="Message_CodeUploaWarning" xml:space="preserve">若有增減Function或是調整Function參數，
+請在開發完畢後手動執行 r.l {0} ALL，
+讓相關程式可以正常使用</s:String>
+    <s:String x:Key="Message_FormUploaWarning" xml:space="preserve">子程式/子畫面/開窗畫面的多語言必須包含在主程式內才會生效：
+1. 若想測試單一主程式執行結果，請自行 r.f $主程式
+2. 若要整個系統完整測試，請自行 r.f $子程式/子畫面/開窗畫面</s:String>
+    <s:String x:Key="Message_FormUploaWarning2">規格的改變會影響程式結構, 請記得要重新下載程式</s:String>
+    <s:String x:Key="Confirm_DownloadBaseData">缺少基礎資料，是否現在下載？</s:String>
+    <s:String x:Key="Message_BaseDataVersionNotMatch">基礎資料版本不同，是否重新下載？</s:String>
+    <s:String x:Key="Message_ConfirmRebuild">確認刪除程式？</s:String>    
+    <s:String x:Key="Message_WriteTzpFail">無法寫入 {0} ! 請確認該檔有存取權限!</s:String>
+    <s:String x:Key="Message_NotConnect">未連接</s:String>
+    <s:String x:Key="Message_ConnectInfo" xml:space="preserve">[使用者：{0}]&#9;[區域：{1}]&#9;[Server：{2}]</s:String>
+    <s:String x:Key="Message_NoCitedProg" xml:space="preserve">找不到引用檔案：{0}！&#x0A;請聯絡管理員解決此問題後才能繼續</s:String>
+    <s:String x:Key="Message_ZipFileNotEnough" xml:space="preserve">{0} 缺少以下必要檔案：{1}{2}{3}請聯絡管理員解決此問題後才能繼續</s:String>
+    <s:String x:Key="Message_SameFileNameAlreadyOpened">已開啟過同名檔案：{0}</s:String>
+    <s:String x:Key="Message_LoadingFailed">載入失敗</s:String>
+    <s:String x:Key="Message_StructureError">程式結構處理發生問題：{0}</s:String>
+    <s:String x:Key="Message_SetProgTypeError">無法設定程式樣版屬性</s:String>
+    <s:String x:Key="Message_ParsingUnFinish">解析尚未完成...，請稍後再次執行</s:String>
+    <s:String x:Key="Message_UnexpectedTreeItem">非預期 TreeItem 類型</s:String>
+    <s:String x:Key="Message_NodeMoveError" xml:space="preserve">程式結構移動發生錯誤：&#x0A;{0}</s:String>
+    <s:String x:Key="Message_BasicDataForCode" xml:space="preserve">基礎資料讀取發生錯誤，輔助功能可能無法正常執行。&#x0A;請更新基礎資料。&#x0A;&#x0A;(如果此錯誤重複發生，請聯絡系統管理員)</s:String>
+    <s:String x:Key="Message_ExportSpecError">無法寫入檔案，請確認 {0} 有寫入權限</s:String>
+    <s:String x:Key="Message_ExportSaveSpecError">{0} 寫入失敗</s:String>
+    <s:String x:Key="Message_ExportSucess">{0} 輸出完成</s:String>
+    <s:String x:Key="Message_ParseError">程式結構解析時發生錯誤，請聯絡系統管理員</s:String>
+    <s:String x:Key="Message_CantNull">此欄不能為空！</s:String>
+    <s:String x:Key="Message_CantEmpty">此欄不能為空字串！</s:String>
+    <s:String x:Key="Message_NotExist">不存在</s:String>
+    <s:String x:Key="Message_NameAlreadyExist">名稱重複</s:String>
+    <s:String x:Key="Message_NameAlreadyExistInTemplate">樣版中已存在相同名稱函式</s:String>
+    <s:String x:Key="Message_CantEmptyOrNull">此欄不能為空或空字串！</s:String>
+    <s:String x:Key="Message_CantContainDot">不能包含句點( "." )！</s:String>
+    <s:String x:Key="Message_FunctionNameFormat">命名規範：xxx()</s:String>
+    <s:String x:Key="Message_FunctionNameFormat_1">不允許特殊符號</s:String>
+    <s:String x:Key="Message_MustContainParameter">必須包含參數定義！(例如：axmt410(), axmt410(p_flag))</s:String>
+    <s:String x:Key="Message_NameMustUnique">函式名稱不可重複！</s:String>
+    <s:String x:Key="Message_NameStartRule">自定義函式名稱必須以"程式名稱"開頭！</s:String>
+    <s:String x:Key="Message_NameMaxLengthRule">自定義函式名稱長度必須小於50個字元！</s:String>
+    <s:String x:Key="Message_NameNoBlackSpace">自訂義函式名稱不可包含空白！</s:String>
+    <s:String x:Key="Message_ConfirmBeforeClose">直接關閉視窗將導致資料遺失，確定關閉？</s:String>
+    <s:String x:Key="Message_MustContainPoundBeforeLine">註釋必須以#開頭</s:String>
+    <s:String x:Key="Message_ProgRelAlreadyExists">此Action屬於 {0} 串查欄位，請從畫面中刪除!</s:String>
+    <s:String x:Key="Message_DependFieldAlreadyUsedByOther">{0} 已被其他參考欄位使用! 不可與其它參考欄位設定相同的依附控件名稱!</s:String>
+    <s:String x:Key="Message_ConfirmUploadTsdEvenValidationFail" xml:space="preserve">規格驗證失敗，上傳後可能導致編譯失敗!&#x0A;繼續上傳請按"是"。&#x0A;按"否"查看錯誤清單並修正所有錯誤。</s:String>
+    <s:String x:Key="Message_NotSetTableAssociation">{0} ： 未設定Table Schema關聯!</s:String>
+    <s:String x:Key="Message_IncludeCantDelComponent">[{0}] 包含Widget控件或樣版控件，無法直接刪除!</s:String>
+    <s:String x:Key="Message_DuplicateFieldName">{0} ： 控件編號重複，請刪除後新增並重新命名!</s:String>
+    <s:String x:Key="Message_CantDeleteFormComponent">畫面主要容器不可刪除</s:String>
+    <s:String x:Key="Message_CantDeleteStdComponent">標準程式元件不可刪除</s:String>
+    <s:String x:Key="Message_DetailFieldNamePrefix">此欄位名稱應以 ""b_"" 開頭</s:String>
+    <s:String x:Key="Message_FieldNameFormat">非 TABLE_COLUMN 欄位，名稱建議為： l_xxx or xxx_desc，否則程式產出時會濾除底線之後的名稱</s:String>
+    <s:String x:Key="Message_ReferenceFieldNameFormat">參考欄位名稱應為 ""_desc"" 結尾 </s:String>
+    <s:String x:Key="Message_VersionInCompatible" xml:space="preserve">檔案{0} 不相容於當前版本。&#x0A;檔案版本：{1}&#x0A;設計器版本：{2}</s:String>
+    <s:String x:Key="Message_NotInstalled">尚未安裝相容於遠端版本的設計器。</s:String>
+    <s:String x:Key="Message_TzpNotInWorkspace">{0} 不在工作目錄之下，禁止開啟。</s:String>
+    <s:String x:Key="Message_ConfirmCreateDirectory">{0} 不存在，是否建立？</s:String>
+    <s:String x:Key="Message_NotInstallCurrentVersionSpecDesigner">未安裝符合版本 {0} 的設計器</s:String>
+    <s:String x:Key="Message_RemoteVersionNotMatchWorkspaceVersion">{0} 版本與當前工作目錄版本不符合</s:String>
+    <s:String x:Key="Message_VersionNotFound">無法取得遠端版本</s:String>
+    <s:String x:Key="Message_GetRemoteVersion">取得遠端版本</s:String>
+    <s:String x:Key="Message_RemoteHasNewVersion">遠端有新版本，連線後將進行更新</s:String>
+    <s:String x:Key="Message_VersionNotFoundInTZS">規格檔未包含版本資訊！</s:String>
+    <s:String x:Key="Message_GetVersionButError">取得遠端版本時發生錯誤：</s:String>
+    <s:String x:Key="Message_VersionInCompatibleWarning" xml:space="preserve">開啟的設計器版本 v{1} 與遠端設計器版本 v{0} 不符合，&#x0A;若上傳規格及程式可能發生錯誤!</s:String>
+    <s:String x:Key="Message_ContinueAndIgnoreConnectionError">檢查更新時發生錯誤，略過此次檢查請按[是]，返回修正請按[否]</s:String>
+    <s:String x:Key="Message_ConnectionIsNotValidate">設定尚有錯誤，請修正後再重試!</s:String>
+    <s:String x:Key="Message_ActionHasType">不可在ToolBar上設定type</s:String>
+    <s:String x:Key="Message_MainTableCantChangeName">主表禁止更名</s:String>
+    <s:String x:Key="Message_NotSupportCutContainer">容器不支援剪下功能</s:String>
+    <s:String x:Key="Message_NotSupportCutCantDel">CantDel屬性元件不允許剪下</s:String>
+    <s:String x:Key="Message_NotSupportCopyContainer">容器不支援複製功能</s:String>
+    <s:String x:Key="Message_SessionErrorCantSave">Section 標記有問題，無法存檔！</s:String>
+    <s:String x:Key="Message_SessionErrorCantRead">Section 標記有問題，無法開啟，請聯絡管理員！</s:String>
+    <s:String x:Key="Message_TapErrorCantRead">內容有誤：{0}，請聯絡系統管理員！</s:String>
+    <s:String x:Key="Message_CantFindSession">找不到 Section 資料：{0}</s:String>
+    <s:String x:Key="Message_SaveError">"{0}" 寫入發生錯誤</s:String>
+    <s:String x:Key="Message_ADPNameExist">Add Point名稱('{0}')重複！</s:String>
+    <s:String x:Key="Message_DelteFailed">"{0}"內容刪除失敗</s:String>
+    <s:String x:Key="Message_FunctionNotFound">找不到 {0} </s:String>
+    <s:String x:Key="Message_RegFormatError">Regular Expression語法錯誤，請重新輸入</s:String>
+    <s:String x:Key="Message_IllegalInput">不合法的輸入值</s:String>
+    <s:String x:Key="Message_InputRange">輸入範圍必須介於{0} - {1}</s:String>
+    <s:String x:Key="Message_ConfirmDelete" xml:space="preserve">確認刪除：&#x0A;"{0}"？</s:String>
+    <s:String x:Key="Message_CantGetFunction">無法取得函式資訊</s:String>
+    <s:String x:Key="Message_CreateFailed">新增失敗：{0}</s:String>
+    <s:String x:Key="Message_NotProduce">不進行自動產生</s:String>
+    <s:String x:Key="Message_CantInput">游標所在禁止編輯，無法插入程式碼</s:String>
+    <s:String x:Key="Message_DuplicatedTag">TGL Tag 重複設定：{0}</s:String>
+    <s:String x:Key="Message_SetArgError">無法設定接收參數起始順序</s:String>
+    <s:String x:Key="Message_SetFreeStyleError">無法設定FreeStyle屬性</s:String>
+    <s:String x:Key="Message_CheckUpdateFailed">檢查更新失敗！</s:String>
+    <s:String x:Key="Message_CheckerStartFailed">更新程式無法啟動：</s:String>
+    <s:String x:Key="Message_CancelUpdate">取消更新</s:String>
+    <s:String x:Key="Message_UpdateFailed" xml:space="preserve">下載更新發生錯誤！請稍後再進行更新。&#x0A;如果此狀況重複發生，請聯絡系統管理員&#x0A;&#x0A;(錯誤訊息：{0})</s:String>
+    <s:String x:Key="Message_StartError">無法啟動主程式：</s:String>
+    <s:String x:Key="Message_UpdateFinished">更新完成！</s:String>
+    <s:String x:Key="Message_Number">數值</s:String>
+    <s:String x:Key="Message_MustHave">必填</s:String>
+    <s:String x:Key="Message_NotEmpty">非空格</s:String>
+    <s:String x:Key="Message_OnlyAllowNumber">僅允許數字</s:String>
+    <s:String x:Key="Message_ActionNameSyntaxIncorrent">僅允許英數字及底線</s:String>
+    <s:String x:Key="Message_FieldNameSyntaxIncorrent">僅允許英數字、底線、點(.)</s:String>
+    <s:String x:Key="Message_PathFormatIncorrent">僅允許英文、數字、底線(_)與橫線(-)</s:String>
+    <s:String x:Key="Message_ValueMustStartWith">屬性 {0} 必須以 {1} 開頭</s:String>
+    <s:String x:Key="Message_CreateLinkFinish">已建立桌面捷徑</s:String>
+    <s:String x:Key="Message_ReorderTabIndex">是否自動重新排列tabIndex?</s:String>
+    <s:String x:Key="Message_SetFreeStyleWarning" xml:space="preserve">您即將要把此程式的設計方式變更為Free Style！變更後，規格的任何調整都不會再產生對應的程式碼，請問是否確定要變更？</s:String>
+    <s:String x:Key="Message_CodeTemplateFileNotFound" xml:space="preserve">找不到程式樣版清單，將使用預設程式樣版清單。
+建議從功能表 -> 基礎資料 -> 更新基礎資料 選項中進行更新。</s:String>
+    <s:String x:Key="Message_CheckGDCFailedTitle">未偵測到 GDC</s:String>
+    <s:String x:Key="Message_CheckGDCFailed" xml:space="preserve">請先啟動GDC，指定作業才能正確執行。</s:String>
+    <s:String x:Key="Message_CheckGDCAgain">現在是否重新檢查？</s:String>
+    <s:String x:Key="Message_CancelExecute">取消執行</s:String>
+    <s:String x:Key="Message_KeepExecute">強制執行</s:String>
+    <s:String x:Key="Message_TryAgain">重新檢查</s:String>
+    <s:String x:Key="Message_NotBooking">未 簽 出</s:String>
+    <s:String x:Key="Message_PropertyChange">注意：設定變更後，必須上傳程式才會生效。</s:String>
+    <s:String x:Key="Message_ChageTableRelation">建議不要設定 PK 和 FK，除非要和 r.t 的設定不同</s:String>
+    <s:String x:Key="Message_QSetting" xml:space="preserve">確定執行 "Q類上階串查設定" ？&#x0A;(注意：變更設定後，請重新下載程式)</s:String>
+    <s:String x:Key="Message_LoginAccountException">帳號密碼錯誤</s:String>
+    <s:String x:Key="Message_SocketException" xml:space="preserve">連線失敗，請稍後再重新嘗試連線。
+若以下錯誤重複出現，請聯絡系統管理員：</s:String>
+    <s:String x:Key="Message_SocketTimeoutException">連線逾時，請重新連線</s:String>
+    <s:String x:Key="Message_ProgInfoFreeStyleAndSectionFlag">程式資訊：Section已經修改過，已經轉為FreeStyle</s:String>
+    <s:String x:Key="Message_ProgInfoFreeStyle">程式資訊：已經轉為FreeStyle</s:String>
+    <s:String x:Key="Message_ProgInfoSectionFlag">程式資訊：Section已經修改過</s:String>
+    <s:String x:Key="Message_RegenComfirm" xml:space="preserve">請問是否重產 "{0}" 的程式？&#x0A;&#x0A;程式重產後請重新下載程式</s:String>
+    <s:String x:Key="Message_PreviewForm" xml:space="preserve">如果預覽結果不如預期，建議先上傳規格後再重新預覽。
+若預覽畫面沒有出現，請查看連線紀錄。</s:String>
+    <s:String x:Key="Message_ThisVersionModifyConfirm" xml:space="preserve">注意事項:
+  1.此功能是為了解決客製過程中剛好發生標準add-point需要除錯的情境, 所以若是正常的開發上傳, 請透過正常的上傳功能即可.
+  2.當標準簽出所修改的add-point剛好是Client端客製的add-point, 則更新後會以客製add-point為主.
+  3.標準簽出的目的是為了排除標準程式的問題, 建議不要增減畫面控件, 以免上傳更新後出現畫面與程式不一致的情況.
+  4.若標準簽出後就上Patch, 則此更新功能會因為版次不同而被系統擋住.
+  請問是否要繼續進行[本版次調整更新]?</s:String>
+    <s:String x:Key="Message_TopstdCantSetFreestyle">topstd不能轉free style</s:String>
+    <s:String x:Key="Message_TopstdCantChangeProgramTemplate">topstd不能更改程式樣板</s:String>
+    <s:String x:Key="Message_TopstdCantChangeStartarg">topstd不能設定保留參數</s:String>
+    <s:String x:Key="Message_Saved">儲存完成：{0}</s:String>
+    <s:String x:Key="Message_UnknownFileType">未知檔案類型</s:String>
+    <s:String x:Key="Message_NecessaryFileMssing">缺少作業必要資訊，請重新下載，或聯絡管理員</s:String>
+    <s:String x:Key="Message_CitedFileMssing">缺少引用來源檔案：{0}</s:String>
+    <s:String x:Key="Message_FileMssing" xml:space="preserve">缺少檔案：{0}&#x0A;請重新下載基礎資料，或聯絡管理員</s:String>
+    <s:String x:Key="Message_FileContentError">資料有誤，請重新下載，或聯絡管理員</s:String>
+    <s:String x:Key="Message_CitedFileContentError">參考來源資料有誤，請重新下載，或聯絡管理員</s:String>
+    <s:String x:Key="Message_TreeNameIllegal">s_browse 名稱固定為樣版中樹狀結構使用</s:String>
+    <s:String x:Key="Message_RepeatInScrollGrid">放置於 ScrollGrid 中，repeat 必要為 true</s:String>
+    <s:String x:Key="Message_DiffCopyUnEditable">複製目的區域包含不可編輯區域，請重新選擇複製來源範圍</s:String>
+    <s:String x:Key="Message_SpecPKNotNull">此欄位為Key值, 建議設定為必要欄位(not null), 請問是否確定要取消勾選?</s:String>
+    <s:String x:Key="Message_SpecReqNotNull">此欄位為必要欄位(not null), 請問是否確定要取消勾選?</s:String>
+    <s:String x:Key="Message_KeyWordNotNull">請輸入搜尋內容。</s:String>
+    <s:String x:Key="Message_NoError">檢核無邏輯結構錯誤</s:String>
+    <s:String x:Key="Message_CannotFindEndIF">第{0}行IF找不到對應的END IF</s:String>
+    <s:String x:Key="Message_CannotFindIF">第{0}行END IF找不到對應的IF</s:String>
+    <s:String x:Key="Message_ConnectionOK">連線成功</s:String>
+    <s:String x:Key="Message_InvalidReferenceFieldNameSuffix">參考欄位的控件名稱結尾若不是"_desc", 則參考欄位的設定無作用</s:String>
+    <s:String x:Key="Message_ChangeLanguageWarning">溫馨提示: 變更語言別請依下列步驟進行</s:String>
+    <s:String x:Key="Message_ChangeLanguageWarning1">1.請到Windows控制臺[地區與語言]確認已安裝目標語言套件</s:String>
+    <s:String x:Key="Message_ChangeLanguageWarning2">2.請到[使用者資料設定作業(azzi800)]變更使用語言</s:String>
+    <s:String x:Key="Message_ChangeLanguageWarning3">3.重啟設計器</s:String>
+    <s:String x:Key="Message_ChangeLanguageWarning4">4.到設計器中更新基礎資料</s:String>
+    <s:String x:Key="Message_UnsupportedLanguage">警告: 設計器未支持此語言別，將以英文顯示!!!</s:String>
+    <s:String x:Key="Message_TableIsExist">表格已存在</s:String>
+    <s:String x:Key="Message_SectionVerify">您沒有解開此程式框架的授權，請找有權限的主管透過adzi052(解開程式框架授權作業)進行授權</s:String>
+    <s:String x:Key="Message_SectionVerifyWarning">注意:取得解開程式框架授權後，必須重新下載程式才會生效</s:String>
+    <s:String x:Key="Message_CodeNotBooking">程式未簽出，請先簽出程式後再點選上傳規格並產生程式功能</s:String>
+    <s:String x:Key="Message_AdjustContainerBlankArea">確認要縮小額外的空白區域？</s:String>
+    <s:String x:Key="Message_TapSrcIsNull">此函式不存在tap.src中，請至4gl.src來源區域取得tap，重命名為tap.src檔，更新至客戶環境tap目錄下後，重新下載差異比對檔案</s:String>
+    <s:String x:Key="Message_FunctionIsExistCanNotSync">Function已存在，不可同步</s:String>
+    <s:String x:Key="Message_FunctionIsExistCanNotCopy">Function不存在，無法複製</s:String>
+    <s:String x:Key="Message_BindSelection">選擇的控件已被其它控件綁定，是否要取代原先的綁定？</s:String>
+    <s:String x:Key="Message_TableNotFound">您開啟的 {0} 規格檔找不到所需要的表格基礎資料：{1}，請重新更新基礎資料。</s:String>
+    <s:String x:Key="Message_BasicDataUpdating">基礎資料更新中...</s:String>
+
+    <!-- 視窗標題 -->
+    <s:String x:Key="WinTitle_TextStringSetting">多語言設定</s:String>
+    <s:String x:Key="WinTitle_PreviewSpec">規格預覽</s:String>
+    <s:String x:Key="WinTitle_Delete">刪除</s:String>
+    <s:String x:Key="WinTitle_SearchBoxTitle">搜尋</s:String>
+    <s:String x:Key="WinTitle_MainTitle">T100設計器({0}) 站臺：{1} 連接資訊：{2}</s:String>
+    <s:String x:Key="WinTitle_Close">關閉</s:String>
+    <s:String x:Key="WinTitle_SearchKeySettingTitle">正規化搜尋條件設定</s:String>
+    
+    <!-- 搜尋 -->
+    <s:String x:Key="Search_BeginSearch">開始尋找</s:String>
+    <s:String x:Key="Search_CurrentDocument">目前檔</s:String>
+    <s:String x:Key="Search_AllOpenDocument">已開啟的檔</s:String>
+    <s:String x:Key="Search_Previous">前一個</s:String>
+    <s:String x:Key="Search_Next">下一個</s:String>
+    <s:String x:Key="Search_ProgramName">程式代號</s:String>
+    <s:String x:Key="Search_Source">來源</s:String>
+    <s:String x:Key="Search_Match">符合</s:String>
+    <s:String x:Key="Search_MatchCase">符合大小寫</s:String>
+    <s:String x:Key="Search_Reg">正規表示法 (Regular Expression)</s:String>
+    <s:String x:Key="Search_Spec">搜尋內容包含規格</s:String>
+    <s:String x:Key="Search_EditableOnly">位於可編輯區域</s:String>
+    <s:String x:Key="Replace_Notice">注意：'{0}'功能只對可編輯區域有效！</s:String>
+    
+    <!-- 4fd items屬性編輯 -->
+    <s:String x:Key="Items_Add">新增</s:String>
+    <s:String x:Key="Items_Delete">刪除</s:String>
+    <s:String x:Key="Items_Modify">修改</s:String>
+    <s:String x:Key="Items_MoveUp">上移</s:String>
+    <s:String x:Key="Items_MoveDown">下移</s:String>
+    
+    <!-- 4fd color屬性 -->
+    <s:String x:Key="Color_black">黑</s:String>
+    <s:String x:Key="Color_white">白</s:String>
+    <s:String x:Key="Color_red">紅</s:String>
+    <s:String x:Key="Color_green">綠</s:String>
+    <s:String x:Key="Color_yellow">黃</s:String>
+    <s:String x:Key="Color_magenta">洋紅</s:String>
+    <s:String x:Key="Color_blue">藍</s:String>
+    <s:String x:Key="Color_cyan">青</s:String>
+
+    <!-- 4fd 屬性 -->
+    <s:String x:Key="ItemProperty_Widget">控件</s:String>
+    <s:String x:Key="ItemProperty_title">標題</s:String>
+    <s:String x:Key="ItemProperty_text">說明</s:String>
+    <s:String x:Key="ItemProperty_comment">註釋</s:String>
+    <s:String x:Key="ItemProperty_items">資料清單</s:String>
+    <s:String x:Key="ItemProperty_case">大小寫</s:String>
+    <s:String x:Key="ItemProperty_noEntry">不可輸入</s:String>
+    <s:String x:Key="ItemProperty_notNull">不可為空</s:String>
+    <s:String x:Key="ItemProperty_notEditable">不可編輯</s:String>
+    <s:String x:Key="ItemProperty_invisible">資料不可見</s:String>
+    <s:String x:Key="ItemProperty_action">動作</s:String>
+    <s:String x:Key="ItemProperty_image">圖片</s:String>
+    <s:String x:Key="ItemProperty_scroll">捲動</s:String>
+    <s:String x:Key="ItemProperty_step">間隔</s:String>
+    <s:String x:Key="ItemProperty_sliderOrientation">滑塊方向</s:String>
+    <s:String x:Key="ItemProperty_valueMin">最小值</s:String>
+    <s:String x:Key="ItemProperty_valueMax">最大值</s:String>
+    <s:String x:Key="ItemProperty_justify">對齊</s:String>
+    <s:String x:Key="ItemProperty_componentType">元件類型</s:String>
+    <s:String x:Key="ItemProperty_valueChecked">選取值</s:String>
+    <s:String x:Key="ItemProperty_valueUnchecked">未選取值</s:String>
+    <s:String x:Key="ItemProperty_orientation">方向</s:String>
+    <s:String x:Key="ItemProperty_style">樣式</s:String>
+    <s:String x:Key="ItemProperty_splitter">分離拖動</s:String>
+    <s:String x:Key="ItemProperty_tabIndex">tab順序</s:String>
+    <s:String x:Key="ItemProperty_hidden">控件隱藏</s:String>
+    <s:String x:Key="ItemProperty_rowHeight">列高</s:String>
+    <s:String x:Key="ItemProperty_totalRows">總列數</s:String>
+    <s:String x:Key="ItemProperty_picture">圖像</s:String>
+    <s:String x:Key="ItemProperty_format">顯示格式</s:String>
+    <s:String x:Key="ItemProperty_aggregate">聚合</s:String>
+    <s:String x:Key="ItemProperty_aggregateName">聚合名稱</s:String>
+    <s:String x:Key="ItemProperty_aggregateText">聚合說明</s:String>
+    <s:String x:Key="ItemProperty_aggregateType">聚合類型</s:String>
+    <s:String x:Key="ItemProperty_unsortable">不可重排順序</s:String>
+    <s:String x:Key="ItemProperty_unmovable">不可移動位置</s:String>
+    <s:String x:Key="ItemProperty_unhidable">不可隱藏</s:String>
+    <s:String x:Key="ItemProperty_unsizable">不可重調大小</s:String>
+    <s:String x:Key="ItemProperty_wantFixedPageSize">固定頁面大小</s:String>
+    <s:String x:Key="ItemProperty_doubleClick">雙擊</s:String>
+    <s:String x:Key="ItemProperty_unsortableColumns">欄位不可重排順序</s:String>
+    <s:String x:Key="ItemProperty_unsizableColumns">欄位不可重調大小</s:String>
+    <s:String x:Key="ItemProperty_unmovableColumns">欄位不可移動位置</s:String>
+    <s:String x:Key="ItemProperty_unhidableColumns">欄位不可隱藏</s:String>
+    <s:String x:Key="ItemProperty_idColumn">主要欄位</s:String>
+    <s:String x:Key="ItemProperty_parentIdColumn">父項欄位</s:String>
+    <s:String x:Key="ItemProperty_expandedColumn">展開欄位</s:String>
+    <s:String x:Key="ItemProperty_isNodeColumn">節點欄位</s:String>
+    <s:String x:Key="ItemProperty_imageExpanded">展開時的圖片</s:String>
+    <s:String x:Key="ItemProperty_imageCollapsed">折疊時的圖片</s:String>
+    <s:String x:Key="ItemProperty_imageLeaf">節點圖片</s:String>
+    <s:String x:Key="ItemProperty_imageColumn">圖片欄位</s:String>
+    <s:String x:Key="ItemProperty_repeat">重複</s:String>
+    <s:String x:Key="ItemProperty_columnCount">欄位數量</s:String>
+    <s:String x:Key="ItemProperty_rowCount">資料列數量</s:String>
+    <s:String x:Key="ItemProperty_stepX">水平(X)間隔</s:String>
+    <s:String x:Key="ItemProperty_stepY">垂直(Y)間隔</s:String>
+    <s:String x:Key="ItemProperty_sizePolicy">尺寸策略</s:String>
+    <s:String x:Key="ItemProperty_autoScale">自動縮放</s:String>
+    <s:String x:Key="ItemProperty_stretch">延伸</s:String>
+    <s:String x:Key="ItemProperty_gridWidth">網格寬度</s:String>
+    <s:String x:Key="ItemProperty_gridHeight">網格高度</s:String>
+    <s:String x:Key="ItemProperty_minWidth">最小寬度</s:String>
+    <s:String x:Key="ItemProperty_minHeight">最小高度</s:String>
+    <s:String x:Key="ItemProperty_posX">水平(X)位置</s:String>
+    <s:String x:Key="ItemProperty_posY">垂直(Y)位置</s:String>
+    <s:String x:Key="ItemProperty_color">字體顏色</s:String>
+    <s:String x:Key="ItemProperty_scrollBars">滾動條</s:String>
+    <s:String x:Key="ItemProperty_tag">標籤</s:String>
+    <s:String x:Key="ItemProperty_gridChildrenInParent">子項佈局依據父容器對齊</s:String>
+    <s:String x:Key="ItemProperty_width">寬度</s:String>
+    <s:String x:Key="ItemProperty_unitWidth">寬度單位</s:String>
+    <s:String x:Key="ItemProperty_height">高度</s:String>
+    <s:String x:Key="ItemProperty_unitHeight">高度單位</s:String>
+    <s:String x:Key="ItemProperty_wantNoReturns">不允許按下Enter鍵</s:String>
+
+    <!-- 站台管理員 -->
+    <s:String x:Key="Site_SiteManagerTitle">站臺管理員 {0}</s:String>
+    <s:String x:Key="Site_SiteSetting">站臺設定</s:String>
+    <s:String x:Key="Site_CreateNewFolder">新建目錄</s:String>
+    <s:String x:Key="Site_CreateNewSite">新建連線</s:String>
+    <s:String x:Key="Site_Delete">刪除</s:String>
+    <s:String x:Key="Site_Rename">更名</s:String>
+    <s:String x:Key="Site_Copy">複製</s:String>
+    <s:String x:Key="Site_Cancel">取消</s:String>
+    <s:String x:Key="Site_SelectTheSite">選擇</s:String>
+    <s:String x:Key="Site_ConfirmModify">儲存</s:String>
+    <s:String x:Key="Site_ServerIP">站臺IP：(*) </s:String>
+    <s:String x:Key="Site_Login">帳號：</s:String>
+    <s:String x:Key="Site_Password">密碼：</s:String>
+    <s:String x:Key="Site_Workspace">工作目錄：(*) </s:String>
+    <s:String x:Key="Site_Area">登入區域：</s:String>
+    <s:String x:Key="Site_Zone">設計器版本檢查區域：</s:String>
+    <s:String x:Key="Site_Prompt">自動填入提示</s:String>
+    <s:String x:Key="Site_LoginPrompt">帳號提示字元：</s:String>
+    <s:String x:Key="Site_PasswordPrompt">密碼提示字元：</s:String>
+    <s:String x:Key="Site_AreaPrompt">區域提示字元：</s:String>
+    <s:String x:Key="Site_UpdateURL">更新網址：</s:String>
+    <s:String x:Key="Site_CheckVersion">版本相容性檢查中...</s:String>
+    <s:String x:Key="Site_CheckUpdateNow">檢查</s:String>
+    <s:String x:Key="Site_IPAddressIsRequired">IP位址必填</s:String>
+    <s:String x:Key="Site_IPAddressFormatError">連線位址格式錯誤</s:String>
+    <s:String x:Key="Site_ZoneIsRequired">Zone必填</s:String>
+    <s:String x:Key="Site_AreaIsRequired">登入區域必填</s:String>
+    <s:String x:Key="Site_WorkspaceIsUsed">工作目錄{0}重複指定</s:String>
+    <s:String x:Key="Site_workspaceIsRequired">工作目錄必填</s:String>
+    <s:String x:Key="Site_RemoteVersion">遠端設計器版本：(*) </s:String>
+    <s:String x:Key="Site_CreateDesktopLink">建立桌面捷徑</s:String>
+    <s:String x:Key="Site_WorkspaceIsNotExist">工作目錄不存在</s:String>
+    <s:String x:Key="Site_VersionNotChecked">尚未取得遠端設計器版本，請按"檢查"按鈕自動取得，或手動填入正確版本。</s:String>
+    <s:String x:Key="Site_ExportSettings">匯出設定</s:String>
+    <s:String x:Key="Site_ImportSettings">匯入設定</s:String>
+    <s:String x:Key="Site_Others">進階設定</s:String>
+    <s:String x:Key="Site_ExtraCommand">登入後執行命令：</s:String>
+    <s:String x:Key="Site_UpdateSetting">設計器更新設定</s:String>
+    <s:String x:Key="Site_UpdateSettingWarning">若對設定參數有疑問，請與系統管理員聯絡，勿任意更動</s:String>
+    <s:String x:Key="Site_ModifyPrompt">建議不要變更，以免無法登入</s:String>
+    <s:String x:Key="Site_ModifyPromptWarning" xml:space="preserve">我已經確實瞭解風險，並且與系統管理者確認修改過內容&#x0A;&#x0A;開始修改？</s:String>
+    <s:String x:Key="Site_ModifyPromptConfirm">確認修改</s:String>
+    <s:String x:Key="Site_ConnectionList">連線清單</s:String>
+    <s:String x:Key="Connect_topstdLoggedIn">已經取得 topstd 編輯權限</s:String>
+    <s:String x:Key="Connect_topstdUnloggedIn">尚未取得 topstd 編輯權限</s:String>
+    
+    <!-- 偏好設定 -->
+    <s:String x:Key="Preference_ProgramName">作業代號</s:String>
+    <s:String x:Key="Preference_ProgramDesc">作業簡述</s:String>
+    <s:String x:Key="Preference_ProgramPreview">預覽</s:String>
+    <s:String x:Key="Preference_Enable">啟用</s:String>
+    <s:String x:Key="Preference_Disable">停用</s:String>
+    <s:String x:Key="Preference_Delete">刪除</s:String>
+    <s:String x:Key="Preference_RedoUndo">執行回復/重複動作的次數上限</s:String>
+    <s:String x:Key="Preference_RedoUndoMemo">(-1 表示不限制)</s:String>
+    <s:String x:Key="Preference_RemainUnSaved">關檔與上傳時若未存檔，顯示提示訊息</s:String>
+    <s:String x:Key="Preference_SimpleDownloadDialog">畫面開發簡潔配置</s:String> <!-- 20240321 by 02632 SIMPLE -->
+    <s:String x:Key="Preference_SimpleDownloadDialog_Change">調整畫面開發簡潔配置，需重啟設器才會生效！</s:String> <!-- 20240701 by 14910 -->
+    <s:String x:Key="Preference_MaxRecentFiles">最近使用的檔案 : 最大數量</s:String> <!-- 20240301 by 02632-->
+    <s:String x:Key="Preference_Reset">重置</s:String>
+    <s:String x:Key="Preference_Save">儲存</s:String>
+    <s:String x:Key="Preference_Cancel">取消</s:String>
+    <s:String x:Key="Preference_Add">新增</s:String>
+    <s:String x:Key="Preference_Modify">修改</s:String>
+    <s:String x:Key="Preference_TabWidth">Tab 鍵置換為空白的寬度</s:String>
+    <s:String x:Key="Preference_WrapText">自動換行</s:String>
+    <s:String x:Key="Preference_CodeCompletion">字詞輔助</s:String>
+    <s:String x:Key="Preference_Font">文字格式</s:String>
+    <s:String x:Key="Preference_FontSize">字體大小</s:String>
+    <s:String x:Key="Preference_FontFamily">字型</s:String>
+    <s:String x:Key="Preference_Theme">顯示主題</s:String>
+    <s:String x:Key="Preference_Background">背景顏色</s:String>
+    <s:String x:Key="Preference_Foreground">文字主題</s:String>
+    <s:String x:Key="Preference_General">一般設定</s:String>
+    <s:String x:Key="Preference_ValidateForm">提示編譯錯誤</s:String>
+    <s:String x:Key="Preference_MissingProg">請輸入作業編號</s:String>
+    <s:String x:Key="Preference_ProgExit">作業編號已存在</s:String>
+    <s:String x:Key="Preference_ConfirmDeleteProg" xml:space="preserve">確認刪除設定：&#x0A;"{0}"？</s:String>
+    <s:String x:Key="Preference_ConfirmDelete">刪除前確認</s:String>
+    <s:String x:Key="Preference_LoadFailed">偏好設定載入失敗</s:String>
+    <s:String x:Key="Preference_Diff">差異比對</s:String>
+    <s:String x:Key="Preference_ShowHint">提示完整句子</s:String>
+    <s:String x:Key="Preference_ConfirmSaveDiff">儲存資料前，詢問是否儲存差異比對來源內容</s:String>
+    <s:String x:Key="Preference_SimplifyColor">差異顏色簡化</s:String>
+    <s:String x:Key="Preference_HorizontalArrangement">水平排列</s:String>
+    <s:String x:Key="Preference_DiffComment">比對註解差異</s:String>
+    <s:String x:Key="Preference_ViMode">Vi編輯模式</s:String>
+    <s:String x:Key="Preference_TopstdEditPermission">預設topstd編輯權限</s:String>
+    <s:String x:Key="Preference_Language">語言別</s:String>
+    <s:String x:Key="Preference_LanguageSettings">語言別設定</s:String>
+    <s:String x:Key="Preference_DiffWithoutSection">不顯示section區塊差異</s:String>
+    <s:String x:Key="Preference_DiffWithANSI">顯示ansi語法差異</s:String>
+    <s:String x:Key="Preference_Welcome">歡迎畫面</s:String>
+    <s:String x:Key="Preference_StartShowWelcome">在啟動時顯示歡迎畫面</s:String>
+    <s:String x:Key="Preference_DisplayOpenedFiles">顯示最近開啟之規格檔與程式檔</s:String>
+    <s:String x:Key="Preference_MaxQuantity">　　最大數量各</s:String>
+    <s:String x:Key="Preference_Each">個</s:String>
+    <s:String x:Key="Preference_MostDisplayFiles">(每個站台最多30個)</s:String>
+    <s:String x:Key="Preference_ClearHistory">清除所有站台紀錄</s:String>
+    <s:String x:Key="Preference_CodeEditor">程式編輯器</s:String>
+    <s:String x:Key="Preference_FormDesigner">規格設計器</s:String>
+    <s:String x:Key="Preference_Lite">簡易規格設計器</s:String>
+    <s:String x:Key="Preference_ShowHintTabIndexSort">不提示TabIndex是否重新排序訊息</s:String>
+    <s:String x:Key="Preference_LocalizedProperty">屬性本地化</s:String>
+
+    <!-- 自動更新 -->
+    <s:String x:Key="Update_Title">軟體更新</s:String>
+    <s:String x:Key="Update_Available" xml:space="preserve">{0}有新版本：{1}</s:String>
+    <s:String x:Key="Update_Confirm">{0} 有新版本可下載 (目前安裝版本為 {1}). 現在下載並安裝新版？</s:String>
+    <s:String x:Key="Update_NotUpdate">稍後更新</s:String>
+    <s:String x:Key="Update_UpdateNow">開始更新</s:String>
+    <s:String x:Key="Update_ReleaseNote">更新說明：</s:String>
+    <s:String x:Key="ProcessList_Title">T100Designer - 關閉設計器以繼續</s:String>
+    <s:String x:Key="ProcessList_MainTitle">關閉設計器以繼續</s:String>
+    <s:String x:Key="ProcessList_Message">請儲存您的工作，然後按下 [關閉設計器，然後繼續]</s:String>
+    <s:String x:Key="ProcessList_CloseBeforeStart">您有其他設計器開啟中，必須先關閉，才能進行更新</s:String>
+    <s:String x:Key="ProcessList_Continue">關閉設計器，然後繼續</s:String>
+
+    <!-- 元件規格 -->
+    <s:String x:Key="CodeSpec_Setting">元件規格設定</s:String>
+    <s:String x:Key="CodeSpec_ComponentID">元件代號</s:String>
+    <s:String x:Key="CodeSpec_ComponentDescription">說明</s:String>    
+    <s:String x:Key="CodeSpec_ComponentDB">適用資料庫</s:String>
+    <s:String x:Key="CodeSpec_ComponentPurpose">目的</s:String>
+    <s:String x:Key="CodeSpec_ComponentParameter">參數</s:String>
+    <s:String x:Key="CodeSpec_ComponentOrder">順序</s:String>
+    <s:String x:Key="CodeSpec_ComponentIn">傳入值</s:String>
+    <s:String x:Key="CodeSpec_ComponentTable">表格</s:String>
+    <s:String x:Key="CodeSpec_ComponentColumn">欄位</s:String>    
+    <s:String x:Key="CodeSpec_ParameterPurpose">用途說明</s:String>
+    <s:String x:Key="CodeSpec_ComponentReturn">回傳值</s:String>
+    <s:String x:Key="CodeSpec_Keyword">關鍵詞</s:String>
+    <s:String x:Key="CodeSpec_FrontComponent">前置元件</s:String>
+    <s:String x:Key="CodeSpec_Dimension">維度</s:String>
+    <s:String x:Key="CodeSpec_DimensionID">編號</s:String>
+    <s:String x:Key="CodeSpec_DimensionClass">分類編號</s:String>
+    <s:String x:Key="CodeSpec_DimensionClassValue">分類值</s:String>
+    <s:String x:Key="CodeSpec_Test">重點測試</s:String>
+    <s:String x:Key="CodeSpec_TestID">項次</s:String>
+    <s:String x:Key="CodeSpec_TestDescription">情境說明</s:String>
+    <s:String x:Key="CodeSpec_TestIn">傳入值</s:String>
+    <s:String x:Key="CodeSpec_TestReturn">預計回傳值</s:String>
+    <s:String x:Key="CodeSpec_TestPosNeg">正向/負向檢測</s:String>
+    <s:String x:Key="CodeSpec_TestErrorCode">輸出的錯誤代碼</s:String>
+    <s:String x:Key="CodeSpec_TestErrDescription">錯誤描述</s:String>
+    <s:String x:Key="CodeSpec_TestMemo">備註</s:String>
+    
+    <!-- DB Structure Creator-->
+    <s:String x:Key="DBStructure_Container">容器控件</s:String>
+    <s:String x:Key="DBStructure_FieldsAndLabels">欄位與標籤</s:String>
+    <s:String x:Key="DBStructure_FieldLabelProperties">欄位與標籤屬性</s:String>
+    <s:String x:Key="DBStructure_MaximumWidth">最大寬度：</s:String>
+    <s:String x:Key="DBStructure_NumberOfFields">垂直欄數：</s:String>
+    <s:String x:Key="DBStructure_ScrollRepeatHeader">ScrollGrid Repeat</s:String>
+    <s:String x:Key="DBStructure_RepeatRowCount">垂直重複數：</s:String>
+    <s:String x:Key="DBStructure_RepeatColumnCount">水準重複數：</s:String>
+    <s:String x:Key="DBStructure_Label">標籤說明</s:String>
+    <s:String x:Key="DBStructure_Table">表格編號</s:String>
+    <s:String x:Key="DBStructure_Column">欄位編號</s:String>
+    <s:String x:Key="DBStructure_WidgetType">控件類型</s:String>
+    <s:String x:Key="DBStructure_WidgetLength">控件寬度</s:String>
+    <s:String x:Key="DBStructure_Filter">篩選：</s:String>
+    <s:String x:Key="DBStructure_Description">說明</s:String>
+    <s:String x:Key="DBStructure_Module">模組</s:String>
+    <s:String x:Key="DBStructure_Back" xml:space="preserve"> &lt; 上一步 </s:String>
+    <s:String x:Key="DBStructure_Next" xml:space="preserve"> 下一步 &gt; </s:String>
+    <s:String x:Key="DBStructure_Cancel" xml:space="preserve"> 取消 </s:String>
+    <s:String x:Key="DBStructure_Finish" xml:space="preserve"> 完成 </s:String>
+
+    <!-- 離線檔案資訊 -->
+    <s:String x:Key="ProgramInformation_Title">離線檔案資訊</s:String>
+    <s:String x:Key="ProgramInformation_Prog">程式名稱</s:String>
+    <s:String x:Key="ProgramInformation_Std_Prog">標準程式名稱</s:String>
+    <s:String x:Key="ProgramInformation_ErpVer">產品版本</s:String>
+    <s:String x:Key="ProgramInformation_Ver">版次</s:String>
+    <s:String x:Key="ProgramInformation_Module">模組</s:String>
+    <s:String x:Key="ProgramInformation_Type">建構類型</s:String>
+    <s:String x:Key="ProgramInformation_Booking">是否簽出</s:String>
+    <s:String x:Key="ProgramInformation_Class">程式類別</s:String>
+    <s:String x:Key="ProgramInformation_Env">開發環境</s:String>
+    <s:String x:Key="ProgramInformation_Zone">開發區域</s:String>
+    <s:String x:Key="ProgramInformation_Identity">識別標示</s:String>
+    <s:String x:Key="ProgramInformation_SectionFlag">Section是否修改過</s:String>
+    <s:String x:Key="ProgramInformation_Template">程式樣版</s:String>
+    <s:String x:Key="ProgramInformation_FreeStyle">是否為FreeStyle</s:String>
+    
+    <!-- FunctionList -->
+    <s:String x:Key="FunctionList_Title">程式輔助</s:String>
+    <s:String x:Key="FunctionList_Delete">刪除</s:String>
+    <s:String x:Key="FunctionList_Copy">複製</s:String>
+    <s:String x:Key="FunctionList_Insert">插入至程式碼</s:String>
+
+    <!-- 資料表關聯設定 -->
+    <s:String x:Key="PK">本表主鍵欄位(PK)</s:String>
+    <s:String x:Key="FK_table">外鍵關聯表格</s:String>
+    <s:String x:Key="FkMaster">外鍵關聯欄位(FkMaster)</s:String>
+    <s:String x:Key="FkDetail">本表關聯欄位(FkDetail)</s:String>
+
+    <!-- VI指令清單 -->
+    <s:String x:Key="VI_CommandList">vi指令清單</s:String>
+    <s:String x:Key="VI_GeneralMode">一般模式:</s:String>
+    <s:String x:Key="VI_MoveOneLeft">向左移一個字元 (h)</s:String>
+    <s:String x:Key="VI_MoveNLeft">向左移n個字元 (nh)</s:String>
+    <s:String x:Key="VI_MoveOneUp">向上移一個字元 (k)</s:String>
+    <s:String x:Key="VI_MoveNUp">向上移n個字元 (nk)</s:String>
+    <s:String x:Key="VI_MoveOneDown">向下移一個字元 (j)</s:String>
+    <s:String x:Key="VI_MoveNDown">向下移n個字元 (nj)</s:String>
+    <s:String x:Key="VI_MoveOneRight">向右移一個字元 (l)</s:String>
+    <s:String x:Key="VI_MoveNRight">向右移n個字元 (nl)</s:String>
+    <s:String x:Key="VI_MoveToLastLine">移至該檔案的最後一列 (G)</s:String>
+    <s:String x:Key="VI_MoveToNLine">移至該檔案的第n列 (nG)</s:String>
+    <s:String x:Key="VI_ScrollDown">視窗往下翻一頁 (Ctrl + f)</s:String>
+    <s:String x:Key="VI_ScrollUp">視窗往上翻一頁 (Ctrl + b)</s:String>
+    <s:String x:Key="VI_DelCharAtCursor">刪除游標所在字元 (x)</s:String>
+    <s:String x:Key="VI_DelCharBeforeCursor">刪除游標前的字元 (X)</s:String>
+    <s:String x:Key="VI_DelEntireLine">刪除整行 (dd)</s:String>
+    <s:String x:Key="VI_DelNLines">刪除n行 (ndd)</s:String>
+    <s:String x:Key="VI_CopyEntireLine">複製整行 (yy)</s:String>
+    <s:String x:Key="VI_CopyNLine">複製n行 (nyy)</s:String>
+    <s:String x:Key="VI_PasteBeforeCursor">貼在游標之前 (p)</s:String>
+    <s:String x:Key="VI_PasteAfterCursor">貼在游標之後 (P)</s:String>
+    <s:String x:Key="VI_Undo">還原 (u)</s:String>
+    <s:String x:Key="VI_SearchDown">向下搜尋 (/)</s:String>
+    <s:String x:Key="VI_SearchUpwards">向上搜尋 (?)</s:String>
+    <s:String x:Key="VI_MoveUpToNextSearchString">向上移至搜尋字串 (n)</s:String>
+    <s:String x:Key="VI_MoveDownToNextSearchString">向下移至搜尋字串 (N)</s:String>
+    <s:String x:Key="VI_EditMode">編輯模式:</s:String>
+    <s:String x:Key="VI_AddDataBeforeCursor">在游標之前插入資料 (i)</s:String>
+    <s:String x:Key="VI_AddDataBeforeLine">在行首插入資料 (I)</s:String>
+    <s:String x:Key="VI_AddDataAfterCursor">在游標之後插入資料 (a)</s:String>
+    <s:String x:Key="VI_AddDataAfterLine">在行尾插入資料 (A)</s:String>
+    <s:String x:Key="VI_AddLineBelowLine">在本行之下新增一行 (o)</s:String>
+    <s:String x:Key="VI_AddLineAboveLine">在本行之上新增一行 (O)</s:String>
+    <s:String x:Key="VI_LeaveEditModeEnterGeneralMode">離開輸入模式，進入一般模式 (ESC)</s:String>
+    <s:String x:Key="VI_ReplaceMode">取代模式:</s:String>
+    <s:String x:Key="VI_EnterReplaceModeUntilESC">進入取代模式，直到ESC為止 (R)</s:String>
+    <s:String x:Key="VI_CommandMode">命令模式:</s:String>
+    <s:String x:Key="VI_EnterCommandModeUntilESC">進入命令模式，直到ESC為止 (:)</s:String>
+    <s:String x:Key="VI_ReplaceTextFromMToNLine">第m到n行整批取代，old置換為new，m>=1 (:m,n/old/new/g)</s:String>
+    <s:String x:Key="VI_ReplaceTextInWholeContext">整批取代，old置換為new (:1,$s/old/new/g)</s:String>
+    <s:String x:Key="VI_Save">儲存檔案 (：w)</s:String>
+    <s:String x:Key="VI_SearchCurrentWord">搜尋游標位置的單字（shift+8(*)）</s:String>
+    <s:String x:Key="VI_Redo">重作（ctrl+r）</s:String>
+    <s:String x:Key="VI_SelectLineMode">進入整行選取模式（shift+v）</s:String>
+    <s:String x:Key="VI_SelectBlockMode">進入區域選取模式（ctrl+v）</s:String>
+    <s:String x:Key="VI_ExecuteLastCommand">重複上一個指令 (.)</s:String>
+
+    <!-- 快速鍵清單 -->
+    <s:String x:Key="Key_HotkeyList">快速鍵清單</s:String>
+    <s:String x:Key="Key_OpenFile">開啟檔案 (Ctrl + O)</s:String>
+    <s:String x:Key="Key_SaveFile">儲存檔案 (Ctrl + S)</s:String>
+    <s:String x:Key="Key_CloseFile">關閉檔案 (Ctrl + W)</s:String>
+    <s:String x:Key="Key_Upload">上傳 (F6)</s:String>
+    <s:String x:Key="Key_Precompile">預編譯 (Shift + F6)</s:String>
+    <s:String x:Key="Key_Exit">離開 (Alt + F4)</s:String>
+    <s:String x:Key="Key_ExportSpec">匯出規格 (Ctrl + E)</s:String>
+    <s:String x:Key="Key_Search">搜尋 (Ctrl + F)</s:String>
+    <s:String x:Key="Key_Replace">取代 (Ctrl + H)</s:String>
+    <s:String x:Key="Key_About">關於 (Ctrl + F1)</s:String>
+    <s:String x:Key="Key_CutComponet">剪下控件 (Ctrl + X)</s:String>
+    <s:String x:Key="Key_PasteComponet">貼上控件 (Ctrl + V)</s:String>
+    <s:String x:Key="Key_MultiSelectComponetsInRegion">圈選控件 (Shift + 按住滑鼠左鍵圈選)</s:String>
+    <s:String x:Key="Key_MultiSelectComponets">多選控件 (Ctrl + 左鍵點選)</s:String>
+    <s:String x:Key="Key_Cut">剪下 (Ctrl + X)</s:String>
+    <s:String x:Key="Key_Paste">貼上 (Ctrl + V)</s:String>
+    <s:String x:Key="Key_MarkSelectedArea">註解區塊 (Ctrl + K)</s:String>
+    <s:String x:Key="Key_UnmarkSelectedArea">取消註解區塊 (Ctrl + Shift + K)</s:String>
+    <s:String x:Key="Key_RefreshScreens">畫面重新整理 (F5)</s:String>
+    <s:String x:Key="Key_ChangeGeneroKeywordsToUppercase">關鍵字轉大寫 (Ctrl + B)</s:String>
+    <s:String x:Key="Key_TermAssistance">字詞輔助 (Ctrl + Return/Enter)</s:String>
+    <s:String x:Key="Key_CheckFunctions">查看函式 (Ctrl + I)</s:String>
+    <s:String x:Key="Key_GoToAssignedLineNo">跳至指定行號 (Ctrl + G)</s:String>
+    <s:String x:Key="Key_DisplaySelfbuildKeywordList">顯示偏好字詞輔助清單 (Ctrl + P)</s:String>
+    <s:String x:Key="Key_DisplayDBColumnsList">顯示資料庫欄位輔助清單 (Ctrl + Q)</s:String>
+    <s:String x:Key="Key_DiffRefersh">差異行數刷新 (Ctrl + D)</s:String>
+    <s:String x:Key="Key_BlockMoveLeft">區塊左移 (Shift + Tab)</s:String>
+    <s:String x:Key="Key_BlockMoveRight">區塊右移 (Tab)</s:String>
+
+    <!-- 其他 -->
+    <s:String x:Key="Diff_ListTitle">Patch後新元件清單</s:String>
+    <s:String x:Key="Diff_ListItemName">欄位名稱</s:String>
+    <s:String x:Key="Diff_ListItemType">欄位類型</s:String>
+    <s:String x:Key="Diff_Memo">(雙擊項目可檢視欄位資訊)</s:String>
+    
+    <!-- 產生簡易SQL框架-->
+    <s:String x:Key="SQLType">SQL類型</s:String>
+    <s:String x:Key="SQLDisplay">呈現方式</s:String>
+    <s:String x:Key="SQLString">字串</s:String>
+    <s:String x:Key="SQLVariable">變數名稱</s:String>
+    <s:String x:Key="SQLTableSetting">表格設定</s:String>
+    <s:String x:Key="SQLMainTable">主要表格</s:String>
+    <s:String x:Key="SQLJoinTable">JOIN表格</s:String>
+    <s:String x:Key="SQLTableName">表格名稱</s:String>
+    <s:String x:Key="SQLJoinType">類型</s:String>
+    <s:String x:Key="SQLPreview">SQL預覽</s:String>
+    <s:String x:Key="SQLCopy">SQL複製</s:String>
+    <s:String x:Key="SQLTest">SQL測試</s:String>
+    <s:String x:Key="SQLAdd">新增</s:String>
+    <s:String x:Key="SQLDelete">刪除</s:String>
+    <s:String x:Key="SQLFinish">完成</s:String>
+    
+    <!-- 簡易畫面設定 -->
+    <s:String x:Key="SimpleForm_QuickHide">快速隱藏</s:String>
+    <s:String x:Key="SimpleForm_QuickShow">快速顯示</s:String>
+    <s:String x:Key="SimpleForm_HideAll">全部隱藏</s:String>
+    <s:String x:Key="SimpleForm_ShowAll">全部顯示</s:String>
+    <s:String x:Key="SimpleForm_HintCantShow">提示: 標準畫面該控件已隱藏, 不可設為顯示</s:String>
+    
+    <!-- 歡迎光臨畫面 -->
+    <s:String x:Key="Welcome_Layout">歡迎光臨</s:String>
+    <s:String x:Key="Welcome_RecentFiles">最近開啟</s:String>
+    <s:String x:Key="Welcome_SpecificationFiles">規格檔案</s:String>
+    <s:String x:Key="Welcome_ProgramFiles">程式檔案</s:String>
+    <s:String x:Key="Welcome_ClearHistory">清除紀錄</s:String>
+    <s:String x:Key="Welcome_ClearAllHistory">清除所有紀錄</s:String>
+    <s:String x:Key="Welcome_NeedToConnect">需要連線</s:String>
+    <s:String x:Key="Welcome_SelectPlatform">請選擇站台</s:String>
+    <s:String x:Key="Welcome_SignOutAndDownloadSpec">簽出/下載規格</s:String>
+    <s:String x:Key="Welcome_SignOutAndDownloadProg">簽出/下載程式</s:String>
+    <s:String x:Key="Welcome_SignOutAndDownloadGRTemplate">簽出/下載GR報表樣板</s:String>
+    <s:String x:Key="Welcome_DownloadBasicDataAndUpdate">下載現有 Server 端基礎資料並更新</s:String>
+    <!--<s:String x:Key="Welcome_RebuildBasicDataAndDownloadUpdate">重產 Server 端基礎資料並下載更新</s:String>-->
+    <s:String x:Key="Welcome_RebuildBasicDataAndDownloadUpdate">重新產生並下載基礎資料</s:String>
+    <s:String x:Key="Welcome_ViewHowDevelopT100Program">查看T100程式如何開發</s:String>
+    <s:String x:Key="Welcome_ViewCommonTool">查看T100程式開發常用工具</s:String>
+    <s:String x:Key="Welcome_AlreadyDownloaded">已經下載</s:String>
+    <s:String x:Key="Welcome_OpenSpecification">開啟規格</s:String>
+    <s:String x:Key="Welcome_OpenProgram">開啟程式</s:String>
+    <s:String x:Key="Welcome_TipsForOpenGR">備註：請透過 Genero Studio 開啟 GR 報表</s:String>
+    
+    <s:String x:Key="Welcome_OpenDownloadedSpecification">開啟已下載規格</s:String>
+    <s:String x:Key="Welcome_OpenDownloadedProgram">開啟已下載程式</s:String>
+    <s:String x:Key="Welcome_RecentOpenedSpecification">最近開啟規格</s:String>
+    <s:String x:Key="Welcome_RecentOpenedProgram">最近開啟程式</s:String>
+    <s:String x:Key="Welcome_ClearThisPlatformHistory">清除此站台之規格與程式開啟紀錄</s:String>
+    <s:String x:Key="Welcome_OpenSpecificationExample">開啟規格範例</s:String>
+    <s:String x:Key="Welcome_OpenProgramExample">開啟程式範例</s:String>
+    <s:String x:Key="Welcome_ViewDownloadedBasicData">查看下載後之基礎資料</s:String>
+    <s:String x:Key="Welcome_StartShowWelcome">在啟動時顯示歡迎畫面</s:String>
+
+    <!-- 滑鼠右鍵 -->
+    <s:String x:Key="MouseLeft_GroupInto">加入到容器</s:String>
+    <s:String x:Key="MouseLeft_BreakLayout">移除 Layout</s:String>
+    <s:String x:Key="MouseLeft_ConvertWidget">轉換控件類型</s:String>
+    <s:String x:Key="MouseLeft_ConvertContainer">轉換容器類型</s:String>
+    <s:String x:Key="MouseLeft_Delete">刪除</s:String>
+    <s:String x:Key="MouseLeft_Copy">複製</s:String>
+    <s:String x:Key="MouseLeft_Paste">貼上</s:String>
+    <s:String x:Key="MouseLeft_BindingSelection">控件綁定</s:String>
+    <s:String x:Key="MouseLeft_UnbindingSelection">控件解除綁定</s:String>
+    <s:String x:Key="MouseLeft_AddPageBefore">往前新增頁籤</s:String>
+    <s:String x:Key="MouseLeft_AddPageAfter">往後新增頁籤</s:String>
+    <s:String x:Key="MouseLeft_DeletePage">刪除頁籤</s:String>
+    <s:String x:Key="MouseLeft_InsertBefore">往前新增欄位</s:String>
+    <s:String x:Key="MouseLeft_InsertAfter">往後新增欄位</s:String>
+    <s:String x:Key="MouseLeft_DeleteTableOrTree">刪除欄位</s:String>
+    <s:String x:Key="MouseLeft_InsertReference">新增參考欄位</s:String>
+    <s:String x:Key="MouseLeft_InsertMultiLanguage">新增多語言欄位</s:String>
+    <s:String x:Key="MouseLeft_InsertQuery">新增串查欄位</s:String>
+    <s:String x:Key="MouseLeft_GeneralFunction">簡易公式設定（客製專用）</s:String>
+    <s:String x:Key="MouseLeft_GeneralValueFunc">簡易帶值設定（客製專用）</s:String>
+
+</ResourceDictionary>

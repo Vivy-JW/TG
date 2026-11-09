@@ -1,0 +1,374 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{99225108-8A98-460D-89EF-4152DF4CB38D}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>T100Designer</RootNamespace>
+    <AssemblyName>T100Designer</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60DC8134-EBA5-43B8-BCC9-BB4BC16C2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>T100Designer.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="CodeEditWindow">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\CodeEditWindow.dll</HintPath>
+    </Reference>
+    <Reference Include="Infrastructure">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\Infrastructure.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Practices.Prism">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\Microsoft.Practices.Prism.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="SpecDesigner.Controls">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\SpecDesigner.Controls.dll</HintPath>
+    </Reference>
+    <Reference Include="SpecDesigner.Export">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\SpecDesigner.Export.dll</HintPath>
+    </Reference>
+    <Reference Include="SpecDesigner.FormDataEditor">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\SpecDesigner.FormDataEditor.dll</HintPath>
+    </Reference>
+    <Reference Include="SpecDesigner.FormEditor">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\SpecDesigner.FormEditor.dll</HintPath>
+    </Reference>
+    <Reference Include="SpecDesigner.Output">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\SpecDesigner.Output.dll</HintPath>
+    </Reference>
+    <Reference Include="SpecDesigner.Search">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\SpecDesigner.Search.dll</HintPath>
+    </Reference>
+    <Reference Include="SpecDesigner.SpecEditor">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\SpecDesigner.SpecEditor.dll</HintPath>
+    </Reference>
+    <Reference Include="SpecDesigner.TableViewer">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\SpecDesigner.TableViewer.dll</HintPath>
+    </Reference>
+    <Reference Include="SpecDesignerCommon">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\SpecDesignerCommon.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Runtime.Remoting" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="UndoRedoFramework">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\UndoRedoFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="WindowsBase" />
+    <Reference Include="Xceed.Wpf.AvalonDock">
+      <HintPath>D:\APPS\T100设计器_1.0.0.251_免安装\Xceed.Wpf.AvalonDock.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Windows.Interactivity" />
+    <Reference Include="mscorlib" />
+    <Reference Include="ICSharpCode.AvalonEdit" />
+    <Reference Include="Xceed.Wpf.AvalonDock.Themes.VS2013" />
+  </ItemGroup>
+  <ItemGroup>
+    <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Microsoft\Shell\ISingleInstanceApp.cs" />
+    <Compile Include="Microsoft\Shell\NativeMethods.cs" />
+    <Compile Include="Microsoft\Shell\SingleInstance.cs" />
+    <Compile Include="Microsoft\Shell\WM.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SpecDesigner\BaseDataViewWindow.xaml.cs">
+      <DependentUpon>BaseDataViewWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SpecDesigner\BookmarksWindow.xaml.cs">
+      <DependentUpon>BookmarksWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SpecDesigner\CodeTemplate.cs" />
+    <Compile Include="SpecDesigner\CodeTemplateComparer.cs" />
+    <Compile Include="SpecDesigner\CodeTemplateSelector.xaml.cs">
+      <DependentUpon>CodeTemplateSelector.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SpecDesigner\Commands\MenuCommands.cs" />
+    <Compile Include="SpecDesigner\Converters\ActiveDocumentConverter.cs" />
+    <Compile Include="SpecDesigner\Converters\HistoryConverter.cs" />
+    <Compile Include="SpecDesigner\Converters\ObjectToTypeStringConverter.cs" />
+    <Compile Include="SpecDesigner\Converters\StringToImageConverter.cs" />
+    <Compile Include="SpecDesigner\Converters\ValueCheckedConverter.cs" />
+    <Compile Include="SpecDesigner\Converters\VisbilityToBooleanConverter.cs" />
+    <Compile Include="SpecDesigner\CustomAdpListWindow.xaml.cs">
+      <DependentUpon>CustomAdpListWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SpecDesigner\DummyArgModel.cs" />
+    <Compile Include="SpecDesigner\EditorWorkspaceList.xaml.cs">
+      <DependentUpon>EditorWorkspaceList.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SpecDesigner\FunctionList.xaml.cs">
+      <DependentUpon>FunctionList.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SpecDesigner\FunctionListCommands.cs" />
+    <Compile Include="SpecDesigner\Helper\ActiveDocoucmentConverter.cs" />
+    <Compile Include="SpecDesigner\Helper\FileViewModelFactory.cs" />
+    <Compile Include="SpecDesigner\InformationWindow.xaml.cs">
+      <DependentUpon>InformationWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SpecDesigner\LayoutInitializer.cs" />
+    <Compile Include="SpecDesigner\Main\AvalonTitleBinding.cs" />
+    <Compile Include="SpecDesigner\Main\SpecDesignerApp.xaml.cs">
+      <DependentUpon>SpecDesignerApp.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SpecDesigner\Main\SpecDesignerInit.cs" />
+    <Compile Include="SpecDesigner\Main\SpecDesignerMainWindow.xaml.cs">
+      <DependentUpon>SpecDesignerMainWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SpecDesigner\Main\SpecDesignerSplashScreen.xaml.cs">
+      <DependentUpon>SpecDesignerSplashScreen.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SpecDesigner\NumbericValidationRule.cs" />
+    <Compile Include="SpecDesigner\PanesStyleSelector.cs" />
+    <Compile Include="SpecDesigner\PanesTemplateSelector.cs" />
+    <Compile Include="SpecDesigner\ProgramInfomationWindow.xaml.cs">
+      <DependentUpon>ProgramInfomationWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SpecDesigner\Properties\Settings.Designer.cs">
+      <DependentUpon>Settings.settings</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <Compile Include="SpecDesigner\ReportSpecificationWindow.xaml.cs">
+      <DependentUpon>ReportSpecificationWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SpecDesigner\ShortcutListWindow.xaml.cs">
+      <DependentUpon>ShortcutListWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SpecDesigner\StartArgSetting.xaml.cs">
+      <DependentUpon>StartArgSetting.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SpecDesigner\TabItemHeader.xaml.cs">
+      <DependentUpon>TabItemHeader.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SpecDesigner\UploadSpecOptions.xaml.cs">
+      <DependentUpon>UploadSpecOptions.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SpecDesigner\ViCommandListWindow.xaml.cs">
+      <DependentUpon>ViCommandListWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SpecDesigner\ViewModels\CodeSpecViewModel.cs" />
+    <Compile Include="SpecDesigner\ViewModels\CodeViewModel.cs" />
+    <Compile Include="SpecDesigner\ViewModels\EditorWorkspace.cs" />
+    <Compile Include="SpecDesigner\ViewModels\FileViewModel.cs" />
+    <Compile Include="SpecDesigner\ViewModels\FormViewModel.cs" />
+    <Compile Include="SpecDesigner\ViewModels\MenuItemViewModel.cs" />
+    <Compile Include="SpecDesigner\ViewModels\PaneViewModel.cs" />
+    <Compile Include="SpecDesigner\ViewModels\ReportSpecViewModel.cs" />
+    <Compile Include="SpecDesigner\ViewModels\SettingViewModel.cs" />
+    <Compile Include="SpecDesigner\ViewModels\WelcomeViewModel.cs" />
+    <Compile Include="SpecDesigner\Views\AnchorableAdapterViewer.cs" />
+    <Compile Include="SpecDesigner\WelcomeWindow.xaml.cs">
+      <DependentUpon>WelcomeWindow.xaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.manifest" />
+    <None Include="SpecDesigner\Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="SpecDesigner\Main\SpecDesignerApp.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </ApplicationDefinition>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="SpecDesigner\BaseDataViewWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SpecDesigner\BookmarksWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SpecDesigner\CodeTemplateSelector.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SpecDesigner\CustomAdpListWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SpecDesigner\EditorWorkspaceList.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SpecDesigner\FunctionList.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SpecDesigner\InformationWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SpecDesigner\Main\SpecDesignerMainWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SpecDesigner\Main\SpecDesignerSplashScreen.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SpecDesigner\ProgramInfomationWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SpecDesigner\ReportSpecificationWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SpecDesigner\ShortcutListWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SpecDesigner\StartArgSetting.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SpecDesigner\TabItemHeader.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SpecDesigner\UploadSpecOptions.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SpecDesigner\ViCommandListWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SpecDesigner\WelcomeWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Themes\Generic.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="application.ico" />
+    <Resource Include="dsc_logo.ico" />
+    <Resource Include="images\about.png" />
+    <Resource Include="images\addbookmark.png" />
+    <Resource Include="images\addbookmark_dark.png" />
+    <Resource Include="images\addbookmark_gray.png" />
+    <Resource Include="images\bookmark.png" />
+    <Resource Include="images\bookmark_next.png" />
+    <Resource Include="images\bookmark_previous.png" />
+    <Resource Include="images\clear.png" />
+    <Resource Include="images\close.png" />
+    <Resource Include="images\copy.png" />
+    <Resource Include="images\copy_block_dark.png" />
+    <Resource Include="images\copy_block_gray.png" />
+    <Resource Include="images\copy_dark.png" />
+    <Resource Include="images\copy_gray.png" />
+    <Resource Include="images\copy_single_dark.png" />
+    <Resource Include="images\copy_single_gray.png" />
+    <Resource Include="images\cut.png" />
+    <Resource Include="images\cut_dark.png" />
+    <Resource Include="images\cut_gray.png" />
+    <Resource Include="images\delbookmark.png" />
+    <Resource Include="images\delbookmark_dark.png" />
+    <Resource Include="images\delbookmark_gray.png" />
+    <Resource Include="images\delete.png" />
+    <Resource Include="images\deleteall.png" />
+    <Resource Include="images\document_4fd.png" />
+    <Resource Include="images\document_4gl.png" />
+    <Resource Include="images\document_4gl_upload.png" />
+    <Resource Include="images\document_4rp.png" />
+    <Resource Include="images\document_spec.png" />
+    <Resource Include="images\document_spec_upload.png" />
+    <Resource Include="images\edit.png" />
+    <Resource Include="images\edit_copy.png" />
+    <Resource Include="images\edit_cut.png" />
+    <Resource Include="images\edit_paste.png" />
+    <Resource Include="images\exit.png" />
+    <Resource Include="images\file_save.png" />
+    <Resource Include="images\folder_open.png" />
+    <Resource Include="images\fromdesigner.png" />
+    <Resource Include="images\notedit.png" />
+    <Resource Include="images\openfile.png" />
+    <Resource Include="images\openfile_dark.png" />
+    <Resource Include="images\openfile_gray.png" />
+    <Resource Include="images\paste.png" />
+    <Resource Include="images\paste_dark.png" />
+    <Resource Include="images\paste_gray.png" />
+    <Resource Include="images\percompile_dark.png" />
+    <Resource Include="images\percompile_gray.png" />
+    <Resource Include="images\point_down_dark.png" />
+    <Resource Include="images\point_down_gray.png" />
+    <Resource Include="images\point_up_dark.png" />
+    <Resource Include="images\point_up_gray.png" />
+    <Resource Include="images\redo.png" />
+    <Resource Include="images\redo_dark.png" />
+    <Resource Include="images\redo_gray.png" />
+    <Resource Include="images\save.png" />
+    <Resource Include="images\save_dark.png" />
+    <Resource Include="images\save_gray.png" />
+    <Resource Include="images\search.png" />
+    <Resource Include="images\search_down_dark.png" />
+    <Resource Include="images\search_down_gray.png" />
+    <Resource Include="images\search_up_dark.png" />
+    <Resource Include="images\search_up_gray.png" />
+    <Resource Include="images\settings.png" />
+    <Resource Include="images\small.png" />
+    <Resource Include="images\small_dark.png" />
+    <Resource Include="images\undo.png" />
+    <Resource Include="images\undo_dark.png" />
+    <Resource Include="images\undo_gray.png" />
+    <Resource Include="images\upload01.png" />
+    <Resource Include="images\upload01_dark.png" />
+    <Resource Include="images\upload01_gray.png" />
+    <Resource Include="images\upload02.png" />
+    <Resource Include="images\upload02_dark.png" />
+    <Resource Include="images\upload02_gray.png" />
+    <Resource Include="images\upload_and_rc3_dark.png" />
+    <Resource Include="images\upload_and_rc3_dark2.png" />
+    <Resource Include="images\upload_and_rc3_gray.png" />
+    <Resource Include="images\upload_and_rc3_gray2.png" />
+    <Resource Include="images\x.png" />
+    <Resource Include="images\x_dark.png" />
+    <Resource Include="startup.png" />
+    <Resource Include="tzc_icon.ico" />
+    <Resource Include="tzd_icon.ico" />
+    <Resource Include="tzg_icon.ico" />
+    <Resource Include="tzp_icon.ico" />
+    <Resource Include="tzr_icon.ico" />
+    <Resource Include="tzs_icon.ico" />
+    <Resource Include="tzt_icon.ico" />
+    <Resource Include="tzx_icon.ico" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

@@ -1,0 +1,73 @@
+<Window
+	x:Class="SpecDesigner.CodeEditWindow.View.StandardVersionComparisonWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:code="clr-namespace:SpecDesigner.CodeEditWindow.View"
+	WindowStartupLocation="CenterScreen">
+	<FrameworkElement.Resources>
+		<ResourceDictionary>
+			<Style
+				x:Key="{x:Type Label}"
+				TargetType="{x:Type Label}">
+				<Setter
+					Property="FontSize"
+					Value="16" />
+				<Setter
+					Property="BorderBrush"
+					Value="#FF000000" />
+				<Setter
+					Property="BorderThickness"
+					Value="0,0,0,1" />
+				<Setter
+					Property="HorizontalContentAlignment"
+					Value="Center" />
+			</Style>
+		</ResourceDictionary>
+	</FrameworkElement.Resources>
+	<Grid
+		x:Name="dockPanel">
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition
+				Width="49*" />
+			<ColumnDefinition
+				Width="5" />
+			<ColumnDefinition
+				Width="49*" />
+		</Grid.ColumnDefinitions>
+		<Grid
+			Column="0">
+			<Grid.RowDefinitions>
+				<RowDefinition
+					Height="Auto" />
+				<RowDefinition
+					Height="*" />
+			</Grid.RowDefinitions>
+			<Label
+				x:Name="textEditor1_Title" />
+			<code:SimpleDiffTextViewer
+				x:Name="textEditor1"
+				Grid.Row="1" />
+		</Grid>
+		<GridSplitter
+			Grid.Column="1"
+			Margin="0,2,0,2"
+			HorizontalAlignment="Stretch"
+			ShowsPreview="True" />
+		<Grid
+			Column="2">
+			<Grid.RowDefinitions>
+				<RowDefinition
+					Height="Auto" />
+				<RowDefinition
+					Height="*" />
+			</Grid.RowDefinitions>
+			<Label
+				x:Name="textEditor2_Title" />
+			<code:SimpleDiffTextViewer
+				x:Name="textEditor2"
+				Grid.Row="1" />
+		</Grid>
+	</Grid>
+</Window>

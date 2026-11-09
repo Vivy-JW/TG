@@ -1,0 +1,1523 @@
+<Window
+	x:Class="SpecDesigner.Main.SpecDesignerMainWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:ad="clr-namespace:Xceed.Wpf.AvalonDock;assembly=Xceed.Wpf.AvalonDock"
+	xmlns:avalonDock="http://schemas.xceed.com/wpf/xaml/avalondock"
+	xmlns:adCtrls="clr-namespace:Xceed.Wpf.AvalonDock.Controls;assembly=Xceed.Wpf.AvalonDock"
+	xmlns:adLayout="clr-namespace:Xceed.Wpf.AvalonDock.Layout;assembly=Xceed.Wpf.AvalonDock"
+	xmlns:adCvr="clr-namespace:Xceed.Wpf.AvalonDock.Converters;assembly=Xceed.Wpf.AvalonDock"
+	xmlns:s="clr-namespace:System;assembly=mscorlib"
+	xmlns:cmds="clr-namespace:SpecDesigner.Commands"
+	xmlns:form="clr-namespace:SpecDesigner.FormEditor;assembly=SpecDesigner.FormEditor"
+	xmlns:code="clr-namespace:SpecDesigner.CodeEditWindow;assembly=CodeEditWindow"
+	xmlns:spc="clr-namespace:SpecDesigner.SpecEditor;assembly=SpecDesigner.SpecEditor"
+	xmlns:output="clr-namespace:SpecDesigner.Output;assembly=SpecDesigner.Output"
+	xmlns:converters="clr-namespace:SpecDesigner.Converters"
+	xmlns:views="clr-namespace:SpecDesigner.Views"
+	xmlns:common="clr-namespace:SpecDesignerCommon;assembly=SpecDesignerCommon"
+	xmlns:local="clr-namespace:SpecDesigner.Main"
+	xmlns:l="clr-namespace:SpecDesigner"
+	xmlns:lv="clr-namespace:SpecDesigner.ViewModels"
+	xmlns:ch="clr-namespace:SpecDesigner.CodeEditWindow.Helper;assembly=CodeEditWindow"
+	xmlns:ci="clr-namespace:SpecDesigner.Infrastructure.Helper;assembly=Infrastructure"
+	xmlns:System="clr-namespace:System;assembly=mscorlib"
+	xmlns:av="clr-namespace:ICSharpCode.AvalonEdit;assembly=ICSharpCode.AvalonEdit"
+	xmlns:pf="clr-namespace:SpecDesignerPreference;assembly=SpecDesignerCommon"
+	x:Name="this"
+	WindowState="Maximized"
+	Title="T100Designer"
+	Height="350"
+	Width="525">
+	<FrameworkElement.Resources>
+		<ResourceDictionary>
+			<converters:ActiveDocumentConverter
+				x:Key="activeDocumentConverter" />
+			<converters:StringToImageConverter
+				x:Key="StringToImageConverter" />
+			<adCvr:BoolToVisibilityConverter
+				x:Key="BoolToVisibilityConverter" />
+			<converters:HistoryConverter
+				x:Key="historyConverter" />
+			<System:Boolean
+				x:Key="FalseValue">False</System:Boolean>
+			<System:Boolean
+				x:Key="TrueValue">True</System:Boolean>
+			<Style
+				x:Key="buttonImageStyle"
+				TargetType="{x:Type Image}">
+				<Setter
+					Property="Height"
+					Value="24" />
+				<Setter
+					Property="Width"
+					Value="24" />
+				<Setter
+					Property="Stretch"
+					Value="Uniform" />
+			</Style>
+			<Style
+				x:Key="toggleImageStyle"
+				TargetType="{x:Type Image}">
+				<Style.Triggers>
+					<Trigger
+						Property="IsEnabled"
+						Value="False">
+						<Setter
+							Property="UIElement.Opacity"
+							Value="0.3" />
+					</Trigger>
+				</Style.Triggers>
+			</Style>
+			<Style
+				x:Key="HideTriggers"
+				TargetType="{x:Type MenuItem}"
+				BasedOn="{StaticResource {x:Type MenuItem}}">
+				<Style.Triggers>
+					<Trigger
+						Property="IsEnabled"
+						Value="False">
+						<Setter
+							Property="Visibility"
+							Value="Collapsed" />
+					</Trigger>
+				</Style.Triggers>
+			</Style>
+		</ResourceDictionary>
+	</FrameworkElement.Resources>
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition
+				Height="24" />
+			<RowDefinition
+				Height="Auto" />
+			<RowDefinition
+				Height="*" />
+			<RowDefinition
+				Height="24" />
+		</Grid.RowDefinitions>
+		<Menu
+			x:Name="CustomMenu">
+			<MenuItem
+				Header="{StaticResource menu_File}"
+				Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}">
+				<MenuItem
+					Header="{StaticResource menu_FileOpen}"
+					Command="cmds:MenuCommands.FileOpenCommand" />
+				<MenuItem
+					Header="{StaticResource menu_FileSave}"
+					Command="ApplicationCommands.Save" />
+				<MenuItem
+					Header="{StaticResource menu_FileClose}"
+					Command="cmds:MenuCommands.FileCloseCommand" />
+				<MenuItem
+					Header="{StaticResource menu_FileCloseAll}"
+					Command="cmds:MenuCommands.FileCloseAllCommand" />
+				<Separator
+					Visibility="Collapsed" />
+				<MenuItem
+					x:Name="recetnFilesMenu"
+					Header="{StaticResource menu_RecentFiles}"
+					Visibility="Collapsed">
+					<ItemsControl.ItemContainerStyle>
+						<Style
+							TargetType="{x:Type MenuItem}">
+							<Setter
+								Property="Header"
+								Value="{Binding}" />
+							<Setter
+								Property="MenuItem.Command"
+								Value="cmds:MenuCommands.RecentFilesCommand" />
+							<Setter
+								Property="MenuItem.CommandParameter"
+								Value="{Binding}" />
+						</Style>
+					</ItemsControl.ItemContainerStyle>
+				</MenuItem>
+				<Separator />
+				<MenuItem
+					Header="{StaticResource menu_Diff}"
+					Command="cmds:MenuCommands.DiffCommand" />
+				<Separator />
+				<MenuItem
+					Header="{StaticResource menu_SimpleFormSetup}"
+					Command="cmds:MenuCommands.SimpleFormSetupCommand"
+					Style="{StaticResource HideTriggers}" />
+				<MenuItem
+					Header="{StaticResource menu_InsertIndFunIntoStandard}"
+					Command="cmds:MenuCommands.InsertIndFunctionSetupCommand" />
+				<Separator />
+				<MenuItem
+					Header="{StaticResource menu_FileExit}"
+					Command="cmds:MenuCommands.ExitCommand" />
+			</MenuItem>
+			<MenuItem
+				Header="{StaticResource menu_Find}">
+				<MenuItem
+					Header="{StaticResource menu_Find}"
+					Command="cmds:MenuCommands.FindCommand" />
+				<MenuItem
+					Header="{StaticResource menu_FindNext}"
+					Command="code:CodeMenuCommands.FindNextCommand" />
+				<MenuItem
+					Header="{StaticResource menu_FindPrevious}"
+					Command="code:CodeMenuCommands.FindPreviousCommand" />
+				<Separator
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<MenuItem
+					Header="{StaticResource menu_Replace}"
+					Command="cmds:MenuCommands.ReplaceCommand"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+			</MenuItem>
+			<MenuItem
+				Header="{StaticResource menu_Specification}"
+				Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}">
+				<MenuItem
+					Header="{StaticResource menu_SpecificationDownload}"
+					Command="cmds:MenuCommands.SpecificationDownloadCommand" />
+				<MenuItem
+					Header="{StaticResource menu_SpecificationUpload}"
+					Command="cmds:MenuCommands.SpecCodeUploadCommand"
+					CommandParameter="{x:Static common:TzpType.Form}" />
+				<MenuItem
+					Header="{StaticResource menu_Precompile}"
+					Command="cmds:MenuCommands.PrecompileCommand"
+					CommandParameter="{x:Static common:TzpType.Form}" />
+				<Separator />
+				<MenuItem
+					Header="{StaticResource menu_ThisVersionSpecModify}"
+					Command="cmds:MenuCommands.SpecThisVersionModifyCommand" />
+				<Separator />
+				<MenuItem
+					Header="{StaticResource menu_TableSchemaAssocSetting}"
+					Command="cmds:MenuCommands.SRRelationSettingCommand" />
+				<MenuItem
+					Header="{StaticResource menu_SpecificationView}"
+					Command="cmds:MenuCommands.SpecificationViewCommand" />
+				<Separator
+					Visibility="{Binding Visibility, ElementName=showSpecUncited}" />
+				<MenuItem
+					x:Name="showSpecUncited"
+					Header="{StaticResource menu_UncitedSpecificationView}"
+					Command="cmds:MenuCommands.UncitedSpecificationViewCommand"
+					Style="{StaticResource HideTriggers}" />
+				<MenuItem
+					Header="{StaticResource menu_PatchComponentListView}"
+					Command="cmds:MenuCommands.ViewFormDiffListCommand"
+					Style="{StaticResource HideTriggers}" />
+				<Separator />
+				<MenuItem
+					Header="{StaticResource menu_PreviewForm}"
+					Command="cmds:MenuCommands.FormPreviewCommand" />
+				<Separator
+					Visibility="{Binding Mode=OneWay, ElementName=simpleFormDownload, Path=IsEnabled, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<MenuItem
+					x:Name="simpleFormDownload"
+					Header="{StaticResource menu_SimpleFormDownload}"
+					Command="cmds:MenuCommands.SimpleFormDownloadCommand"
+					Style="{StaticResource HideTriggers}" />
+				<MenuItem
+					x:Name="simpleFormUpload"
+					Header="{StaticResource menu_SimpleFormUpload}"
+					Command="cmds:MenuCommands.SimpleFormUploadCommand" />
+				<Separator />
+				<MenuItem
+					Header="{StaticResource menu_SpecificationExport}"
+					Command="cmds:MenuCommands.ExportDocxCommand"
+					CommandTarget="{Binding Path=DataContext, RelativeSource={RelativeSource Self}}" />
+				<MenuItem
+					Header="{StaticResource menu_SCOImport}"
+					Command="cmds:MenuCommands.adzp165Command" />
+				<Separator />
+				<MenuItem
+					Header="{StaticResource menu_AboutSpec}"
+					Command="cmds:MenuCommands.ViewProgramInfomationCommand"
+					CommandParameter="Spec" />
+				<MenuItem
+					Header="{StaticResource menu_AdjustContainerBlankArea}"
+					Command="cmds:MenuCommands.SpecAdjustContainerBlankAreaCommand"
+					CommandParameter="Spec"
+					Visibility="Collapsed" />
+			</MenuItem>
+			<MenuItem
+				Header="{StaticResource menu_Program}"
+				Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}">
+				<MenuItem
+					Header="{StaticResource menu_ProgramDownload}"
+					Command="cmds:MenuCommands.ProgramDownloadCommand" />
+				<MenuItem
+					Header="{StaticResource menu_ProgramUpload}"
+					Command="cmds:MenuCommands.SpecCodeUploadCommand"
+					CommandParameter="{x:Static common:TzpType.Code}" />
+				<MenuItem
+					Header="{StaticResource menu_Precompile}"
+					Command="cmds:MenuCommands.PrecompileCommand"
+					CommandParameter="{x:Static common:TzpType.Code}" />
+				<Separator />
+				<MenuItem
+					Header="{StaticResource menu_UploadIndFunctionSetup}"
+					Command="cmds:MenuCommands.UploadIndFunctionSetupCommand" />
+				<Separator />
+				<MenuItem
+					Header="{StaticResource menu_ThisVersionProgramModify}"
+					Command="cmds:MenuCommands.ProgramThisVersionModifyCommand" />
+				<Separator />
+				<MenuItem
+					Header="{StaticResource menu_ProgramTest}"
+					Command="cmds:MenuCommands.ProgramTestCommand" />
+				<MenuItem
+					Header="{StaticResource menu_ProgramDebug}"
+					Command="cmds:MenuCommands.ProgramDebugCommand" />
+				<MenuItem
+					Header="{StaticResource menu_ProgramErrorCheck}"
+					Command="cmds:MenuCommands.ProgramErrorCheckCommand" />
+				<Separator
+					Visibility="{Binding Visibility, ElementName=showProgramUncited}" />
+				<MenuItem
+					x:Name="showProgramUncited"
+					Header="{StaticResource menu_ShowProgramUncited}"
+					Command="cmds:MenuCommands.ShowUncitedCommand"
+					Style="{StaticResource HideTriggers}" />
+				<MenuItem
+					x:Name="showProgramSectionUncited"
+					Header="{StaticResource menu_ShowProgramSectionUncited}"
+					Command="cmds:MenuCommands.ShowSectionUncitedCommand" />
+				<MenuItem
+					x:Name="showProgramCustomAdpList"
+					Header="{StaticResource menu_ShowProgramCustomAdpList}"
+					Command="cmds:MenuCommands.ShowCustomAdpListCommand" />
+				<Separator />
+				<MenuItem
+					Header="{StaticResource menu_ShowProgramRegen}"
+					Command="cmds:MenuCommands.ProgramRegenCommand" />
+				<MenuItem
+					Header="{StaticResource menu_SpecificationUploadResetTAP}"
+					Command="cmds:MenuCommands.SpecificationUploadResetTAPCommand" />
+				<MenuItem
+					Header="{StaticResource menu_azzi908}"
+					Command="cmds:MenuCommands.SetFreeStyleCommand" />
+				<MenuItem
+					Header="{StaticResource menu_changeProgramTemplate}"
+					Command="cmds:MenuCommands.ChangeProgramTemplateCommand" />
+				<MenuItem
+					Header="{StaticResource Menu_SetCodeStartArg}"
+					Command="cmds:MenuCommands.ChangeStartargCommand" />
+				<MenuItem
+					Header="{StaticResource menu_QSetting}"
+					Command="cmds:MenuCommands.azzi909Command" />
+				<Separator />
+				<MenuItem
+					Header="{StaticResource menu_EnableViMode}"
+					Command="av:AvalonEditCommands.EnableViMode" />
+				<Separator />
+				<MenuItem
+					Header="{StaticResource menu_Edit}">
+					<MenuItem
+						Header="{StaticResource CE_KeywordConvert}"
+						Command="ch:CodeEditCommands.KeywordUpperCase"
+						CommandTarget="{Binding ActiveDocument}" />
+					<MenuItem
+						Header="{StaticResource CE_Block}"
+						Command="ch:CodeEditCommands.BlockComment"
+						CommandTarget="{Binding ActiveDocument}" />
+					<MenuItem
+						Header="{StaticResource CE_UnBlock}"
+						Command="ch:CodeEditCommands.UnblockComment"
+						CommandTarget="{Binding ActiveDocument}" />
+				</MenuItem>
+				<MenuItem
+					Header="{StaticResource menu_AutoComplete}">
+					<MenuItem
+						Header="{StaticResource menu_ShowKeyword}"
+						Command="ch:CodeEditCommands.CodeCompletion"
+						CommandTarget="{Binding ActiveDocument}" />
+					<MenuItem
+						Header="{StaticResource menu_ShowSelfKeyword}"
+						Command="ch:CodeEditCommands.FavoriteCodeCompletion"
+						CommandTarget="{Binding ActiveDocument}" />
+					<MenuItem
+						Header="{StaticResource menu_ShowDBKeyword}"
+						Command="ch:CodeEditCommands.ColumnCodeCompletion"
+						CommandTarget="{Binding ActiveDocument}" />
+				</MenuItem>
+				<MenuItem
+					Header="{StaticResource CE_GoToLineTitle}"
+					Command="ch:CodeEditCommands.GoToLine"
+					CommandTarget="{Binding ActiveDocument}" />
+				<MenuItem
+					Header="{StaticResource CE_Refresh}"
+					Command="ch:CodeEditCommands.RefreshScreen"
+					CommandTarget="{Binding ActiveDocument}" />
+				<MenuItem
+					Header="{StaticResource CE_ToogleDiffEditable}"
+					Command="cmds:MenuCommands.ToggleDiffEditableCommand"
+					Style="{StaticResource HideTriggers}"
+					CommandTarget="{Binding ActiveDocument}" />
+				<Separator />
+				<MenuItem
+					Header="{StaticResource menu_AboutProgram}"
+					Command="cmds:MenuCommands.ViewProgramInfomationCommand"
+					CommandParameter="Code" />
+			</MenuItem>
+			<MenuItem
+				Header="{StaticResource menu_Report}"
+				Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}">
+				<MenuItem
+					Header="{StaticResource menu_Report_Download}"
+					Command="cmds:MenuCommands.ReportDownloadCommand" />
+				<MenuItem
+					Header="{StaticResource menu_Report_Upload}"
+					Command="cmds:MenuCommands.ReportUploadCommand" />
+				<Separator />
+				<MenuItem
+					Header="{StaticResource menu_Report_Open}"
+					Command="cmds:MenuCommands.ReportOpenCommand" />
+			</MenuItem>
+			<MenuItem
+				Header="{StaticResource menu_ForConsultant}">
+				<MenuItem
+					Header="{StaticResource menu_SpecificationDownload_2}"
+					Command="cmds:MenuCommands.SpecificationDownloadCommand"
+					CommandParameter="SIMPLE" />
+				<MenuItem
+					Header="{StaticResource menu_SpecOpen}"
+					Command="cmds:MenuCommands.SpecOpenCommand" />
+				<MenuItem
+					Header="{StaticResource menu_TableSchemaAssocSetting}"
+					Command="cmds:MenuCommands.SRRelationSettingCommand" />
+				<MenuItem
+					Header="{StaticResource menu_UploadAndRC3_2}"
+					Command="cmds:MenuCommands.SpecCodeUploadAndRC3Command"
+					CommandParameter="{x:Static common:TzpType.Form}" />
+				<MenuItem
+					Header="{StaticResource menu_PreviewForm}"
+					Command="cmds:MenuCommands.FormPreviewCommand" />
+				<MenuItem
+					Header="{StaticResource menu_SpecCheckIn}"
+					Command="cmds:MenuCommands.SpecCheckInCommand" />
+				<Separator />
+				<MenuItem
+					Header="{StaticResource menu_ToggleStandardAndLite}"
+					Command="cmds:MenuCommands.ToggleLiteCommand"
+					IsCheckable="True"
+					IsChecked="{Binding SimpleDownloadDialog}" />
+				<Separator />
+				<MenuItem
+					Header="{StaticResource menu_AboutSpec}"
+					Command="cmds:MenuCommands.ViewProgramInfomationCommand"
+					CommandParameter="Spec" />
+			</MenuItem>
+			<MenuItem
+				Header="{StaticResource menu_Tools}">
+				<MenuItem
+					Header="{StaticResource menu_adzi140}"
+					Command="cmds:MenuCommands.adzi140Command" />
+				<MenuItem
+					Header="{StaticResource menu_adzi150}"
+					Command="cmds:MenuCommands.adzi150Command" />
+				<MenuItem
+					Header="{StaticResource menu_adzp168}"
+					Command="cmds:MenuCommands.adzp168Command"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<MenuItem
+					Header="{StaticResource menu_adzi210}"
+					Command="cmds:MenuCommands.adzi210Command" />
+				<MenuItem
+					Header="{StaticResource menu_adzi220}"
+					Command="cmds:MenuCommands.adzi220Command" />
+				<MenuItem
+					Header="{StaticResource menu_adzq255}"
+					Command="cmds:MenuCommands.adzq255Command"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<Separator />
+				<MenuItem
+					Header="{StaticResource menu_azzi900}"
+					Command="cmds:MenuCommands.azzi900Command" />
+				<MenuItem
+					Header="{StaticResource menu_azzi901}"
+					Command="cmds:MenuCommands.azzi901Command" />
+				<MenuItem
+					Header="{StaticResource menu_azzi910}"
+					Command="cmds:MenuCommands.azzi910Command"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<MenuItem
+					Header="{StaticResource menu_azzi920}"
+					Command="cmds:MenuCommands.azzi920Command" />
+				<MenuItem
+					Header="{StaticResource menu_azzi600}"
+					Command="cmds:MenuCommands.azzi600Command" />
+				<MenuItem
+					Header="{StaticResource menu_azzi650}"
+					Command="cmds:MenuCommands.azzi650Command"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<Separator />
+				<MenuItem
+					Header="{StaticResource menu_adzp188}"
+					Command="cmds:MenuCommands.adzp188Command"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<MenuItem
+					Header="{StaticResource menu_azzi301}"
+					Command="cmds:MenuCommands.azzi301Command"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<MenuItem
+					Header="{StaticResource menu_azzi300}"
+					Command="cmds:MenuCommands.azzi300Command"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<Separator
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<MenuItem
+					Header="{StaticResource menu_adzp270}"
+					Command="cmds:MenuCommands.adzp270Command"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<MenuItem
+					Header="{StaticResource menu_adzp990Exp}"
+					Command="cmds:MenuCommands.adzp990ExpCommand" />
+				<MenuItem
+					Header="{StaticResource menu_adzp990Imp}"
+					Command="cmds:MenuCommands.adzp990ImpCommand" />
+				<MenuItem
+					Header="{StaticResource menu_ProgramDevelopDataExport}"
+					Command="cmds:MenuCommands.adzi888ExpCommand" />
+				<MenuItem
+					Header="{StaticResource menu_ProgramDevelopDataImport}"
+					Command="cmds:MenuCommands.adzi888ImpCommand" />
+			</MenuItem>
+			<MenuItem
+				x:Name="preferenceMenu"
+				Header="{StaticResource menu_CommonUsed}"
+				Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}">
+				<ItemsControl.ItemContainerStyle>
+					<Style
+						BasedOn="{StaticResource {x:Type MenuItem}}"
+						TargetType="{x:Type MenuItem}">
+						<Setter
+							Property="Header"
+							Value="{Binding Title}" />
+						<Setter
+							Property="MenuItem.Command"
+							Value="cmds:MenuCommands.PreferenceShortcut" />
+						<Setter
+							Property="MenuItem.CommandParameter"
+							Value="{Binding Name}" />
+					</Style>
+				</ItemsControl.ItemContainerStyle>
+			</MenuItem>
+			<MenuItem
+				Header="{StaticResource menu_AdvancedTools}">
+				<MenuItem
+					Header="{StaticResource menu_BasicDataUpdate}"
+					Command="cmds:MenuCommands.BasicDataUpdateCommand" />
+				<MenuItem
+					Header="{StaticResource menu_SelectBasicDataUpdate}"
+					Command="cmds:MenuCommands.SelectBasicDataUpdateCommand" />
+				<MenuItem
+					Header="{StaticResource menu_BasicDataView}"
+					Command="cmds:MenuCommands.BaseDataViewCommand" />
+				<MenuItem
+					Header="{StaticResource menu_ReGenerateBasicData}"
+					Command="cmds:MenuCommands.RegenerateBasicDataCommand" />
+				<Separator />
+				<MenuItem
+					Header="{StaticResource tableView_WindowTitle}"
+					Command="cmds:MenuCommands.TableViewCommand" />
+				<MenuItem
+					Header="{StaticResource columnView_WindowTitle}"
+					Command="cmds:MenuCommands.ColumnViewCommand" />
+				<Separator />
+				<MenuItem
+					Header="{StaticResource menu_SiteManager}"
+					Command="cmds:MenuCommands.SiteManagerCommand" />
+				<MenuItem
+					Header="{StaticResource menu_ShowLog}"
+					Command="cmds:MenuCommands.ShowLogCommand" />
+				<Separator
+					Visibility="{Binding Mode=OneWay, ElementName=serviceCloudSetting, Path=IsEnabled, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<MenuItem
+					x:Name="serviceCloudSetting"
+					Header="{StaticResource menu_ServiceCloudSetting}"
+					Command="cmds:MenuCommands.ShowServiceCloudLoginCommand"
+					Style="{StaticResource HideTriggers}" />
+				<Separator
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<MenuItem
+					Header="{StaticResource menu_SearchKeySetting}"
+					Command="cmds:MenuCommands.SearchKeySettingWindowCommand"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<Separator />
+				<MenuItem
+					Header="{StaticResource menu_Preference}"
+					Command="cmds:MenuCommands.PreferenceWindowCommand" />
+			</MenuItem>
+			<MenuItem
+				Header="{StaticResource menu_View}">
+				<MenuItem
+					Header="{StaticResource menu_ViewSpecPropertyEditor}"
+					Tag=""
+					Command="cmds:MenuCommands.ToggleLayoutCommand"
+					CommandParameter="SpecPropertyEditorLayout"
+					IsCheckable="True"
+					IsChecked="{Binding SpecPropertyEditorLayout_IsChecked}" />
+				<MenuItem
+					Header="{StaticResource menu_FormStructure}"
+					Tag=""
+					Command="cmds:MenuCommands.ToggleLayoutCommand"
+					CommandParameter="FormStructureLayout"
+					IsCheckable="True"
+					IsChecked="{Binding FormStructureLayout_IsChecked}" />
+				<MenuItem
+					Header="{StaticResource FunctionList_Title}"
+					Tag=""
+					Command="cmds:MenuCommands.ToggleLayoutCommand"
+					CommandParameter="FunctionListLayout"
+					IsCheckable="True"
+					IsChecked="{Binding FunctionListLayout_IsChecked}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<MenuItem
+					Header="{StaticResource menu_ViewSpecEditor}"
+					Tag=""
+					Command="cmds:MenuCommands.ToggleLayoutCommand"
+					CommandParameter="SpecEditorLayout"
+					IsCheckable="True"
+					IsChecked="{Binding SpecEditorLayout_IsChecked}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<MenuItem
+					Header="{StaticResource menu_ViewErrorList}"
+					Tag=""
+					Command="cmds:MenuCommands.ToggleLayoutCommand"
+					CommandParameter="SpecErrorsLayout"
+					IsCheckable="True"
+					IsChecked="{Binding SpecErrorsLayout_IsChecked}" />
+				<MenuItem
+					Header="{StaticResource menu_Bookmarks}"
+					Tag=""
+					Command="cmds:MenuCommands.ToggleLayoutCommand"
+					CommandParameter="BookmarksLayout"
+					IsCheckable="True"
+					IsChecked="{Binding BookmarksLayout_IsChecked}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<MenuItem
+					Header="{StaticResource menu_Welcome}"
+					Tag=""
+					Visibility="Collapsed"
+					Command="cmds:MenuCommands.ToggleLayoutCommand"
+					CommandParameter="WelcomeLayout"
+					IsCheckable="True"
+					IsChecked="{Binding WelcomeLayout_IsChecked}" />
+				<MenuItem
+					Header="{StaticResource menu_DatabaseSource}"
+					Tag=""
+					Command="cmds:MenuCommands.ToggleLayoutCommand"
+					CommandParameter="DatabaseSourceLayout"
+					IsCheckable="True"
+					IsChecked="{Binding DatabaseSourceLayout_IsChecked}" />
+			</MenuItem>
+			<MenuItem
+				Header="{StaticResource menu_Help}"
+				Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}">
+				<MenuItem
+					Header="Genero User Guide"
+					Command="cmds:MenuCommands.ShowGeneroUserGuideCommand" />
+				<Separator />
+				<MenuItem
+					Header="{StaticResource menu_About}"
+					Command="cmds:MenuCommands.ShowAboutCommand" />
+				<MenuItem
+					Header="{StaticResource menu_Shortcut}"
+					Command="cmds:MenuCommands.ShowShorcutListCommand" />
+				<MenuItem
+					Header="{StaticResource menu_ViCommandList}"
+					Command="cmds:MenuCommands.ShowViCommandListCommand" />
+			</MenuItem>
+		</Menu>
+		<ToolBarTray
+			Orientation="Horizontal"
+			IsLocked="True"
+			Grid.Row="1">
+			<ToolBar
+				Band="1"
+				BandIndex="1">
+				<Button
+					x:Name="fileOpenMenu"
+					Command="cmds:MenuCommands.FileOpenCommand"
+					ToolTip="{StaticResource menu_FileOpen}">
+					<FrameworkElement.Style>
+						<Style
+							BasedOn="{StaticResource ToolBarButtonBaseStyle}"
+							TargetType="{x:Type Button}">
+							<Setter
+								Property="Content">
+								<Setter.Value>
+									<Image
+										Source="Images/openfile_dark.png"
+										Style="{StaticResource buttonImageStyle}" />
+								</Setter.Value>
+							</Setter>
+							<Style.Triggers>
+								<Trigger
+									Property="IsEnabled"
+									Value="False">
+									<Setter
+										Property="Content">
+										<Setter.Value>
+											<Image
+												Source="Images/openfile_gray.png"
+												Style="{StaticResource buttonImageStyle}" />
+										</Setter.Value>
+									</Setter>
+								</Trigger>
+							</Style.Triggers>
+						</Style>
+					</FrameworkElement.Style>
+				</Button>
+				<Button
+					Command="ApplicationCommands.Save"
+					ToolTip="{StaticResource menu_FileSave}">
+					<FrameworkElement.Style>
+						<Style
+							BasedOn="{StaticResource ToolBarButtonBaseStyle}"
+							TargetType="{x:Type Button}">
+							<Setter
+								Property="Content">
+								<Setter.Value>
+									<Image
+										Source="Images/save_dark.png"
+										Style="{StaticResource buttonImageStyle}" />
+								</Setter.Value>
+							</Setter>
+							<Style.Triggers>
+								<Trigger
+									Property="IsEnabled"
+									Value="False">
+									<Setter
+										Property="Content">
+										<Setter.Value>
+											<Image
+												Source="Images/save_gray.png"
+												Style="{StaticResource buttonImageStyle}" />
+										</Setter.Value>
+									</Setter>
+								</Trigger>
+							</Style.Triggers>
+						</Style>
+					</FrameworkElement.Style>
+				</Button>
+				<Separator />
+				<Button
+					Command="cmds:MenuCommands.SpecCodeUploadCommand"
+					ToolTip="{StaticResource menu_Upload}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}">
+					<FrameworkElement.Style>
+						<Style
+							BasedOn="{StaticResource ToolBarButtonBaseStyle}"
+							TargetType="{x:Type Button}">
+							<Setter
+								Property="Content">
+								<Setter.Value>
+									<Image
+										Source="Images/upload01_dark.png"
+										Style="{StaticResource buttonImageStyle}" />
+								</Setter.Value>
+							</Setter>
+							<Style.Triggers>
+								<Trigger
+									Property="IsEnabled"
+									Value="False">
+									<Setter
+										Property="Content">
+										<Setter.Value>
+											<Image
+												Source="Images/upload01_gray.png"
+												Style="{StaticResource buttonImageStyle}" />
+										</Setter.Value>
+									</Setter>
+								</Trigger>
+							</Style.Triggers>
+						</Style>
+					</FrameworkElement.Style>
+				</Button>
+				<Button
+					Command="cmds:MenuCommands.SpecCodeUploadAndRC3Command"
+					ToolTip="{StaticResource menu_UploadAndRC3}">
+					<FrameworkElement.Style>
+						<Style
+							BasedOn="{StaticResource ToolBarButtonBaseStyle}"
+							TargetType="{x:Type Button}">
+							<Setter
+								Property="Content">
+								<Setter.Value>
+									<Image
+										Source="Images/upload_and_rc3_dark2.png"
+										Style="{StaticResource buttonImageStyle}" />
+								</Setter.Value>
+							</Setter>
+							<Style.Triggers>
+								<Trigger
+									Property="IsEnabled"
+									Value="False">
+									<Setter
+										Property="Content">
+										<Setter.Value>
+											<Image
+												Source="Images/upload_and_rc3_gray2.png"
+												Style="{StaticResource buttonImageStyle}" />
+										</Setter.Value>
+									</Setter>
+								</Trigger>
+							</Style.Triggers>
+						</Style>
+					</FrameworkElement.Style>
+				</Button>
+				<Button
+					Command="cmds:MenuCommands.PrecompileCommand"
+					ToolTip="{StaticResource menu_Precompile}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}">
+					<FrameworkElement.Style>
+						<Style
+							BasedOn="{StaticResource ToolBarButtonBaseStyle}"
+							TargetType="{x:Type Button}">
+							<Setter
+								Property="Content">
+								<Setter.Value>
+									<Image
+										Source="Images/percompile_dark.png"
+										Style="{StaticResource buttonImageStyle}" />
+								</Setter.Value>
+							</Setter>
+							<Style.Triggers>
+								<Trigger
+									Property="IsEnabled"
+									Value="False">
+									<Setter
+										Property="Content">
+										<Setter.Value>
+											<Image
+												Source="Images/percompile_gray.png"
+												Style="{StaticResource buttonImageStyle}" />
+										</Setter.Value>
+									</Setter>
+								</Trigger>
+							</Style.Triggers>
+						</Style>
+					</FrameworkElement.Style>
+				</Button>
+				<Separator />
+				<Button
+					Command="ApplicationCommands.Cut"
+					ToolTip="{StaticResource CE_Cut}">
+					<FrameworkElement.Style>
+						<Style
+							BasedOn="{StaticResource ToolBarButtonBaseStyle}"
+							TargetType="{x:Type Button}">
+							<Setter
+								Property="Content">
+								<Setter.Value>
+									<Image
+										Source="/Images/cut_dark.png"
+										Style="{StaticResource buttonImageStyle}" />
+								</Setter.Value>
+							</Setter>
+							<Style.Triggers>
+								<Trigger
+									Property="IsEnabled"
+									Value="False">
+									<Setter
+										Property="Content">
+										<Setter.Value>
+											<Image
+												Source="/Images/cut_gray.png"
+												Style="{StaticResource buttonImageStyle}" />
+										</Setter.Value>
+									</Setter>
+								</Trigger>
+							</Style.Triggers>
+						</Style>
+					</FrameworkElement.Style>
+				</Button>
+				<Button
+					Command="ApplicationCommands.Copy"
+					ToolTip="{StaticResource CE_Copy}">
+					<FrameworkElement.Style>
+						<Style
+							BasedOn="{StaticResource ToolBarButtonBaseStyle}"
+							TargetType="{x:Type Button}">
+							<Setter
+								Property="Content">
+								<Setter.Value>
+									<Image
+										Source="/Images/copy_dark.png"
+										Style="{StaticResource buttonImageStyle}" />
+								</Setter.Value>
+							</Setter>
+							<Style.Triggers>
+								<Trigger
+									Property="IsEnabled"
+									Value="False">
+									<Setter
+										Property="Content">
+										<Setter.Value>
+											<Image
+												Source="/Images/copy_gray.png"
+												Style="{StaticResource buttonImageStyle}" />
+										</Setter.Value>
+									</Setter>
+								</Trigger>
+							</Style.Triggers>
+						</Style>
+					</FrameworkElement.Style>
+				</Button>
+				<Button
+					Command="ApplicationCommands.Paste"
+					ToolTip="{StaticResource CE_Paste}">
+					<FrameworkElement.Style>
+						<Style
+							BasedOn="{StaticResource ToolBarButtonBaseStyle}"
+							TargetType="{x:Type Button}">
+							<Setter
+								Property="Content">
+								<Setter.Value>
+									<Image
+										Source="/Images/paste_dark.png"
+										Style="{StaticResource buttonImageStyle}" />
+								</Setter.Value>
+							</Setter>
+							<Style.Triggers>
+								<Trigger
+									Property="IsEnabled"
+									Value="False">
+									<Setter
+										Property="Content">
+										<Setter.Value>
+											<Image
+												Source="/Images/paste_gray.png"
+												Style="{StaticResource buttonImageStyle}" />
+										</Setter.Value>
+									</Setter>
+								</Trigger>
+							</Style.Triggers>
+						</Style>
+					</FrameworkElement.Style>
+				</Button>
+				<Separator />
+				<Button
+					Command="ApplicationCommands.Undo"
+					ToolTip="{StaticResource menu_Undo}">
+					<FrameworkElement.Style>
+						<Style
+							BasedOn="{StaticResource ToolBarButtonBaseStyle}"
+							TargetType="{x:Type Button}">
+							<Setter
+								Property="Content">
+								<Setter.Value>
+									<Image
+										Source="/Images/undo_dark.png"
+										Style="{StaticResource buttonImageStyle}" />
+								</Setter.Value>
+							</Setter>
+							<Style.Triggers>
+								<Trigger
+									Property="IsEnabled"
+									Value="False">
+									<Setter
+										Property="Content">
+										<Setter.Value>
+											<Image
+												Source="/Images/undo_gray.png"
+												Style="{StaticResource buttonImageStyle}" />
+										</Setter.Value>
+									</Setter>
+								</Trigger>
+							</Style.Triggers>
+						</Style>
+					</FrameworkElement.Style>
+				</Button>
+				<Button
+					Command="ApplicationCommands.Redo"
+					ToolTip="{StaticResource menu_Redo}">
+					<FrameworkElement.Style>
+						<Style
+							BasedOn="{StaticResource ToolBarButtonBaseStyle}"
+							TargetType="{x:Type Button}">
+							<Setter
+								Property="Content">
+								<Setter.Value>
+									<Image
+										Source="/Images/redo_dark.png"
+										Style="{StaticResource buttonImageStyle}" />
+								</Setter.Value>
+							</Setter>
+							<Style.Triggers>
+								<Trigger
+									Property="IsEnabled"
+									Value="False">
+									<Setter
+										Property="Content">
+										<Setter.Value>
+											<Image
+												Source="/Images/redo_gray.png"
+												Style="{StaticResource buttonImageStyle}" />
+										</Setter.Value>
+									</Setter>
+								</Trigger>
+							</Style.Triggers>
+						</Style>
+					</FrameworkElement.Style>
+				</Button>
+				<Separator
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<Button
+					Command="ci:BookmarkCommands.ToggleBookmarkCommand"
+					ToolTip="{StaticResource menu_ToogleBookmark}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}">
+					<FrameworkElement.Style>
+						<Style
+							BasedOn="{StaticResource ToolBarButtonBaseStyle}"
+							TargetType="{x:Type Button}">
+							<Setter
+								Property="Content">
+								<Setter.Value>
+									<Image
+										Source="/Images/addbookmark_dark.png"
+										Style="{StaticResource buttonImageStyle}" />
+								</Setter.Value>
+							</Setter>
+							<Style.Triggers>
+								<Trigger
+									Property="IsEnabled"
+									Value="False">
+									<Setter
+										Property="Content">
+										<Setter.Value>
+											<Image
+												Source="/Images/addbookmark_gray.png"
+												Style="{StaticResource buttonImageStyle}" />
+										</Setter.Value>
+									</Setter>
+								</Trigger>
+							</Style.Triggers>
+						</Style>
+					</FrameworkElement.Style>
+				</Button>
+				<Separator
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}" />
+				<Button
+					Command="ci:DiffCommands.ToNextDiffLineCommand"
+					ToolTip="{StaticResource menu_ToNextDiffLine}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}">
+					<FrameworkElement.Style>
+						<Style
+							BasedOn="{StaticResource ToolBarButtonBaseStyle}"
+							TargetType="{x:Type Button}">
+							<Setter
+								Property="Content">
+								<Setter.Value>
+									<Image
+										Source="/Images/point_down_dark.png"
+										Style="{StaticResource buttonImageStyle}" />
+								</Setter.Value>
+							</Setter>
+							<Style.Triggers>
+								<Trigger
+									Property="IsEnabled"
+									Value="False">
+									<Setter
+										Property="Content">
+										<Setter.Value>
+											<Image
+												Source="/Images/point_down_gray.png"
+												Style="{StaticResource buttonImageStyle}" />
+										</Setter.Value>
+									</Setter>
+								</Trigger>
+							</Style.Triggers>
+						</Style>
+					</FrameworkElement.Style>
+				</Button>
+				<Button
+					Command="ci:DiffCommands.ToPreviousDiffLineCommand"
+					ToolTip="{StaticResource menu_ToPreviousDiffLine}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}">
+					<FrameworkElement.Style>
+						<Style
+							BasedOn="{StaticResource ToolBarButtonBaseStyle}"
+							TargetType="{x:Type Button}">
+							<Setter
+								Property="Content">
+								<Setter.Value>
+									<Image
+										Source="/Images/point_up_dark.png"
+										Style="{StaticResource buttonImageStyle}" />
+								</Setter.Value>
+							</Setter>
+							<Style.Triggers>
+								<Trigger
+									Property="IsEnabled"
+									Value="False">
+									<Setter
+										Property="Content">
+										<Setter.Value>
+											<Image
+												Source="/Images/point_up_gray.png"
+												Style="{StaticResource buttonImageStyle}" />
+										</Setter.Value>
+									</Setter>
+								</Trigger>
+							</Style.Triggers>
+						</Style>
+					</FrameworkElement.Style>
+				</Button>
+				<Button
+					Command="ch:CodeEditCommands.DiffBlockCopyContent"
+					ToolTip="{StaticResource CE_DiffBlockCopyContent}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}">
+					<FrameworkElement.Style>
+						<Style
+							BasedOn="{StaticResource ToolBarButtonBaseStyle}"
+							TargetType="{x:Type Button}">
+							<Setter
+								Property="Content">
+								<Setter.Value>
+									<Image
+										Source="/Images/copy_block_dark.png"
+										Style="{StaticResource buttonImageStyle}" />
+								</Setter.Value>
+							</Setter>
+							<Style.Triggers>
+								<Trigger
+									Property="IsEnabled"
+									Value="False">
+									<Setter
+										Property="Content">
+										<Setter.Value>
+											<Image
+												Source="/Images/copy_block_gray.png"
+												Style="{StaticResource buttonImageStyle}" />
+										</Setter.Value>
+									</Setter>
+								</Trigger>
+							</Style.Triggers>
+						</Style>
+					</FrameworkElement.Style>
+				</Button>
+				<Button
+					Command="ch:CodeEditCommands.DiffLineCopyContent"
+					ToolTip="{StaticResource CE_DiffLineCopyContent}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}">
+					<FrameworkElement.Style>
+						<Style
+							BasedOn="{StaticResource ToolBarButtonBaseStyle}"
+							TargetType="{x:Type Button}">
+							<Setter
+								Property="Content">
+								<Setter.Value>
+									<Image
+										Source="/Images/copy_single_dark.png"
+										Style="{StaticResource buttonImageStyle}" />
+								</Setter.Value>
+							</Setter>
+							<Style.Triggers>
+								<Trigger
+									Property="IsEnabled"
+									Value="False">
+									<Setter
+										Property="Content">
+										<Setter.Value>
+											<Image
+												Source="/Images/copy_single_gray.png"
+												Style="{StaticResource buttonImageStyle}" />
+										</Setter.Value>
+									</Setter>
+								</Trigger>
+							</Style.Triggers>
+						</Style>
+					</FrameworkElement.Style>
+				</Button>
+				<Button
+					Command="ci:DiffCommands.ToNextNormalizationCommand"
+					ToolTip="{StaticResource CE_DiffSearchToNext}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}">
+					<FrameworkElement.Style>
+						<Style
+							BasedOn="{StaticResource ToolBarButtonBaseStyle}"
+							TargetType="{x:Type Button}">
+							<Setter
+								Property="Content">
+								<Setter.Value>
+									<Image
+										Source="/Images/search_down_dark.png"
+										Style="{StaticResource buttonImageStyle}" />
+								</Setter.Value>
+							</Setter>
+							<Style.Triggers>
+								<Trigger
+									Property="IsEnabled"
+									Value="False">
+									<Setter
+										Property="Content">
+										<Setter.Value>
+											<Image
+												Source="/Images/search_down_gray.png"
+												Style="{StaticResource buttonImageStyle}" />
+										</Setter.Value>
+									</Setter>
+								</Trigger>
+							</Style.Triggers>
+						</Style>
+					</FrameworkElement.Style>
+				</Button>
+				<Button
+					Command="ci:DiffCommands.ToPreviousNormalizationCommand"
+					ToolTip="{StaticResource CE_DiffSearchToPrevious}"
+					Visibility="{Binding Source='{x:Static pf:PreferenceManager.Current}', Path=Settings.StandardView, Converter='{StaticResource BoolToVisibilityConverter}'}">
+					<FrameworkElement.Style>
+						<Style
+							BasedOn="{StaticResource ToolBarButtonBaseStyle}"
+							TargetType="{x:Type Button}">
+							<Setter
+								Property="Content">
+								<Setter.Value>
+									<Image
+										Source="/Images/search_up_dark.png"
+										Style="{StaticResource buttonImageStyle}" />
+								</Setter.Value>
+							</Setter>
+							<Style.Triggers>
+								<Trigger
+									Property="IsEnabled"
+									Value="False">
+									<Setter
+										Property="Content">
+										<Setter.Value>
+											<Image
+												Source="/Images/search_up_gray.png"
+												Style="{StaticResource buttonImageStyle}" />
+										</Setter.Value>
+									</Setter>
+								</Trigger>
+							</Style.Triggers>
+						</Style>
+					</FrameworkElement.Style>
+				</Button>
+			</ToolBar>
+		</ToolBarTray>
+		<Grid
+			Row="2">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition
+					Width="Auto" />
+				<ColumnDefinition
+					Width="80*" />
+			</Grid.ColumnDefinitions>
+			<ad:DockingManager
+				x:Name="dockManager"
+				Grid.Column="2"
+				Grid.Row="1"
+				DocumentsSource="{Binding Editors}"
+				ActiveContent="{Binding ActiveDocument, Mode=TwoWay, Converter='{StaticResource activeDocumentConverter}'}">
+				<ad:DockingManager.Theme>
+					<avalonDock:Vs2013LightTheme />
+				</ad:DockingManager.Theme>
+				<ad:DockingManager.AnchorableContextMenu>
+					<ContextMenu>
+						<MenuItem
+							Header="Float"
+							Command="{Binding Path=FloatCommand}" />
+						<MenuItem
+							Header="Dock"
+							Command="{Binding Path=DockCommand}" />
+						<MenuItem
+							Header="Auto Hide"
+							Command="{Binding Path=AutoHideCommand}" />
+						<MenuItem
+							Header="Hide"
+							Command="{Binding Path=HideCommand}" />
+					</ContextMenu>
+				</ad:DockingManager.AnchorableContextMenu>
+				<ad:DockingManager.DocumentHeaderTemplate>
+					<DataTemplate>
+						<StackPanel
+							Orientation="Horizontal">
+							<Image
+								Width="16"
+								Source="{Binding IconSource}" />
+							<TextBlock
+								Margin="4 2 0 0"
+								Text="{Binding Title}" />
+						</StackPanel>
+					</DataTemplate>
+				</ad:DockingManager.DocumentHeaderTemplate>
+				<FrameworkElement.Resources>
+					<ResourceDictionary>
+						<Style
+							x:Key="{x:Type adCtrls:DropDownControlArea}"
+							TargetType="{x:Type adCtrls:DropDownControlArea}">
+							<Setter
+								Property="VerticalAlignment"
+								Value="Center" />
+						</Style>
+					</ResourceDictionary>
+				</FrameworkElement.Resources>
+				<ad:DockingManager.LayoutItemTemplateSelector>
+					<l:PanesTemplateSelector>
+						<l:PanesTemplateSelector.FileViewTemplate>
+							<DataTemplate>
+								<ContentPresenter
+									Content="{Binding UI}" />
+							</DataTemplate>
+						</l:PanesTemplateSelector.FileViewTemplate>
+						<l:PanesTemplateSelector.SettingViewTemplate>
+							<DataTemplate>
+								<ContentPresenter
+									Content="{Binding UI}" />
+							</DataTemplate>
+						</l:PanesTemplateSelector.SettingViewTemplate>
+					</l:PanesTemplateSelector>
+				</ad:DockingManager.LayoutItemTemplateSelector>
+				<ad:DockingManager.LayoutItemContainerStyleSelector>
+					<l:PanesStyleSelector>
+						<l:PanesStyleSelector.SettingStyle>
+							<Style
+								TargetType="{x:Type adCtrls:LayoutAnchorableItem}">
+								<Setter
+									Property="adCtrls:LayoutItem.Title"
+									Value="{Binding Model.Title}" />
+								<Setter
+									Property="adCtrls:LayoutItem.IconSource"
+									Value="{Binding Model.IconSource}" />
+								<Setter
+									Property="adCtrls:LayoutItem.ContentId"
+									Value="{Binding Model.ContentId}" />
+								<Setter
+									Property="adCtrls:LayoutItem.IsSelected"
+									Value="{Binding Model.IsSelected}" />
+								<Setter
+									Property="adCtrls:LayoutItem.IsActive"
+									Value="{Binding Model.IsActive, Mode=TwoWay}" />
+								<Setter
+									Property="adCtrls:LayoutAnchorableItem.AutoHideCommand"
+									Value="{Binding Model.AutoHideCommand}" />
+								<Setter
+									Property="adCtrls:LayoutAnchorableItem.HideCommand"
+									Value="{Binding Model.HideCommand}" />
+								<Setter
+									Property="adCtrls:LayoutItem.CloseCommand"
+									Value="{Binding Model.CloseCommand}" />
+								<Setter
+									Property="adCtrls:LayoutItem.DockAsDocumentCommand"
+									Value="{Binding Model.DockAsDocumentCommand}" />
+							</Style>
+						</l:PanesStyleSelector.SettingStyle>
+						<l:PanesStyleSelector.EditorStyle>
+							<Style
+								TargetType="{x:Type adCtrls:LayoutItem}">
+								<Setter
+									Property="adCtrls:LayoutItem.Title"
+									Value="{Binding Model.Title}" />
+								<Setter
+									Property="adCtrls:LayoutItem.IconSource"
+									Value="{Binding Model.IconSource}" />
+								<Setter
+									Property="adCtrls:LayoutItem.ContentId"
+									Value="{Binding Model.ContentId}" />
+								<Setter
+									Property="adCtrls:LayoutItem.IsSelected"
+									Value="{Binding Model.IsSelected, Mode=TwoWay}" />
+								<Setter
+									Property="adCtrls:LayoutItem.IsActive"
+									Value="{Binding Model.IsActive, Mode=TwoWay}" />
+								<Setter
+									Property="adCtrls:LayoutItem.CloseCommand"
+									Value="{Binding Model.CloseCommand}" />
+								<Setter
+									Property="adCtrls:LayoutItem.CanFloat"
+									Value="False" />
+								<Setter
+									Property="FrameworkElement.Tag"
+									Value="{Binding Model.FilePath}" />
+							</Style>
+						</l:PanesStyleSelector.EditorStyle>
+					</l:PanesStyleSelector>
+				</ad:DockingManager.LayoutItemContainerStyleSelector>
+				<ad:DockingManager.LayoutUpdateStrategy>
+					<l:LayoutInitializer />
+				</ad:DockingManager.LayoutUpdateStrategy>
+				<adLayout:LayoutRoot>
+					<adLayout:LayoutPanel
+						Orientation="Horizontal">
+						<adLayout:LayoutAnchorablePane
+							DockWidth="200">
+							<adLayout:LayoutAnchorable
+								Title="{StaticResource menu_ViewSpecPropertyEditor}"
+								x:Name="SpecPropertyEditorLayout"
+								ContentId="SpecPropertyEditorLayout">
+								<views:AnchorableAdapterViewer
+									Content="{Binding Path=ActiveDocument.PropertiesUI}" />
+							</adLayout:LayoutAnchorable>
+							<adLayout:LayoutAnchorable
+								Title="{StaticResource menu_FormStructure}"
+								x:Name="FormStructureLayout"
+								ContentId="FormStructureLayout">
+								<views:AnchorableAdapterViewer
+									Content="{Binding Path=ActiveDocument.Structure}" />
+							</adLayout:LayoutAnchorable>
+							<adLayout:LayoutAnchorable
+								Title="{StaticResource FunctionList_Title}"
+								x:Name="FunctionListLayout"
+								ContentId="FunctionListLayout">
+								<views:AnchorableAdapterViewer>
+									<l:FunctionList />
+								</views:AnchorableAdapterViewer>
+							</adLayout:LayoutAnchorable>
+							<adLayout:LayoutAnchorable
+								Title="{StaticResource menu_DatabaseSource}"
+								x:Name="DatabaseSourceLayout"
+								ContentId="DatabaseSourceLayout">
+								<views:AnchorableAdapterViewer
+									Content="{Binding Path=ActiveDocument.DatabaseSource}" />
+							</adLayout:LayoutAnchorable>
+						</adLayout:LayoutAnchorablePane>
+						<adLayout:LayoutPanel
+							Orientation="Vertical"
+							DockWidth="*">
+							<adLayout:LayoutDocumentPane />
+							<adLayout:LayoutAnchorablePane
+								DockHeight="185">
+								<adLayout:LayoutAnchorable
+									Title="{StaticResource menu_ViewFormSpecification}"
+									x:Name="SpecEditorLayout"
+									ContentId="SpecEditorLayout">
+									<views:AnchorableAdapterViewer
+										Content="{Binding Path=ActiveDocument.SpecUI}" />
+								</adLayout:LayoutAnchorable>
+								<adLayout:LayoutAnchorable
+									Title="{StaticResource menu_ViewErrorList}"
+									x:Name="SpecErrorsLayout"
+									ContentId="SpecErrorsLayout">
+									<output:OutputPanelControl
+										x:Name="outputPanelControl"
+										IsActive="{Binding IsActive, ElementName=SpecErrorsLayout, Mode=TwoWay}" />
+								</adLayout:LayoutAnchorable>
+								<adLayout:LayoutAnchorable
+									Title="{StaticResource menu_Bookmarks}"
+									x:Name="BookmarksLayout"
+									ContentId="BookmarksLayout">
+									<l:BookmarksWindow />
+								</adLayout:LayoutAnchorable>
+							</adLayout:LayoutAnchorablePane>
+						</adLayout:LayoutPanel>
+					</adLayout:LayoutPanel>
+				</adLayout:LayoutRoot>
+			</ad:DockingManager>
+			<Grid
+				Column="2"
+				Row="1"
+				Background="{StaticResource MenuBackground}"
+				Opacity="0.8">
+				<FrameworkElement.Style>
+					<Style
+						TargetType="{x:Type Grid}">
+						<Setter
+							Property="Visibility"
+							Value="Collapsed" />
+						<Style.Triggers>
+							<DataTrigger
+								Value="False"
+								Binding="{Binding CommonDataIsLoaded, ElementName=this}">
+								<Setter
+									Property="Visibility"
+									Value="Visible" />
+							</DataTrigger>
+						</Style.Triggers>
+					</Style>
+				</FrameworkElement.Style>
+				<TextBlock
+					Text="{StaticResource Message_DownloadDataBeforeCoding}"
+					FontSize="50"
+					Foreground="#FFFF0000"
+					HorizontalAlignment="Center"
+					VerticalAlignment="Center" />
+			</Grid>
+		</Grid>
+		<StatusBar
+			Grid.Row="3"
+			BorderBrush="#FF808080"
+			BorderThickness="0,1,0,0">
+			<StatusBarItem
+				Content="{Binding ActiveDocument.FilePath}" />
+			<Separator
+				Grid.Column="1"
+				Visibility="{Binding Visibility, ElementName=MessageStatusBarItem}" />
+			<StatusBarItem
+				x:Name="MessageStatusBarItem"
+				Grid.Column="2">
+				<FrameworkElement.Style>
+					<Style
+						TargetType="{x:Type StatusBarItem}">
+						<Style.Triggers>
+							<MultiDataTrigger>
+								<MultiDataTrigger.Conditions>
+									<Condition
+										Value="true"
+										Binding="{Binding IsFreeStyle}" />
+									<Condition
+										Value="true"
+										Binding="{Binding IsSectionModify}" />
+								</MultiDataTrigger.Conditions>
+								<Setter
+									Property="Content"
+									Value="{StaticResource Message_ProgInfoFreeStyleAndSectionFlag}" />
+								<Setter
+									Property="Visibility"
+									Value="Visible" />
+							</MultiDataTrigger>
+							<MultiDataTrigger>
+								<MultiDataTrigger.Conditions>
+									<Condition
+										Value="true"
+										Binding="{Binding IsFreeStyle}" />
+									<Condition
+										Value="false"
+										Binding="{Binding IsSectionModify}" />
+								</MultiDataTrigger.Conditions>
+								<Setter
+									Property="Content"
+									Value="{StaticResource Message_ProgInfoFreeStyle}" />
+								<Setter
+									Property="Visibility"
+									Value="Visible" />
+							</MultiDataTrigger>
+							<MultiDataTrigger>
+								<MultiDataTrigger.Conditions>
+									<Condition
+										Value="false"
+										Binding="{Binding IsFreeStyle}" />
+									<Condition
+										Value="true"
+										Binding="{Binding IsSectionModify}" />
+								</MultiDataTrigger.Conditions>
+								<Setter
+									Property="Content"
+									Value="{StaticResource Message_ProgInfoSectionFlag}" />
+								<Setter
+									Property="Visibility"
+									Value="Visible" />
+							</MultiDataTrigger>
+							<MultiDataTrigger>
+								<MultiDataTrigger.Conditions>
+									<Condition
+										Value="false"
+										Binding="{Binding IsFreeStyle}" />
+									<Condition
+										Value="false"
+										Binding="{Binding IsSectionModify}" />
+								</MultiDataTrigger.Conditions>
+								<Setter
+									Property="Visibility"
+									Value="Collapsed" />
+							</MultiDataTrigger>
+						</Style.Triggers>
+					</Style>
+				</FrameworkElement.Style>
+			</StatusBarItem>
+		</StatusBar>
+	</Grid>
+</Window>

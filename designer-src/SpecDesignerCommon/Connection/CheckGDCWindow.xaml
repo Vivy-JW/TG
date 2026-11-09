@@ -1,0 +1,80 @@
+<Window
+	x:Class="SpecDesignerCommon.Connection.CheckGDCWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	WindowStyle="SingleBorderWindow"
+	ResizeMode="NoResize"
+	WindowStartupLocation="CenterScreen"
+	Title="{StaticResource Message_CheckGDCFailedTitle}"
+	SizeToContent="WidthAndHeight"
+	xmlns:connection="clr-namespace:SpecDesignerCommon.Connection">
+	<Grid>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition
+				Width="Auto" />
+			<ColumnDefinition
+				Width="*" />
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition
+				Height="Auto" />
+			<RowDefinition
+				Height="Auto" />
+			<RowDefinition
+				Height="Auto" />
+		</Grid.RowDefinitions>
+		<Grid
+			Margin="10">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition
+					Width="Auto" />
+				<ColumnDefinition
+					Width="*" />
+			</Grid.ColumnDefinitions>
+			<Image
+				x:Name="Image_MessageBox"
+				Margin="5 0" />
+			<Label
+				Grid.Column="1"
+				Content="{StaticResource Message_CheckGDCFailed}"
+				VerticalAlignment="Center"
+				HorizontalAlignment="Left" />
+		</Grid>
+		<Label
+			Grid.Row="1"
+			Grid.ColumnSpan="2"
+			Content="{StaticResource Message_CheckGDCAgain}"
+			HorizontalAlignment="Stretch"
+			HorizontalContentAlignment="Center"
+			VerticalAlignment="Center"
+			VerticalContentAlignment="Center"
+			FontWeight="Heavy"
+			Background="#FFD3D3D3"
+			Margin="0,6" />
+		<Grid
+			Row="2"
+			ColumnSpan="2">
+			<Separator
+				VerticalAlignment="Top" />
+			<StackPanel
+				Orientation="Horizontal"
+				HorizontalAlignment="Right"
+				Margin="8">
+				<Button
+					x:Name="cancelButton"
+					Content="{StaticResource Message_CancelExecute}"
+					Margin="4" />
+				<Button
+					x:Name="tryAgainButton"
+					Content="{StaticResource Message_TryAgain}"
+					Margin="4" />
+				<Button
+					x:Name="continueButton"
+					Content="{StaticResource Message_KeepExecute}"
+					Margin="4" />
+			</StackPanel>
+		</Grid>
+	</Grid>
+</Window>
