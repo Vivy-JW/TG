@@ -1,9 +1,12 @@
 ---
-name: tt-pj-test
-description: 在TT中涉及任何和测试(test)相关的内容都要激活此SKILL
+name: tg-pj-test
+description: 在 TG 中涉及任何和测试（test）相关的内容都要激活此 SKILL。触发词：测试、test、用例、Makefile、跑测试、真机验证。
 ---
 
-# TT 测试
+# TG 测试
+
+> **命名说明**：项目已更名为 TG，本文命令前缀写作 `tg`。但代码里的模块名与二进制名尚未改名，
+> **在代码改名提交之前，实际执行请把 `tg` 换成 `tt`**（当前产物仍是 `tt.exe`）。
 
 ## 关于Makefile
 
@@ -18,7 +21,7 @@ description: 在TT中涉及任何和测试(test)相关的内容都要激活此SK
 | 全仓离线测试 | `make test` | 约 1 分钟；不连 T100 |
 | 前端逻辑 | `make check-web` | 需要 `web/node_modules`；不做 tsc |
 | 前端类型 + 构建 | `make web-build` | 含 tsc；会重写 `web/dist` |
-| 生成 `./tt.exe` | `make build` | `selftest` / `doctor` 前必须先跑 |
+| 生成 `./tg.exe` | `make build` | `selftest` / `doctor` 前必须先跑 |
 | `.tzc` 合成对抗 | `make selftest` | 31 项；先用 `make build` |
 | `.tzc` 全语料 | `make deep-tzc` | 9–11 分钟；需语料**副本** |
 | `.tzs` 环境自检 | `make doctor` | 需引擎 exe、设计器、工作区/语料 |
@@ -62,15 +65,15 @@ make e2e                                    # 需要时再加 TTZS_PKG
 2. 环境一律点名，不猜、不扫、不拿别的环境顶替：
 
 ```bash
-./tt.exe debug probe -m <模块> -p <作业> --env <环境>
-./tt.exe debug ents --env <环境> --json
-./tt.exe debug sql "SELECT ..." --ent <ENT>
-./tt.exe dict r.t <表> --at <环境>@<企业>
+./tg.exe debug probe -m <模块> -p <作业> --env <环境>
+./tg.exe debug ents --env <环境> --json
+./tg.exe debug sql "SELECT ..." --ent <ENT>
+./tg.exe dict r.t <表> --at <环境>@<企业>
 ```
 
 - `debug probe` 会真的登录并启动作业；这是最重的动作，只在用户点名的环境跑。
 - `debug sql` 只放行单条 SELECT/WITH，最多 200 行；只读开关关掉时不要用。
-- 会话结束用 `./tt.exe debug quit`；后台服务用 `./tt.exe serve --stop`。
+- 会话结束用 `./tg.exe debug quit`；后台服务用 `./tg.exe serve --stop`。
 - 真机作业可能留下服务器行锁或客户端窗口；停站过夜有看门狗自动放行（默认 1800 秒）。
 
 ## 配置与隔离

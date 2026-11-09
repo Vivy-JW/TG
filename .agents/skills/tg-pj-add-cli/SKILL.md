@@ -1,11 +1,14 @@
 ---
-name: tt-pj-add-cli
-description: 在 TT 中新增或改造 CLI 命令时使用。触发词：加命令、命令组、Agent 友好、JSON 输出、--brief、投影、批量、错误码、CLI 契约。
+name: tg-pj-add-cli
+description: 在 TG 中新增或改造 CLI 命令时使用。触发词：加命令、命令组、Agent 友好、JSON 输出、--brief、投影、批量、错误码、CLI 契约。
 ---
 
-# 给 TT 加 CLI：只做 Agent 真正需要的命令
+# 给 TG 加 CLI：只做 Agent 真正需要的命令
 
-TT 的 CLI 是 Agent 的查询 API，不是数据导出器。  
+> **命名说明**：项目已更名为 TG，本文命令前缀写作 `tg`。但代码里的模块名与二进制名尚未改名，
+> **在代码改名提交之前，实际执行请把 `tg` 换成 `tt`**（当前产物仍是 `tt.exe`）。
+
+TG 的 CLI 是 Agent 的查询 API，不是数据导出器。  
 每条命令只回答一个问题，返回足够的信息，并允许调用方继续裁剪。
 
 ## 设计四问
@@ -51,7 +54,7 @@ TT 的 CLI 是 Agent 的查询 API，不是数据导出器。
 - 一个稳定动作：放现有组，或顶层单命令。
 - 只有多个独立数据面才建组，不是多个视图就建组。
 - 例：`interface` 有页面/字段/标签三个数据面 → 组；`outline` 只有一棵块树 → 单命令 + flags。
-- 不要把“都读文件”当成同组理由；`tt file` 是服务器文件线，纯本地源码分析优先顶层。
+- 不要把“都读文件”当成同组理由；`tg file` 是服务器文件线，纯本地源码分析优先顶层。
 
 新组必须有至少两个稳定动作，在 `internal/cli/at/scopes.go` 认领 `--at` 作用域，并用 `common.UnknownSubcommand` 处理未知子命令。
 
@@ -110,13 +113,13 @@ go test ./... -count=1
 手工回读：
 
 ```bash
-tt <cmd> --help
-tt <cmd> --at-list
-tt <cmd> ...
-tt <cmd> ... --human
-tt <cmd> ... --brief
-tt <cmd> <不存在 ID>
-tt <cmd> --kw <无匹配词>
+tg <cmd> --help
+tg <cmd> --at-list
+tg <cmd> ...
+tg <cmd> ... --human
+tg <cmd> ... --brief
+tg <cmd> <不存在 ID>
+tg <cmd> --kw <无匹配词>
 ```
 
 ## 提交前检查
