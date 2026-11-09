@@ -34,12 +34,17 @@ export async function gpPatchEnv(name: string, patch: Partial<GpEnvBrief>) {
   await refreshGpEnvs()
 }
 
-/** 弹本机选目录对话框（GP 服务的 /api/pickdir），返回选中的绝对路径；取消返回空串。 */
+/** 弹本机选目录对话框，返回选中的绝对路径；取消返回空串。
+ *
+ * 端点用**共享的** `/api/pickdir`（`internal/web/pickdir.go`）——合并成一个进程之前
+ * 这里写的是 GP 服务的 `/api/gp/pickdir`，那个前缀在统一服务下不存在，于是 404、
+ * 函数吞掉异常返回空串，表现是"选目录按钮没反应"。T100 侧 `api.ts` 的 `pickDir` 调的就是同一个端点。
+ */
 export async function gpPickDir(initial: string): Promise<string> {
   try {
-    const r = await fetch(base() + '/api/gp/pickdir', {
+    const r = await fetch(base() + '/api/pickdir', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ initial }),
+      body: JSON.stringify({ initial, title: '选择 GP 源码镜像目录' }),
     })
     const j = await r.json()
     return j?.ok ? String(j.path || '') : ''

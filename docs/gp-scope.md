@@ -197,6 +197,7 @@ TT 的 GP 面现在只有"环境 / 镜像 / 字典 / 调试会话"四件事，**
    - `web/app/src/GpSettings.tsx:576` 的 `setSource` POST `/api/gp/settings` → `gp.Service.ServeHTTP` 的 switch 里没有这一个，**表现是"改查询源报错"**。T100 的对应实现是共享端点 `PUT /api/hosts` 的 `query.source` 节（`SettingsView.tsx:748`；`api.ts:194` 的 `HostsPatch`）。
    - 更麻烦的是第三处：`GpSettings.tsx:137` 从 `GET /api/gp/meta` 读 `m.querySource`，而 `gp.go:262` 的 `hMeta` 只吐 `envs`（name/host/user/mirror/dict/db/job），**没有 `querySource` 字段** → 下拉框永远显示"在线"。而且 `internal/gp` 全包搜不到 `query`/`source` 的读取，`cli/gp/register.go:164` 的 `openLive` 也只有一个在线路径。**这个控件读不到、存不下、也没人消费。**
    两处 404 都是"服务从两进程并成一进程"时漏搬的端点（`gpEnvs.ts` 的注释还写着"GP 服务的 /api/pickdir"）。
+   **pickdir 已修**（改调 `/api/pickdir`，前端 `tsc --noEmit` 与 `check:app` 全绿，dist 已重建）；`/api/gp/settings` 与 `querySource` 按 Q6 待定。
 5. **`skills/` 没有 GP 技能。** 分发的 4 个技能全是 T100 的；GP 那套（`gp-erp-architecture`/`-debug`/`-read`）现在只在本机 `.agents/skills` 之外。用户装完 TG，Agent 拿到的是 T100 文档——这是**对外发版前必须换的**。
 6. **`internal/README.md` 的包地图里没有 `internal/gp`。** 55 个包的清单从 `cli/at` 到 `cli` 都有，唯独这个 2067 行、带 9 个端点的子系统没登记（整份文档里 `gp` 出现 0 次）。
 
