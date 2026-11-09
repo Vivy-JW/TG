@@ -229,13 +229,13 @@ TT 的 GP 面现在只有"环境 / 镜像 / 字典 / 调试会话"四件事，**
 
 1. **`tt debug` 完全不认 GP 环境。** `internal/cli/debug` 全包搜不到一处 `Product` 判断。对着 GP 环境跑 `tt debug`，它会按 T100 的路径去解析作业、企业、源码镜像——报错大概是"找不到作业"，而不是"这是 GP 环境"。
 2. **GP 调试没有命令行面。** 只有 `/api/gp/session/{new,list,exec,close}`；`tt gp` 只有 `table|link|msg`。也就是说：**GP 版的"调试"今天只有 Web 能做，命令行做不了**。而 TT 的定位是 CLI-first。
-3. **`tt file mirror` 是 T100 专用。** 帮助原文"管理 T100 本地镜像（source: 4gl/42f/42s/inc）"。GP 的镜像只有 `/api/gp/mirror`，且**只拉 `*.4gl`**（`internal/gp/gp.go:990` 的 `find ... -iname '*.4gl'`），GP 的 `42f/42s/inc` 不在镜像里。
+3. **`tt file mirror` 是 T100 专用。** 帮助原文"管理 T100 本地镜像（source: 4gl/42f/42s/inc）"。GP 的镜像只有 `/api/gp/mirror`，且**只拉 `*.4gl`**（`internal/gp/gp.go:990` 的 `find ... -iname '*.4gl'`），GP 的 `42f/42s/inc` 不在镜像里。**已定（Q3）**：按 profile 补，默认 `debug` 只 4gl、`source` 收全四类。
 4. **前端有两个端点不存在（GP 页的"查询数据源"其实是三处断线）。**
    - `web/app/src/gpEnvs.ts:40` 的 `gpPickDir` POST `/api/gp/pickdir` → 后端只有 `POST /api/pickdir`（`internal/web/server.go:161` 挂的 `internal/web/pickdir.go`，本机回环、返回 `{ok,path,canceled}`）。返回 404，函数吞掉异常返回空串，**表现是"选目录按钮没反应"**。T100 侧 `web/app/src/api.ts:487` 调的正是 `/api/pickdir`，改一行 URL 就对齐。
    - `web/app/src/GpSettings.tsx:576` 的 `setSource` POST `/api/gp/settings` → `gp.Service.ServeHTTP` 的 switch 里没有这一个，**表现是"改查询源报错"**。T100 的对应实现是共享端点 `PUT /api/hosts` 的 `query.source` 节（`SettingsView.tsx:748`；`api.ts:194` 的 `HostsPatch`）。
    - 更麻烦的是第三处：`GpSettings.tsx:137` 从 `GET /api/gp/meta` 读 `m.querySource`，而 `gp.go:262` 的 `hMeta` 只吐 `envs`（name/host/user/mirror/dict/db/job），**没有 `querySource` 字段** → 下拉框永远显示"在线"。而且 `internal/gp` 全包搜不到 `query`/`source` 的读取，`cli/gp/register.go:164` 的 `openLive` 也只有一个在线路径。**这个控件读不到、存不下、也没人消费。**
    两处 404 都是"服务从两进程并成一进程"时漏搬的端点（`gpEnvs.ts` 的注释还写着"GP 服务的 /api/pickdir"）。
-   **pickdir 已修**（改调 `/api/pickdir`，前端 `tsc --noEmit` 与 `check:app` 全绿，dist 已重建）；`/api/gp/settings` 与 `querySource` 按 Q6 待定。
+   **pickdir 已修**（改调 `/api/pickdir`，前端 `tsc --noEmit` 与 `check:app` 全绿，dist 已重建）。`/api/gp/settings` 与 `querySource` 两处按 **Q6 = a** 处理：控件先**不渲染**（`GpSettings.tsx` 顶部的 `SHOW_QUERY_SOURCE = false`，代码保留），等 §4.D 字典改造落地后连同后端一起接通——现在渲染它只会给用户一个点了报错的死控件。
 5. **`skills/` 没有 GP 技能。** 分发的 4 个技能全是 T100 的；GP 那套（`gp-erp-architecture`/`-debug`/`-read`）现在只在本机 `.agents/skills` 之外。用户装完 TG，Agent 拿到的是 T100 文档——这是**对外发版前必须换的**。
 6. **`internal/README.md` 的包地图里没有 `internal/gp`。** 55 个包的清单从 `cli/at` 到 `cli` 都有，唯独这个 2067 行、带 9 个端点的子系统没登记（整份文档里 `gp` 出现 0 次）。
 7. **GP 字典只有三条命令。** `tt gp` 只有 `table|link|msg`；而本地库里已经同步了 `t_table`/`t_column`/`t_index`/`t_constraint`/`t_module`/`t_prog`/`t_prog_link` 七张表，开窗（`gaq_file`）与消息（`gaz_file`）连本地表都没建。改造字典层（§4.D）就是把这七张表接到 `db.Source` 的 25 个查询方法上。
@@ -272,7 +272,7 @@ Get-ChildItem internal -Directory | ForEach-Object {
 
 - ~~**Q1**：`debug` 合一还是各留一份~~ —— **已定（2026-11-09）**：TG 与 TT 完全独立，不与 T100 共享代码；`internal/debug` 归 TG，拔掉 T100 接线，不新建第二套（§5.1）。
 - ~~**Q2**：`dict/live` 搬到 `erpdb` 还是新建 `livedb`~~ —— **已作废（2026-11-09）**：`internal/dict` 不删，改造成 GP 的字典层（§4.D），`cli/gp` 继续用它没有断 import 的问题。
-- **Q3**：GP 镜像要不要扩到 `42f/42s/inc`（§7.3）——扩了 GP 才能真正离线改画面。
-- **Q4**：`designer-src/` + `engine/`（16 MB、1264 文件）什么时候删——它们对 GP 零价值，但删了在本仓库不可回。
-- **Q5**：阶段 3 的改名要不要一次性做（`module tt`、`tt.exe`、`TT_WEB_DIR`、MSI 产品名、数据目录），还是继续分批。
-- **Q6**：GP 页的"查询数据源"怎么处理（§7.4）——**原建议 A（删控件）已随 §4.D 作废**：字典改造成 GP 的之后，"本地镜像 / 远程直查"这个选择才有语义，所以控件先留着，等字典改造落地再接 B（meta 回读 + `PUT /api/hosts` 保存 + `tt gp` 本地库查询）。
+- ~~**Q3**：GP 镜像要不要扩到 `42f/42s/inc`~~ —— **已定（2026-11-09）：做 profile**。默认 `debug`（只 4gl，调试够用且快），`source` 收 4gl+42f+42s+inc，与 `tt file mirror` 同构（§7.3）。
+- ~~**Q4**：`designer-src/` + `engine/`（16 MB、1264 文件）什么时候删~~ —— **已定（2026-11-09）：阶段 3 与 T100 代码同批删**；删前把 `TT-src` 打 zip 存到仓库外（它没有 git 历史）。注意 `engine/designer/` 那 28 个设计器 DLL（10.5 MB）是厂商二进制、且原本随发行包分发，TG 发版绝不能带。
+- ~~**Q5**：阶段 3 的改名要不要一次性做~~ —— **已定（2026-11-09）：分三批**。①对外标识（二进制名、MSI 产品名、PATH 写入名、文档自称）②数据与配置（`~/.tt`→`~/.tg` 带一次性迁移、`TT_WEB_DIR`、`.tt-serve.json`、`TT_*` 变量读旧名兼容）③代码内部（`module tt`→`module tg` 全仓 import 重写 + 重生成 `commands.html`）。每批一个 commit、可单独回滚。
+- ~~**Q6**：GP 页的"查询数据源"怎么处理（§7.4）~~ —— **已定（2026-11-09）：先隐藏，字典改造后接通**。`GpSettings.tsx` 里 `SHOW_QUERY_SOURCE = false`，卡片代码保留不删；理由是原建议"A 删控件"随 §4.D 作废——字典改造成 GP 的之后，"本地镜像 / 远程直查"才有语义。接通时要做三件：`GET /api/gp/meta` 回读 `querySource`、`POST /api/gp/settings`（或改走共享 `PUT /api/hosts`）、`tt gp` 补本地 `.db` 查询路径。

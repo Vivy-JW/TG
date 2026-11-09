@@ -8,7 +8,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Copy, Eye, EyeOff, Trash2 } from 'lucide-react'
 import { Button, Input } from '../../shared/ui'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui-radix'
-import { Card, Field, SettingRow } from '../../shared/settings'
+import { Card, Field } from '../../shared/settings'
 import { cn } from '../../shared/utils'
 import { useToast } from './toast'
 
@@ -544,100 +544,11 @@ export function GpSites({ only, create, initial, onSaved, onDiscard, onDraftChan
   )
 }
 
-/** 数据字典（TOP GP）：查询数据源 + 字典同步 + 源码镜像。 */
-export function GpDict() {
-  const g = useGp()
-  const timer = useRef<number | null>(null)
-  const [, force] = useState(0)
-
-  const busy = g.envs.some((e) => e.job?.state === 'running')
-
-  const poll = useCallback(async () => {
-    if (timer.current) { window.clearTimeout(timer.current); timer.current = null }
-    await g.load()
-    force((x) => x + 1)
-  }, [g])
-
-  useEffect(() => {
-    if (!busy) return
-    timer.current = window.setTimeout(() => { void poll() }, 1500)
-    return () => { if (timer.current) window.clearTimeout(timer.current) }
-  }, [busy, poll, g.envs])
-
-  const runSync = async (name: string) => {
-    await g.call('/api/gp/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ env: name }) })
-    void poll()
-  }
-  const runMirror = async (name: string, mode: 'incr' | 'full') => {
-    await g.call('/api/gp/mirror', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ env: name, mode }) })
-    void poll()
-  }
-  const setSource = async (v: string) => {
-    await g.call('/api/gp/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ querySource: v }) })
-    g.setQuerySource(v)
-  }
-
-  const optVal = (name: string) => 'local:' + name
-
-  return (
-    <>
-      {g.err && <Card id="card-gpdict-err" title="TOP GP 服务"><div className="px-1 text-xs text-red-500">{g.err}</div></Card>}
-
-      <Card id="card-gp-datasrc" title="查询数据源"
-        description="在线 = 查询时点名环境走远程库；本地 = 只读该环境自己的 SQLite。">
-        <SettingRow id="gp.dsrc" label="数据源"
-          control={
-            <select className={cn(input, 'rounded-md border border-border bg-background px-2')}
-              value={g.querySource} onChange={(e) => void setSource(e.target.value)}>
-              <option value="auto">在线（查询时点名环境）</option>
-              {g.envs.map((e) => <option key={e.name} value={optVal(e.name)}>{'本地（' + e.name + '）'}</option>)}
-            </select>
-          } />
-      </Card>
-
-      <Card id="card-gp-dict" title="数据字典同步" description="从 GP 库拉 zta_file / gaq_file / gaz_file 等字典表，落到本地 SQLite。">
-        <div className="flex flex-col gap-0.5">
-          {g.envs.length === 0 && <div className="px-1 text-xs text-muted-foreground">还没有环境。</div>}
-          {g.envs.map((e) => {
-            const running = e.job?.state === 'running' && e.job?.kind === 'sync'
-            return (
-              <div key={e.name} className="flex items-center gap-2 rounded-ui px-2 py-1.5 text-xs">
-                <span className="w-24 shrink-0 truncate">{e.name}</span>
-                <span className="min-w-0 flex-1 truncate text-muted-foreground">
-                  {e.dict?.exists ? '已同步 · ' + Number(e.dict.sizeMB ?? 0).toFixed(1) + ' MB' : '未同步'}
-                </span>
-                {running && <span className="text-[11px] text-amber-500">同步中…</span>}
-                <Button size="sm" variant="outline" disabled={busy} onClick={() => void runSync(e.name)}>开始同步</Button>
-              </div>
-            )
-          })}
-        </div>
-      </Card>
-
-      <Card id="card-gp-mirror" title="源码镜像" description="只取 *.4gl；服务器上不留任何文件。落在 <镜像根>\<环境名>\tiptop 与 topcust。">
-        <div className="flex flex-col gap-0.5">
-          {g.envs.length === 0 && <div className="px-1 text-xs text-muted-foreground">还没有环境。</div>}
-          {g.envs.map((e) => {
-            const running = e.job?.state === 'running' && e.job?.kind === 'mirror'
-            return (
-              <div key={e.name} className="flex items-center gap-2 rounded-ui px-2 py-1.5 text-xs">
-                <span className="w-24 shrink-0 truncate">{e.name}</span>
-                <span className="min-w-0 flex-1 truncate text-muted-foreground">
-                  {e.mirror?.exists ? e.mirror.files + ' 个 · ' + Number(e.mirror.sizeMB ?? 0).toFixed(1) + ' MB' : '未拉取'}
-                </span>
-                {running && <span className="text-[11px] text-amber-500">拉取中…</span>}
-                <Button size="sm" variant="outline" disabled={busy} onClick={() => void runMirror(e.name, 'incr')}>增量更新</Button>
-                <Button size="sm" variant="outline" disabled={busy} onClick={() => void runMirror(e.name, 'full')}>全量</Button>
-              </div>
-            )
-          })}
-        </div>
-        <div className="mt-2 px-1">
-          <a className="text-xs text-primary underline-offset-2 hover:underline" href="#" target="_blank" rel="noreferrer">
-            打开 GP 控制台（同步 / 镜像 / 会话）→
-          </a>
-        </div>
-      </Card>
-    </>
-  )
-}
+/**
+ * 这里原本还有一个 `GpDict()`（「查询数据源」「数据字典同步」「源码镜像」三张卡），
+ * 但**从来没有被任何地方挂载**——SettingsView 只 import 了 `GpSites`，同步/镜像按钮是
+ * SettingsView 自己实现的（`SettingsView.tsx:1939` 起），所以那三张卡在界面上不存在。
+ * 2026-11-09 删除死代码；其中「查询数据源」按 docs/gp-scope.md §10 Q6 处理：等 §4.D
+ * 字典层改造成 GP 自己的之后（本地镜像 / 在线直查才有语义），在 SettingsView 里新建并接线
+ * （`GET /api/gp/meta` 回读 querySource + 保存端点 + `tt gp` 本地库查询）。
+ */
