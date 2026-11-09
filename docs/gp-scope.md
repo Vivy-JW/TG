@@ -114,23 +114,34 @@ m.Handle("/api/gp/", s.opt.GP)                                    // GP
 
 ## 5. 三处手术（要先拍板）
 
-### 5.1 `debug`：GP 复用一份，还是各留一份？
+### 5.1 `debug`：**已定 —— 归 TG，拔掉 T100 接线**（2026-11-09 拍板）
 
-**现状事实**：
+**用户的定调**：TG 是与 TT 完全独立的工具，**不需要 T100 的内容**。所以不存在"为共享而抽象"这条路——不做 A（抽接口让 T100 与 GP 共用），也不做"删掉 `debug` 另建一套"。
 
-- `internal/debug` 的 import 里有四个 T100 依赖：`entdir`（企业→账号）、`dict/live`（只读 SQL）、`target`（寻址契约）、`session`（序号/世代）。
-- 同时它已经 import 了 `gp`（做环境分流）。
-- **GP 调试会话是另起的一套**：`internal/gp/session.go` 只用 `host` 起 PTY，**不 import `debug`**。两套 PTY 实现，共存。
+**先纠正一处我原先写错的事实**（重要，否则会删错东西）：
 
-**两条路**：
+> 原稿说"GP 调试会话是另起的一套，`internal/gp/session.go` 不 import `debug`，两套 PTY 共存"。
+> 这只说对了一半：`internal/gp/session.go` 只是 Web 的**简化 PTY**（`/api/gp/session/{new,exec,close}`，起 `r.d2` 后发命令）。
+> **真正在跑的 GP 调试器在 `internal/debug` 里**：`internal/debug/gp.go`（230 行）负责"进实例菜单 → 选实例 → 进模块 4gl 目录 → 校验源码存在 → `r.d2 <短程序名>` → 等 `(fgldb)` → 恢复断点"，
+> 另有 12 处 `Product == "gp"` 分支（`config.go:65/273`、`manager.go:177/391/654`、`session.go:778/876/959/1338`、`api.go:2796`）把登录段、模块推导、源码镜像分叉给 GP。
+> 也就是说：**按原稿的"B 各留一份、删掉 `internal/debug`"执行，等于删掉唯一能用的 GP 调试器**（断点、停站、事件、WS、前端工作台全在它里面）。
 
-| | A. 合一（抽接口） | B. 各留一份 |
+**所以落法是第三种**：`internal/debug` 整体归 TG 所有（它是 fgldb 机制 + GP 接线），只把里面的 T100 领域件拔掉。
+
+**要拔的 T100 接线（共 5 个非测试文件，占 13265 行的 1% 不到）**：
+
+| 文件 | 依赖 | 处置 |
 |---|---|---|
-| 做法 | 把"取账号/取字典"抽成接口，由产品侧注入实现；`debug` 只留 fgldb 机制 | `internal/gp` 就是 GP 的调试线，`internal/debug` 跟 T100 一起删 |
-| 代价 | 要给 13265 行的核心动刀，风险集中；但前端工作台、WS、断点只维护一套 | 调试面要重写一遍（前端 `DebugWorkbench` 已经很重）；两套都各自演化 |
-| 时机 | 阶段 2 | 阶段 3 |
+| `internal/debug/ents.go` | `entdir` 企业清单 | 删（GP 没有 ENT） |
+| `internal/debug/db.go` | `entdir`（企业→账号）+ 只读 SQL | 删；账号改由环境配置给 |
+| `internal/debug/dbsqldirect.go` | `dict/live` | 删（T100 字典直查） |
+| `internal/debug/srcmirror.go` | `entdir` | 改成纯 GP 路径（`$TOP/$CUST` 镜像），去掉企业段 |
+| `internal/debug/api.go` 的企业/作业入口 | `target` 的 ENT 形态 | 摘掉 `环境/99`、`@企业` 那一支（见 §5.3） |
 
-**倾向 B**：GP 已经有能跑的 `session.go`，先让它长大；等 GP 调试需求稳定（比如要不要断点、要不要停站）再谈合并。理由与"删除放最后"同源——**现在合并是拿不确定性换抽象**。
+**同时要处理的重复**：`internal/gp/session.go` 与 `internal/debug` 的两套 PTY 不能长期并存。阶段 2 二选一——要么把 `internal/gp/session.go` 降级成 `debug` 的薄封装（推荐，前端/WS/断点只有一条路），要么明确它只服务 `/api/gp/session` 的"快速 exec"，不再长大。
+
+**连带删除（阶段 3）**：`cli/debug`（4547 行，T100 作业调试命令面）、`debugclient`（581 行，`cli/debug` 与 `cli/session` 共用的 REST 客户端）。GP 要命令行面的话，在 `cli/gp` 里新写，不复用这两个。
+
 
 ### 5.2 `dict/live` 其实不是字典包
 
@@ -231,7 +242,7 @@ Get-ChildItem internal -Directory | ForEach-Object {
 
 ## 10. 待拍板
 
-- **Q1**：`debug` 合一还是各留一份（§5.1，倾向 B：各留）。
+- ~~**Q1**：`debug` 合一还是各留一份~~ —— **已定（2026-11-09）**：TG 与 TT 完全独立，不与 T100 共享代码；`internal/debug` 归 TG，拔掉 T100 接线，不新建第二套（§5.1）。
 - **Q2**：`dict/live` 搬到 `erpdb` 还是新建 `livedb`（§5.2）。
 - **Q3**：GP 镜像要不要扩到 `42f/42s/inc`（§7.3）——扩了 GP 才能真正离线改画面。
 - **Q4**：`designer-src/` + `engine/`（16 MB、1264 文件）什么时候删——它们对 GP 零价值，但删了在本仓库不可回。
