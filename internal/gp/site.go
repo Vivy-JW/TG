@@ -23,44 +23,66 @@ import (
 	"tt/internal/dict/live"
 )
 
-// Site 一个营运据点：代号 + 名字。
+// Site 一个营运据点：代号 + 名称。
 type Site struct {
 	Code string `json:"code"`
 	Name string `json:"name"`
 }
 
-// LookupSite 连库查 azp_file，按据点代号取名字（大小写不敏感）。
+// ListSites 连库把 azp_file 的据点全表取回来（按代号排序）。
 //
-// 返回 found=false 不是错误：像 "ds" 这种系统库在 azp_file 里没有对应据点
-// （实测 30 个据点里没有 ds），用户仍然可以只填代号、名字留空。
-func LookupSite(ctx context.Context, c dbconfig.Connection, code string) (site Site, found bool, err error) {
-	code = strings.TrimSpace(code)
-	if code == "" {
-		return Site{}, false, nil
-	}
+// 一次取全表而不是逐个查：设置页要的是"挑一个"，把所有据点摆成一张表
+// 比"先记住代号再来查名字"顺手得多；azp_file 实测只有 30 行，代价可以忽略。
+func ListSites(ctx context.Context, c dbconfig.Connection) ([]Site, error) {
 	l, err := live.OpenCompany(ctx, c, SyncCompany)
 	if err != nil {
-		return Site{}, false, err
+		return nil, err
 	}
 	defer l.Close()
 
 	cols, rows, err := l.Connector().Query(ctx, `SELECT azp01, azp02 FROM azp_file ORDER BY azp01`)
 	if err != nil {
-		return Site{}, false, fmt.Errorf("查 azp_file 失败：%w", err)
+		return nil, fmt.Errorf("查 azp_file 失败：%w", err)
 	}
 	if len(cols) < 2 {
-		return Site{}, false, fmt.Errorf("azp_file 的列不对：%v", cols)
+		return nil, fmt.Errorf("azp_file 的列不对：%v", cols)
 	}
-	want := strings.ToUpper(code)
+	out := make([]Site, 0, len(rows))
 	for _, r := range rows {
-		if strings.ToUpper(strings.TrimSpace(r[0])) == want {
-			return Site{Code: strings.TrimSpace(r[0]), Name: strings.TrimSpace(r[1])}, true, nil
+		code := strings.ToUpper(strings.TrimSpace(r[0]))
+		if code == "" {
+			continue
+		}
+		out = append(out, Site{Code: code, Name: strings.TrimSpace(r[1])})
+	}
+	return out, nil
+}
+
+// LookupSite 按据点代号取名字（大小写不敏感）。
+//
+// 返回 found=false 不是错误：像 "ds" 这种系统库在 azp_file 里没有对应据点
+// （实测 30 个据点里没有 ds），用户仍然可以只填代号、名称留空。
+func LookupSite(ctx context.Context, c dbconfig.Connection, code string) (site Site, found bool, err error) {
+	want := strings.ToUpper(strings.TrimSpace(code))
+	if want == "" {
+		return Site{}, false, nil
+	}
+	sites, err := ListSites(ctx, c)
+	if err != nil {
+		return Site{}, false, err
+	}
+	for _, s := range sites {
+		if strings.EqualFold(s.Code, want) {
+			return s, true, nil
 		}
 	}
 	return Site{}, false, nil
 }
 
-// hSite 处理 POST /api/gp/site：{"env":"22主机","code":"DIGIWIN"}。
+// hSite 处理 POST /api/gp/site：
+//
+//	{"env":"22主机"}                → 据点全表（页签打开/刷新时用）
+//	{"env":"22主机","code":"DIGIWIN"} → 按代号取一个
 //
 // 只读：不写配置（回写由前端拿着 code/name 走 /api/gp/env 的补丁保存）。
 func (s *Service) hSite(w http.ResponseWriter, r *http.Request) {
@@ -79,6 +101,15 @@ func (s *Service) hSite(w http.ResponseWriter, r *http.Request) {
 	}
 	if env.DB == nil {
 		writeJSON(w, 400, map[string]any{"ok": false, "error": "这个环境没有配置数据库连接"})
+		return
+	}
+	if strings.TrimSpace(body.Code) == "" {
+		sites, err := ListSites(r.Context(), *env.DB)
+		if err != nil {
+			writeJSON(w, 502, map[string]any{"ok": false, "error": err.Error()})
+			return
+		}
+		writeJSON(w, 200, map[string]any{"ok": true, "count": len(sites), "sites": sites})
 		return
 	}
 	site, found, err := LookupSite(r.Context(), *env.DB, body.Code)

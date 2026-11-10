@@ -5,14 +5,19 @@
 // SSH / 数据库 两个页签、没有 ENT；保存也跟 T100 一样走 500ms 自动保存。
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Copy, Eye, EyeOff, Trash2 } from 'lucide-react'
-import { Button, Input } from '../../shared/ui'
+import { Check, Copy, Eye, EyeOff, RefreshCw, Trash2 } from 'lucide-react'
+import {
+  Button, Input, Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '../../shared/ui'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui-radix'
 import { Card, Field } from '../../shared/settings'
 import { cn } from '../../shared/utils'
 import { useToast } from './toast'
 
 interface DbAcc { account: string; password?: string; hasPassword?: boolean }
+
+/** 一个营运据点（azp_file 的一行）：代号 + 名称。 */
+interface SiteRow { code: string; name: string }
 
 export interface GpEnv {
   name: string
@@ -26,8 +31,10 @@ export interface GpEnv {
   custRoot?: string
   /** 营运据点代号（azp_file.azp01 小写 = zta_file.zta02 = Oracle schema）；空 = "ds"。 */
   company?: string
-  /** 营运据点名字（azp_file.azp02），「从服务器刷新」时抄下来，只是显示用。 */
+  /** 营运据点名称（azp_file.azp02），「从服务器刷新」时抄下来，只是显示用。 */
   companyName?: string
+  /** 上次「从服务器刷新」的时间（RFC3339）；只用来显示"什么时候抄的"。 */
+  companySyncedAt?: string
   mirrorDir?: string
   dictDir?: string
   db?: { type?: string; host?: string; port?: number; sid?: string; service?: string; accounts?: DbAcc[] }
@@ -48,6 +55,7 @@ interface GpEnvPatch {
   custRoot?: string
   company?: string
   companyName?: string
+  companySyncedAt?: string
   mirrorDir?: string
   dictDir?: string
   db?: {
@@ -65,7 +73,7 @@ const input = 'h-7 w-full min-w-0 text-xs'
 export function emptyGpEnv(): GpEnv {
   return {
     name: '', host: '', port: 22, user: '', hasPassword: false,
-    instance: '', workspace: '', custRoot: '', company: '', companyName: '',
+    instance: '', workspace: '', custRoot: '', company: '', companyName: '', companySyncedAt: '',
     db: { type: 'oracle', host: '', port: 1521, service: '', accounts: [{ account: '', password: '' }] },
   }
 }
@@ -85,6 +93,7 @@ function envSnapshot(c: GpEnv): string {
     instance: (c.instance || '').trim(),
     company: (c.company || '').trim(),
     companyName: (c.companyName || '').trim(),
+    companySyncedAt: (c.companySyncedAt || '').trim(),
     db: {
       host: (c.db?.host || '').trim(),
       port: c.db?.port ?? 1521,
@@ -113,6 +122,7 @@ function buildEnvPatch(
   if ((c.instance || '').trim() !== (b.instance || '')) patch.instance = (c.instance || '').trim()
   if ((c.company || '').trim() !== (b.company || '')) patch.company = (c.company || '').trim()
   if ((c.companyName || '').trim() !== (b.companyName || '')) patch.companyName = (c.companyName || '').trim()
+  if ((c.companySyncedAt || '').trim() !== (b.companySyncedAt || '')) patch.companySyncedAt = (c.companySyncedAt || '').trim()
 
   const bdb = b.db || {}
   const db: NonNullable<GpEnvPatch['db']> = {}
@@ -182,9 +192,10 @@ export function GpSites({ only, create, initial, onSaved, onDiscard, onDraftChan
   const [msg, setMsg] = useState('')
   const [busy, setBusy] = useState(false)
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
-  // 营运据点：从服务器抄 azp_file 的结果与忙状态。
+  // 营运据点：从服务器抄 azp_file 的结果与忙状态（一次取全表，摆成一张可点的表）。
   const [siteBusy, setSiteBusy] = useState(false)
   const [siteMsg, setSiteMsg] = useState('')
+  const [sites, setSites] = useState<SiteRow[]>([])
   const [test, setTest] = useState<{ ssh?: { ok: boolean; msg: string }; db?: { ok: boolean; msg: string } } | null>(null)
 
   // 基线 = 上一次读入/保存成功时的“表单值”（不含密码）；脏 = 碰过且与基线不同。
@@ -432,32 +443,47 @@ export function GpSites({ only, create, initial, onSaved, onDiscard, onDraftChan
     } catch (e) { setMsg('测试失败：' + String(e)) } finally { setBusy(false) }
   }
 
-  // 「从服务器刷新」：连库读 azp_file（固定 ds schema），按代号取名字。
-  // 只读不写：拿到结果后走同一个补丁保存，写回 config.json 的 company/companyName。
-  const refreshSite = async () => {
+  // 「从服务器刷新」：连库读 azp_file（固定 ds schema）把据点**全表**取回来，
+  // 摆成一张可点的表 —— 用户不知道代号对应哪家公司，让他挑比让他算要顺手。
+  // 只读不写：选中某行后才走同一个补丁保存，写回 config.json 的 company/companyName。
+  const refreshSites = async () => {
     if (!cur) return
-    const code = (cur.company || '').trim()
-    if (!code) { setSiteMsg('先填营运据点代号，再从服务器刷新'); return }
     setSiteBusy(true); setSiteMsg('')
     try {
       const r = await g.call('/api/gp/site', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ env: cur.name, code }),
+        body: JSON.stringify({ env: cur.name }),
       })
       if (!r.ok) { setSiteMsg(r.error || '查询失败'); return }
-      if (!r.found) {
-        setSiteMsg(`azp_file 里没有「${code}」；系统库（如 ds）可以只填代号，名字留空`)
-        return
-      }
-      patch({ company: r.code, companyName: r.name })
-      setSiteMsg(`已取到：${r.code} · ${r.name}`)
+      const rows: SiteRow[] = Array.isArray(r.sites) ? r.sites : []
+      setSites(rows)
+      // 刷新时间跟着配置走（下次打开页面不用再点一次就知道是什么时候抄的）。
+      patch({ companySyncedAt: new Date().toISOString() })
+      setSiteMsg(rows.length ? `已取到 ${rows.length} 个据点` : 'azp_file 里一条据点都没有')
     } catch (e) {
       setSiteMsg('查询失败：' + String(e))
     } finally { setSiteBusy(false) }
   }
 
+  // 第一次切到「营运据点」页签时自动抄一次清单：空表让人以为"没东西可选"，
+  // 而这一抄只是一次只读查询。用 ref 挡住后续切换，不反复连库。
+  const sitesLoadedRef = useRef(false)
+  useEffect(() => {
+    if (tab !== 'site' || sitesLoadedRef.current) return
+    if (!(curRef.current?.name || '').trim()) return
+    sitesLoadedRef.current = true
+    void refreshSites()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab])
+
   if (!cur) return null
   const acc = cur.db?.accounts?.[0]
+  // 当前选中的据点：空 = ds（后端同样的默认）。azp_file 里没有 ds 这种系统库，
+  // 所以"选中值不在清单里"时补一行显示出来，别让人以为没选中。
+  const curCode = (cur.company || '').trim().toLowerCase() || 'ds'
+  const shownRows: SiteRow[] = sites.some((s) => s.code.toLowerCase() === curCode)
+    ? sites
+    : [{ code: curCode, name: cur.companyName || '' }, ...sites]
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -564,36 +590,66 @@ export function GpSites({ only, create, initial, onSaved, onDiscard, onDraftChan
           </div>
         </TabsContent>
 
-        <TabsContent value="site" forceMount className="mt-3 min-h-0 flex-1 overflow-auto data-[state=inactive]:hidden">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-            <Field label="营运据点">
-              <Input className={input} value={cur.company || ''} placeholder="ds"
-                onChange={(e) => patch({ company: e.target.value })} />
-              <span className="mt-1 block text-[10px] leading-relaxed text-muted-foreground/80">
-                {`代号（azp_file.azp01，小写即 zta_file.zta02 / Oracle schema）；留空 = ds`}
-              </span>
-            </Field>
-            <Field label="营运据点名字">
-              <Input className={input} value={cur.companyName || ''} placeholder="点右边「从服务器刷新」取"
-                onChange={(e) => patch({ companyName: e.target.value })} />
-              <span className="mt-1 block text-[10px] leading-relaxed text-muted-foreground/80">
-                从 azp_file 抄下来的名字，只是显示用
-              </span>
-            </Field>
-            <div className="col-span-2 flex items-center gap-2">
-              <Button size="sm" variant="outline" disabled={siteBusy}
-                title="连库查 azp_file（固定读 ds 这个系统库），用左边的代号取据点名字；只读，不改服务器上的任何东西。系统库（如 ds）在 azp_file 里没有，会提示「没有这个据点」，此时只填代号、名字留空即可。"
-                onClick={() => void refreshSite()}>
-                {siteBusy ? '查询中…' : '从服务器刷新'}
-              </Button>
-              {siteMsg && <span className="text-[11px] text-muted-foreground">{siteMsg}</span>}
-            </div>
-            <div className="col-span-2 rounded-[3px] border border-border/60 bg-muted/30 px-2 py-1.5 text-[10px] leading-relaxed text-muted-foreground">
-              直查（dict r.t / prog / msg 等）按这里的据点选 schema 与字典行；
-              <b className="text-foreground/80">本地字典同步固定按 ds 取</b>（ds 表档最全，2,962 张），
-              与这里填什么无关 —— 所以本地查得到、远程查不到时，先看据点填得对不对。
-            </div>
+
+        <TabsContent value="site" forceMount className="mt-3 flex min-h-0 flex-1 flex-col gap-2 overflow-auto data-[state=inactive]:hidden">
+          <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+            <span>
+              上次同步：{cur.companySyncedAt ? new Date(cur.companySyncedAt).toLocaleString('zh-CN') : '从未同步'}
+            </span>
+            <Button size="sm" variant="outline" className="ml-auto h-7" disabled={siteBusy}
+              title="连库读 azp_file（固定读 ds 这个系统库）把全部营运据点列出来；只读，不改服务器上的任何东西。"
+              onClick={() => void refreshSites()}>
+              <RefreshCw className={cn('h-3.5 w-3.5', siteBusy && 'animate-spin')} />
+              {siteBusy ? '同步中…' : '从服务器刷新'}
+            </Button>
           </div>
+          {shownRows.length === 0 ? (
+            <div className="py-3 text-xs leading-relaxed text-muted-foreground">
+              还没有据点清单。点上面的「从服务器刷新」读一次 azp_file（需要能连上该环境的库），之后在这里点一行就选中。
+            </div>
+          ) : (
+            <div className="min-h-0 flex-1 overflow-auto rounded-ui border border-border">
+              <Table container={false}>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="w-44">营运据点</TableHead>
+                    <TableHead>营运据点名称</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {shownRows.map((s) => {
+                    const sel = s.code.toLowerCase() === curCode
+                    const missing = !sites.some((x) => x.code.toLowerCase() === s.code.toLowerCase())
+                    return (
+                      <TableRow key={s.code}
+                        onClick={() => patch({ company: s.code.toLowerCase(), companyName: s.name })}
+                        className={cn('cursor-pointer', sel ? 'bg-accent/70 hover:bg-accent/70' : 'hover:bg-accent/40')}>
+                        <TableCell className="font-mono text-xs">
+                          <span className="flex items-center gap-1">
+                            {sel && <Check className="h-3.5 w-3.5 text-primary" />}
+                            {s.code.toLowerCase()}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {s.name || (
+                            <span className="text-muted-foreground">
+                              {missing ? '（不在 azp_file 里，ds 这类系统库就是这样）' : '—'}
+                            </span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+          {siteMsg && <p className="text-[11px] text-muted-foreground">{siteMsg}</p>}
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
+            直查（<span className="font-mono">dict r.t / prog / msg</span>）按选中的据点取 schema 与字典行；
+            <b className="text-foreground/80">本地字典同步固定按 ds 取</b>，与这里选哪个无关。
+            代号写错不报错、只是查出来空 —— 拿不准就点「从服务器刷新」看名字。
+          </p>
         </TabsContent>
 
         <div className="mt-3 flex items-center gap-2">

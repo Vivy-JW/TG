@@ -114,6 +114,11 @@ type NamedSsh struct {
 	// 只是显示用：查询口径看 Company。存一份是为了不打开设置页就得连库，
 	// 也让"这个代号到底是哪家公司"在 config.json 里自解释。
 	CompanyName string `json:"companyName,omitempty"`
+	// CompanySyncedAt 上次「从服务器刷新」的时间（RFC3339，本地时区）。
+	//
+	// 与 T100 的 entsSyncedAt 同义：只是让人知道这张据点表是什么时候抄的，
+	// 不参与任何判断 —— 表里的 name 才是准的，过期了自己再点一次刷新。
+	CompanySyncedAt string `json:"companySyncedAt,omitempty"`
 	// MirrorDir 这个环境的源码镜像目录（绝对路径）；空 = 用顶层 mirror.dir/<环境名>。
 	MirrorDir string `json:"mirrorDir,omitempty"`
 	// DictDir 这个环境的本地字典库目录（绝对路径）；空 = 用顶层 dict.dir，再空 = <数据目录>/dict。
