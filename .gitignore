@@ -92,5 +92,8 @@ web/dist.old-*/
 # robocopy 从 TT-src 带过来的空 tmp/，将来构建也可能往里写
 /tmp/
 
+# 开发自用的 TG 运行实例：config.json（含明文口令）、字典库、镜像、日志
+/run/
+
 # Office 打开文件时留下的临时锁文件（LibreOffice / Excel）
 ~$*

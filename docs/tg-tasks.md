@@ -37,8 +37,9 @@
 - ☐ `Source` 接口瘦身（30 个方法 → 只留有 GP 数据的十来条）
 - ☐ `internal/dict/live/README.md` 与包注释去 T100 表述
 - ☐ 更新 `docs/gp-dict-wiring.md` 的 ✅/⬜ 标记与 `docs/gp-scope.md` §4.D
-- ☐ 提交字典层改动
-- ☐ 清理 `tmp\gp-probe.json`（含明文口令）、`tmp\gpdict`、`tmp\tg.exe`
+- ☑ 提交字典层改动（`a75acb3`）
+- ☑ 清理 `tmp\gp-probe.json`（含明文口令）、`tmp\gpdict`、`tmp\tg.exe`
+- ☑ TG 起自己的运行实例（`run\`，独立端口），不再借用 TT 的 28670
 
 ## 阶段 2 调试面
 
