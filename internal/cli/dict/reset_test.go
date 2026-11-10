@@ -1,4 +1,4 @@
-﻿package dict
+package dict
 
 import (
 	"os"
@@ -51,7 +51,7 @@ func resetDictPackageState(t *testing.T) {
 
 	// 字符串
 	t.Cleanup(snapVars(
-		&dbPath, &srcConfigPath, &dictEnt, &srcDetail, &srcProduct,
+		&dbPath, &srcConfigPath, &dictEnt, &dictCompany, &srcDetail, &srcProduct,
 		&checkKW, &checkLang,
 		&dbSyncTable, &discoverType, &discoverHost,
 		&msgLang, &msgText, &msgType, &msgStatus, &msgProg,
@@ -187,7 +187,7 @@ func TestOpenQuerySourceLocalSucceedsWhenDBExists(t *testing.T) {
 // 所以它有残余缺口：往清单里加了名字却忘了真的在函数里还原，这条测不出来。
 // 但它挡得住最常见的那种：**新加一个包级 var，两处都忘了**。
 var dictMutableVars = []string{
-	"dbPath", "srcConfigPath", "queryLimit", "srcQueryLimit", "dictEnt", "dictFull", "srcProduct", "srcDetail",
+	"dbPath", "srcConfigPath", "queryLimit", "srcQueryLimit", "dictEnt", "dictCompany", "dictFull", "srcProduct", "srcDetail",
 	"checkKW", "checkLang",
 	"dbSyncTable", "discoverType", "discoverHost", "discoverSave", "dbListSecrets",
 	"msgLang", "msgText", "msgType", "msgStatus", "msgProg", "msgFull",

@@ -40,6 +40,10 @@ var srcConfigPath string
 // 环境级 topent 已移除,所以这是企业编号的唯一来源之一(另一个是 tt debug --ent)。
 var dictEnt string
 
+// dictCompany --company:本次远程直查用哪个公司别(zta_file.zta02 / Oracle schema)。
+// 空 = 用配置 hosts.sshs[].company(再空 = ds)。
+var dictCompany string
+
 func init() {
 	// 字典独有的 persistent flag:--db 只对 tt dict 有意义
 	Group.PersistentFlags().StringVarP(&dbPath, "db", "d", "",
@@ -53,6 +57,10 @@ func init() {
 	// 不给就用账号列表首项(并在信封 notes 里说明)。
 	Group.PersistentFlags().StringVar(&dictEnt, "ent", "",
 		"企业编号(ENT):据此解析该环境用哪个账号(schema);不给 = 用账号列表首项")
+	// --company 是 GP 的公司别(zta_file.zta02 / Oracle schema):"这个库里有几十家公司,
+	// 我这次要看哪一家"。只影响远程直查;同步仍按配置里的公司别(本地 .db 一个环境一份)。
+	Group.PersistentFlags().StringVar(&dictCompany, "company", "",
+		"公司别(zta_file.zta02,如 ds/digiwin):覆盖配置里该环境的值,只对远程直查生效")
 
 	// 打开/关闭查询数据源:本地 SQLite(--db/TDICT_DB)或远程库(--env/query.source)。
 	// 不依赖本地字典库的子命令(db/mirror/spill)各自覆盖本钩子。

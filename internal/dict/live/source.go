@@ -78,9 +78,15 @@ func progNameCol(lang string) string {
 // ---- 表字典 ----
 
 // QueryTableMeta 表档:按公司别查 zta_file，未收录返回 (nil, nil)。
+//
+// 模块/类型与本地同步取同一口径：模块 = zta03（空才退 gat06）、类型 = zta09
+// （空才退 gat07）。从前这里只取 gat_file 的 gat06/gat07，而 gat06 在库里
+// 基本都是空的 —— 于是同一条 `dict r.t` 本地有模块、远程没有，看起来像"远程查不到"。
 func (l *Live) QueryTableMeta(table string) (*db.TableMeta, error) {
 	rows, err := l.q(fmt.Sprintf(`
-		SELECT lower(z.zta01), COALESCE(g.gat03, ''), COALESCE(g.gat06, ''), COALESCE(g.gat07, ''),
+		SELECT lower(z.zta01), COALESCE(g.gat03, ''),
+		       COALESCE(NULLIF(TRIM(z.zta03), ''), g.gat06, ''),
+		       COALESCE(NULLIF(TRIM(z.zta09), ''), g.gat07, ''),
 		       COALESCE(z.zta07, '')
 		  FROM zta_file z
 		  LEFT JOIN gat_file g ON g.gat01 = z.zta01 AND g.gat02 = '2'
@@ -93,8 +99,11 @@ func (l *Live) QueryTableMeta(table string) (*db.TableMeta, error) {
 	}
 	r := rows[0]
 	return &db.TableMeta{
-		TableName: get(r, 0), TableDesc: get(r, 1), Module: get(r, 2), TableType: get(r, 3),
-		Kind: strings.ToUpper(strings.TrimSpace(get(r, 4))),
+		TableName: get(r, 0),
+		TableDesc: get(r, 1),
+		Module:    strings.ToUpper(strings.TrimSpace(get(r, 2))),
+		TableType: strings.ToUpper(strings.TrimSpace(get(r, 3))),
+		Kind:      strings.ToUpper(strings.TrimSpace(get(r, 4))),
 	}, nil
 }
 
@@ -279,7 +288,10 @@ func (l *Live) QueryProgInfo(code, lang string) (*db.ProgInfo, error) {
 	}
 	info.Module = l.progModule(code)
 	// zr_file 是"程序 × 表 × 操作码"的行集合，同一张表可能有多行 → 按表去重。
-	if cnt, err := l.q(fmt.Sprintf(`SELECT COUNT(DISTINCT zr02) FROM zr_file WHERE lower(zr01) = lower(%s)`, tableLit(code))); err == nil && len(cnt) > 0 {
+	// 两侧都 TRIM：zr_file 是 p_get_zr 扫源码生成的，同一条程序名/表名可能带尾空格
+	// （本地同步用 clean() 去空白后归并，这里不 TRIM 就会比本地少几张表 —— 实测
+	// apmt420 本地 164 张、远程 159 张，差的 5 张就在带空格的那几行里）。
+	if cnt, err := l.q(fmt.Sprintf(`SELECT COUNT(DISTINCT TRIM(lower(zr02))) FROM zr_file WHERE TRIM(lower(zr01)) = lower(%s)`, tableLit(code))); err == nil && len(cnt) > 0 {
 		if n, err := parseCount(get(cnt[0], 0)); err == nil {
 			info.TableCount = n
 		}
@@ -329,11 +341,11 @@ func (l *Live) QueryProgList(lang, keyword string) ([]db.ProgListItem, error) {
 // QueryProgTables 程序 → 表:zr_file（一个 (程序,表) 可能多行操作码，按表合并）。
 func (l *Live) QueryProgTables(code, lang string) ([]db.ProgTableRow, error) {
 	rows, err := l.q(fmt.Sprintf(`
-		SELECT lower(r.zr02), COALESCE(g.gat03, ''), upper(r.zr03)
+		SELECT lower(TRIM(r.zr02)), COALESCE(g.gat03, ''), upper(r.zr03)
 		  FROM zr_file r
-		  LEFT JOIN gat_file g ON g.gat01 = r.zr02 AND g.gat02 = '2'
-		 WHERE lower(r.zr01) = lower(%s)
-		 ORDER BY r.zr02`, tableLit(code)))
+		  LEFT JOIN gat_file g ON lower(TRIM(g.gat01)) = lower(TRIM(r.zr02)) AND g.gat02 = '2'
+		 WHERE TRIM(lower(r.zr01)) = lower(%s)
+		 ORDER BY 1`, tableLit(code)))
 	if err != nil {
 		return nil, err
 	}
@@ -343,11 +355,11 @@ func (l *Live) QueryProgTables(code, lang string) ([]db.ProgTableRow, error) {
 // QueryTablePrograms 反查哪些程序用这张表:zr_file + gaz_file(程序名)。
 func (l *Live) QueryTablePrograms(table, lang string) ([]db.TableProgRow, error) {
 	rows, err := l.q(fmt.Sprintf(`
-		SELECT lower(r.zr01), COALESCE(g.gaz03, ''), upper(r.zr03)
+		SELECT lower(TRIM(r.zr01)), COALESCE(g.gaz03, ''), upper(r.zr03)
 		  FROM zr_file r
-		  LEFT JOIN gaz_file g ON lower(g.gaz01) = lower(r.zr01) AND g.gaz02 = '2'
-		 WHERE lower(r.zr02) = lower(%s)
-		 ORDER BY r.zr01`, tableLit(table)))
+		  LEFT JOIN gaz_file g ON lower(TRIM(g.gaz01)) = lower(TRIM(r.zr01)) AND g.gaz02 = '2'
+		 WHERE lower(TRIM(r.zr02)) = lower(%s)
+		 ORDER BY 1`, tableLit(table)))
 	if err != nil {
 		return nil, err
 	}

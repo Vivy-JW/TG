@@ -266,15 +266,17 @@ func (s *Service) hMeta(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 	type envView struct {
-		Name      string         `json:"name"`
-		Host      string         `json:"host"`
-		Port      int            `json:"port"`
-		User      string         `json:"user"`
-		Password  string         `json:"password"`
-		HasPwd    bool           `json:"hasPassword"`
-		Instance  string         `json:"instance"`
-		Workspace string         `json:"workspace"`
-		CustRoot  string         `json:"custRoot"`
+		Name      string `json:"name"`
+		Host      string `json:"host"`
+		Port      int    `json:"port"`
+		User      string `json:"user"`
+		Password  string `json:"password"`
+		HasPwd    bool   `json:"hasPassword"`
+		Instance  string `json:"instance"`
+		Workspace string `json:"workspace"`
+		CustRoot  string `json:"custRoot"`
+		// Company 公司别（zta_file.zta02 / Oracle schema）；空 = "ds"。
+		Company   string         `json:"company"`
 		MirrorDir string         `json:"mirrorDir"`
 		DictDir   string         `json:"dictDir"`
 		DB        map[string]any `json:"db,omitempty"`
@@ -320,7 +322,7 @@ func (s *Service) hMeta(w http.ResponseWriter, _ *http.Request) {
 		out = append(out, envView{
 			Name: e.Name, Host: e.Host, Port: e.Port, User: e.User,
 			Password: e.Password, HasPwd: e.Password != "",
-			Instance: inst, Workspace: e.Workspace, CustRoot: e.CustRoot, MirrorDir: e.MirrorDir,
+			Instance: inst, Workspace: e.Workspace, CustRoot: e.CustRoot, Company: e.Company, MirrorDir: e.MirrorDir,
 			DictDir: e.DictDir,
 			DB:      db, Mirror: mv, Dict: dv, Job: s.job(e.Name),
 		})
@@ -351,6 +353,7 @@ type gpEnvPatch struct {
 	Instance  *string    `json:"instance,omitempty"`
 	Workspace *string    `json:"workspace,omitempty"`
 	CustRoot  *string    `json:"custRoot,omitempty"`
+	Company   *string    `json:"company,omitempty"`
 	MirrorDir *string    `json:"mirrorDir,omitempty"`
 	DictDir   *string    `json:"dictDir,omitempty"`
 	Zone      *string    `json:"zone,omitempty"`
@@ -362,7 +365,7 @@ type gpEnvPatch struct {
 func patchFromEnv(e config.NamedSsh) gpEnvPatch {
 	p := gpEnvPatch{
 		Name: &e.Name, Host: &e.Host, Port: &e.Port, User: &e.User,
-		Workspace: &e.Workspace, CustRoot: &e.CustRoot,
+		Workspace: &e.Workspace, CustRoot: &e.CustRoot, Company: &e.Company,
 		MirrorDir: &e.MirrorDir, DictDir: &e.DictDir, Zone: &e.Zone,
 	}
 	// 旧客户端的“整条 env”没有 instance；空值不能当“清空实例”处理，
@@ -418,6 +421,10 @@ func applyEnvPatch(dst *config.NamedSsh, p gpEnvPatch) {
 	}
 	if p.CustRoot != nil && p.Instance == nil {
 		dst.CustRoot = strings.TrimSpace(*p.CustRoot)
+	}
+	// 公司别：空 = 回到 "ds"（同步与查库都按它取字典）。
+	if p.Company != nil {
+		dst.Company = strings.ToLower(strings.TrimSpace(*p.Company))
 	}
 	if p.MirrorDir != nil {
 		dst.MirrorDir = strings.TrimSpace(*p.MirrorDir)

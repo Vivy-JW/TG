@@ -36,12 +36,19 @@ type Live struct {
 func (l *Live) Company() string { return l.company }
 
 // newLive 从连接配置推出公司别与 schema 名。
-func newLive(c dbconfig.Connection, conn erpdb.Connector, tun *sshtun.Tunnel) *Live {
+//
+// company 为空时才退回连库账号；给了就以它为准 —— 账号只决定"以谁的身份登录"，
+// 公司别决定"看哪家公司的字典"。两者在 GP 里并不等价（账号 digiwin 也能读 DS）。
+func newLive(c dbconfig.Connection, conn erpdb.Connector, tun *sshtun.Tunnel, company string) *Live {
 	acct := "ds"
 	if len(c.Accounts) > 0 && strings.TrimSpace(c.Accounts[0].Account) != "" {
 		acct = strings.TrimSpace(c.Accounts[0].Account)
 	}
-	return &Live{conn: conn, tun: tun, company: strings.ToLower(acct), owner: strings.ToUpper(acct)}
+	co := strings.ToLower(strings.TrimSpace(company))
+	if co == "" {
+		co = strings.ToLower(acct)
+	}
+	return &Live{conn: conn, tun: tun, company: co, owner: strings.ToUpper(co)}
 }
 
 // Dialect 返回底层连接方言("kingbase"|"oracle")。
@@ -61,7 +68,20 @@ func (l *Live) Close() {
 }
 
 // Open 按连接配置建立远程数据源。若配置了 viaSsh,先起 SSH 隧道再连本地转发端口。
+//
+// 公司别取连库账号（老行为）。要按配置里的公司别查，用 OpenCompany ——
+// GP 一个库里装几十家公司，账号与公司别本来就不是一回事。
 func Open(ctx context.Context, c dbconfig.Connection) (*Live, error) {
+	return open(ctx, c, "")
+}
+
+// OpenCompany 同 Open，但显式指定公司别（zta_file.zta02 / Oracle schema）。
+// company 为空时退回连库账号。
+func OpenCompany(ctx context.Context, c dbconfig.Connection, company string) (*Live, error) {
+	return open(ctx, c, company)
+}
+
+func open(ctx context.Context, c dbconfig.Connection, company string) (*Live, error) {
 	effective := c
 	if c.ViaSSH != nil {
 		remoteHost, remotePort := c.ViaSSH.EffectiveRemote(c.Host, c.Port)
@@ -85,11 +105,11 @@ func Open(ctx context.Context, c dbconfig.Connection) (*Live, error) {
 			t.Close()
 			return nil, err
 		}
-		return newLive(c, conn, t), nil
+		return newLive(c, conn, t, company), nil
 	}
 	conn, err := erpdb.Open(ctx, effective)
 	if err != nil {
 		return nil, err
 	}
-	return newLive(c, conn, nil), nil
+	return newLive(c, conn, nil, company), nil
 }

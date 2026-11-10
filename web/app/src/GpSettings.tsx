@@ -24,6 +24,8 @@ export interface GpEnv {
   instance?: string
   workspace?: string
   custRoot?: string
+  /** 公司别（zta_file.zta02 / Oracle schema）；空 = "ds"。 */
+  company?: string
   mirrorDir?: string
   dictDir?: string
   db?: { type?: string; host?: string; port?: number; sid?: string; service?: string; accounts?: DbAcc[] }
@@ -42,6 +44,7 @@ interface GpEnvPatch {
   instance?: string
   workspace?: string
   custRoot?: string
+  company?: string
   mirrorDir?: string
   dictDir?: string
   db?: {
@@ -59,7 +62,7 @@ const input = 'h-7 w-full min-w-0 text-xs'
 export function emptyGpEnv(): GpEnv {
   return {
     name: '', host: '', port: 22, user: '', hasPassword: false,
-    instance: '', workspace: '', custRoot: '',
+    instance: '', workspace: '', custRoot: '', company: '',
     db: { type: 'oracle', host: '', port: 1521, service: '', accounts: [{ account: '', password: '' }] },
   }
 }
@@ -77,6 +80,7 @@ function envSnapshot(c: GpEnv): string {
     port: c.port ?? 22,
     user: (c.user || '').trim(),
     instance: (c.instance || '').trim(),
+    company: (c.company || '').trim(),
     db: {
       host: (c.db?.host || '').trim(),
       port: c.db?.port ?? 1521,
@@ -103,6 +107,7 @@ function buildEnvPatch(
   if ((c.port ?? 22) !== (b.port ?? 22)) patch.port = c.port ?? 22
   if ((c.user || '').trim() !== (b.user || '')) patch.user = (c.user || '').trim()
   if ((c.instance || '').trim() !== (b.instance || '')) patch.instance = (c.instance || '').trim()
+  if ((c.company || '').trim() !== (b.company || '')) patch.company = (c.company || '').trim()
 
   const bdb = b.db || {}
   const db: NonNullable<GpEnvPatch['db']> = {}
@@ -506,6 +511,13 @@ export function GpSites({ only, create, initial, onSaved, onDiscard, onDraftChan
             <Field label="服务名(SERVICE_NAME)">
               <Input className={input} value={cur.db?.service || ''} placeholder="如 toptest"
                 onChange={(e) => patch({ db: { ...(cur.db || {}), service: e.target.value } })} />
+            </Field>
+            <Field label="公司别">
+              <Input className={input} value={cur.company || ''} placeholder="ds"
+                onChange={(e) => patch({ company: e.target.value })} />
+              <span className="mt-1 block text-[10px] leading-relaxed text-muted-foreground/80">
+                {`字典同步与实际查库都按它取（zta_file.zta02，也就是 Oracle schema）；留空 = ds`}
+              </span>
             </Field>
             <Field label="数据库账号">
               <Input className={input} value={acc?.account || ''} placeholder="ds"

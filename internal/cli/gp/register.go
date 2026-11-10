@@ -171,7 +171,7 @@ func openLive(ctx context.Context, t *target) (*live.Live, error) {
 			WithHint("在设置 → 站点管理 → 数据库里配置该环境的 Oracle 连接").
 			WithMeta(t.meta)
 	}
-	l, err := live.Open(ctx, *t.env.DB)
+	l, err := live.OpenCompany(ctx, *t.env.DB, gp.Company(t.env))
 	if err != nil {
 		return nil, output.Errorf("CONNECT", 5, "连接 GP 数据库失败: %v", err).
 			WithHint("先 tt db ping --env " + t.env.Name + " 验证连通性").

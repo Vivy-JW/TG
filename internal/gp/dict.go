@@ -155,6 +155,21 @@ SELECT g.gaz01, g.gaz03
 // <环境>.db，路径规则只能有一份实现。
 func DictPath(e config.NamedSsh) string { return dictPath(e) }
 
+// Company 返回该 GP 环境的公司别（zta_file.zta02），空 = "ds"。
+//
+// 为什么不是"账号就是公司别"：GP 一个库里装了几十家公司，字典表按公司别分行
+// 存；连库账号只决定以谁的身份登录。本项目这套库里账号叫 digiwin，而
+// zta02='ds' 有 2,962 张表、'digiwin' 只有 2,902 张 —— 混着用就会出现
+// "本地查得到、远程说表不存在"，表格总数也对不上。
+//
+// 同步与查库共用这一个函数，是"两边同一套口径"的唯一保证。
+func Company(e config.NamedSsh) string {
+	if s := strings.ToLower(strings.TrimSpace(e.Company)); s != "" {
+		return s
+	}
+	return "ds"
+}
+
 // dictPath 本地字典库路径。环境可单独指定 DictDir，否则落在 gp 数据目录下。
 func dictPath(e config.NamedSsh) string {
 	dir := e.DictDir
@@ -269,6 +284,11 @@ func (s *Service) runSync(env config.NamedSsh) {
 	}
 
 	s.progress(env.Name, "连接 "+env.DB.Host+":"+fmt.Sprint(env.DB.Port)+"/"+env.DB.Service+" …")
+	// 公司别按配置走（空 = ds），schema 名是它的大写形式：ds ↔ DS。
+	// 这里不能用连库账号推 —— 账号与公司别在 GP 里是两件事。
+	lib := Company(env)
+	owner := strings.ToUpper(lib)
+
 	oc, err := sql.Open("oracle", gpDSN(env.DB, account, password))
 	if err != nil {
 		fail(err)
@@ -281,12 +301,7 @@ func (s *Service) runSync(env config.NamedSsh) {
 		fail(fmt.Errorf("连不上数据库：%w", err))
 		return
 	}
-	s.progress(env.Name, "已连上（账号 "+account+"）")
-
-	lib, owner := "ds", "DS"
-	if env.DB.Service != "" {
-		owner = "DS"
-	}
+	s.progress(env.Name, "已连上（账号 "+account+"，公司别 "+lib+"）")
 
 	// 表字典
 	tables := map[string]struct{ module, cn string }{}
@@ -546,6 +561,9 @@ func (s *Service) runSync(env config.NamedSsh) {
 		_, _ = tx.Exec(`INSERT OR REPLACE INTO meta(key,value) VALUES('indexes', ?)`, fmt.Sprint(len(indexes)))
 		_, _ = tx.Exec(`INSERT OR REPLACE INTO meta(key,value) VALUES('constraints', ?)`, fmt.Sprint(len(constraints)))
 		_, _ = tx.Exec(`INSERT OR REPLACE INTO meta(key,value) VALUES('owner', ?)`, owner)
+		// 这份本地库代表哪个公司别：库文件按环境命名，切了公司别再同步会覆盖同一份文件，
+		// 所以至少把"它是什么"记下来（tt dict db status / 排障时看 meta）。
+		_, _ = tx.Exec(`INSERT OR REPLACE INTO meta(key,value) VALUES('company', ?)`, lib)
 		_, _ = tx.Exec(`INSERT OR REPLACE INTO meta(key,value) VALUES('tables', ?)`, fmt.Sprint(len(tabs)))
 		_ = tx.Commit()
 	}

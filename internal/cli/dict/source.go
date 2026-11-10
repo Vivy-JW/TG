@@ -266,14 +266,19 @@ func openRemoteSource(target, entRaw string) error {
 	if err != nil {
 		return err
 	}
+	company := gp.Company(*ref.Env)
+	// --company 覆盖配置：同一个库里不同公司的字典本来就是两套，允许按此单次切换。
+	if c := strings.ToLower(strings.TrimSpace(dictCompany)); c != "" {
+		company = c
+	}
 	srcTarget = dbconfig.NewTarget(cc, ref.Name, ref.Env.Host, ref.Env.User, ref.Env.Zone,
 		entRaw, dbconfig.RouteClientDirect)
-	srcNotes = []string{"TOP GP 环境：直查远程库，公司别取连库账号"}
+	srcNotes = []string{"TOP GP 环境：直查远程库，公司别 " + company}
 	if common.Verbose {
-		fmt.Fprintf(os.Stderr, "[dict] 数据源: 远程 %s (账号 %s, %s %s)\n",
-			ref.Name, srcTarget.Account, cc.Type, cc.Address())
+		fmt.Fprintf(os.Stderr, "[dict] 数据源: 远程 %s (账号 %s, 公司别 %s, %s %s)\n",
+			ref.Name, srcTarget.Account, company, cc.Type, cc.Address())
 	}
-	l, err := live.Open(context.Background(), *cc)
+	l, err := live.OpenCompany(context.Background(), *cc, company)
 	if err != nil {
 		return fmt.Errorf("打开远程数据源 %q: %w", ref.Name, err)
 	}
@@ -357,4 +362,3 @@ func dictDBSyncTarget(env string) string {
 	}
 	return config.DictDBPathForEnv(dictCfgPath(), env)
 }
-

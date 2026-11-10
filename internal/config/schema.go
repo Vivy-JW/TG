@@ -97,6 +97,17 @@ type NamedSsh struct {
 	Instance string `json:"instance,omitempty"`
 	// CustRoot TOP GP 的 $CUST 客制根（服务器上的路径）。T100 不用。
 	CustRoot string `json:"custRoot,omitempty"`
+	// Company TOP GP 的公司别（zta_file.zta02，同时也是 Oracle 的 schema：
+	// ds ↔ DS）。空 = "ds"。
+	//
+	// 为什么必须有这一项：GP 一个库里装了几十家公司，字典表按公司别分行存
+	// （同一个表名，ds / digiwin / puran 各一行）。连库账号**不等于**公司别 ——
+	// 实测这套库账号叫 digiwin、而它的 schema 是 DIGIWIN，zta_file 里
+	// zta02='ds' 有 2,962 行、'digiwin' 只有 2,902 行；两边混用会出现
+	// "本地查得到、远程说表不存在"，且表格总数对不上。
+	//
+	// 用法：字典同步（建本地 .db）与实际查库都用这个值，保证两边同一套口径。
+	Company string `json:"company,omitempty"`
 	// MirrorDir 这个环境的源码镜像目录（绝对路径）；空 = 用顶层 mirror.dir/<环境名>。
 	MirrorDir string `json:"mirrorDir,omitempty"`
 	// DictDir 这个环境的本地字典库目录（绝对路径）；空 = 用顶层 dict.dir，再空 = <数据目录>/dict。
