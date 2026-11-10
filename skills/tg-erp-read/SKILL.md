@@ -1,45 +1,45 @@
 ---
-name: tt-erp-read
-description: 正在阅读或需要阅读鼎捷T100代码时自动触发本技能
+name: tg-erp-read
+description: 正在阅读或需要阅读鼎捷TOP GP代码时自动触发本技能
 ---
 
 # ERP 代码阅读
 
 ## 获取源码：在线现读 / 离线镜像
 
-1. 区分环境。tt的用户主要是ERP顾问或者ERP开发，他们的电脑上可能配置了多个不同的客户环境。用户提问时可能带了环境信息，比如："帮我看一下XX公司的XX作业的代码"。如果足够明确，可以判断出是哪个客户环境的作业，那么就可以直接去对应的环境中获取源码；如果不够明确，则需要先询问用户，确认客户环境后再去获取源码。
+1. 区分环境。tg的用户主要是ERP顾问或者ERP开发，他们的电脑上可能配置了多个不同的客户环境。用户提问时可能带了环境信息，比如："帮我看一下XX公司的XX作业的代码"。如果足够明确，可以判断出是哪个客户环境的作业，那么就可以直接去对应的环境中获取源码；如果不够明确，则需要先询问用户，确认客户环境后再去获取源码。
 
 查看环境列表的命令：
 ```bash
-tt env list
+tg env list
 ```
 
-2. 找到程序编号。作业编号是用户在客户端看到的功能入口，而程序编号是作业的实现代码。一个作业可能调用多个程序，而一个程序也可能被多个作业复用。作业不等于程序，一个程序也可能被多个作业复用。在处理问题时，我们要优先判断用户说的是作业还是程序。用户大概率讲的是作业，我们需要借助 `tt dict prog <程序编号>` 来找到对应的程序，才能确定去看哪一份源代码。
+2. 找到程序编号。作业编号是用户在客户端看到的功能入口，而程序编号是作业的实现代码。一个作业可能调用多个程序，而一个程序也可能被多个作业复用。作业不等于程序，一个程序也可能被多个作业复用。在处理问题时，我们要优先判断用户说的是作业还是程序。用户大概率讲的是作业，我们需要借助 `tg dict prog <程序编号>` 来找到对应的程序，才能确定去看哪一份源代码。
 
 ```bash
-tt dict prog <程序编号> --at <环境>@<企业>
-tt dict prog --kw <业务词> --at <环境>@<企业>
+tt dict prog <程序编号> --evn <环境>
+tt dict prog --kw <业务词> --env <环境>
 ```
 
 3. 优先从本地环境读取代码，如果用户指定环境没有代码镜像可以从本地的其他环境镜像获取代码，代码总体差异不会太大，本地没有镜像，不要帮用户通过 `mirror` 命令去下载代码，时间会很长，彻底没有办法时才尝试从远程获取代码，优先提醒用户拉取环境代码镜像。
 
 获取本地源码镜像目录的命令：
 ```bash
-tt file mirror path --at <环境>
+tg file mirror path --env <环境>
 ```
 
 从远程SFTP读取源码的命令：
 ```bash
-tt file ls --at <环境> erp/<模块>/4gl
-tt file find --at <环境> erp -name '*<程序>*'
-tt file grep -rn --at <环境> --include '*.4gl' '<关键字>' erp/<模块>/4gl
-tt file head -n 80 --at <环境> erp/<模块>/4gl/<程序>.4gl
+tg file ls --env <环境> erp/<模块>/4gl
+tg file find --env <环境> erp -name '*<程序>*'
+tg file grep -rn --env <环境> --include '*.4gl' '<关键字>' erp/<模块>/4gl
+tg file head -n 80 --env <环境> erp/<模块>/4gl/<程序>.4gl
 ```
 
-4.使用代码大纲工具`tt outline`可以辅助快速阅读代码
+4.使用代码大纲工具`tg outline`可以辅助快速阅读代码
 
 ```bash
-tt outline testdata/fgl-fixtures/input-on-key.4gl --human
+tg outline testdata/fgl-fixtures/input-on-key.4gl --human
 ```
 
 ```text
@@ -54,7 +54,7 @@ FUNCTION inp_key  [2-7]
 
 合成画面的命令：
  ```bash
-   tt interface fields bsft001_wf `
+   tg interface fields bsft001_wf `
      --42f "C:\Users\18526\Desktop\bsft001_wf.42f" `
      --42s "C:\Users\18526\Desktop\bsft001_wf.42s" `
      --page page_4 `
@@ -64,7 +64,7 @@ FUNCTION inp_key  [2-7]
 
 ## 通过数据字典理解字段含义
 
-在T100的数据库中，所有的表和字段都是流水号，无法直接理解其含义。我们需要借助数据字典来获取其真实的中文含义。T100中跟数据库相关的字段有很显而易见的特征，具体的编码规则请参考 [tt-erp-architecture/SKILL.md](../tt-erp-architecture/SKILL.md)。
+在TOP GP的数据库中，所有的表和字段都是流水号，无法直接理解其含义。我们需要借助数据字典来获取其真实的中文含义。TOP GP中跟数据库相关的字段有很显而易见的特征，具体的编码规则请参考 [tg-erp-architecture/SKILL.md](../tt-erp-architecture/SKILL.md)。
 
 例如下面一段代码中，`pmds007`、`pmdt036`、`apba010`、`apba103`、`apba104`、`apba105` 都是数据库中的字段编号，我们需要通过数据字典来查询其对应的中文含义，才能理解这段代码的逻辑。
 ```
@@ -75,9 +75,9 @@ VALUES (gr_qry[li_i].check,gr_qry[li_i].pmdsdocno,gr_qry[li_i].pmdtseq,gr_qry[li
 
 从字典中查询表和字段的中文含义的命令：
 ```bash
-tt dict r.t --brief "capp115_tmp,pmds_t,pmdt_t,apba_t" --at <环境>@<企业>
-tt dict r.t apba_t --at <环境>@<企业>
-tt dict r.t capp115_tmp --at <环境>@<企业>
+tg dict r.t --brief "capp115_tmp,pmds_t,pmdt_t,apba_t" --at <环境>@<企业>
+tg dict r.t apba_t --at <环境>@<企业>
+tg dict r.t capp115_tmp --at <环境>@<企业>
 ```
 
 > Tips: 需要配置环境的命令都可以通过`--at-list`命令查看可以使用哪些环境
@@ -179,10 +179,17 @@ tt dict msg --at <环境>@<企业> -- -3101
 T100中的开窗查询组件是可以复用到不同的字段的，特征为 `q_xxx()`，它是由设计器生成的。
 
 ```
-ON ACTION controlp INFIELD sfajwfdocno
-  ...
-  CALL q_sfajwfdocno_01_wf()
-  ...
+ON ACTION controlp
+
+CASE
+WHEN INFIELD(bmbb05)
+                 CALL cl_init_qry_var()
+                 LET g_qryparam.arg1 = g_ima941
+                 LET g_qryparam.form ="q_agd"
+                 CALL cl_create_qry() RETURNING g_bmba_1[l_ac2].bmbb05
+                 DISPLAY BY NAME g_bmba_1[l_ac2].bmbb05
+                 NEXT FIELD bmbb05
+END CASE
 ```
 
 > 开窗是由实体代码的，可以在 `com/qry` 看到生成的代码，但基本上不需要，因为通过工具就可以查到SQL，也要结合查询组件附近的参数看，因为会注入参数。
@@ -215,8 +222,8 @@ END IF
 
 选择环境，执行一句查询的示例
 ```
-tt db sql --at <环境>@<企业> "select count(*) from capp115_tmp"
-tt db sql --at <环境>@<企业> "select bmaa001,bmaastus from bmaa_t where bmaa001='FCPU010100003'"
+tg db sql --at <环境>@<企业> "select count(*) from capp115_tmp"
+tg db sql --at <环境>@<企业> "select bmaa001,bmaastus from bmaa_t where bmaa001='FCPU010100003'"
 ```
 
 默认从本机直连该企业的库；直连建不起来会自动回退服务器 sqlplus（不静默：信封里
