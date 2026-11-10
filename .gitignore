@@ -91,3 +91,6 @@ web/dist.old-*/
 
 # robocopy 从 TT-src 带过来的空 tmp/，将来构建也可能往里写
 /tmp/
+
+# Office 打开文件时留下的临时锁文件（LibreOffice / Excel）
+~$*
