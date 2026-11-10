@@ -80,7 +80,8 @@ func progNameCol(lang string) string {
 // QueryTableMeta 表档:按公司别查 zta_file，未收录返回 (nil, nil)。
 func (l *Live) QueryTableMeta(table string) (*db.TableMeta, error) {
 	rows, err := l.q(fmt.Sprintf(`
-		SELECT lower(z.zta01), COALESCE(g.gat03, ''), COALESCE(g.gat06, ''), COALESCE(g.gat07, '')
+		SELECT lower(z.zta01), COALESCE(g.gat03, ''), COALESCE(g.gat06, ''), COALESCE(g.gat07, ''),
+		       COALESCE(z.zta07, '')
 		  FROM zta_file z
 		  LEFT JOIN gat_file g ON g.gat01 = z.zta01 AND g.gat02 = '2'
 		 WHERE z.zta02 = %s AND lower(z.zta01) = lower(%s)`, lit(l.company), tableLit(table)))
@@ -93,6 +94,7 @@ func (l *Live) QueryTableMeta(table string) (*db.TableMeta, error) {
 	r := rows[0]
 	return &db.TableMeta{
 		TableName: get(r, 0), TableDesc: get(r, 1), Module: get(r, 2), TableType: get(r, 3),
+		Kind: strings.ToUpper(strings.TrimSpace(get(r, 4))),
 	}, nil
 }
 

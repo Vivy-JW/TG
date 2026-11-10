@@ -6,13 +6,16 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	_ "modernc.org/sqlite"
 )
 
 // DB holds the database connection.
 type DB struct {
-	conn *sql.DB
+	conn     *sql.DB
+	kindOnce sync.Once
+	kindCol  bool
 }
 
 // Open opens the SQLite database at the given path.
@@ -439,17 +442,62 @@ type TableMeta struct {
 	TableDesc string `json:"表说明"`
 	Module    string `json:"模块"`
 	TableType string `json:"类型"`
+	Kind      string `json:"种类,omitempty"`
+}
+
+// KindLabel 把 t_table.kind（GP 的 zta07：T=实体表、S=同义词、V=视图）翻成中文。
+// 空值直接返回空串，调用方据此决定要不要显示。
+func KindLabel(kind string) string {
+	switch strings.ToUpper(strings.TrimSpace(kind)) {
+	case "T":
+		return "实体表"
+	case "S":
+		return "同义词"
+	case "V":
+		return "视图"
+	}
+	return ""
+}
+
+// hasKind reports whether t_table has the kind column (字典库可能还是旧版本同步出来的)。
+func (d *DB) hasKind() bool {
+	d.kindOnce.Do(func() {
+		rows, err := d.conn.Query("PRAGMA table_info(t_table)")
+		if err != nil {
+			return
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var cid int
+			var name, ctype string
+			var notnull int
+			var dflt sql.NullString
+			var pk int
+			if rows.Scan(&cid, &name, &ctype, &notnull, &dflt, &pk) != nil {
+				continue
+			}
+			if strings.EqualFold(name, "kind") {
+				d.kindCol = true
+				return
+			}
+		}
+	})
+	return d.kindCol
 }
 
 // QueryTableMeta returns the basic info (name, description, module, type)
 // for the given table. Returns (nil, nil) if the table is not in the registry.
 func (d *DB) QueryTableMeta(tableName string) (*TableMeta, error) {
+	kindExpr := "''"
+	if d.hasKind() {
+		kindExpr = "COALESCE(a.kind, '')"
+	}
 	query := `
-		SELECT a.tab, COALESCE(a.tab_cn, ''), COALESCE(a.module, ''), COALESCE(a.tab_type, '')
+		SELECT a.tab, COALESCE(a.tab_cn, ''), COALESCE(a.module, ''), COALESCE(a.tab_type, ''), ` + kindExpr + `
 		FROM t_table a
 		WHERE a.tab = ?`
 	var m TableMeta
-	err := d.conn.QueryRow(query, tableName).Scan(&m.TableName, &m.TableDesc, &m.Module, &m.TableType)
+	err := d.conn.QueryRow(query, tableName).Scan(&m.TableName, &m.TableDesc, &m.Module, &m.TableType, &m.Kind)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -546,6 +594,7 @@ type TableDict struct {
 	TableDesc string      `json:"表说明"`
 	Module    string      `json:"模块"`
 	TableType string      `json:"类型"`
+	Kind      string      `json:"种类,omitempty"`
 	Fields    []TableInfo `json:"字段"`
 	Keys      []KeyInfo   `json:"键值"`
 	Indexes   []IndexInfo `json:"索引"`

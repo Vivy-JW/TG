@@ -27,8 +27,10 @@ import (
 
 const gpSchemaSQL = `
 CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY, value TEXT);
+-- kind：zta07 的 T/S（T=实体表、S=同义词）。S 类只有登记项、在 DS 的 all_tab_columns
+-- 里没有列，所以表数（2,962）比有字段的表数（2,901）多出来的正是它们。
 CREATE TABLE IF NOT EXISTS t_table(
-  tab TEXT PRIMARY KEY, tab_cn TEXT, module TEXT, tab_type TEXT,
+  tab TEXT PRIMARY KEY, tab_cn TEXT, module TEXT, tab_type TEXT, kind TEXT,
   col_count INTEGER, remark TEXT, raw TEXT);
 CREATE TABLE IF NOT EXISTS t_column(
   tab TEXT, seq INTEGER, col TEXT, col_cn TEXT, dtype TEXT,
@@ -64,7 +66,7 @@ CREATE INDEX IF NOT EXISTS ix_msg_code ON t_msg(code);
 
 const (
 	sqlGPTables = `
-SELECT z.zta01, z.zta02, z.zta03, z.zta09,
+SELECT z.zta01, z.zta02, z.zta03, z.zta09, z.zta07,
        g.gat03, g.gat06, g.gat07
   FROM zta_file z
   LEFT JOIN gat_file g ON g.gat01 = z.zta01 AND g.gat02 = '2'
@@ -293,12 +295,12 @@ func (s *Service) runSync(env config.NamedSsh) {
 		fail(fmt.Errorf("查 zta_file 失败：%w", err))
 		return
 	}
-	type tabRow struct{ tab, cn, module, ttype, remark string }
+	type tabRow struct{ tab, cn, module, ttype, kind, remark string }
 	var tabs []tabRow
 	for rows.Next() {
-		var tab, libv, module, ttype sql.NullString
+		var tab, libv, module, ttype, kind sql.NullString
 		var cn, gat06, gat07 sql.NullString
-		if err := rows.Scan(&tab, &libv, &module, &ttype, &cn, &gat06, &gat07); err != nil {
+		if err := rows.Scan(&tab, &libv, &module, &ttype, &kind, &cn, &gat06, &gat07); err != nil {
 			continue
 		}
 		t := strings.ToLower(clean(tab))
@@ -314,7 +316,7 @@ func (s *Service) runSync(env config.NamedSsh) {
 			tt = clean(gat07)
 		}
 		tables[t] = struct{ module, cn string }{mod, clean(cn)}
-		tabs = append(tabs, tabRow{t, clean(cn), mod, tt, ""})
+		tabs = append(tabs, tabRow{t, clean(cn), mod, tt, strings.ToUpper(clean(kind)), ""})
 	}
 	rows.Close()
 	s.progress(env.Name, fmt.Sprintf("表字典 zta_file：%d 张", len(tabs)))
@@ -509,11 +511,11 @@ func (s *Service) runSync(env config.NamedSsh) {
 	}
 	tx, _ := lc.Begin()
 	if tx != nil {
-		st, _ := tx.Prepare(`INSERT OR REPLACE INTO t_table(tab,tab_cn,module,tab_type,col_count,remark,raw) VALUES(?,?,?,?,?,?,?)`)
+		st, _ := tx.Prepare(`INSERT OR REPLACE INTO t_table(tab,tab_cn,module,tab_type,kind,col_count,remark,raw) VALUES(?,?,?,?,?,?,?,?)`)
 		if st != nil {
 			for i, t := range tabs {
 				raw, _ := json.Marshal(t)
-				_, _ = st.Exec(t.tab, t.cn, t.module, t.ttype, 0, t.remark, string(raw))
+				_, _ = st.Exec(t.tab, t.cn, t.module, t.ttype, t.kind, 0, t.remark, string(raw))
 				s.setJob(env.Name, func(j *Job) { j.Done = int64(i + 1) })
 			}
 			st.Close()

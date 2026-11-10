@@ -295,6 +295,7 @@ func queryTableDict(name string) (*db.TableDict, bool, error) {
 		d.TableDesc = meta.TableDesc
 		d.Module = meta.Module
 		d.TableType = meta.TableType
+		d.Kind = meta.Kind
 	}
 
 	fields, err := GetDB().QueryTable(name)
@@ -333,7 +334,9 @@ func queryTableDict(name string) (*db.TableDict, bool, error) {
 
 // printTableDict prints a table's dictionary as plain text sections.
 func printTableDict(d *db.TableDict) {
-	if d.TableDesc == "" && d.Module == "" && d.TableType == "" && len(d.Fields) == 0 {
+	// 同义词（S）只有登记项、没有字段，但它确实"存在"，不能走"未找到"这条。
+	hasMeta := d.TableDesc != "" || d.Module != "" || d.TableType != "" || d.Kind != ""
+	if !hasMeta && len(d.Fields) == 0 {
 		fmt.Printf("未找到表 '%s' 或该表无字段定义。\n\n", d.TableName)
 		return
 	}
@@ -348,13 +351,22 @@ func printTableDict(d *db.TableDict) {
 	if d.TableType != "" {
 		metaParts = append(metaParts, "类型: "+d.TableType)
 	}
+	// 实体表（T）是常态，不占一行；同义词/视图要显式标出来，否则字段为空像同步漏了。
+	kindName := db.KindLabel(d.Kind)
+	if kindName != "" && (strings.EqualFold(d.Kind, "S") || strings.EqualFold(d.Kind, "V")) {
+		metaParts = append(metaParts, "种类: "+kindName)
+	}
 	if len(metaParts) > 0 {
 		fmt.Printf("%s\n", strings.Join(metaParts, "    "))
 	}
 
 	fmt.Printf("\n字段 (%d):\n", len(d.Fields))
 	if len(d.Fields) == 0 {
-		fmt.Println("  (无)")
+		if strings.EqualFold(d.Kind, "S") || strings.EqualFold(d.Kind, "V") {
+			fmt.Println("  (无：这是" + kindName + "，只在 zta_file 里登记，列定义不在本 schema 的 all_tab_columns 里)")
+		} else {
+			fmt.Println("  (无)")
+		}
 	} else {
 		headers := []string{"序号", "字段名", "字段说明", "数据类型", "长度", "主键", "必填", "备注"}
 		var rows [][]string
@@ -421,6 +433,7 @@ type tableSummary struct {
 	TableDesc string              `json:"表说明"`
 	Module    string              `json:"模块"`
 	TableType string              `json:"类型"`
+	Kind      string              `json:"种类,omitempty"`
 	FieldCnt  int                 `json:"字段数"`
 	Fields    []tableSummaryField `json:"字段"`
 }
@@ -430,7 +443,7 @@ var tableSummaryColumns = []string{"表名", "表说明", "模块", "类型", "�
 func tableSummaryOf(d *db.TableDict, includeFields bool, fieldCnt int) tableSummary {
 	t := tableSummary{
 		TableName: d.TableName, TableDesc: d.TableDesc, Module: d.Module,
-		TableType: d.TableType, FieldCnt: fieldCnt,
+		TableType: d.TableType, Kind: d.Kind, FieldCnt: fieldCnt,
 		Fields: make([]tableSummaryField, 0),
 	}
 	if !includeFields {
@@ -467,14 +480,22 @@ func printTableSummary(s tableSummary) {
 	if s.TableType != "" {
 		parts = append(parts, "类型: "+s.TableType)
 	}
+	// 实体表是常态不占位；同义词/视图必须显式标出，否则“字段 0”看着像同步漏了。
+	kindName := db.KindLabel(s.Kind)
+	if strings.EqualFold(s.Kind, "S") || strings.EqualFold(s.Kind, "V") {
+		parts = append(parts, "种类: "+kindName)
+	}
 	if len(parts) > 0 {
 		fmt.Println(strings.Join(parts, "    "))
 	}
 	fmt.Printf("\n字段 (%d):\n", s.FieldCnt)
 	if len(s.Fields) == 0 {
-		if s.FieldCnt > 0 {
+		switch {
+		case s.FieldCnt > 0:
 			fmt.Println("  (用 --fields 展开字段骨架)")
-		} else {
+		case strings.EqualFold(s.Kind, "S") || strings.EqualFold(s.Kind, "V"):
+			fmt.Println("  (无：这是" + kindName + "，只在 zta_file 里登记，列定义不在本 schema 的 all_tab_columns 里)")
+		default:
 			fmt.Println("  (无)")
 		}
 		return
