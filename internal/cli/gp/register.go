@@ -35,12 +35,13 @@ import (
 func Register(root *cobra.Command) {
 	g := &cobra.Command{
 		Use:   "gp",
-		Short: "TOP GP：p_zta 表结构 / p_link 程序链接 / p_ze 错误消息",
+		Short: "TOP GP：p_zta 表结构 / p_link 程序链接 / p_ze 错误消息 / 本地字典同步",
 		Long: `TOP GP 查询（不是 T100 字典）。
 
   tt gp table <表> --env <环境>      查 p_zta 的表结构（本地 GP 字典）
   tt gp link <作业> --env <环境>     查 p_link 的完整程序链接（远程 Oracle）
   tt gp msg <编号> --env <环境>      查 p_ze 的错误消息（远程 Oracle）
+  tt gp sync --env <环境>            把 GP 字典同步到本地 SQLite（Web 的「同步字典」同款）
 
 别名：table=p_zta，link=p_link，msg=p_ze。
 
@@ -52,7 +53,7 @@ zta_file/ztb_file/gal_file/ze_file，数据源、字段、语义都不同。`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error { return cmd.Help() },
 	}
-	g.AddCommand(newTableCmd(), newLinkCmd(), newMsgCmd())
+	g.AddCommand(newTableCmd(), newLinkCmd(), newMsgCmd(), newSyncCmd())
 	root.AddCommand(g)
 }
 

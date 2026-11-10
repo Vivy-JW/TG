@@ -3,10 +3,13 @@ package dict
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"tt/internal/cli/common"
+	"tt/internal/config"
 	"tt/internal/dict/dbsync"
+	"tt/internal/gp"
 
 	"github.com/spf13/cobra"
 )
@@ -33,6 +36,11 @@ var dbSyncCmd = &cobra.Command{
 		conn, envName, err := resolveDbConn(common.Env)
 		if err != nil {
 			return err
+		}
+		// TOP GP 环境的同步走 gp.Service：它按 GP 的字典表(zta_file/all_tab_columns/
+		// gaz_file/zz_file/zr_file/ze_file)重建本地库，与 T100 那套 dbsync 不是一批表。
+		if e, ok := gpEnvNamed(envName); ok {
+			return runGPSync(e)
 		}
 		tables := dbsync.DictTables
 		if dbSyncTable != "" {
@@ -79,4 +87,33 @@ var dbSyncCmd = &cobra.Command{
 func init() {
 	dbSyncCmd.Flags().StringVar(&dbSyncTable, "table", "", "仅同步指定的表 (逗号分隔, 默认全部字典表)")
 	dbCmd.AddCommand(dbSyncCmd)
+}
+
+// runGPSync 用 gp.Service 重建 TOP GP 的本地字典库（写 gp.DictPath）。
+//
+// 进度由 sync 的 job 回调给出；人类模式打到 stderr，JSON 模式整包返回。
+func runGPSync(env config.NamedSsh) error {
+	jsonOut := common.IsJSON()
+	svc := gp.New(dictCfgPath())
+	fmt.Fprintf(os.Stderr, "正在从 TOP GP 拉取字典数据 (环境: %s) -> %s\n", env.Name, gp.DictPath(env))
+	start := time.Now()
+	steps := []string{}
+	err := svc.Sync(env, func(msg string) {
+		steps = append(steps, msg)
+		if !jsonOut {
+			fmt.Fprintln(os.Stderr, "  "+msg)
+		}
+	})
+	if err != nil {
+		return fmt.Errorf("同步 GP 字典失败: %w", err)
+	}
+	cost := time.Since(start).Round(time.Second)
+	if jsonOut {
+		return common.PrintJSON(map[string]any{
+			"ok": true, "env": env.Name, "target": gp.DictPath(env),
+			"用时": cost.String(), "步骤": steps,
+		})
+	}
+	fmt.Printf("同步完成: %s (用时 %v)\n", gp.DictPath(env), cost)
+	return nil
 }

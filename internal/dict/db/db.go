@@ -74,19 +74,23 @@ type TableInfo struct {
 }
 
 // QueryTable returns the field dictionary for the given table name.
+//
+// GP 的字段字典来自 t_column（同步自 all_tab_columns + gaq_file）：
+// col_cn 是 gaq_file 的字段中文名，dlen 是 data_length，nullable='N' 记必填。
+// 主键不在 all_tab_columns 里，用 t_constraint 的 P 约束反查。
 func (d *DB) QueryTable(tableName string) ([]TableInfo, error) {
 	query := `
-		SELECT b.dzeb021, b.dzeb002,
-		       COALESCE(bl.dzebl003, b.dzeb003, ''),
-		       COALESCE(b.dzeb007, ''),
-		       COALESCE(b.dzeb008, ''),
-		       CASE WHEN b.dzeb004 = 'Y' THEN 'PK' ELSE '' END,
-		       CASE WHEN b.dzeb005 = 'Y' THEN 'Y' ELSE '' END,
-		       COALESCE(b.dzeb024, '')
-		FROM dzeb_t b
-		LEFT JOIN dzebl_t bl ON bl.dzebl001 = b.dzeb002 AND bl.dzebl002 = 'zh_CN'
-		WHERE b.dzeb001 = ?
-		ORDER BY CAST(b.dzeb021 AS INTEGER)
+		SELECT CAST(c.seq AS TEXT), c.col, COALESCE(c.col_cn, ''),
+		       COALESCE(c.dtype, ''), COALESCE(CAST(c.dlen AS TEXT), ''),
+		       CASE WHEN EXISTS (SELECT 1 FROM t_constraint k
+		                          WHERE k.tab = c.tab AND k.ctype = 'P'
+		                            AND (',' || COALESCE(k.cols, '') || ',') LIKE '%,' || c.col || ',%')
+		            THEN 'PK' ELSE '' END,
+		       CASE WHEN lower(COALESCE(c.nullable, '')) = 'n' THEN 'Y' ELSE '' END,
+		       COALESCE(c.remark, '')
+		FROM t_column c
+		WHERE c.tab = ?
+		ORDER BY CAST(c.seq AS INTEGER)
 	`
 	rows, err := d.conn.Query(query, tableName)
 	if err != nil {
@@ -121,17 +125,17 @@ type FieldInfo struct {
 // QueryField searches for the given field name across all tables.
 func (d *DB) QueryField(fieldName string) ([]FieldInfo, error) {
 	query := `
-		SELECT b.dzeb001, b.dzeb002,
-		       COALESCE(bl.dzebl003, b.dzeb003, ''),
-		       COALESCE(b.dzeb007, ''),
-		       COALESCE(b.dzeb008, ''),
-		       CASE WHEN b.dzeb004 = 'Y' THEN 'PK' ELSE '' END,
-		       CASE WHEN b.dzeb005 = 'Y' THEN 'Y' ELSE '' END,
-		       COALESCE(b.dzeb024, '')
-		FROM dzeb_t b
-		LEFT JOIN dzebl_t bl ON bl.dzebl001 = b.dzeb002 AND bl.dzebl002 = 'zh_CN'
-		WHERE b.dzeb002 = ?
-		ORDER BY b.dzeb001
+		SELECT c.tab, c.col, COALESCE(c.col_cn, ''),
+		       COALESCE(c.dtype, ''), COALESCE(CAST(c.dlen AS TEXT), ''),
+		       CASE WHEN EXISTS (SELECT 1 FROM t_constraint k
+		                          WHERE k.tab = c.tab AND k.ctype = 'P'
+		                            AND (',' || COALESCE(k.cols, '') || ',') LIKE '%,' || c.col || ',%')
+		            THEN 'PK' ELSE '' END,
+		       CASE WHEN lower(COALESCE(c.nullable, '')) = 'n' THEN 'Y' ELSE '' END,
+		       COALESCE(c.remark, '')
+		FROM t_column c
+		WHERE c.col = ?
+		ORDER BY c.tab, CAST(c.seq AS INTEGER)
 	`
 	rows, err := d.conn.Query(query, fieldName)
 	if err != nil {
@@ -161,26 +165,24 @@ type TableListItem struct {
 }
 
 // QueryTableList returns all tables, optionally filtered by keyword
-// (matched against table name and zh_CN/指定语言 table description).
+// (matched against table name and its zh_CN description).
 //
-// 字段数用 LEFT JOIN + COUNT 一次算出,而不是逐行相关子查询:
-// 3,882 张表 × 15 万行字段表,相关子查询实测 81 秒,改 JOIN 后 0.25 秒(本地无索引的库也如此)。
+// 字段数用 LEFT JOIN + COUNT 一次算出,而不是逐行相关子查询。
 func (d *DB) QueryTableList(lang, keyword string) ([]TableListItem, error) {
 	like := "%" + keyword + "%"
 	query := `
-		SELECT a.dzea001,
-		       COALESCE(al.dzeal003, a.dzea002, ''),
-		       COALESCE(a.dzea003, ''),
-		       COALESCE(a.dzea004, ''),
-		       COUNT(b.dzeb001)
-		FROM dzea_t a
-		LEFT JOIN dzeal_t al ON al.dzeal001 = a.dzea001 AND al.dzeal002 = ?
-		LEFT JOIN dzeb_t b ON b.dzeb001 = a.dzea001
-		WHERE (? = '' OR a.dzea001 LIKE ? OR al.dzeal003 LIKE ? OR a.dzea002 LIKE ?)
-		GROUP BY a.dzea001, al.dzeal003, a.dzea002, a.dzea003, a.dzea004
-		ORDER BY a.dzea001
+		SELECT a.tab,
+		       COALESCE(a.tab_cn, ''),
+		       COALESCE(a.module, ''),
+		       COALESCE(a.tab_type, ''),
+		       COUNT(b.col)
+		FROM t_table a
+		LEFT JOIN t_column b ON b.tab = a.tab
+		WHERE (? = '' OR a.tab LIKE ? OR COALESCE(a.tab_cn, '') LIKE ?)
+		GROUP BY a.tab, a.tab_cn, a.module, a.tab_type
+		ORDER BY a.tab
 	`
-	rows, err := d.conn.Query(query, lang, keyword, like, like, like)
+	rows, err := d.conn.Query(query, keyword, like, like)
 	if err != nil {
 		return nil, fmt.Errorf("query table list: %w", err)
 	}
@@ -439,14 +441,13 @@ type TableMeta struct {
 	TableType string `json:"类型"`
 }
 
-// QueryTableMeta returns the basic info (name, zh_CN description, module, type)
+// QueryTableMeta returns the basic info (name, description, module, type)
 // for the given table. Returns (nil, nil) if the table is not in the registry.
 func (d *DB) QueryTableMeta(tableName string) (*TableMeta, error) {
 	query := `
-		SELECT a.dzea001, COALESCE(al.dzeal003, a.dzea002, ''), COALESCE(a.dzea003, ''), COALESCE(a.dzea004, '')
-		FROM dzea_t a
-		LEFT JOIN dzeal_t al ON al.dzeal001 = a.dzea001 AND al.dzeal002 = 'zh_CN'
-		WHERE a.dzea001 = ?`
+		SELECT a.tab, COALESCE(a.tab_cn, ''), COALESCE(a.module, ''), COALESCE(a.tab_type, '')
+		FROM t_table a
+		WHERE a.tab = ?`
 	var m TableMeta
 	err := d.conn.QueryRow(query, tableName).Scan(&m.TableName, &m.TableDesc, &m.Module, &m.TableType)
 	if err != nil {
@@ -458,7 +459,7 @@ func (d *DB) QueryTableMeta(tableName string) (*TableMeta, error) {
 	return &m, nil
 }
 
-// KeyInfo holds a key (主键/外键) definition from dzed_t.
+// KeyInfo holds a key (主键/唯一/外键/检查) definition from t_constraint.
 type KeyInfo struct {
 	KeyName  string `json:"键名"`
 	KeyType  string `json:"类型"`
@@ -467,12 +468,31 @@ type KeyInfo struct {
 	RefField string `json:"外键字段"`
 }
 
-// QueryKeys returns the key definitions (键值档 dzed_t) for the given table.
+// KeyTypeLabel 把 Oracle 的约束类型码翻成中文。
+func KeyTypeLabel(ctype string) string {
+	switch strings.ToUpper(strings.TrimSpace(ctype)) {
+	case "P":
+		return "主键"
+	case "U":
+		return "唯一"
+	case "R":
+		return "外键"
+	case "C":
+		return "检查"
+	default:
+		return ctype
+	}
+}
+
+// QueryKeys returns the key definitions for the given table.
+//
+// GP 的键值在 t_constraint（同步自 all_constraints + all_cons_columns），
+// cols 是同一约束下按位置排好的字段串。GP 里 R 型（外键）实测为 0 条，
+// 所以 RefTable/RefField 目前恒为空——字段级的引用关系在 gau_file，还没同步。
 func (d *DB) QueryKeys(tableName string) ([]KeyInfo, error) {
 	rows, err := d.conn.Query(`
-		SELECT dzed002, COALESCE(dzed003, ''), COALESCE(dzed004, ''),
-		       COALESCE(dzed005, ''), COALESCE(dzed006, '')
-		FROM dzed_t WHERE dzed001 = ? ORDER BY dzed002`, tableName)
+		SELECT cons, COALESCE(ctype, ''), COALESCE(cols, '')
+		FROM t_constraint WHERE tab = ? ORDER BY cons`, tableName)
 	if err != nil {
 		return nil, fmt.Errorf("query keys %s: %w", tableName, err)
 	}
@@ -481,26 +501,29 @@ func (d *DB) QueryKeys(tableName string) ([]KeyInfo, error) {
 	var result []KeyInfo
 	for rows.Next() {
 		var k KeyInfo
-		if err := rows.Scan(&k.KeyName, &k.KeyType, &k.KeyField, &k.RefTable, &k.RefField); err != nil {
+		var ctype string
+		if err := rows.Scan(&k.KeyName, &ctype, &k.KeyField); err != nil {
 			return nil, fmt.Errorf("scan key row: %w", err)
 		}
+		k.KeyType = KeyTypeLabel(ctype)
 		result = append(result, k)
 	}
 	return result, rows.Err()
 }
 
-// IndexInfo holds an index definition from dzec_t.
+// IndexInfo holds an index definition from t_index.
 type IndexInfo struct {
 	IndexName  string `json:"索引名"`
 	IndexType  string `json:"类型"`
 	IndexField string `json:"索引字段"`
 }
 
-// QueryIndexes returns the index definitions (索引档 dzec_t) for the given table.
+// QueryIndexes returns the index definitions for the given table.
+// 源是 all_indexes + all_ind_columns；类型是 UNIQUE/NONUNIQUE。
 func (d *DB) QueryIndexes(tableName string) ([]IndexInfo, error) {
 	rows, err := d.conn.Query(`
-		SELECT dzec002, COALESCE(dzec003, ''), COALESCE(dzec004, '')
-		FROM dzec_t WHERE dzec001 = ? ORDER BY dzec002`, tableName)
+		SELECT idx, COALESCE(uniqueness, ''), COALESCE(cols, '')
+		FROM t_index WHERE tab = ? ORDER BY idx`, tableName)
 	if err != nil {
 		return nil, fmt.Errorf("query indexes %s: %w", tableName, err)
 	}

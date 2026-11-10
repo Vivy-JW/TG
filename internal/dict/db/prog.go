@@ -27,7 +27,11 @@ type ProgInfo struct {
 	Name      string `json:"程序名称"`   // gzzal003(指定语言)
 	ShortName string `json:"程序简称"`   // gzzal005
 	Category  string `json:"程序类别"`   // gzza002
-	Module    string `json:"归属模块"`   // gzza003
+	// CategoryName 是程序类别码的中文名。产品口径不同(T100 与 TOP GP 的 M/T 含义
+	// 不一样)，所以由数据源自己给：T100 侧留空、由命令层按 T100 码表翻译；
+	// GP 侧由 gpdb 填 GP 码表的名字。空值不出现在输出里。
+	CategoryName string `json:"程序类别名称,omitempty"`
+	Module       string `json:"归属模块"` // gzza003
 	Cust      string `json:"客制"`     // gzza011
 	RefMain   string `json:"引用主程序"`  // gzza008
 	RunCmd    string `json:"系统运行指令"` // gzza004
@@ -37,6 +41,12 @@ type ProgInfo struct {
 	// 下面两项只在“这个编号本身是作业”时有值：同名作业靠它们区分。
 	JobParamGrp string `json:"应用参数组"` // gzzz003
 	JobExtra    string `json:"额外参数"`  // gzzz004
+	// Memo 程序/作业的用途说明。T100 的程序档没有这个字段，GP 的 gaz_file.gaz04 有
+	// (如「維護所有資料檔案之關連性」)，所以同样由数据源决定填不填。
+	Memo string `json:"作用说明,omitempty"`
+	// TableCount 这个程序用到的表格数。只在数据源顺手能算出来时给(如 GP 的
+	// zr_file)，T100 侧留空 —— 要看明细还得走 --tables。
+	TableCount int `json:"表格总数,omitempty"`
 }
 
 // ProgJob 一个使用某程序的作业(gzzz_t 按 gzzz002 关联到程序)。
@@ -56,9 +66,11 @@ type ProgListItem struct {
 	Code     string `json:"程序编号"`
 	Name     string `json:"程序名称"`
 	Category string `json:"程序类别"`
-	Module   string `json:"归属模块"`
-	Cust     string `json:"客制"`
-	JobCount int    `json:"作业数"`
+	// CategoryName 同 ProgInfo.CategoryName：产品口径不同，由数据源决定填不填。
+	CategoryName string `json:"程序类别名称,omitempty"`
+	Module       string `json:"归属模块"`
+	Cust         string `json:"客制"`
+	JobCount     int    `json:"作业数"`
 }
 
 // ---- 程序 ↔ 表格(gzdg_t 程序与应用表格功能分析表,由 T100 自己维护) ----
@@ -136,52 +148,55 @@ type SubProgListItem struct {
 	Cust     string `json:"客制"`
 }
 
-// QuerySubProgInfo 按编号查子程序/元件/库的登记;未收录返回 (nil, nil)。
+// QuerySubProgInfo 查子程序/元件/库的登记。
+//
+// TOP GP 没有目录中的"子程序"实体：4GL 的 FUNCTION 住在本程序自己的源码里，
+// 不登记到字典表。这里固定返回"未收录"，命令层据此走"没有这条记录"的分支。
 func (d *DB) QuerySubProgInfo(code, lang string) (*SubProgInfo, error) {
-	var p SubProgInfo
-	err := d.conn.QueryRow(`
-		SELECT g.gzde001, COALESCE(l.gzdel003, ''), COALESCE(g.gzde003, ''),
-		       COALESCE(g.gzde002, ''), COALESCE(g.gzde008, ''), COALESCE(g.gzde009, ''),
-		       COALESCE(g.gzde005, ''), COALESCE(g.gzde006, ''), COALESCE(g.gzdestus, '')
-		FROM gzde_t g
-		LEFT JOIN gzdel_t l ON l.gzdel001 = g.gzde001 AND l.gzdel002 = ?
-		WHERE g.gzde001 = ?`, lang, code).
-		Scan(&p.Code, &p.Name, &p.Category, &p.Module, &p.Cust, &p.Industry,
-			&p.ProgCat, &p.GenType, &p.Status)
-	switch err {
-	case nil:
-		return &p, nil
-	case sql.ErrNoRows:
-		return nil, nil
+	return nil, nil
+}
+
+// QuerySubProgList 列出/搜索子程序与元件。GP 无子程序目录，恒为空。
+func (d *DB) QuerySubProgList(lang, keyword string) ([]SubProgListItem, error) {
+	return []SubProgListItem{}, nil
+}
+
+// progNameColumn 按语言挑程序名称列：zh_TW 用 gaz_file 的繁体名（同步时落到 name_tw），
+// 其余语言用简体名（name）。GP 的 gaz02 只有 0（繁）/2（简）两种。
+func progNameColumn(lang string) string {
+	switch strings.ToLower(strings.TrimSpace(lang)) {
+	case "zh_tw", "zhtw", "tw", "0":
+		return "COALESCE(NULLIF(p.name_tw,''), p.name, '')"
 	default:
-		return nil, fmt.Errorf("query subprog info %s: %w", code, err)
+		return "COALESCE(p.name, '')"
 	}
 }
 
-// QuerySubProgList 列出/搜索子程序与元件(--kw 按编号或说明过滤)。
-func (d *DB) QuerySubProgList(lang, keyword string) ([]SubProgListItem, error) {
-	like := "%" + keyword + "%"
-	rows, err := d.conn.Query(`
-		SELECT g.gzde001, COALESCE(l.gzdel003, ''), COALESCE(g.gzde003, ''),
-		       COALESCE(g.gzde002, ''), COALESCE(g.gzde008, '')
-		FROM gzde_t g
-		LEFT JOIN gzdel_t l ON l.gzdel001 = g.gzde001 AND l.gzdel002 = ?
-		WHERE (? = '' OR g.gzde001 LIKE ? OR COALESCE(l.gzdel003, '') LIKE ?)
-		ORDER BY g.gzde001`, lang, keyword, like, like)
-	if err != nil {
-		return nil, fmt.Errorf("query subprog list: %w", err)
+// CategoryName 把 GP 的 zz_file.zz03 程序类别码翻成中文注解。
+// 取值来自 azz/4gl/../../azz/sdd/p_zz.sdd 的「欄位說明」；GP 只有这九种。
+func CategoryName(code string) string {
+	switch strings.ToUpper(strings.TrimSpace(code)) {
+	case "M":
+		return "目录程式"
+	case "I":
+		return "建档维护"
+	case "U":
+		return "公用程式"
+	case "P":
+		return "处理类"
+	case "R":
+		return "报表类"
+	case "Q":
+		return "查询"
+	case "T":
+		return "异动单据"
+	case "S":
+		return "设定"
+	case "O":
+		return "其他"
+	default:
+		return ""
 	}
-	defer rows.Close()
-
-	var result []SubProgListItem
-	for rows.Next() {
-		var p SubProgListItem
-		if err := rows.Scan(&p.Code, &p.Name, &p.Category, &p.Module, &p.Cust); err != nil {
-			return nil, fmt.Errorf("scan subprog row: %w", err)
-		}
-		result = append(result, p)
-	}
-	return result, rows.Err()
 }
 
 // SubProgCategoryLabel 规格类别(SCC 91)的中文注解。
@@ -257,149 +272,117 @@ func GroupTablePrograms(rows [][]string, get func([]string, int) string) []Table
 	return result
 }
 
-// QueryProgTables 查"这个程序用了哪些表"(gzdg_t 按 gzdg001)。表名取 dzeal_t(指定语言)。
+// QueryProgTables 查"这个程序用了哪些表"。
+//
+// GP 的这条关系不在目录里，而在 zr_file：由 p_get_zr 扫 4GL 源码生成，
+// zr01 程序 / zr02 表 / zr03 操作码，同步时合并成 t_prog_table(prog,tab,ops)。
+// 表说明取 t_table（可能没有——备份表与视图不进表档，此时留空）。
 func (d *DB) QueryProgTables(code, lang string) ([]ProgTableRow, error) {
 	rows, err := d.conn.Query(`
-		SELECT t.gzdg002, COALESCE(al.dzeal003, ''), COALESCE(t.gzdg003, '')
-		FROM gzdg_t t
-		LEFT JOIN dzeal_t al ON al.dzeal001 = t.gzdg002 AND al.dzeal002 = ?
-		WHERE t.gzdg001 = ?
-		ORDER BY t.gzdg002, t.gzdg003`, lang, code)
+		SELECT t.tab, COALESCE(k.tab_cn, ''), COALESCE(t.ops, '')
+		FROM t_prog_table t
+		LEFT JOIN t_table k ON k.tab = t.tab
+		WHERE t.prog = ?
+		ORDER BY t.tab`, strings.ToLower(code))
 	if err != nil {
 		return nil, fmt.Errorf("query prog tables %s: %w", code, err)
 	}
 	defer rows.Close()
 
-	var raw [][]string
+	var result []ProgTableRow
 	for rows.Next() {
-		var table, desc, op string
-		if err := rows.Scan(&table, &desc, &op); err != nil {
+		var r ProgTableRow
+		if err := rows.Scan(&r.Table, &r.TableDesc, &r.Ops); err != nil {
 			return nil, fmt.Errorf("scan prog table: %w", err)
 		}
-		raw = append(raw, []string{table, desc, op})
+		result = append(result, r)
 	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return GroupProgTables(raw, GetCol), nil
+	return result, rows.Err()
 }
 
-// QueryTablePrograms 反查"哪些程序在用这张表"(gzdg_t 按 gzdg002)。程序名取 gzzal_t(指定语言)。
+// QueryTablePrograms 反查"哪些程序在用这张表"（t_prog_table 按 tab）。
 func (d *DB) QueryTablePrograms(table, lang string) ([]TableProgRow, error) {
 	rows, err := d.conn.Query(`
-		SELECT t.gzdg001, COALESCE(pl.gzzal003, ''), COALESCE(t.gzdg003, '')
-		FROM gzdg_t t
-		LEFT JOIN gzzal_t pl ON pl.gzzal001 = t.gzdg001 AND pl.gzzal002 = ?
-		WHERE t.gzdg002 = ?
-		ORDER BY t.gzdg001, t.gzdg003`, lang, table)
+		SELECT t.prog, COALESCE(p.name, ''), COALESCE(t.ops, '')
+		FROM t_prog_table t
+		LEFT JOIN t_prog p ON p.prog = t.prog
+		WHERE t.tab = ?
+		ORDER BY t.prog`, strings.ToLower(table))
 	if err != nil {
 		return nil, fmt.Errorf("query table programs %s: %w", table, err)
 	}
 	defer rows.Close()
 
-	var raw [][]string
+	var result []TableProgRow
 	for rows.Next() {
-		var prog, name, op string
-		if err := rows.Scan(&prog, &name, &op); err != nil {
+		var r TableProgRow
+		if err := rows.Scan(&r.Prog, &r.ProgName, &r.Ops); err != nil {
 			return nil, fmt.Errorf("scan table program: %w", err)
 		}
-		raw = append(raw, []string{prog, name, op})
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return GroupTablePrograms(raw, GetCol), nil
-}
-
-// QueryProgInfo 按编号查程序登记信息(附"该编号是否也是作业、挂的哪个程序")。
-// 程序与作业都未收录时返回 (nil, nil)。
-func (d *DB) QueryProgInfo(code, lang string) (*ProgInfo, error) {
-	info := &ProgInfo{Code: code}
-
-	row := d.conn.QueryRow(`
-		SELECT COALESCE(a.gzza002, ''), COALESCE(a.gzza003, ''), COALESCE(a.gzza004, ''),
-		       COALESCE(a.gzza008, ''), COALESCE(a.gzza011, ''), COALESCE(a.gzzastus, ''),
-		       COALESCE(l.gzzal003, ''), COALESCE(l.gzzal005, '')
-		FROM gzza_t a
-		LEFT JOIN gzzal_t l ON l.gzzal001 = a.gzza001 AND l.gzzal002 = ?
-		WHERE a.gzza001 = ?`, lang, code)
-	var category, module, runCmd, refMain, cust, status, name, shortName string
-	switch err := row.Scan(&category, &module, &runCmd, &refMain, &cust, &status, &name, &shortName); err {
-	case nil:
-		info.IsProg = true
-		info.Category, info.Module, info.RunCmd = category, module, runCmd
-		info.RefMain, info.Cust, info.Status = refMain, cust, status
-		info.Name, info.ShortName = name, shortName
-	case sql.ErrNoRows:
-		// 不是程序,再看看是不是作业
-	default:
-		return nil, fmt.Errorf("query prog info %s: %w", code, err)
-	}
-
-	var jobProg, jobParam, jobExtra string
-	if err := d.conn.QueryRow(
-		`SELECT COALESCE(gzzz002, ''), COALESCE(gzzz003, ''), COALESCE(gzzz004, '')
-		 FROM gzzz_t WHERE gzzz001 = ?`, code).Scan(&jobProg, &jobParam, &jobExtra); err == nil {
-		info.IsJob = true
-		info.JobProg, info.JobParamGrp, info.JobExtra = jobProg, jobParam, jobExtra
-	} else if err != sql.ErrNoRows {
-		return nil, fmt.Errorf("query job info %s: %w", code, err)
-	}
-
-	if !info.IsProg && !info.IsJob {
-		return nil, nil
-	}
-	return info, nil
-}
-
-// QueryProgJobs 查"哪些作业用了这个程序"(gzzz_t.gzzz002 = code)。
-// 作业名称取它所挂程序的名称(gzzal_t),与 azzi910 的取法一致。
-func (d *DB) QueryProgJobs(code, lang string) ([]ProgJob, error) {
-	rows, err := d.conn.Query(`
-		SELECT z.gzzz001,
-		       COALESCE(l.gzzal003, ''),
-		       COALESCE(z.gzzz005, ''),
-		       COALESCE(z.gzzz003, ''),
-		       COALESCE(z.gzzz004, ''),
-		       COALESCE(k.gzzk003, ''),
-		       COALESCE(z.gzzz006, ''),
-		       COALESCE(z.gzzzstus, '')
-		FROM gzzz_t z
-		LEFT JOIN gzzal_t l ON l.gzzal001 = z.gzzz002 AND l.gzzal002 = ?
-		LEFT JOIN gzzk_t k ON k.gzzk001 = z.gzzz002 AND k.gzzk002 = z.gzzz003
-		WHERE z.gzzz002 = ?
-		ORDER BY z.gzzz001`, lang, code)
-	if err != nil {
-		return nil, fmt.Errorf("query prog jobs %s: %w", code, err)
-	}
-	defer rows.Close()
-
-	var result []ProgJob
-	for rows.Next() {
-		var j ProgJob
-		if err := rows.Scan(&j.JobCode, &j.JobName, &j.Module, &j.ParamGrp, &j.Extra,
-			&j.ParamDesc, &j.DocType, &j.Status); err != nil {
-			return nil, fmt.Errorf("scan prog job: %w", err)
-		}
-		result = append(result, j)
+		result = append(result, r)
 	}
 	return result, rows.Err()
 }
 
-// QueryProgList 列出/搜索程序(--kw 按程序编号或程序名称过滤),附各自的作业数。
+// QueryProgInfo 按编号查程序登记信息。未收录返回 (nil, nil)。
+//
+// GP 的 gzza_t 对应 t_prog（同步自 gaz_file + zz_file + gal_file）：
+//   - category ← zz_file.zz03（程序类别，M/I/U/P/R/Q/T/S/O）
+//   - run_cmd  ← zz_file.zz08（系统运行指令）
+//   - module   ← gal_file 里 gal03 == gal01 那行的 gal02（入口模块）
+//   - name/name_tw ← gaz_file 的简体/繁体名称
+//
+// GP 没有"作业"这张独立的表：gaz_file 里一条程序就是一条作业，
+// 所以 IsJob 恒为 true、JobProg 就是它自己（见 QueryProgJobs）。
+func (d *DB) QueryProgInfo(code, lang string) (*ProgInfo, error) {
+	info := &ProgInfo{Code: strings.ToLower(strings.TrimSpace(code))}
+	row := d.conn.QueryRow(`
+		SELECT COALESCE(p.category, ''), COALESCE(p.module, ''), COALESCE(p.run_cmd, ''),
+		       COALESCE(p.memo, ''), `+progNameColumn(lang)+`,
+		       (SELECT COUNT(*) FROM t_prog_table x WHERE x.prog = p.prog)
+		FROM t_prog p
+		WHERE p.prog = ?`, info.Code)
+	var category, module, runCmd, memo, name string
+	var tableCount int
+	switch err := row.Scan(&category, &module, &runCmd, &memo, &name, &tableCount); err {
+	case nil:
+		info.IsProg = true
+		info.Category, info.Module, info.RunCmd = category, module, runCmd
+		info.Memo, info.TableCount = memo, tableCount
+		info.Name = name
+		info.CategoryName = CategoryName(category)
+	case sql.ErrNoRows:
+		return nil, nil
+	default:
+		return nil, fmt.Errorf("query prog info %s: %w", code, err)
+	}
+	return info, nil
+}
+
+// QueryProgJobs 查"哪些作业用了这个程序"。
+//
+// GP 里 gzze_t 不存在，作业就是程序本身（gaz_file 的 gaz03 写着"……作業"），
+// 所以这里恒返回 1 条：编号、名称、模块都取该程序自己。
+func (d *DB) QueryProgJobs(code, lang string) ([]ProgJob, error) {
+	info, err := d.QueryProgInfo(code, lang)
+	if err != nil {
+		return nil, err
+	}
+	if info == nil {
+		return []ProgJob{}, nil
+	}
+	return []ProgJob{{JobCode: info.Code, JobName: info.Name, Module: info.Module}}, nil
+}
+
+// QueryProgList 列出/搜索程序（--kw 按编号或名称过滤）。
+// GP 里每个程序就是一条作业，所以"作业数"恒为 1。
 func (d *DB) QueryProgList(lang, keyword string) ([]ProgListItem, error) {
 	like := "%" + keyword + "%"
 	rows, err := d.conn.Query(`
-		SELECT a.gzza001,
-		       COALESCE(l.gzzal003, ''),
-		       COALESCE(a.gzza002, ''),
-		       COALESCE(a.gzza003, ''),
-		       COALESCE(a.gzza011, ''),
-		       (SELECT COUNT(*) FROM gzzz_t z WHERE z.gzzz002 = a.gzza001)
-		FROM gzza_t a
-		LEFT JOIN gzzal_t l ON l.gzzal001 = a.gzza001 AND l.gzzal002 = ?
-		WHERE (? = '' OR a.gzza001 LIKE ? OR COALESCE(l.gzzal003, '') LIKE ?)
-		ORDER BY a.gzza001`, lang, keyword, like, like)
+		SELECT p.prog, `+progNameColumn(lang)+`, COALESCE(p.category, ''), COALESCE(p.module, '')
+		FROM t_prog p
+		WHERE (? = '' OR lower(p.prog) LIKE lower(?) OR lower(COALESCE(p.name, '')) LIKE lower(?))
+		ORDER BY p.prog`, keyword, like, like)
 	if err != nil {
 		return nil, fmt.Errorf("query prog list: %w", err)
 	}
@@ -408,9 +391,11 @@ func (d *DB) QueryProgList(lang, keyword string) ([]ProgListItem, error) {
 	var result []ProgListItem
 	for rows.Next() {
 		var p ProgListItem
-		if err := rows.Scan(&p.Code, &p.Name, &p.Category, &p.Module, &p.Cust, &p.JobCount); err != nil {
+		if err := rows.Scan(&p.Code, &p.Name, &p.Category, &p.Module); err != nil {
 			return nil, fmt.Errorf("scan prog row: %w", err)
 		}
+		p.CategoryName = CategoryName(p.Category)
+		p.JobCount = 1 // GP：程序即作业
 		result = append(result, p)
 	}
 	return result, rows.Err()

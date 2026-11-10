@@ -69,22 +69,12 @@ func MsgLike(term string) string {
 	return "%" + term + "%"
 }
 
-// inUpper 生成列值 IN 列表的占位串(每个值都包 UPPER(?)),返回占位串与参数。
-// 列侧记得自己包 UPPER —— 与单值条件同一个规矩:大小写不敏感交给 SQL,
-// 本地 SQLite 与远程库表现才一致。数字码(如 gzze007)过一遍 UPPER 是无害空操作。
-func inUpper(vals []string) (string, []any) {
-	ph := make([]string, len(vals))
-	args := make([]any, len(vals))
-	for i, v := range vals {
-		ph[i] = "UPPER(?)"
-		args[i] = v
-	}
-	return strings.Join(ph, ","), args
-}
-
 // msgWhere 拼 MsgQuery 的 WHERE 子句与绑定参数。一个条件都没给时返回空串。
-// 编号两端 UPPER:编号本身都是小写(实测 gzze_t 无大写编号),但工具里其它查询
-// 一律大小写不敏感,这里跟上;顺带让本地 SQLite 与远程库行为一致。
+// 编号两端 UPPER:工具里其它查询一律大小写不敏感,这里跟上。
+//
+// GP 的 ze_file 只有四个列(ze01 编号 / ze02 语言 / ze03 文本 / ze04 日期),
+// 所以只有编号、文本、语言三个条件能落到 SQL 上;类型/状态/建议作业
+// 在 QueryMsgs 里提前返回空集,不会走到这里。
 func msgWhere(q MsgQuery) (string, []any) {
 	var conds []string
 	var args []any
@@ -93,37 +83,22 @@ func msgWhere(q MsgQuery) (string, []any) {
 		ors := make([]string, 0, len(q.Codes))
 		for _, c := range q.Codes {
 			if strings.ContainsAny(c, "*%") {
-				ors = append(ors, "UPPER(COALESCE(gzze001, '')) LIKE UPPER(?)")
+				ors = append(ors, "UPPER(COALESCE(code, '')) LIKE UPPER(?)")
 				args = append(args, MsgLike(c))
 			} else {
-				ors = append(ors, "UPPER(COALESCE(gzze001, '')) = UPPER(?)")
+				ors = append(ors, "UPPER(COALESCE(code, '')) = UPPER(?)")
 				args = append(args, c)
 			}
 		}
 		conds = append(conds, "("+strings.Join(ors, " OR ")+")")
 	}
 	if q.Text != "" {
-		conds = append(conds, "UPPER(COALESCE(gzze003, '')) LIKE UPPER(?)")
+		conds = append(conds, "UPPER(COALESCE(text, '')) LIKE UPPER(?)")
 		args = append(args, MsgLike(q.Text))
 	}
-	if len(q.Types) > 0 {
-		ph, a := inUpper(q.Types)
-		conds = append(conds, "UPPER(gzze007) IN ("+ph+")")
-		args = append(args, a...)
-	}
-	if len(q.Status) > 0 {
-		ph, a := inUpper(q.Status)
-		conds = append(conds, "UPPER(COALESCE(gzzestus, '')) IN ("+ph+")")
-		args = append(args, a...)
-	}
-	if len(q.Progs) > 0 {
-		ph, a := inUpper(q.Progs)
-		conds = append(conds, "UPPER(COALESCE(gzze005, '')) IN ("+ph+")")
-		args = append(args, a...)
-	}
 	if q.Lang != "" {
-		conds = append(conds, "gzze002 = ?")
-		args = append(args, q.Lang)
+		conds = append(conds, "lang = ?")
+		args = append(args, LangCode(q.Lang))
 	}
 	if len(conds) == 0 {
 		return "", nil
@@ -135,68 +110,47 @@ func msgWhere(q MsgQuery) (string, []any) {
 // 命令层会先给出更具体的用法提示,这里只兜住将来别的调用方。
 var errMsgNoCond = errors.New("消息查询至少需要一个条件(编号/语句/类型/状态/建议作业)")
 
-// QueryMsgs 按多条件查消息:命中几行就是几条 (编号, 语言) 记录,按编号排序。
-// 配套的作业名称(gzzal_t)一次性补齐;gzzal_t 缺表/查询失败仅导致名称为空,
-// 不阻断主结果。gzze_t 缺表时返回原错误(命令层用 IsMissingTable 提示先 sync)。
+// QueryMsgs 按条件查消息:命中几行就是几条 (编号, 语言) 记录,按编号排序。
+//
+// 源是 t_msg(同步自 ze_file)。GP 的 ze_file 没有"讯息类型/启用状态/建议作业"
+// 这三列,所以带这三类条件时直接返回空集 —— 空是准确答案,不是查询失败。
 func (d *DB) QueryMsgs(q MsgQuery) ([]MsgRow, error) {
 	if !q.HasFilter() {
 		return nil, errMsgNoCond
 	}
+	if len(q.Types) > 0 || len(q.Status) > 0 || len(q.Progs) > 0 {
+		return []MsgRow{}, nil
+	}
 	where, args := msgWhere(q)
 	rows, err := d.conn.Query(`
-		SELECT COALESCE(gzze001, ''), COALESCE(gzze002, ''), COALESCE(gzze003, ''),
-		       COALESCE(gzze004, ''), COALESCE(gzze005, ''), COALESCE(gzze006, ''),
-		       COALESCE(gzze007, ''), COALESCE(gzze008, ''), COALESCE(gzzestus, '')
-		FROM gzze_t`+where+`
-		ORDER BY gzze001, gzze002`, args...)
+		SELECT COALESCE(code, ''), COALESCE(lang, ''), COALESCE(text, '')
+		FROM t_msg`+where+`
+		ORDER BY code, lang`, args...)
 	if err != nil {
 		return nil, fmt.Errorf("query msg: %w", err)
 	}
 	defer rows.Close()
 
 	var result []MsgRow
-	progs := map[string]bool{}
 	for rows.Next() {
 		var r MsgRow
-		if err := rows.Scan(&r.Code, &r.Lang, &r.Text, &r.Action, &r.ExecProg,
-			&r.Detail, &r.TypeCode, &r.ForceWin, &r.Status); err != nil {
+		if err := rows.Scan(&r.Code, &r.Lang, &r.Text); err != nil {
 			return nil, fmt.Errorf("scan msg row: %w", err)
-		}
-		if r.ExecProg != "" && r.ExecProg != ":EXEPROG" {
-			progs[r.ExecProg] = true
 		}
 		result = append(result, r)
 	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	if len(result) == 0 {
-		return result, nil
-	}
-
-	// 作业名称:一次性查 gzzal_t(该语言的作业名称),缺表静默降级
-	names, err := d.msgProgNames(progs)
-	if err != nil {
-		names = map[string]string{} // gzzal_t 未同步/缺失:名称留空
-	}
-	for i := range result {
-		result[i].ProgName = names[result[i].ExecProg+"\x00"+result[i].Lang]
-	}
-	return result, nil
+	return result, rows.Err()
 }
 
-// QueryMsgLangs 按同样的条件(只去掉语言)返回有记录的 gzze002 清单。
-// 用途:命令层在"该编号没有 --lang 那一行"时列出可用语言 —— 源系统是精确
-// (编号,语言) 匹配、没有自动回退,说清有哪些语言比干说"没找到"有用。
+// QueryMsgLangs 按同样的条件(只去掉语言)返回有记录的语言清单。
+// 用途:命令层在"该编号没有 --lang 那一行"时列出可用语言。
 func (d *DB) QueryMsgLangs(q MsgQuery) ([]string, error) {
 	if !q.HasFilter() {
 		return nil, errMsgNoCond
 	}
 	q.Lang = "" // 这一步问的就是"除当前语言外还有哪些"
 	where, args := msgWhere(q)
-	// ORDER BY 用别名:Oracle 的 DISTINCT 只认 select 列表里的表达式,直接写
-	// ORDER BY gzze002 会报 ORA-01791(COALESCE 之后它不认那是个 SELECTed expression)。
-	rows, err := d.conn.Query(`SELECT DISTINCT COALESCE(gzze002, '') AS lang FROM gzze_t`+where+` ORDER BY lang`, args...)
+	rows, err := d.conn.Query(`SELECT DISTINCT COALESCE(lang, '') AS lang FROM t_msg`+where+` ORDER BY lang`, args...)
 	if err != nil {
 		return nil, fmt.Errorf("query msg langs: %w", err)
 	}
@@ -211,36 +165,6 @@ func (d *DB) QueryMsgLangs(q MsgQuery) ([]string, error) {
 		if lang != "" {
 			out = append(out, lang)
 		}
-	}
-	return out, rows.Err()
-}
-
-// msgProgNames 查作业多语言名称:key = "<作业号>\x00<语言>"。
-func (d *DB) msgProgNames(progs map[string]bool) (map[string]string, error) {
-	if len(progs) == 0 {
-		return map[string]string{}, nil
-	}
-	ids := make([]any, 0, len(progs))
-	ph := ""
-	for p := range progs {
-		ids = append(ids, p)
-		ph += "?,"
-	}
-	ph = ph[:len(ph)-1]
-	rows, err := d.conn.Query(`
-		SELECT gzzal001, COALESCE(gzzal002, ''), COALESCE(gzzal003, '')
-		FROM gzzal_t WHERE gzzal001 IN (`+ph+`)`, ids...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	out := map[string]string{}
-	for rows.Next() {
-		var prog, lang, name string
-		if err := rows.Scan(&prog, &lang, &name); err != nil {
-			return nil, err
-		}
-		out[prog+"\x00"+lang] = name
 	}
 	return out, rows.Err()
 }

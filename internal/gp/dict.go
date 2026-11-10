@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -44,12 +45,21 @@ CREATE TABLE IF NOT EXISTS t_constraint(
 CREATE TABLE IF NOT EXISTS t_module(
   module TEXT PRIMARY KEY, form_dir TEXT, rep_dir TEXT);
 CREATE TABLE IF NOT EXISTS t_prog(
-  prog TEXT PRIMARY KEY, name TEXT, module TEXT, memo TEXT, name2 TEXT);
+  prog TEXT PRIMARY KEY, name TEXT, module TEXT, memo TEXT, name2 TEXT,
+  category TEXT, run_cmd TEXT, name_tw TEXT);
 CREATE INDEX IF NOT EXISTS ix_prog_name ON t_prog(name);
+-- 程序用到的表（源 zr_file，由 GP 的 p_get_zr 扫 4GL 源码生成；ops 已合并成 S/I/U/D 顺序）
+CREATE TABLE IF NOT EXISTS t_prog_table(
+  prog TEXT, tab TEXT, ops TEXT, PRIMARY KEY(prog, tab));
+CREATE INDEX IF NOT EXISTS ix_prog_table_tab ON t_prog_table(tab);
 CREATE TABLE IF NOT EXISTS t_prog_link(
   prog TEXT, module TEXT, linked_prog TEXT, link_flag TEXT,
   PRIMARY KEY(prog, module, linked_prog));
 CREATE INDEX IF NOT EXISTS ix_prog_link_prog ON t_prog_link(prog);
+-- 错误消息（源 ze_file：ze01 编号 / ze02 语言 / ze03 文本 / ze04 建立日期）
+CREATE TABLE IF NOT EXISTS t_msg(
+  code TEXT, lang TEXT, text TEXT, mdate TEXT, PRIMARY KEY(code, lang));
+CREATE INDEX IF NOT EXISTS ix_msg_code ON t_msg(code);
 `
 
 const (
@@ -108,10 +118,30 @@ SELECT g.gaz01, g.gaz03, g.gaz06, g.gaz04,
  WHERE g.gaz02 = '2'
  ORDER BY g.gaz01`
 
-	// 说明：不在同步时把 gal_file 的所有链接行拉进 t_prog_link。
-	// gal_file 很大，全表扫描会让 50 秒的同步卡到数分钟；入口模块已经由
-	// sqlGPProg 里“gal03 == gaz01”的精确子查询写进 t_prog，足够启动使用。
-	// t_prog_link 保留给以后需要做“一个作业多程序”的完整视图时再按需填充。
+	// 繁体名称单独拉一份：sqlGPProg 只取 gaz02='2'（简体），--lang zh_TW 要有得选。
+	sqlGPProgTW = `
+SELECT g.gaz01, g.gaz03
+  FROM gaz_file g
+ WHERE g.gaz02 = '0'
+ ORDER BY g.gaz01`
+
+	// 程序类别与系统运行指令。zz03 由 p_zz 按编号第 4 码写入（M/I/U/P/R/Q/T/S/O），
+	// zz08 是 GP 自己的"系统运行指令"（如 $FGLRUN $APMi/apmt420）。
+	sqlGPZZ = `SELECT zz01, zz03, zz08 FROM zz_file`
+
+	// 程序 → 表：zr_file 由 GP 的 p_get_zr 扫 4GL 源码生成（zr01 程序 / zr02 表 / zr03 操作码）。
+	// 操作码可能是 S/I/U/D，也可能是没跑完的中间码 T/V/E/J（p_get_zr 收尾时才翻正）。
+	sqlGPZR = `SELECT lower(zr01), lower(zr02), upper(zr03) FROM zr_file`
+
+	// 错误消息。GP 的消息在 ze_file（ze01 编号 / ze02 语言 / ze03 文本 / ze04 建立日期），
+	// 不是 T100 的 gzze_t，也不是 gaz_file（那是"作业目录"）。
+	sqlGPZe = `SELECT ze01, ze02, ze03, ze04 FROM ze_file`
+
+	// 说明：不在同步时把 gal_file 的所有链接行拉进 t_prog_link。入口模块已经由
+	// sqlGPProg 里「gal03 == gaz01」的精确子查询写进 t_prog，足够启动使用。
+	// t_prog_link 保留给"一个作业多程序"的完整视图；真填的话 gal_file 只有 17,810 行，
+	// 不构成性能问题（原注释说"很大会把同步拖到数分钟"是没实测过的）。
+	// 程序 → 表 走 t_prog_table（源 zr_file），与这条是两个不同的关系，别混。
 
 	sqlGPModule = `SELECT gao01, gao02, gao04 FROM gao_file`
 )
@@ -142,6 +172,74 @@ func gpDSN(db *dbconfig.Connection, account, password string) string {
 }
 
 func clean(s sql.NullString) string { return strings.TrimSpace(s.String) }
+
+// mergeOpCodes 把一张表上的多个操作码合成一个字符串：S/I/U/D 固定在前，
+// 其余的按字母序附后（GP 里 T/V/E/J 是 p_get_zr 没跑完时的中间码，照样留着不丢）。
+func mergeOpCodes(set map[string]bool) string {
+	var out []string
+	for _, code := range []string{"S", "I", "U", "D"} {
+		if set[code] {
+			out = append(out, code)
+			delete(set, code)
+		}
+	}
+	var rest []string
+	for code := range set {
+		rest = append(rest, code)
+	}
+	sort.Strings(rest)
+	return strings.Join(append(out, rest...), "/")
+}
+
+// Sync 同步一个环境的字典，阻塞到完成；onProgress 逐条收到进度（可为 nil）。
+//
+// Web 侧走 /api/gp/sync 的后台任务，CLI 侧走这里 —— 两条路都落到同一个
+// <环境>.db（路径只有 DictPath 一份实现），跑的是同一个 runSync，所以
+// "命令行同步完的库，界面里查得到"这件事不靠约定，靠同一份代码。
+func (s *Service) Sync(env config.NamedSsh, onProgress func(string)) error {
+	if s.job(env.Name).State == "running" {
+		return fmt.Errorf("环境 %s 的字典同步已经在跑", env.Name)
+	}
+	s.setJob(env.Name, func(j *Job) {
+		*j = Job{State: "running", Kind: "sync", Started: time.Now()}
+	})
+
+	done := make(chan struct{})
+	go func() {
+		s.runSync(env)
+		close(done)
+	}()
+
+	seen := 0
+	flush := func() {
+		j := s.job(env.Name)
+		for seen < len(j.Progress) {
+			if onProgress != nil {
+				onProgress(j.Progress[seen])
+			}
+			seen++
+		}
+	}
+	tick := time.NewTicker(200 * time.Millisecond)
+	defer tick.Stop()
+	for {
+		select {
+		case <-done:
+			flush()
+			j := s.job(env.Name)
+			switch j.State {
+			case "done":
+				return nil
+			case "error":
+				return fmt.Errorf("%s", j.Error)
+			default:
+				return fmt.Errorf("同步没有正常结束（state=%s）", j.State)
+			}
+		case <-tick.C:
+			flush()
+		}
+	}
+}
 
 // runSync 把 GP 字典整份同步到本地 SQLite。
 func (s *Service) runSync(env config.NamedSsh) {
@@ -315,6 +413,82 @@ func (s *Service) runSync(env config.NamedSsh) {
 	r7.Close()
 	s.progress(env.Name, fmt.Sprintf("约束：%d 条", len(constraints)))
 
+	// 程序类别 / 系统运行指令（zz_file）+ 程序 → 表（zr_file）。
+	// 两族都失败不影响主流程：主数据（表/字段）已经拿到。
+	type progExtra struct{ category, runCmd string }
+	extras := map[string]progExtra{}
+	if r8, err := oc.QueryContext(ctx, sqlGPZZ); err == nil {
+		for r8.Next() {
+			var prog, cat, cmd sql.NullString
+			if r8.Scan(&prog, &cat, &cmd) != nil {
+				continue
+			}
+			p := strings.ToLower(clean(prog))
+			if p == "" {
+				continue
+			}
+			extras[p] = progExtra{strings.ToUpper(clean(cat)), clean(cmd)}
+		}
+		r8.Close()
+		s.progress(env.Name, fmt.Sprintf("程序类别 zz_file：%d 条", len(extras)))
+	}
+
+	twNames := map[string]string{}
+	if r9, err := oc.QueryContext(ctx, sqlGPProgTW); err == nil {
+		for r9.Next() {
+			var prog, name sql.NullString
+			if r9.Scan(&prog, &name) != nil {
+				continue
+			}
+			twNames[strings.ToLower(clean(prog))] = clean(name)
+		}
+		r9.Close()
+	}
+
+	// 程序 → 表：把同一 (程序,表) 的多行操作码合成一条，写入时按 S/I/U/D 排序。
+	type ptKey struct{ prog, tab string }
+	ptOps := map[ptKey]map[string]bool{}
+	if r10, err := oc.QueryContext(ctx, sqlGPZR); err == nil {
+		for r10.Next() {
+			var prog, tab, op sql.NullString
+			if r10.Scan(&prog, &tab, &op) != nil {
+				continue
+			}
+			p, t := strings.ToLower(clean(prog)), strings.ToLower(clean(tab))
+			if p == "" || t == "" {
+				continue
+			}
+			k := ptKey{p, t}
+			if ptOps[k] == nil {
+				ptOps[k] = map[string]bool{}
+			}
+			if o := strings.ToUpper(clean(op)); o != "" {
+				ptOps[k][o] = true
+			}
+		}
+		r10.Close()
+		s.progress(env.Name, fmt.Sprintf("程序用表 zr_file：%d 条", len(ptOps)))
+	}
+
+	// 错误消息（ze_file）。同样失败不影响主流程。
+	type msgRow struct{ code, lang, text, mdate string }
+	var msgs []msgRow
+	if r11, err := oc.QueryContext(ctx, sqlGPZe); err == nil {
+		for r11.Next() {
+			var code, lang, text, mdate sql.NullString
+			if r11.Scan(&code, &lang, &text, &mdate) != nil {
+				continue
+			}
+			c := strings.ToLower(clean(code))
+			if c == "" {
+				continue
+			}
+			msgs = append(msgs, msgRow{c, clean(lang), clean(text), clean(mdate)})
+		}
+		r11.Close()
+		s.progress(env.Name, fmt.Sprintf("错误消息 ze_file：%d 条", len(msgs)))
+	}
+
 	// 写 SQLite（先写临时文件，完成后原子替换，避免中途失败留下半个库）
 	path := dictPath(env)
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
@@ -376,7 +550,7 @@ func (s *Service) runSync(env config.NamedSsh) {
 
 	// 作业目录 + 模块（失败不影响主流程）
 	if r4, err := oc.QueryContext(ctx, sqlGPProg); err == nil {
-		stp, _ := lc.Prepare(`INSERT OR REPLACE INTO t_prog(prog,name,module,memo,name2) VALUES(?,?,?,?,?)`)
+		stp, _ := lc.Prepare(`INSERT OR REPLACE INTO t_prog(prog,name,module,memo,name2,category,run_cmd,name_tw) VALUES(?,?,?,?,?,?,?,?)`)
 		if stp != nil {
 			n := 0
 			for r4.Next() {
@@ -384,13 +558,41 @@ func (s *Service) runSync(env config.NamedSsh) {
 				if r4.Scan(&prog, &name, &name2, &memo, &module) != nil {
 					continue
 				}
-				_, _ = stp.Exec(strings.ToLower(clean(prog)), clean(name), strings.ToLower(clean(module)), clean(memo), clean(name2))
+				p := strings.ToLower(clean(prog))
+				ex := extras[p]
+				_, _ = stp.Exec(p, clean(name), strings.ToLower(clean(module)), clean(memo), clean(name2),
+					ex.category, ex.runCmd, twNames[p])
 				n++
 			}
 			stp.Close()
 			s.progress(env.Name, fmt.Sprintf("作业目录 gaz_file：%d 条", n))
 		}
 		r4.Close()
+	}
+	// 程序 → 表：十几万行级别，放一个事务里写；逐条 autocommit 会把同步拖成分钟级。
+	if len(ptOps) > 0 {
+		if tx2, err := lc.Begin(); err == nil {
+			if stx, err := tx2.Prepare(`INSERT OR REPLACE INTO t_prog_table(prog,tab,ops) VALUES(?,?,?)`); err == nil {
+				for k, set := range ptOps {
+					_, _ = stx.Exec(k.prog, k.tab, mergeOpCodes(set))
+				}
+				stx.Close()
+			}
+			_ = tx2.Commit()
+		}
+		s.progress(env.Name, fmt.Sprintf("程序用表：%d 条关系", len(ptOps)))
+	}
+	if len(msgs) > 0 {
+		if tx3, err := lc.Begin(); err == nil {
+			if stz, err := tx3.Prepare(`INSERT OR REPLACE INTO t_msg(code,lang,text,mdate) VALUES(?,?,?,?)`); err == nil {
+				for _, m := range msgs {
+					_, _ = stz.Exec(m.code, m.lang, m.text, m.mdate)
+				}
+				stz.Close()
+			}
+			_ = tx3.Commit()
+		}
+		s.progress(env.Name, fmt.Sprintf("错误消息：%d 条", len(msgs)))
 	}
 	if r5, err := oc.QueryContext(ctx, sqlGPModule); err == nil {
 		stm, _ := lc.Prepare(`INSERT OR REPLACE INTO t_module(module,form_dir,rep_dir) VALUES(?,?,?)`)
@@ -426,6 +628,7 @@ func (s *Service) runSync(env config.NamedSsh) {
 		j.Result = map[string]any{
 			"path": path, "tables": len(tabs), "columns": len(cols),
 			"indexes": len(indexes), "constraints": len(constraints), "sizeMB": mb,
+			"messages": len(msgs),
 		}
 		j.Ended = time.Now()
 	})

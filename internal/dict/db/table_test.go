@@ -6,7 +6,8 @@ import (
 	"testing"
 )
 
-// buildTableDB 建一个只含表字典三张表(dzea_t 表档/dzeal_t 表说明/dzeb_t 字段档)的临时库。
+// buildTableDB 建一个只含 GP 表字典四张表（t_table 表档 / t_column 字段 /
+// t_index 索引 / t_constraint 约束）的临时库，列与 tt gp sync 产出的同构。
 func buildTableDB(t *testing.T) *DB {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "tables.db")
@@ -15,17 +16,20 @@ func buildTableDB(t *testing.T) *DB {
 		t.Fatalf("open temp db: %v", err)
 	}
 	stmts := []string{
-		`CREATE TABLE dzea_t (dzea001 TEXT, dzea002 TEXT, dzea003 TEXT, dzea004 TEXT)`,
-		`CREATE TABLE dzeal_t (dzeal001 TEXT, dzeal002 TEXT, dzeal003 TEXT)`,
-		`CREATE TABLE dzeb_t (dzeb001 TEXT, dzeb002 TEXT, dzeb021 TEXT)`,
-		`INSERT INTO dzea_t VALUES ('apca_t','應付憑單','AAP','T')`,
-		`INSERT INTO dzea_t VALUES ('glab_t','帳套科目','AGL','D')`,
-		`INSERT INTO dzeal_t VALUES ('apca_t','zh_CN','应付凭单单头')`,
-		`INSERT INTO dzeal_t VALUES ('glab_t','zh_CN','账套应用会计科目设置档')`,
-		// apca_t 两个字段,glab_t 一个字段
-		`INSERT INTO dzeb_t VALUES ('apca_t','apca001','1')`,
-		`INSERT INTO dzeb_t VALUES ('apca_t','apca002','2')`,
-		`INSERT INTO dzeb_t VALUES ('glab_t','glab001','1')`,
+		`CREATE TABLE t_table (tab TEXT, tab_cn TEXT, module TEXT, tab_type TEXT, col_count TEXT)`,
+		`CREATE TABLE t_column (tab TEXT, seq TEXT, col TEXT, col_cn TEXT, dtype TEXT,
+		   dlen TEXT, dprec TEXT, dscale TEXT, nullable TEXT, dflt TEXT, remark TEXT, fmt TEXT)`,
+		`CREATE TABLE t_index (tab TEXT, idx TEXT, uniqueness TEXT, cols TEXT)`,
+		`CREATE TABLE t_constraint (tab TEXT, cons TEXT, ctype TEXT, status TEXT, validated TEXT, cols TEXT)`,
+		`INSERT INTO t_table VALUES ('ima_file','料件主档','INV','1','2')`,
+		`INSERT INTO t_table VALUES ('apca_file','应付凭单单头','APP','1','1')`,
+		// ima_file 两个字段，ima01 是主键且必填
+		`INSERT INTO t_column VALUES ('ima_file','1','ima01','料件编号','VARCHAR2','40','','','N','','','001')`,
+		`INSERT INTO t_column VALUES ('ima_file','2','ima02','料件名称','VARCHAR2','100','','','Y','','','')`,
+		`INSERT INTO t_column VALUES ('apca_file','1','apca01','单别','VARCHAR2','4','','','N','','','')`,
+		`INSERT INTO t_constraint VALUES ('ima_file','ima_file_pk','P','ENABLED','VALIDATED','ima01')`,
+		`INSERT INTO t_constraint VALUES ('ima_file','ima_file_uk','U','ENABLED','VALIDATED','ima02')`,
+		`INSERT INTO t_index VALUES ('ima_file','ima_file_pk','UNIQUE','ima01')`,
 	}
 	for _, s := range stmts {
 		if _, err := conn.Exec(s); err != nil {
@@ -43,8 +47,7 @@ func buildTableDB(t *testing.T) *DB {
 	return d
 }
 
-// TestQueryTableList 列表模式:字段数由 JOIN 聚合得出(不是逐行相关子查询),
-// 关键字按表名/中文表说明过滤,空关键字返回全部。
+// TestQueryTableList 列表模式：字段数由 JOIN 聚合得出，关键字按表名/中文说明过滤。
 func TestQueryTableList(t *testing.T) {
 	d := buildTableDB(t)
 
@@ -55,45 +58,101 @@ func TestQueryTableList(t *testing.T) {
 	if len(all) != 2 {
 		t.Fatalf("应有 2 张表, got %d: %+v", len(all), all)
 	}
-	if all[0].TableName != "apca_t" || all[0].TableDesc != "应付凭单单头" || all[0].Module != "AAP" {
-		t.Errorf("apca_t 行不符: %+v", all[0])
+	if all[0].TableName != "apca_file" || all[0].TableDesc != "应付凭单单头" || all[0].Module != "APP" {
+		t.Errorf("apca_file 行不符: %+v", all[0])
 	}
-	if all[0].FieldCnt != 2 {
-		t.Errorf("apca_t 字段数应为 2, got %d", all[0].FieldCnt)
-	}
-	if all[1].TableName != "glab_t" || all[1].FieldCnt != 1 {
-		t.Errorf("glab_t 行不符: %+v", all[1])
+	if all[1].TableName != "ima_file" || all[1].FieldCnt != 2 {
+		t.Errorf("ima_file 字段数应为 2: %+v", all[1])
 	}
 
-	// 按中文表说明过滤(说明在 dzeal_t,是 LEFT JOIN 来的)
 	byDesc, err := d.QueryTableList("zh_CN", "凭单")
 	if err != nil {
 		t.Fatalf("QueryTableList(凭单): %v", err)
 	}
-	if len(byDesc) != 1 || byDesc[0].TableName != "apca_t" {
-		t.Errorf("按表说明过滤应命中 apca_t: %+v", byDesc)
+	if len(byDesc) != 1 || byDesc[0].TableName != "apca_file" {
+		t.Errorf("按表说明过滤应命中 apca_file: %+v", byDesc)
 	}
 
-	// 按表名过滤
-	byName, err := d.QueryTableList("zh_CN", "glab")
-	if err != nil {
-		t.Fatalf("QueryTableList(glab): %v", err)
-	}
-	if len(byName) != 1 || byName[0].TableName != "glab_t" {
-		t.Errorf("按表名过滤应命中 glab_t: %+v", byName)
+	byName, err := d.QueryTableList("zh_CN", "ima")
+	if err != nil || len(byName) != 1 || byName[0].TableName != "ima_file" {
+		t.Errorf("按表名过滤应命中 ima_file: %+v, %v", byName, err)
 	}
 
-	// 换了语言别时取不到 zh_CN 说明,退回原始表档说明(dzea002,繁体)
-	tw, err := d.QueryTableList("zh_TW", "")
-	if err != nil {
-		t.Fatalf("QueryTableList(zh_TW): %v", err)
-	}
-	if tw[0].TableDesc != "應付憑單" {
-		t.Errorf("无该语言行应退回原始表说明, got %q", tw[0].TableDesc)
-	}
-
-	// 无匹配:空结果,不报错
 	if none, err := d.QueryTableList("zh_CN", "无此表"); err != nil || len(none) != 0 {
 		t.Errorf("无匹配应返回空: %+v, %v", none, err)
+	}
+}
+
+// TestQueryTableMeta 表档：未收录返回 (nil, nil)。
+func TestQueryTableMeta(t *testing.T) {
+	d := buildTableDB(t)
+
+	meta, err := d.QueryTableMeta("ima_file")
+	if err != nil {
+		t.Fatalf("QueryTableMeta: %v", err)
+	}
+	if meta == nil || meta.TableDesc != "料件主档" || meta.Module != "INV" {
+		t.Errorf("ima_file 表档不符: %+v", meta)
+	}
+
+	if none, err := d.QueryTableMeta("nosuch_file"); err != nil || none != nil {
+		t.Errorf("未收录应返回 (nil,nil): %+v, %v", none, err)
+	}
+}
+
+// TestQueryTable 字段字典：主键由 t_constraint 推、必填由 nullable 推。
+func TestQueryTable(t *testing.T) {
+	d := buildTableDB(t)
+
+	cols, err := d.QueryTable("ima_file")
+	if err != nil {
+		t.Fatalf("QueryTable: %v", err)
+	}
+	if len(cols) != 2 {
+		t.Fatalf("ima_file 应有 2 个字段, got %d: %+v", len(cols), cols)
+	}
+	if cols[0].FieldName != "ima01" || cols[0].FieldDesc != "料件编号" || cols[0].IsPK != "PK" {
+		t.Errorf("ima01 行不符: %+v", cols[0])
+	}
+	if cols[0].Required != "Y" {
+		t.Errorf("ima01 nullable=N 应算必填: %+v", cols[0])
+	}
+	if cols[0].Length != "40" || cols[0].DataType != "VARCHAR2" {
+		t.Errorf("长度/类型不符: %+v", cols[0])
+	}
+	if cols[1].FieldName != "ima02" || cols[1].IsPK != "" || cols[1].Required != "" {
+		t.Errorf("ima02 行不符: %+v", cols[1])
+	}
+}
+
+// TestQueryKeys 键值：ctype 翻成中文。
+func TestQueryKeys(t *testing.T) {
+	d := buildTableDB(t)
+
+	keys, err := d.QueryKeys("ima_file")
+	if err != nil {
+		t.Fatalf("QueryKeys: %v", err)
+	}
+	if len(keys) != 2 {
+		t.Fatalf("ima_file 应有 2 个约束, got %d: %+v", len(keys), keys)
+	}
+	if keys[0].KeyName != "ima_file_pk" || keys[0].KeyType != "主键" || keys[0].KeyField != "ima01" {
+		t.Errorf("主键行不符: %+v", keys[0])
+	}
+	if keys[1].KeyType != "唯一" {
+		t.Errorf("唯一键应翻成“唯一”: %+v", keys[1])
+	}
+}
+
+// TestQueryIndexes 索引。
+func TestQueryIndexes(t *testing.T) {
+	d := buildTableDB(t)
+
+	idx, err := d.QueryIndexes("ima_file")
+	if err != nil {
+		t.Fatalf("QueryIndexes: %v", err)
+	}
+	if len(idx) != 1 || idx[0].IndexName != "ima_file_pk" || idx[0].IndexType != "UNIQUE" {
+		t.Errorf("索引不符: %+v", idx)
 	}
 }

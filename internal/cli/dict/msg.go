@@ -171,8 +171,12 @@ func runMsg(cmd *cobra.Command, args []string) error {
 // printMsg 文本模式输出单条消息。
 func printMsg(m *db.MsgRow) {
 	fmt.Printf("=== %s (%s) ===\n", m.Code, m.Lang)
-	fmt.Printf("类型:     %s\n", typeWithCode(msgTypeLabel(m.TypeCode), m.TypeCode))
-	fmt.Printf("状态:     %s\n", statusLabel(m.Status))
+	// 类型与状态是 T100 的列(GP 的 ze_file 只有编号/语言/文本/日期)，空着就不打，
+	// 免得 GP 用户以为"查到了但类型没值"。
+	if m.TypeCode != "" || m.Status != "" {
+		fmt.Printf("类型:     %s\n", typeWithCode(msgTypeLabel(m.TypeCode), m.TypeCode))
+		fmt.Printf("状态:     %s\n", statusLabel(m.Status))
+	}
 	fmt.Printf("文本:     %s\n", m.Text)
 	if m.Action != "" {
 		fmt.Printf("建议处理: %s\n", m.Action)

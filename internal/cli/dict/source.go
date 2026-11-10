@@ -1,8 +1,7 @@
 package dict
 
-// 查询数据源(r.t/r.v/desc/scc/r.q 共用):本地 SQLite 镜像(*db.DB)与远程 ERP 库
-// (*live.Live,金仓/Oracle)实现同一 db.Source 接口,数据源由配置/CLI 决定,
-// 命令层不感知差异 —— 不再有 --online 开关。
+// 查询数据源:本地 SQLite 字典库(*db.DB)与远程 TOP GP 的 Oracle 库(*live.Live)
+// 实现同一 db.Source 接口,数据源由配置/CLI 决定,命令层不感知差异。
 //
 // 选择优先级:
 //  1. --env/--conn <环境名|local:<环境>>（覆盖本次调用；**显式指定即强制**）；
@@ -27,12 +26,17 @@ import (
 	"tt/internal/dbconfig"
 	"tt/internal/dict/db"
 	"tt/internal/dict/live"
+	"tt/internal/gp"
 	"tt/internal/output"
 )
 
 var (
 	dataSrc  db.Source
 	srcLocal bool // 当前源为本地 SQLite(错误提示文案分流)
+
+	// srcProduct 数据源所属产品："gp" = TOP GP 的本地字典库，"t100" = 其余(本地镜像/远程直查)。
+	// 只有少数文案与类别码表要按产品分流,所以用状态而不是给每条命令加参数。
+	srcProduct string
 
 	// srcTarget 当前数据源的"落脚点"(环境/账号/库/路径)—— openQuerySource 时填好,
 	// 由查询命令打进输出信封。它是"我这次到底查的是哪儿"的唯一答案。
@@ -187,6 +191,14 @@ func openLocalSource(env string) error {
 			return localNeedsEnvErr()
 		}
 		resolvedPath, err = resolveDBPath(dbPath)
+	} else if e, ok := gpEnvNamed(env); ok {
+		// TOP GP 的本地字典库由 tt gp sync(或 tt dict db sync)产出，位置在 gp.DictPath。
+		resolvedPath = gp.DictPath(e)
+		if _, statErr := os.Stat(resolvedPath); statErr != nil {
+			return output.Errorf(output.CodeUsage, 2,
+				"环境 %s 还没有本地字典库（%s）。\n先同步一次： tt dict db sync --env %s",
+				env, resolvedPath, env)
+		}
 	} else {
 		resolvedPath, err = resolveDBPathForEnv(env, dbPath)
 	}
@@ -209,12 +221,34 @@ func openLocalSource(env string) error {
 	}
 	dataSrc = database
 	srcLocal = true
+	srcProduct = "gp"
 	return nil
 }
 
-// openRemoteSource 打开指定 SSH 环境的远程库(客户端直连)。
+// gpEnvNamed 按环境名取配置,并判断它是不是 TOP GP 环境。
 //
-// entRaw = 用户显式给的企业编号(--ent);空 = 不按企业解析账号,用账号列表首项。
+// 字典命令只服务 TOP GP,但配置里可能还留着 T100 的条目 —— 那些走旧路径。
+func gpEnvNamed(name string) (config.NamedSsh, bool) {
+	path, err := common.ResolveConfig(true)
+	if err != nil {
+		return config.NamedSsh{}, false
+	}
+	hosts, err := config.LoadHosts(path)
+	if err != nil {
+		return config.NamedSsh{}, false
+	}
+	e := hosts.ByName(name)
+	if e == nil {
+		return config.NamedSsh{}, false
+	}
+	return *e, strings.EqualFold(strings.TrimSpace(e.Product), "gp")
+}
+
+// openRemoteSource 打开指定环境的远程库(客户端直连)。
+//
+// TOP GP 没有"企业 → 账号"这一层:账号就是 hosts.sshs[].db.accounts 的列表首项,
+// 表字典的公司别(zta_file.zta02)也取它 —— 见 live.newLive。entRaw 只在
+// 配置还留着 T100 环境时才有意义, GP 上忽略。
 func openRemoteSource(target, entRaw string) error {
 	path, err := common.ResolveConfig(false)
 	if err != nil {
@@ -234,11 +268,10 @@ func openRemoteSource(target, entRaw string) error {
 	}
 	srcTarget = dbconfig.NewTarget(cc, ref.Name, ref.Env.Host, ref.Env.User, ref.Env.Zone,
 		entRaw, dbconfig.RouteClientDirect)
-	// 用哪个账号由**显式给的企业编号**决定:与 tt debug 同一条规则、同一份快照 —— 见 entacct.go
-	srcNotes = hookEntAccount(cc, ref, config.LocationsAt(path).DataDir(), entRaw)
+	srcNotes = []string{"TOP GP 环境：直查远程库，公司别取连库账号"}
 	if common.Verbose {
-		fmt.Fprintf(os.Stderr, "[dict] 数据源: 远程 %s (账号 %s/%s, %s %s)\n",
-			ref.Name, srcTarget.Account, srcTarget.AccountSource, cc.Type, cc.Address())
+		fmt.Fprintf(os.Stderr, "[dict] 数据源: 远程 %s (账号 %s, %s %s)\n",
+			ref.Name, srcTarget.Account, cc.Type, cc.Address())
 	}
 	l, err := live.Open(context.Background(), *cc)
 	if err != nil {
@@ -246,6 +279,7 @@ func openRemoteSource(target, entRaw string) error {
 	}
 	dataSrc = l
 	srcLocal = false
+	srcProduct = "gp"
 	return nil
 }
 
@@ -312,11 +346,15 @@ func dictCfgPath() string {
 	return path
 }
 
-// dictDBSyncTarget 某环境本地库的写侧目标：<该环境的库目录>/<环境>.db；
-// -d/--db 或 TDICT_DB 显式给了就写那里。
+// dictDBSyncTarget 某环境本地库的写侧目标：TOP GP 环境写 gp.DictPath；
+// 其余（配置里遗留的 T100 条目）写 <该环境的库目录>/<环境>.db；-d/--db 或 TDICT_DB 显式给了就写那里。
 func dictDBSyncTarget(env string) string {
 	if p := strings.TrimSpace(dbPath); p != "" {
 		return config.AbsPath(p)
 	}
+	if e, ok := gpEnvNamed(env); ok {
+		return gp.DictPath(e)
+	}
 	return config.DictDBPathForEnv(dictCfgPath(), env)
 }
+

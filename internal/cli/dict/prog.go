@@ -143,6 +143,15 @@ func runProgDetail(code string) error {
 		fmt.Println("未找到程序/作业/元件 '" + code + "' 的登记；但 gzdg_t 有用表索引：")
 		return printProgTables(code, true)
 	}
+	// 作用说明（GP 的 gaz04）可能是上千字的作业说明，一份 JSON 里塞几段就把
+	// 别的字段挤出视野。摘要视图截到 160 字，--full 收回全文。
+	memoNote := ""
+	if info.Memo != "" && !dictFull {
+		if r := []rune(info.Memo); len(r) > 160 {
+			info.Memo = strings.TrimSpace(string(r[:160])) + " …"
+			memoNote = "作用说明已截断（--full 看全文）"
+		}
+	}
 	if Format() != output.FormatTable {
 		jobs, jerr := GetDB().QueryProgJobs(code, progLang)
 		if jerr != nil && !db.IsMissingTable(jerr) {
@@ -153,11 +162,17 @@ func runProgDetail(code string) error {
 			return terr
 		}
 		notes := []string{progBatchTip}
+		if memoNote != "" {
+			notes = append(notes, memoNote)
+		}
+		if srcProduct == "gp" && len(jobs) == 1 && jobs[0].JobCode == info.Code {
+			notes = append(notes, "TOP GP 的程序登记表本身就是作业表：作业 = 程序，没有独立的作业实体")
+		}
 		if len(jobs) == 0 && !info.IsJob {
 			notes = append(notes, "程序存在，但没有作业登记（不是 NOT_FOUND）")
 		}
 		if len(tables) == 0 {
-			notes = append(notes, "gzdg_t 没有该程序的用表登记（可能只用了动态 SQL）")
+			notes = append(notes, tableEmptyNote())
 		}
 		item := map[string]any{"程序": info, "作业": jobs, "表格": tables}
 		if err := shapeProgTables(item); err != nil {
@@ -514,7 +529,7 @@ func printProgInfo(p *db.ProgInfo) {
 	}
 	parts := make([]string, 0, 5)
 	if p.Category != "" {
-		parts = append(parts, "程序类别: "+p.Category+categoryLabel(p.Category))
+		parts = append(parts, "程序类别: "+p.Category+catLabel(p))
 	}
 	if p.Module != "" {
 		parts = append(parts, "归属模块: "+p.Module)
@@ -534,6 +549,34 @@ func printProgInfo(p *db.ProgInfo) {
 	if p.RunCmd != "" {
 		fmt.Printf("系统运行指令: %s\n", p.RunCmd)
 	}
+	if p.Memo != "" {
+		fmt.Printf("作用说明: %s\n", p.Memo)
+	}
+	if p.TableCount > 0 {
+		fmt.Printf("表格总数: %d\n", p.TableCount)
+	}
+}
+
+// catLabel 程序类别码的中文补充。数据源给了名字就用它的 —— TOP GP 的 M/T 与 T100
+// 同码不同义(M 在 GP 是"目录程式"、在 T100 是"主档维护")，不能共用一张码表；
+// 没给名字的(T100 各源)仍按编号第 4 码的约定翻译。
+func catLabel(p *db.ProgInfo) string {
+	if p.CategoryName != "" {
+		return "(" + p.CategoryName + ")"
+	}
+	if name := categoryLabel(p.Category); name != "" {
+		return "(" + name + ")"
+	}
+	return ""
+}
+
+// tableEmptyNote 程序查到了、但用表索引为空的说明。两边的索引来源不同，
+// 所以要分开讲：GP 是扫 4GL 源码生成、报表与批处理常常没有；T100 是 gzdg_t。
+func tableEmptyNote() string {
+	if srcProduct == "gp" {
+		return "zr_file 没有该程序的用表记录（GP 的用表索引由 p_get_zr 扫 4GL 源码生成，报表/批处理常常没有）"
+	}
+	return "gzdg_t 没有该程序的用表登记（可能只用了动态 SQL）"
 }
 
 // runProgList 列表模式:列出/搜索程序(附各自的作业数)。
@@ -575,27 +618,11 @@ func runProgList() error {
 	return nil
 }
 
-// categoryLabel 程序类别码的中文补充(取 T100 程序编号第 4 码的类别约定)。
-// 注意 ERP 里存的是大写(gzza002='I'),这里统一转小写再比——否则注解永远不出现。
+// categoryLabel 程序类别码的中文名（不含括号，调用方自己加）。码表在
+// db.CategoryName（TOP GP 的口径：M 目录程式 / I 建档维护 / U 公用程式 /
+// P 处理类 / R 报表类 / Q 查询 / T 异动单据 / S 设定 / O 其他）。
 func categoryLabel(code string) string {
-	switch strings.ToLower(code) {
-	case "i":
-		return "(基本资料维护)"
-	case "m":
-		return "(主档维护)"
-	case "t":
-		return "(交易处理)"
-	case "s":
-		return "(参数设定)"
-	case "p":
-		return "(批次处理)"
-	case "q":
-		return "(查询)"
-	case "r":
-		return "(报表)"
-	default:
-		return ""
-	}
+	return db.CategoryName(code)
 }
 
 func orDash(s string) string {

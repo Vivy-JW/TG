@@ -11,6 +11,7 @@ package live
 
 import (
 	"context"
+	"strings"
 
 	"tt/internal/dbconfig"
 	"tt/internal/erpdb"
@@ -21,6 +22,26 @@ import (
 type Live struct {
 	conn erpdb.Connector
 	tun  *sshtun.Tunnel
+	// company 是 GP 的公司别（zta_file.zta02）。GP 的字典没有"企业"这一层，
+	// 公司别就取连库账号——实测一边的 schema DS 对应的账号与公司别都叫 ds。
+	// 表字典按公司别分行存（同一个表名 50 家公司各一行），所以这个值必须带上。
+	company string
+	// owner 是 Oracle 的 schema 名，用于 all_tab_columns / all_constraints
+	// 这类跨 schema 的视图——GP 实例里还有一个 PATCHTEMP 有同名表，不按
+	// owner 过滤会捞到重复行。
+	owner string
+}
+
+// Company 返回该数据源使用的公司别。
+func (l *Live) Company() string { return l.company }
+
+// newLive 从连接配置推出公司别与 schema 名。
+func newLive(c dbconfig.Connection, conn erpdb.Connector, tun *sshtun.Tunnel) *Live {
+	acct := "ds"
+	if len(c.Accounts) > 0 && strings.TrimSpace(c.Accounts[0].Account) != "" {
+		acct = strings.TrimSpace(c.Accounts[0].Account)
+	}
+	return &Live{conn: conn, tun: tun, company: strings.ToLower(acct), owner: strings.ToUpper(acct)}
 }
 
 // Dialect 返回底层连接方言("kingbase"|"oracle")。
@@ -64,11 +85,11 @@ func Open(ctx context.Context, c dbconfig.Connection) (*Live, error) {
 			t.Close()
 			return nil, err
 		}
-		return &Live{conn: conn, tun: t}, nil
+		return newLive(c, conn, t), nil
 	}
 	conn, err := erpdb.Open(ctx, effective)
 	if err != nil {
 		return nil, err
 	}
-	return &Live{conn: conn}, nil
+	return newLive(c, conn, nil), nil
 }

@@ -44,12 +44,13 @@ func TestIsSubSuffix(t *testing.T) {
 	}
 }
 
-// TestCategoryLabel 程序类别码的中文注解:ERP 里存的是大写(gzza002='I'),
-// 大小写都要能注解出来(曾经只认小写,导致 prog 输出里注解永远不出现)。
+// TestCategoryLabel 程序类别码的中文名（TOP GP 口径，来源 p_zz.sdd 的 zz03 定义）。
+// ERP 里存的是大写（zz_file.zz03='I'），大小写都要能翻译出来。
 func TestCategoryLabel(t *testing.T) {
 	cases := map[string]string{
-		"I": "(基本资料维护)", "i": "(基本资料维护)",
-		"M": "(主档维护)", "Q": "(查询)", "R": "(报表)", "P": "(批次处理)",
+		"I": "建档维护", "i": "建档维护",
+		"M": "目录程式", "Q": "查询", "R": "报表类", "P": "处理类",
+		"T": "异动单据", "U": "公用程式", "S": "设定", "O": "其他",
 		"": "", "Z": "",
 	}
 	for in, want := range cases {
