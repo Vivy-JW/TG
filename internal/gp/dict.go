@@ -155,19 +155,27 @@ SELECT g.gaz01, g.gaz03
 // <环境>.db，路径规则只能有一份实现。
 func DictPath(e config.NamedSsh) string { return dictPath(e) }
 
-// Company 返回该 GP 环境的公司别（zta_file.zta02），空 = "ds"。
+// SyncCompany 是本地字典库**固定**取自的据点代号。
 //
-// 为什么不是"账号就是公司别"：GP 一个库里装了几十家公司，字典表按公司别分行
+// ds 是 GP 的系统示范据点：zta_file 里 2,962 张表（另一家 2,902），
+// 表档/字段档最全。字典同步是"把 GP 的表清单抄一份到本地"，抄哪一份都行，
+// 但要**确定**是同一份 —— 所以写死，不跟配置里的营运据点联动。
+// 直查（dict r.t --env <环境>）才按营运据点选 schema。
+const SyncCompany = "ds"
+
+// Company 返回该 GP 环境直查时用的营运据点代号（zta_file.zta02），空 = "ds"。
+//
+// 为什么不是"账号就是据点"：GP 一个库里装了几十家公司，字典表按据点代号分行
 // 存；连库账号只决定以谁的身份登录。本项目这套库里账号叫 digiwin，而
 // zta02='ds' 有 2,962 张表、'digiwin' 只有 2,902 张 —— 混着用就会出现
 // "本地查得到、远程说表不存在"，表格总数也对不上。
 //
-// 同步与查库共用这一个函数，是"两边同一套口径"的唯一保证。
+// 只用于直查；本地字典库的同步固定用 SyncCompany。
 func Company(e config.NamedSsh) string {
 	if s := strings.ToLower(strings.TrimSpace(e.Company)); s != "" {
 		return s
 	}
-	return "ds"
+	return SyncCompany
 }
 
 // dictPath 本地字典库路径。环境可单独指定 DictDir，否则落在 gp 数据目录下。
@@ -284,9 +292,11 @@ func (s *Service) runSync(env config.NamedSsh) {
 	}
 
 	s.progress(env.Name, "连接 "+env.DB.Host+":"+fmt.Sprint(env.DB.Port)+"/"+env.DB.Service+" …")
-	// 公司别按配置走（空 = ds），schema 名是它的大写形式：ds ↔ DS。
-	// 这里不能用连库账号推 —— 账号与公司别在 GP 里是两件事。
-	lib := Company(env)
+	// 本地字典库**固定按 ds 取**（用户 2026-11-10 定调）：ds 是系统示范据点，
+	// 表档最全（2,962 张），拿来当"查得到 GP 有哪些表"的底库。这是常量，
+	// 不看配置里的营运据点 —— 营运据点只决定**直查**连哪个 schema。
+	// 想换底库就改这一行，不要接到 Company(env) 上。
+	lib := SyncCompany
 	owner := strings.ToUpper(lib)
 
 	oc, err := sql.Open("oracle", gpDSN(env.DB, account, password))
@@ -301,7 +311,7 @@ func (s *Service) runSync(env config.NamedSsh) {
 		fail(fmt.Errorf("连不上数据库：%w", err))
 		return
 	}
-	s.progress(env.Name, "已连上（账号 "+account+"，公司别 "+lib+"）")
+	s.progress(env.Name, "已连上（账号 "+account+"，字典据点 "+lib+"）")
 
 	// 表字典
 	tables := map[string]struct{ module, cn string }{}
@@ -561,7 +571,7 @@ func (s *Service) runSync(env config.NamedSsh) {
 		_, _ = tx.Exec(`INSERT OR REPLACE INTO meta(key,value) VALUES('indexes', ?)`, fmt.Sprint(len(indexes)))
 		_, _ = tx.Exec(`INSERT OR REPLACE INTO meta(key,value) VALUES('constraints', ?)`, fmt.Sprint(len(constraints)))
 		_, _ = tx.Exec(`INSERT OR REPLACE INTO meta(key,value) VALUES('owner', ?)`, owner)
-		// 这份本地库代表哪个公司别：库文件按环境命名，切了公司别再同步会覆盖同一份文件，
+		// 这份本地库代表哪个字典据点：库文件按环境命名，换据点再同步会覆盖同一份文件，
 		// 所以至少把"它是什么"记下来（tt dict db status / 排障时看 meta）。
 		_, _ = tx.Exec(`INSERT OR REPLACE INTO meta(key,value) VALUES('company', ?)`, lib)
 		_, _ = tx.Exec(`INSERT OR REPLACE INTO meta(key,value) VALUES('tables', ?)`, fmt.Sprint(len(tabs)))

@@ -150,6 +150,8 @@ func (s *Service) serve(w http.ResponseWriter, r *http.Request) {
 		s.hSessionClose(w, r)
 	case r.Method == http.MethodPost && r.URL.Path == "/api/gp/sync":
 		s.hSync(w, r)
+	case r.Method == http.MethodPost && r.URL.Path == "/api/gp/site":
+		s.hSite(w, r)
 	case r.Method == http.MethodPost && r.URL.Path == "/api/gp/mirror":
 		s.hMirror(w, r)
 	case r.Method == http.MethodPost && r.URL.Path == "/api/gp/test":
@@ -275,14 +277,16 @@ func (s *Service) hMeta(w http.ResponseWriter, _ *http.Request) {
 		Instance  string `json:"instance"`
 		Workspace string `json:"workspace"`
 		CustRoot  string `json:"custRoot"`
-		// Company 公司别（zta_file.zta02 / Oracle schema）；空 = "ds"。
-		Company   string         `json:"company"`
-		MirrorDir string         `json:"mirrorDir"`
-		DictDir   string         `json:"dictDir"`
-		DB        map[string]any `json:"db,omitempty"`
-		Mirror    map[string]any `json:"mirror"`
-		Dict      map[string]any `json:"dict"`
-		Job       *Job           `json:"job"`
+		// Company 营运据点代号（zta_file.zta02 / Oracle schema）；空 = "ds"。
+		Company string `json:"company"`
+		// CompanyName 营运据点名字（azp_file.azp02），「从服务器刷新」时抄下来。
+		CompanyName string         `json:"companyName"`
+		MirrorDir   string         `json:"mirrorDir"`
+		DictDir     string         `json:"dictDir"`
+		DB          map[string]any `json:"db,omitempty"`
+		Mirror      map[string]any `json:"mirror"`
+		Dict        map[string]any `json:"dict"`
+		Job         *Job           `json:"job"`
 	}
 	out := make([]envView, 0, len(envs))
 	for _, e := range envs {
@@ -322,7 +326,8 @@ func (s *Service) hMeta(w http.ResponseWriter, _ *http.Request) {
 		out = append(out, envView{
 			Name: e.Name, Host: e.Host, Port: e.Port, User: e.User,
 			Password: e.Password, HasPwd: e.Password != "",
-			Instance: inst, Workspace: e.Workspace, CustRoot: e.CustRoot, Company: e.Company, MirrorDir: e.MirrorDir,
+			Instance: inst, Workspace: e.Workspace, CustRoot: e.CustRoot,
+			Company: e.Company, CompanyName: e.CompanyName, MirrorDir: e.MirrorDir,
 			DictDir: e.DictDir,
 			DB:      db, Mirror: mv, Dict: dv, Job: s.job(e.Name),
 		})
@@ -345,19 +350,20 @@ type gpDBPatch struct {
 // gpEnvPatch 是 GP 环境的补丁。只有提交了的键才会被写回；
 // 密码/账号密码为空时按 GP 表单的约定“留空=不改”，不会把已存口令抹掉。
 type gpEnvPatch struct {
-	Name      *string    `json:"name,omitempty"`
-	Host      *string    `json:"host,omitempty"`
-	Port      *int       `json:"port,omitempty"`
-	User      *string    `json:"user,omitempty"`
-	Password  *string    `json:"password,omitempty"`
-	Instance  *string    `json:"instance,omitempty"`
-	Workspace *string    `json:"workspace,omitempty"`
-	CustRoot  *string    `json:"custRoot,omitempty"`
-	Company   *string    `json:"company,omitempty"`
-	MirrorDir *string    `json:"mirrorDir,omitempty"`
-	DictDir   *string    `json:"dictDir,omitempty"`
-	Zone      *string    `json:"zone,omitempty"`
-	DB        *gpDBPatch `json:"db,omitempty"`
+	Name        *string    `json:"name,omitempty"`
+	Host        *string    `json:"host,omitempty"`
+	Port        *int       `json:"port,omitempty"`
+	User        *string    `json:"user,omitempty"`
+	Password    *string    `json:"password,omitempty"`
+	Instance    *string    `json:"instance,omitempty"`
+	Workspace   *string    `json:"workspace,omitempty"`
+	CustRoot    *string    `json:"custRoot,omitempty"`
+	Company     *string    `json:"company,omitempty"`
+	CompanyName *string    `json:"companyName,omitempty"`
+	MirrorDir   *string    `json:"mirrorDir,omitempty"`
+	DictDir     *string    `json:"dictDir,omitempty"`
+	Zone        *string    `json:"zone,omitempty"`
+	DB          *gpDBPatch `json:"db,omitempty"`
 }
 
 // patchFromEnv 是旧版“整条 env”请求的兼容转换：所有字段都算作提交，
@@ -366,7 +372,8 @@ func patchFromEnv(e config.NamedSsh) gpEnvPatch {
 	p := gpEnvPatch{
 		Name: &e.Name, Host: &e.Host, Port: &e.Port, User: &e.User,
 		Workspace: &e.Workspace, CustRoot: &e.CustRoot, Company: &e.Company,
-		MirrorDir: &e.MirrorDir, DictDir: &e.DictDir, Zone: &e.Zone,
+		CompanyName: &e.CompanyName,
+		MirrorDir:   &e.MirrorDir, DictDir: &e.DictDir, Zone: &e.Zone,
 	}
 	// 旧客户端的“整条 env”没有 instance；空值不能当“清空实例”处理，
 	// 否则会把已有的 workspace/custRoot 一起清掉。非空才交给推导。
@@ -422,9 +429,13 @@ func applyEnvPatch(dst *config.NamedSsh, p gpEnvPatch) {
 	if p.CustRoot != nil && p.Instance == nil {
 		dst.CustRoot = strings.TrimSpace(*p.CustRoot)
 	}
-	// 公司别：空 = 回到 "ds"（同步与查库都按它取字典）。
+	// 营运据点：空 = 回到 "ds"（只影响直查；本地字典库同步固定按 ds）。
 	if p.Company != nil {
 		dst.Company = strings.ToLower(strings.TrimSpace(*p.Company))
+	}
+	// 据点名字只是显示用的抄本；随据点一起清空，避免代号换了名字还留着旧的。
+	if p.CompanyName != nil {
+		dst.CompanyName = strings.TrimSpace(*p.CompanyName)
 	}
 	if p.MirrorDir != nil {
 		dst.MirrorDir = strings.TrimSpace(*p.MirrorDir)

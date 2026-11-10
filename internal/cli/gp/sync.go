@@ -66,9 +66,9 @@ Web 的「同步字典」按钮与这条命令走同一段代码、落到同一�
 
 			dict := gp.DictPath(t.env)
 			elapsed := time.Since(started).Round(time.Second)
-			company := gp.Company(t.env)
+			company := gp.SyncCompany
 			if !common.IsJSON() {
-				fmt.Printf("同步完成：%s（公司别 %s，用时 %s）\n", dict, company, elapsed)
+				fmt.Printf("同步完成：%s（字典据点 %s，用时 %s）\n", dict, company, elapsed)
 				return nil
 			}
 			meta := metaNotes(t.meta, "字典库 "+dict)
@@ -78,11 +78,11 @@ Web 的「同步字典」按钮与这条命令走同一段代码、落到同一�
 				Format: common.OutputFormat(),
 				Meta:   meta,
 				Data: map[string]any{
-					"环境":  t.env.Name,
-					"字典库": dict,
-					"公司别": company,
-					"用时":  elapsed.String(),
-					"步骤":  steps,
+					"环境":   t.env.Name,
+					"字典库":  dict,
+					"字典据点": company,
+					"用时":   elapsed.String(),
+					"步骤":   steps,
 				},
 			})
 		},

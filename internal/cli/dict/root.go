@@ -60,7 +60,7 @@ func init() {
 	// --company 是 GP 的公司别(zta_file.zta02 / Oracle schema):"这个库里有几十家公司,
 	// 我这次要看哪一家"。只影响远程直查;同步仍按配置里的公司别(本地 .db 一个环境一份)。
 	Group.PersistentFlags().StringVar(&dictCompany, "company", "",
-		"公司别(zta_file.zta02,如 ds/digiwin):覆盖配置里该环境的值,只对远程直查生效")
+		"营运据点(zta_file.zta02,如 ds/digiwin):覆盖配置里该环境的值,只对远程直查生效")
 
 	// 打开/关闭查询数据源:本地 SQLite(--db/TDICT_DB)或远程库(--env/query.source)。
 	// 不依赖本地字典库的子命令(db/mirror/spill)各自覆盖本钩子。

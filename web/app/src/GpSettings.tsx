@@ -24,8 +24,10 @@ export interface GpEnv {
   instance?: string
   workspace?: string
   custRoot?: string
-  /** 公司别（zta_file.zta02 / Oracle schema）；空 = "ds"。 */
+  /** 营运据点代号（azp_file.azp01 小写 = zta_file.zta02 = Oracle schema）；空 = "ds"。 */
   company?: string
+  /** 营运据点名字（azp_file.azp02），「从服务器刷新」时抄下来，只是显示用。 */
+  companyName?: string
   mirrorDir?: string
   dictDir?: string
   db?: { type?: string; host?: string; port?: number; sid?: string; service?: string; accounts?: DbAcc[] }
@@ -45,6 +47,7 @@ interface GpEnvPatch {
   workspace?: string
   custRoot?: string
   company?: string
+  companyName?: string
   mirrorDir?: string
   dictDir?: string
   db?: {
@@ -62,7 +65,7 @@ const input = 'h-7 w-full min-w-0 text-xs'
 export function emptyGpEnv(): GpEnv {
   return {
     name: '', host: '', port: 22, user: '', hasPassword: false,
-    instance: '', workspace: '', custRoot: '', company: '',
+    instance: '', workspace: '', custRoot: '', company: '', companyName: '',
     db: { type: 'oracle', host: '', port: 1521, service: '', accounts: [{ account: '', password: '' }] },
   }
 }
@@ -81,6 +84,7 @@ function envSnapshot(c: GpEnv): string {
     user: (c.user || '').trim(),
     instance: (c.instance || '').trim(),
     company: (c.company || '').trim(),
+    companyName: (c.companyName || '').trim(),
     db: {
       host: (c.db?.host || '').trim(),
       port: c.db?.port ?? 1521,
@@ -108,6 +112,7 @@ function buildEnvPatch(
   if ((c.user || '').trim() !== (b.user || '')) patch.user = (c.user || '').trim()
   if ((c.instance || '').trim() !== (b.instance || '')) patch.instance = (c.instance || '').trim()
   if ((c.company || '').trim() !== (b.company || '')) patch.company = (c.company || '').trim()
+  if ((c.companyName || '').trim() !== (b.companyName || '')) patch.companyName = (c.companyName || '').trim()
 
   const bdb = b.db || {}
   const db: NonNullable<GpEnvPatch['db']> = {}
@@ -168,7 +173,7 @@ export function GpSites({ only, create, initial, onSaved, onDiscard, onDraftChan
 }) {
   const g = useGp()
   const toast = useToast()
-  const [tab, setTab] = useState<'ssh' | 'db'>('ssh')
+  const [tab, setTab] = useState<'ssh' | 'db' | 'site'>('ssh')
   const [cur, setCur] = useState<GpEnv | null>(create ? (initial ?? emptyEnv()) : null)
   const [pwd, setPwd] = useState('')
   const [dbPwd, setDbPwd] = useState('')
@@ -177,6 +182,9 @@ export function GpSites({ only, create, initial, onSaved, onDiscard, onDraftChan
   const [msg, setMsg] = useState('')
   const [busy, setBusy] = useState(false)
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
+  // 营运据点：从服务器抄 azp_file 的结果与忙状态。
+  const [siteBusy, setSiteBusy] = useState(false)
+  const [siteMsg, setSiteMsg] = useState('')
   const [test, setTest] = useState<{ ssh?: { ok: boolean; msg: string }; db?: { ok: boolean; msg: string } } | null>(null)
 
   // 基线 = 上一次读入/保存成功时的“表单值”（不含密码）；脏 = 碰过且与基线不同。
@@ -424,6 +432,30 @@ export function GpSites({ only, create, initial, onSaved, onDiscard, onDraftChan
     } catch (e) { setMsg('测试失败：' + String(e)) } finally { setBusy(false) }
   }
 
+  // 「从服务器刷新」：连库读 azp_file（固定 ds schema），按代号取名字。
+  // 只读不写：拿到结果后走同一个补丁保存，写回 config.json 的 company/companyName。
+  const refreshSite = async () => {
+    if (!cur) return
+    const code = (cur.company || '').trim()
+    if (!code) { setSiteMsg('先填营运据点代号，再从服务器刷新'); return }
+    setSiteBusy(true); setSiteMsg('')
+    try {
+      const r = await g.call('/api/gp/site', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ env: cur.name, code }),
+      })
+      if (!r.ok) { setSiteMsg(r.error || '查询失败'); return }
+      if (!r.found) {
+        setSiteMsg(`azp_file 里没有「${code}」；系统库（如 ds）可以只填代号，名字留空`)
+        return
+      }
+      patch({ company: r.code, companyName: r.name })
+      setSiteMsg(`已取到：${r.code} · ${r.name}`)
+    } catch (e) {
+      setSiteMsg('查询失败：' + String(e))
+    } finally { setSiteBusy(false) }
+  }
+
   if (!cur) return null
   const acc = cur.db?.accounts?.[0]
 
@@ -431,17 +463,18 @@ export function GpSites({ only, create, initial, onSaved, onDiscard, onDraftChan
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="mb-3 flex items-center gap-2">
         <span className="rounded-[3px] bg-primary/15 px-1.5 py-0.5 text-[10px] font-semibold text-primary">TOP GP</span>
-        <span className="text-[11px] text-muted-foreground">TOP GP 没有 ENT；填实例名即可，$TOP / $CUST 由后台推导。</span>
+        <span className="text-[11px] text-muted-foreground">TOP GP 没有 ENT；填实例名即可，$TOP / $CUST 由后台推导；营运据点在单独页签里选。</span>
         {saveState !== 'idle' && (
           <span className="ml-auto text-[11px] text-muted-foreground">{saveState === 'saving' ? '保存中…' : '已保存'}</span>
         )}
       </div>
 
-      <Tabs value={tab} onValueChange={(v) => setTab(v as 'ssh' | 'db')} className="flex min-h-0 flex-1 flex-col">
+      <Tabs value={tab} onValueChange={(v) => setTab(v as 'ssh' | 'db' | 'site')} className="flex min-h-0 flex-1 flex-col">
         <div className="flex items-center gap-2">
           <TabsList>
             <TabsTrigger value="ssh">SSH 服务器</TabsTrigger>
             <TabsTrigger value="db">数据库</TabsTrigger>
+            <TabsTrigger value="site">营运据点</TabsTrigger>
           </TabsList>
           <span className="ml-auto flex items-center gap-2">
             <Button variant="ghost" size="sm" title={create ? '复制当前草稿（只改本地表单）' : '复制该环境（整份抄一份，名称自动加 -copy）'}
@@ -512,13 +545,6 @@ export function GpSites({ only, create, initial, onSaved, onDiscard, onDraftChan
               <Input className={input} value={cur.db?.service || ''} placeholder="如 toptest"
                 onChange={(e) => patch({ db: { ...(cur.db || {}), service: e.target.value } })} />
             </Field>
-            <Field label="公司别">
-              <Input className={input} value={cur.company || ''} placeholder="ds"
-                onChange={(e) => patch({ company: e.target.value })} />
-              <span className="mt-1 block text-[10px] leading-relaxed text-muted-foreground/80">
-                {`字典同步与实际查库都按它取（zta_file.zta02，也就是 Oracle schema）；留空 = ds`}
-              </span>
-            </Field>
             <Field label="数据库账号">
               <Input className={input} value={acc?.account || ''} placeholder="ds"
                 onChange={(e) => patch({ db: { ...(cur.db || {}), accounts: [{ account: e.target.value, password: dbPwd || undefined }] } })} />
@@ -535,6 +561,38 @@ export function GpSites({ only, create, initial, onSaved, onDiscard, onDraftChan
                 </button>
               </div>
             </Field>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="site" forceMount className="mt-3 min-h-0 flex-1 overflow-auto data-[state=inactive]:hidden">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+            <Field label="营运据点">
+              <Input className={input} value={cur.company || ''} placeholder="ds"
+                onChange={(e) => patch({ company: e.target.value })} />
+              <span className="mt-1 block text-[10px] leading-relaxed text-muted-foreground/80">
+                {`代号（azp_file.azp01，小写即 zta_file.zta02 / Oracle schema）；留空 = ds`}
+              </span>
+            </Field>
+            <Field label="营运据点名字">
+              <Input className={input} value={cur.companyName || ''} placeholder="点右边「从服务器刷新」取"
+                onChange={(e) => patch({ companyName: e.target.value })} />
+              <span className="mt-1 block text-[10px] leading-relaxed text-muted-foreground/80">
+                从 azp_file 抄下来的名字，只是显示用
+              </span>
+            </Field>
+            <div className="col-span-2 flex items-center gap-2">
+              <Button size="sm" variant="outline" disabled={siteBusy}
+                title="连库查 azp_file（固定读 ds 这个系统库），用左边的代号取据点名字；只读，不改服务器上的任何东西。系统库（如 ds）在 azp_file 里没有，会提示「没有这个据点」，此时只填代号、名字留空即可。"
+                onClick={() => void refreshSite()}>
+                {siteBusy ? '查询中…' : '从服务器刷新'}
+              </Button>
+              {siteMsg && <span className="text-[11px] text-muted-foreground">{siteMsg}</span>}
+            </div>
+            <div className="col-span-2 rounded-[3px] border border-border/60 bg-muted/30 px-2 py-1.5 text-[10px] leading-relaxed text-muted-foreground">
+              直查（dict r.t / prog / msg 等）按这里的据点选 schema 与字典行；
+              <b className="text-foreground/80">本地字典同步固定按 ds 取</b>（ds 表档最全，2,962 张），
+              与这里填什么无关 —— 所以本地查得到、远程查不到时，先看据点填得对不对。
+            </div>
           </div>
         </TabsContent>
 

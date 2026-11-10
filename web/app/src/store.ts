@@ -26,6 +26,10 @@ export interface GpEnvBrief {
   instance?: string
   workspace?: string
   custRoot?: string
+  /** 营运据点代号（zta_file.zta02 / Oracle schema）；空 = ds。直查按它取，同步固定按 ds。 */
+  company?: string
+  /** 营运据点名字（azp_file.azp02），从服务器刷新时抄下来。 */
+  companyName?: string
   mirrorDir?: string
   db?: { type?: string; host?: string; port?: number; sid?: string; accounts?: { account: string }[] }
   dict?: { exists?: boolean; sizeMB?: number }

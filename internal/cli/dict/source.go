@@ -273,9 +273,9 @@ func openRemoteSource(target, entRaw string) error {
 	}
 	srcTarget = dbconfig.NewTarget(cc, ref.Name, ref.Env.Host, ref.Env.User, ref.Env.Zone,
 		entRaw, dbconfig.RouteClientDirect)
-	srcNotes = []string{"TOP GP 环境：直查远程库，公司别 " + company}
+	srcNotes = []string{"TOP GP 环境：直查远程库，营运据点 " + company}
 	if common.Verbose {
-		fmt.Fprintf(os.Stderr, "[dict] 数据源: 远程 %s (账号 %s, 公司别 %s, %s %s)\n",
+		fmt.Fprintf(os.Stderr, "[dict] 数据源: 远程 %s (账号 %s, 营运据点 %s, %s %s)\n",
 			ref.Name, srcTarget.Account, company, cc.Type, cc.Address())
 	}
 	l, err := live.OpenCompany(context.Background(), *cc, company)
