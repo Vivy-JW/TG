@@ -29,7 +29,7 @@ go list -f '{{.ImportPath}}|{{join .Imports " "}}' ./internal/... | grep 'tt/int
 | `target` | 会话寻址的目标层：层级定义、选择器解析、契约表、失败信封。全是纯函数——不发请求、不写盘 |
 | `form42f` | `.42f` 编译表单 → 字段表 + 页面布局。纯函数，零 IO |
 | `str42s` | `.42s` 编译字符串表 → 中文标签。纯函数，零 IO |
-| `dict/db` | 本地 SQLite 字典查询 + `Source` 接口 + ACC 元模型 |
+| `dict/db` | 本地 SQLite 字典查询 + `Source` 接口（GP 的 `t_*` 表） |
 | `dev/fgl` | 4GL 源码结构：分块、语义 |
 | `dev/model` | tzc 领域模型 Region / Document / EnvContext + 行号定位 |
 | `dev/tapfile` | TAP 文件的 CDATA 感知、字节保真改写 |
@@ -47,7 +47,7 @@ go list -f '{{.ImportPath}}|{{join .Imports " "}}' ./internal/... | grep 'tt/int
 | `erpdb` | 客户端直连库封装：Oracle / 金仓，一个接口两个实现 |
 | `screen` | `.42f` 布局 + `.42s` 标签 → 前端画面模型 |
 
-### L2 · 共享服务（13 个）
+### L2 · 共享服务（16 个）
 
 | 包 | 只该管这些 |
 |---|---|
@@ -56,7 +56,10 @@ go list -f '{{.ImportPath}}|{{join .Imports " "}}' ./internal/... | grep 'tt/int
 | `designer` | 从设计器 `sites.xml` 只读导入环境站点 |
 | `update` | tt 自身更新：查新版、下载校验、交棒给脱离进程；外加「技能树一致性」检查 |
 | `testkit` | 跨包测试辅助：语料发现、stdout 捕获、flag 重置、仓库本体定位 |
-| `dict/dbsync` | 远程字典表 → 本地 SQLite 同步 |
+| `dict/dbsync` | GP 字典同步引擎：连 Oracle 读 zta/gat/gaq/all_*/gaz/zz/zr/ze，投影成本地 SQLite 的 `t_*` 表（临时库 + 原子替换）|
+| `dict` | GP 字典层的对外面：`DictPath`/`Company`、`Site`/`ResolveSchema`、`QryDef.BuildSQL`、`LookupModule`、`SyncEnv` |
+| `mirror` | 4GL 源码镜像：服务器侧 `find` 清单、增量判定、`pruneStale`、`manifest.json` |
+| `gpsession` | GP 调试的 pty 会话：登录选实例 → `r.d2` → 等 `(fgldb) `→ `info line main`；`Manager` 管多会话 |
 | `dict/live` | 远程 ERP 库（Oracle / 金仓）直查，实现 `dict/db` 的 `Source` 接口 |
 | `dev/store` | 工作区落盘：manifest、基线、原子写、锁 |
 | `dev/split` | Document' → TapOp + TglPatch 的写回计划 |
@@ -70,9 +73,9 @@ go list -f '{{.ImportPath}}|{{join .Imports " "}}' ./internal/... | grep 'tt/int
 | 包 | 只该管这些 |
 |---|---|
 | `debug` | 调试子系统：会话、断点、执行日志、企业快照、源码镜像；外加 HTTP+WS 服务（`api.go`）与只读 SQL |
-| `dict/server` | 字典侧 REST：源码镜像拉取、字典同步 |
+| `dict/server` | 字典侧 REST：字典同步 / 本地库状态（源码镜像已改由 `/api/gp/mirror` 走 `internal/mirror`） |
 | `dev/verify` | 三道闸门 + 不变量 I1–I15 |
-| `web` | 统一本地服务的 HTTP 层：REST/WS 路由、嵌 SPA、设置页后端 |
+| `web` | 统一本地服务的 HTTP 层：REST/WS 路由、嵌 SPA、设置页后端；`gpapi.go` 是 `/api/gp/*`（meta/env/test/site/mirror/sync/会话）；`jobs` 是统一的 job 注册表 |
 | `cli/file` | 服务器文件命令组：只读看/取文件 + 离线镜像管理 |
 | `cli/interfacecmd` | `tt interface`：42f + 42s → 画面 |
 | `cli/outline` | `tt outline`：4GL → 块树 |
@@ -85,7 +88,8 @@ go list -f '{{.ImportPath}}|{{join .Imports " "}}' ./internal/... | grep 'tt/int
 | `cli/at` | `--at` 文法、作用域表、`--at-list` |
 | `debugclient` | 调试面 REST 的**唯一客户端** |
 | `cli/dev/tzc` | `tt dev tzc` 八个动词 + uuid 生成 + 31 项对抗自检 |
-| `cli/dict` | `tt dict` 命令组：表 / 字段 / 校验 / 开窗 / 消息 / 参数 / ACC 查询 + 字典库运维 |
+| `cli/dict` | `tt dict` 命令组：表 / 程序 / 消息 / 开窗（r.q）+ 字典库运维 |
+| `cli/gp` | `tt gp` 与顶层 `tt site`：直查表/程序/消息、GP 字典同步、营运据点清单 |
 | `cli/db` | `tt db`：本机 ping / 服务器 probe / 只读 SQL |
 | `cli/dev` | `tt dev` 分发（tzc / tzs 两条线） |
 | `cli/session` | `tt session` 命令组 |
