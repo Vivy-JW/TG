@@ -645,11 +645,6 @@ export function GpSites({ only, create, initial, onSaved, onDiscard, onDraftChan
             </div>
           )}
           {siteMsg && <p className="text-[11px] text-muted-foreground">{siteMsg}</p>}
-          <p className="text-[11px] leading-relaxed text-muted-foreground">
-            直查（<span className="font-mono">dict r.t / prog / msg</span>）按选中的据点取 schema 与字典行；
-            <b className="text-foreground/80">本地字典同步固定按 ds 取</b>，与这里选哪个无关。
-            代号写错不报错、只是查出来空 —— 拿不准就点「从服务器刷新」看名字。
-          </p>
         </TabsContent>
 
         <div className="mt-3 flex items-center gap-2">
