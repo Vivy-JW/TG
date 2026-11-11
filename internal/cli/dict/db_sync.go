@@ -1,6 +1,7 @@
 package dict
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"time"
@@ -8,7 +9,6 @@ import (
 	"tt/internal/cli/common"
 	"tt/internal/config"
 	dictlib "tt/internal/dict"
-	"tt/internal/gp"
 
 	"github.com/spf13/cobra"
 )
@@ -42,21 +42,23 @@ func init() {
 	dbCmd.AddCommand(dbSyncCmd)
 }
 
-// runGPSync 用 gp.Service 重建 TOP GP 的本地字典库（写 dictlib.DictPath）。
+// runGPSync 重建 TOP GP 的本地字典库（写 dictlib.DictPath）。
 //
-// 进度由 sync 的 job 回调给出；人类模式打到 stderr，JSON 模式整包返回。
+// 与 Web 的「同步字典」按钮同一个入口（dictlib.SyncEnv），只是没有 job 包装：
+// 进度直接打到 stderr，JSON 模式整包返回。
 func runGPSync(env config.NamedSsh) error {
 	jsonOut := common.IsJSON()
-	svc := gp.New(dictCfgPath())
 	fmt.Fprintf(os.Stderr, "正在从 TOP GP 拉取字典数据 (环境: %s) -> %s\n", env.Name, dictlib.DictPath(env))
 	start := time.Now()
 	steps := []string{}
-	err := svc.Sync(env, func(msg string) {
+	ctx, cancel := context.WithTimeout(context.Background(), dictlib.SyncTimeout)
+	defer cancel()
+	_, err := dictlib.SyncEnv(ctx, env, func(msg string) {
 		steps = append(steps, msg)
 		if !jsonOut {
 			fmt.Fprintln(os.Stderr, "  "+msg)
 		}
-	})
+	}, nil)
 	if err != nil {
 		return fmt.Errorf("同步 GP 字典失败: %w", err)
 	}

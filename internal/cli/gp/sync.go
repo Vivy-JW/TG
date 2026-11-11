@@ -1,6 +1,7 @@
 package gp
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"time"
@@ -8,8 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"tt/internal/cli/common"
-	 dictlib "tt/internal/dict"
-	"tt/internal/gp"
+	dictlib "tt/internal/dict"
 	"tt/internal/output"
 )
 
@@ -46,21 +46,17 @@ Web 的「同步字典」按钮与这条命令走同一段代码、落到同一�
 				return envErr(t, "DB", 2, "环境 %q 没有配置数据库连接", t.env.Name).
 					WithHint("在设置 → 站点管理 → 数据库里配置该环境的 Oracle 连接")
 			}
-			path, err := common.ResolveConfig(false)
-			if err != nil {
-				return err
-			}
-
 			started := time.Now()
 			var steps []string
-			svc := gp.New(path)
-			err = svc.Sync(t.env, func(msg string) {
+			ctx, cancel := context.WithTimeout(context.Background(), dictlib.SyncTimeout)
+			defer cancel()
+			_, err = dictlib.SyncEnv(ctx, t.env, func(msg string) {
 				steps = append(steps, msg)
 				if common.IsJSON() {
 					return // JSON 信封里带步骤，不往 stdout 掺进度
 				}
 				fmt.Fprintln(os.Stderr, "  "+msg)
-			})
+			}, nil)
 			if err != nil {
 				return envErr(t, "GP_SYNC", 5, "GP 字典同步失败: %v", err)
 			}

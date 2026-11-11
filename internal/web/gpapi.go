@@ -1,11 +1,18 @@
-// Package gp —— TOP GP 的执行面（Go 实现）。
+package web
+
+// TOP GP 的 HTTP 面：/api/gp/*。
 //
-// 它是「TT 只有一个服务」这件事的第一步：GP 的环境、源码镜像、字典同步与调试会话
-// 都挂在统一服务的 /api/gp/ 下，不再有第二个进程、第二个端口。
+// 这里只做三件事：读配置里的 GP 环境、把请求翻译成执行面的调用、把结果写成 JSON。
+// 每一项的实际实现都在别处：
 //
-// 环境本身住在 config.json 的 hosts.sshs 里（NamedSsh.Product == "gp"），
-// 与 T100 的环境同一份文件、同一个清单 —— 设置页读的是一处，左树读的也是同一处。
-package gp
+//	环境补丁     internal/config（ApplyEnvPatch / MergeTestEnv / RootsForInstance）
+//	源码镜像     internal/mirror（Pull + manifest）
+//	字典同步     internal/dict（SyncEnv → dbsync.Run → SyncGP）
+//	营运据点     internal/dict（ListSites / LookupSite）
+//	调试会话     internal/gpsession（Manager）
+//	后台任务     internal/web/jobs（Registry）
+//
+// 原来这些混在 internal/gp 一个包里（943 行），第③④步拆分后只剩这一层薄面。
 
 import (
 	"context"
@@ -21,23 +28,19 @@ import (
 	"time"
 
 	"tt/internal/config"
-	"tt/internal/dbconfig"
 	dictlib "tt/internal/dict"
 	"tt/internal/dict/dbsync"
 	"tt/internal/dict/live"
 	"tt/internal/envmove"
+	_ "tt/internal/erpdb" // 注册 sql 驱动 "oracle"（go-ora）
 	"tt/internal/gpsession"
 	"tt/internal/host"
 	"tt/internal/mirror"
 	"tt/internal/web/jobs"
 )
 
-// Service 是 /api/gp/ 的处理器。
-//
-// 后台任务（镜像/同步）的进度表与调试会话都不住在这里：
-// 前者是 web 面的事（internal/web/jobs），后者是 pty 生命周期（internal/gpsession）。
-// 这个包只负责环境配置（/api/gp/env、meta、三个连接测试）与路由装配。
-type Service struct {
+// GPAPI 是 /api/gp/ 的处理器。
+type GPAPI struct {
 	cfgPath string
 
 	jobs *jobs.Registry
@@ -53,34 +56,29 @@ type Service struct {
 	sess *gpsession.Manager
 }
 
-// SetReloader 注入配置写入后的重载回调。应在开始服务前调用。
-func (s *Service) SetReloader(f func() error) { s.reload = f }
-
-// New 建一个 GP 服务。cfgPath 是 config.json 的路径（与统一服务同一份）。
-func New(cfgPath string) *Service {
-	return &Service{cfgPath: cfgPath, jobs: jobs.New(), sess: gpsession.NewManager()}
+// NewGPAPI 建一个 GP 处理器。cfgPath 是 config.json 的路径（与统一服务同一份）。
+func NewGPAPI(cfgPath string) *GPAPI {
+	return &GPAPI{cfgPath: cfgPath, jobs: jobs.New(), sess: gpsession.NewManager()}
 }
 
-// job / setJob / progress / progressCount 是给本包内 runMirror、runSync 用的薄壳；
-// 真正的状态机在 internal/web/jobs，这里只保留调用点好读的名字。
-func (s *Service) job(name string) *jobs.Job { return s.jobs.Get(name) }
+// SetReloader 注入配置写入后的重载回调。应在开始服务前调用。
+func (s *GPAPI) SetReloader(f func() error) { s.reload = f }
 
-func (s *Service) setJob(name string, f func(*jobs.Job)) { s.jobs.Update(name, f) }
+func (s *GPAPI) job(name string) *jobs.Job { return s.jobs.Get(name) }
 
-func (s *Service) progress(name, msg string) { s.jobs.Note(name, msg) }
+func (s *GPAPI) setJob(name string, f func(*jobs.Job)) { s.jobs.Update(name, f) }
+
+func (s *GPAPI) progress(name, msg string) { s.jobs.Note(name, msg) }
 
 // progressCount 同时更新“已完成/总数”和一条进度文字；镜像与字典同步共用。
-func (s *Service) progressCount(name string, done, total int, msg string) {
+func (s *GPAPI) progressCount(name string, done, total int, msg string) {
 	s.jobs.Count(name, done, total, msg)
 }
 
-// Handler 返回挂在 /api/gp/ 下的处理器（路径自带 /api/gp 前缀）。
-func (s *Service) Handler() http.Handler { return http.HandlerFunc(s.serve) }
+// ServeHTTP 让 *GPAPI 自己就是个 http.Handler（web.Options.GP 直接收它）。
+func (s *GPAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) { s.serve(w, r) }
 
-// ServeHTTP 让 *Service 自己就是个 http.Handler（web.Options.GP 直接收它）。
-func (s *Service) ServeHTTP(w http.ResponseWriter, r *http.Request) { s.serve(w, r) }
-
-func (s *Service) serve(w http.ResponseWriter, r *http.Request) {
+func (s *GPAPI) serve(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case r.Method == http.MethodGet && r.URL.Path == "/api/gp/meta":
 		s.hMeta(w, r)
@@ -107,14 +105,8 @@ func (s *Service) serve(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func writeJSON(w http.ResponseWriter, code int, v any) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(code)
-	_ = json.NewEncoder(w).Encode(v)
-}
-
 // gpEnvs 取全部 GP 环境。
-func (s *Service) gpEnvs() ([]config.NamedSsh, error) {
+func (s *GPAPI) gpEnvs() ([]config.NamedSsh, error) {
 	h, err := config.LoadHosts(s.cfgPath)
 	if err != nil {
 		return nil, err
@@ -128,47 +120,23 @@ func (s *Service) gpEnvs() ([]config.NamedSsh, error) {
 	return out, nil
 }
 
-// gpInstanceRe 实例名只允许普通路径段，不能带 / 或空格。
-func validGPInstance(inst string) bool {
-	if inst == "" {
-		return false
+// findEnv 按名字取一个 GP 环境（大小写不敏感）。
+func (s *GPAPI) findEnv(name string) (*config.NamedSsh, error) {
+	envs, err := s.gpEnvs()
+	if err != nil {
+		return nil, err
 	}
-	for _, r := range inst {
-		if r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9' || r == '_' || r == '-' || r == '.' {
-			continue
-		}
-		return false
-	}
-	return true
-}
-
-// gpRootsForInstance 实例名 → GP 的 $TOP / $CUST。
-// 现场约定是 /u1/<实例>/tiptop 与 /u1/<实例>/topcust（TOPTEST 即 /u1/toptest/...）。
-func gpRootsForInstance(inst string) (workspace, custRoot string) {
-	inst = strings.TrimSpace(inst)
-	if inst == "" {
-		return "", ""
-	}
-	base := "/u1/" + inst
-	return base + "/tiptop", base + "/topcust"
-}
-
-// gpInstanceFromWorkspace 旧配置里只有 workspace 时，从 /u1/<实例>/tiptop 反推实例名。
-func gpInstanceFromWorkspace(workspace string) string {
-	parts := strings.Split(strings.Trim(strings.TrimSpace(workspace), "/"), "/")
-	for i, p := range parts {
-		if strings.EqualFold(p, "tiptop") && i > 0 {
-			return parts[i-1]
+	want := strings.TrimSpace(name)
+	for i := range envs {
+		if strings.EqualFold(envs[i].Name, want) {
+			return &envs[i], nil
 		}
 	}
-	if len(parts) > 0 {
-		return parts[len(parts)-1]
-	}
-	return ""
+	return nil, fmt.Errorf("环境不存在：%s", want)
 }
 
 // hMeta 环境清单 + 本地状态。只读 manifest/文件状态，不遍历目录、不打开 SQLite。
-func (s *Service) hMeta(w http.ResponseWriter, _ *http.Request) {
+func (s *GPAPI) hMeta(w http.ResponseWriter, _ *http.Request) {
 	envs, err := s.gpEnvs()
 	if err != nil {
 		writeJSON(w, 500, map[string]any{"ok": false, "error": err.Error()})
@@ -230,7 +198,7 @@ func (s *Service) hMeta(w http.ResponseWriter, _ *http.Request) {
 		}
 		inst := e.Instance
 		if inst == "" {
-			inst = gpInstanceFromWorkspace(e.Workspace)
+			inst = config.InstanceFromWorkspace(e.Workspace)
 		}
 		out = append(out, envView{
 			Name: e.Name, Host: e.Host, Port: e.Port, User: e.User,
@@ -244,221 +212,18 @@ func (s *Service) hMeta(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, 200, map[string]any{"ok": true, "envs": out})
 }
 
-// gpDBPatch 是数据库那一节的“只改提交的字段”补丁。
-// 指针字段为 nil = 本次没提交，保留旧值；非 nil 的空串/0 = 明确改成空。
-type gpDBPatch struct {
-	Type        *string            `json:"type,omitempty"`
-	Host        *string            `json:"host,omitempty"`
-	Port        *int               `json:"port,omitempty"`
-	Service     *string            `json:"service,omitempty"`
-	Database    *string            `json:"database,omitempty"`
-	Accounts    *[]dbconfig.DBAcct `json:"accounts,omitempty"`
-	ReadonlySQL *bool              `json:"readonlySql,omitempty"`
-}
-
-// gpEnvPatch 是 GP 环境的补丁。只有提交了的键才会被写回；
-// 密码/账号密码为空时按 GP 表单的约定“留空=不改”，不会把已存口令抹掉。
-type gpEnvPatch struct {
-	Name        *string `json:"name,omitempty"`
-	Host        *string `json:"host,omitempty"`
-	Port        *int    `json:"port,omitempty"`
-	User        *string `json:"user,omitempty"`
-	Password    *string `json:"password,omitempty"`
-	Instance    *string `json:"instance,omitempty"`
-	Workspace   *string `json:"workspace,omitempty"`
-	CustRoot    *string `json:"custRoot,omitempty"`
-	Company     *string `json:"company,omitempty"`
-	CompanyName *string `json:"companyName,omitempty"`
-	// CompanySyncedAt 只在「从服务器刷新」成功后由前端回填，RFC3339。
-	CompanySyncedAt *string    `json:"companySyncedAt,omitempty"`
-	MirrorDir       *string    `json:"mirrorDir,omitempty"`
-	DictDir         *string    `json:"dictDir,omitempty"`
-	Zone            *string    `json:"zone,omitempty"`
-	DB              *gpDBPatch `json:"db,omitempty"`
-}
-
-// patchFromEnv 是旧版“整条 env”请求的兼容转换：所有字段都算作提交，
-// 但空密码仍按“不改”处理，避免老客户端一次保存把口令抹掉。
-func patchFromEnv(e config.NamedSsh) gpEnvPatch {
-	p := gpEnvPatch{
-		Name: &e.Name, Host: &e.Host, Port: &e.Port, User: &e.User,
-		Workspace: &e.Workspace, CustRoot: &e.CustRoot, Company: &e.Company,
-		CompanyName: &e.CompanyName, CompanySyncedAt: &e.CompanySyncedAt,
-		MirrorDir: &e.MirrorDir, DictDir: &e.DictDir, Zone: &e.Zone,
-	}
-	// 旧客户端的“整条 env”没有 instance；空值不能当“清空实例”处理，
-	// 否则会把已有的 workspace/custRoot 一起清掉。非空才交给推导。
-	if e.Instance != "" {
-		p.Instance = &e.Instance
-	}
-	if e.Password != "" {
-		p.Password = &e.Password
-	}
-	if e.DB != nil {
-		p.DB = &gpDBPatch{
-			Type: &e.DB.Type, Host: &e.DB.Host, Port: &e.DB.Port,
-			Service: &e.DB.Service, Database: &e.DB.Database,
-			Accounts: &e.DB.Accounts, ReadonlySQL: e.DB.ReadonlySQL,
-		}
-	}
-	return p
-}
-
-// applyEnvPatch 把补丁合并进 dst。它只碰补丁里出现的字段，
-// 因此“只改主机”不会顺带清掉 service / 密码 / dictDir / mirrorDir。
-func applyEnvPatch(dst *config.NamedSsh, p gpEnvPatch) {
-	if p.Name != nil {
-		dst.Name = strings.TrimSpace(*p.Name)
-	}
-	if p.Host != nil {
-		dst.Host = strings.TrimSpace(*p.Host)
-	}
-	if p.Port != nil {
-		dst.Port = *p.Port
-	}
-	if p.User != nil {
-		dst.User = strings.TrimSpace(*p.User)
-	}
-	// GP 表单：密码留空 = 不改（不是“清空”）。
-	if p.Password != nil && *p.Password != "" {
-		dst.Password = *p.Password
-	}
-	if p.Instance != nil {
-		inst := strings.TrimSpace(*p.Instance)
-		dst.Instance = inst
-		if inst == "" {
-			// 清空实例名 = 不再保留旧实例推导出来的路径，避免旧路径继续生效。
-			dst.Workspace, dst.CustRoot = "", ""
-		} else {
-			dst.Workspace, dst.CustRoot = gpRootsForInstance(inst)
-		}
-	}
-	// 旧客户端（或高级配置）仍可直接给路径；给了 instance 时以 instance 推导为准。
-	if p.Workspace != nil && p.Instance == nil {
-		dst.Workspace = strings.TrimSpace(*p.Workspace)
-	}
-	if p.CustRoot != nil && p.Instance == nil {
-		dst.CustRoot = strings.TrimSpace(*p.CustRoot)
-	}
-	// 营运据点：空 = 回到 "ds"（只影响直查；本地字典库同步固定按 ds）。
-	if p.Company != nil {
-		dst.Company = strings.ToLower(strings.TrimSpace(*p.Company))
-	}
-	// 据点名字只是显示用的抄本；随据点一起清空，避免代号换了名字还留着旧的。
-	if p.CompanyName != nil {
-		dst.CompanyName = strings.TrimSpace(*p.CompanyName)
-	}
-	// 刷新时间原样存（前端给 RFC3339），不裁时区。
-	if p.CompanySyncedAt != nil {
-		dst.CompanySyncedAt = strings.TrimSpace(*p.CompanySyncedAt)
-	}
-	if p.MirrorDir != nil {
-		dst.MirrorDir = strings.TrimSpace(*p.MirrorDir)
-	}
-	if p.DictDir != nil {
-		dst.DictDir = strings.TrimSpace(*p.DictDir)
-	}
-	if p.Zone != nil {
-		dst.Zone = strings.TrimSpace(*p.Zone)
-	}
-	if p.DB != nil {
-		applyGPEnvDB(dst, p.DB)
-	}
-}
-
-// applyGPEnvDB 合并数据库补丁。DB 不存在时新建一节，字段逐个覆盖。
-func applyGPEnvDB(dst *config.NamedSsh, p *gpDBPatch) {
-	if p == nil {
-		return
-	}
-	if dst.DB == nil {
-		dst.DB = &dbconfig.Connection{Type: "oracle", Port: 1521}
-	}
-	if p.Type != nil {
-		dst.DB.Type = strings.TrimSpace(*p.Type)
-	}
-	if p.Host != nil {
-		dst.DB.Host = strings.TrimSpace(*p.Host)
-	}
-	if p.Port != nil {
-		dst.DB.Port = *p.Port
-	}
-	if p.Service != nil {
-		dst.DB.Service = strings.TrimSpace(*p.Service)
-	}
-	if p.Database != nil {
-		dst.DB.Database = strings.TrimSpace(*p.Database)
-	}
-	if p.ReadonlySQL != nil {
-		v := *p.ReadonlySQL
-		dst.DB.ReadonlySQL = &v
-	}
-	if p.Accounts != nil {
-		mergeGPAccounts(dst.DB, *p.Accounts)
-	}
-	if dst.DB.Type == "" {
-		dst.DB.Type = "oracle"
-	}
-}
-
-// mergeGPAccounts 按账号名合并口令：
-//   - 单账号 ↔ 单账号：视为同一条（允许改账号名），空密码沿用旧密码；
-//   - 多账号：同账号更新、空密码保留旧密码，未提交的账号原样保留。
-//
-// 这样 GP 表单只编辑首个账号时，不会把配置里其余账号一起抹掉。
-func mergeGPAccounts(db *dbconfig.Connection, incoming []dbconfig.DBAcct) {
-	if db == nil || len(incoming) == 0 {
-		return
-	}
-	if len(db.Accounts) == 1 && len(incoming) == 1 {
-		a := incoming[0]
-		a.Account = strings.TrimSpace(a.Account)
-		if a.Account == "" {
-			return
-		}
-		if a.Password == "" {
-			a.Password = db.Accounts[0].Password
-		}
-		db.Accounts = []dbconfig.DBAcct{a}
-		return
-	}
-	out := append([]dbconfig.DBAcct(nil), db.Accounts...)
-	for _, in := range incoming {
-		account := strings.TrimSpace(in.Account)
-		if account == "" {
-			continue
-		}
-		found := -1
-		for i := range out {
-			if out[i].Account == account {
-				found = i
-				break
-			}
-		}
-		if found >= 0 {
-			if in.Password == "" {
-				in.Password = out[found].Password
-			}
-			out[found] = dbconfig.DBAcct{Account: account, Password: in.Password}
-			continue
-		}
-		out = append(out, dbconfig.DBAcct{Account: account, Password: in.Password})
-	}
-	db.Accounts = out
-}
-
 // hEnv 保存/删除一个 GP 环境（写回 config.json 的 hosts.sshs）。
 //
 // 保存走补丁语义：请求可带 patch（只改提交字段），也兼容旧版的整条 env。
 // 这样设置页的自动保存只发“这次真正变了的字段”，不会把没碰过的 service、
 // 密码、dictDir、mirrorDir 清掉。
-func (s *Service) hEnv(w http.ResponseWriter, r *http.Request) {
+func (s *GPAPI) hEnv(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Action  string           `json:"action"`
 		Name    string           `json:"name,omitempty"`
 		OldName string           `json:"oldName,omitempty"`
 		Env     *config.NamedSsh `json:"env,omitempty"`
-		Patch   *gpEnvPatch      `json:"patch,omitempty"`
+		Patch   *config.EnvPatch `json:"patch,omitempty"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		writeJSON(w, 400, map[string]any{"ok": false, "error": "请求体不是 JSON: " + err.Error()})
@@ -511,12 +276,12 @@ func (s *Service) hEnv(w http.ResponseWriter, r *http.Request) {
 			return nil
 		}
 
-		var patch gpEnvPatch
+		var patch config.EnvPatch
 		switch {
 		case body.Patch != nil:
 			patch = *body.Patch
 		case body.Env != nil:
-			patch = patchFromEnv(*body.Env)
+			patch = config.PatchFromEnv(*body.Env)
 		default:
 			return fmt.Errorf("保存请求缺少 env 或 patch")
 		}
@@ -555,7 +320,7 @@ func (s *Service) hEnv(w http.ResponseWriter, r *http.Request) {
 				Product:   "gp",
 			}
 		}
-		applyEnvPatch(&env, patch)
+		config.ApplyEnvPatch(&env, patch)
 		// 改名走 oldName：目标名以请求的 name 为准，补丁里的 name 只做兜底。
 		if name != "" {
 			env.Name = name
@@ -573,13 +338,13 @@ func (s *Service) hEnv(w http.ResponseWriter, r *http.Request) {
 		// 实例名是 GP 的唯一入口：路径由它推导，用户不需要手填 $TOP/$CUST。
 		// 旧配置没有 instance 时，从已有 workspace 反推一次，便于平滑迁移。
 		if strings.TrimSpace(env.Instance) == "" {
-			env.Instance = gpInstanceFromWorkspace(env.Workspace)
+			env.Instance = config.InstanceFromWorkspace(env.Workspace)
 		}
 		if env.Instance != "" {
-			if !validGPInstance(env.Instance) {
+			if !config.ValidInstance(env.Instance) {
 				return fmt.Errorf("实例名 %q 不合法：只能包含字母、数字、下划线、点或连字符（如 toptest）", env.Instance)
 			}
-			env.Workspace, env.CustRoot = gpRootsForInstance(env.Instance)
+			env.Workspace, env.CustRoot = config.RootsForInstance(env.Instance)
 		}
 		if strings.TrimSpace(env.Workspace) == "" || strings.TrimSpace(env.CustRoot) == "" {
 			return fmt.Errorf("环境 %q 缺少实例名：填 topprod / toptest / topstd 等，后台会推导 $TOP/$CUST", env.Name)
@@ -611,96 +376,6 @@ func (s *Service) hEnv(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, map[string]any{"ok": true, "name": name})
 }
 
-// mergeTestEnv 把“表单里没填的项”用已保存值补齐，供测试连接使用。
-//
-// 测试连接不是保存：用户可能只改了 DB 主机、口令框留空（表示不改），
-// 这时必须拿已保存的口令去测；否则每次测试都要重新输入密码，且自动保存
-// 清空密码框后测试必然失败（实测）。
-func mergeTestEnv(req, saved config.NamedSsh) config.NamedSsh {
-	env := req
-	if env.Name == "" {
-		env.Name = saved.Name
-	}
-	if env.Password == "" {
-		env.Password = saved.Password
-	}
-	if env.Port == 0 {
-		env.Port = saved.Port
-	}
-	if env.Host == "" {
-		env.Host = saved.Host
-	}
-	if env.User == "" {
-		env.User = saved.User
-	}
-	if env.Instance == "" {
-		env.Instance = saved.Instance
-	}
-	if env.Instance == "" {
-		env.Instance = gpInstanceFromWorkspace(saved.Workspace)
-	}
-	if env.Workspace == "" {
-		env.Workspace = saved.Workspace
-	}
-	if env.CustRoot == "" {
-		env.CustRoot = saved.CustRoot
-	}
-	if env.Company == "" {
-		env.Company = saved.Company
-	}
-	if env.CompanyName == "" {
-		env.CompanyName = saved.CompanyName
-	}
-	if env.Instance != "" {
-		env.Workspace, env.CustRoot = gpRootsForInstance(env.Instance)
-	}
-
-	if env.DB == nil {
-		if saved.DB == nil {
-			return env
-		}
-		db := *saved.DB
-		db.Accounts = append([]dbconfig.DBAcct(nil), saved.DB.Accounts...)
-		env.DB = &db
-		return env
-	}
-
-	db := *env.DB
-	db.Accounts = append([]dbconfig.DBAcct(nil), env.DB.Accounts...)
-	if saved.DB != nil {
-		if db.Type == "" {
-			db.Type = saved.DB.Type
-		}
-		if db.Host == "" {
-			db.Host = saved.DB.Host
-		}
-		if db.Port == 0 {
-			db.Port = saved.DB.Port
-		}
-		if db.Service == "" {
-			db.Service = saved.DB.Service
-		}
-		if db.Database == "" {
-			db.Database = saved.DB.Database
-		}
-	}
-	// 账号：请求没给账号时整组沿用；给了账号但口令为空时按账号名沿用旧口令。
-	if len(db.Accounts) == 0 || strings.TrimSpace(db.Accounts[0].Account) == "" {
-		if saved.DB != nil {
-			db.Accounts = append([]dbconfig.DBAcct(nil), saved.DB.Accounts...)
-		}
-	} else if db.Accounts[0].Password == "" && saved.DB != nil {
-		for _, a := range saved.DB.Accounts {
-			if a.Account == db.Accounts[0].Account {
-				db.Accounts[0].Password = a.Password
-				break
-			}
-		}
-	}
-	env.DB = &db
-	return env
-}
-
 // hTest 按页签分别测，三者互不牵连：
 //
 //	what=ssh  只测 SSH（连得上 + 能开 SFTP + $TOP 存在）
@@ -708,7 +383,7 @@ func mergeTestEnv(req, saved config.NamedSsh) config.NamedSsh {
 //	what=site 只测据点（按据点连库，看 zta_file 有没有这家公司的字典行）
 //
 // what 为空时按老行为把 ssh 和 db 都测一遍（旧前端还在这么调）。
-func (s *Service) hTest(w http.ResponseWriter, r *http.Request) {
+func (s *GPAPI) hTest(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Env  config.NamedSsh `json:"env"`
 		What string          `json:"what"`
@@ -721,7 +396,7 @@ func (s *Service) hTest(w http.ResponseWriter, r *http.Request) {
 	env := body.Env
 	for _, e := range envs {
 		if e.Name == body.Env.Name {
-			env = mergeTestEnv(body.Env, e)
+			env = config.MergeTestEnv(body.Env, e)
 			break
 		}
 	}
@@ -825,8 +500,49 @@ func testSite(ctx context.Context, env config.NamedSsh) map[string]any {
 	return map[string]any{"ok": true, "msg": msg}
 }
 
+// hSite 处理 POST /api/gp/site：
+//
+//	{"env":"22主机"}                → 据点全表（页签打开/刷新时用）
+//	{"env":"22主机","code":"DIGIWIN"} → 按代号取一个
+//
+// 只读：不写配置（回写由前端拿着 code/name 走 /api/gp/env 的补丁保存）。
+func (s *GPAPI) hSite(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		Env  string `json:"env"`
+		Code string `json:"code"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeJSON(w, 400, map[string]any{"ok": false, "error": "请求体不是 JSON"})
+		return
+	}
+	env, err := s.findEnv(body.Env)
+	if err != nil {
+		writeJSON(w, 404, map[string]any{"ok": false, "error": err.Error()})
+		return
+	}
+	if env.DB == nil {
+		writeJSON(w, 400, map[string]any{"ok": false, "error": "这个环境没有配置数据库连接"})
+		return
+	}
+	if strings.TrimSpace(body.Code) == "" {
+		sites, err := dictlib.ListSites(r.Context(), *env.DB)
+		if err != nil {
+			writeJSON(w, 502, map[string]any{"ok": false, "error": err.Error()})
+			return
+		}
+		writeJSON(w, 200, map[string]any{"ok": true, "count": len(sites), "sites": sites})
+		return
+	}
+	site, found, err := dictlib.LookupSite(r.Context(), *env.DB, body.Code)
+	if err != nil {
+		writeJSON(w, 502, map[string]any{"ok": false, "error": err.Error()})
+		return
+	}
+	writeJSON(w, 200, map[string]any{"ok": true, "found": found, "code": site.Code, "name": site.Name, "schema": site.Schema, "hasDB": site.HasDB})
+}
+
 // hMirror 起一轮源码镜像（只拉 *.4gl）。mode=incr 增量，其它当全量。
-func (s *Service) hMirror(w http.ResponseWriter, r *http.Request) {
+func (s *GPAPI) hMirror(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Env  string `json:"env"`
 		Mode string `json:"mode"`
@@ -835,35 +551,22 @@ func (s *Service) hMirror(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 400, map[string]any{"ok": false, "error": "请求体不是 JSON"})
 		return
 	}
-	envs, err := s.gpEnvs()
+	env, err := s.findEnv(body.Env)
 	if err != nil {
-		writeJSON(w, 500, map[string]any{"ok": false, "error": err.Error()})
+		writeJSON(w, 404, map[string]any{"ok": false, "error": err.Error()})
 		return
 	}
-	var env *config.NamedSsh
-	for i := range envs {
-		if envs[i].Name == body.Env {
-			env = &envs[i]
-			break
-		}
-	}
-	if env == nil {
-		writeJSON(w, 404, map[string]any{"ok": false, "error": "环境不存在：" + body.Env})
-		return
-	}
-	if cur := s.job(env.Name); cur.State == "running" {
+	if cur := s.job(env.Name); cur.State == jobs.StateRunning {
 		writeJSON(w, 200, map[string]any{"ok": true, "job": cur})
 		return
 	}
-	s.setJob(env.Name, func(j *jobs.Job) {
-		s.jobs.Start(env.Name, "mirror")
-	})
+	s.jobs.Start(env.Name, "mirror")
 	go s.runMirror(*env, body.Mode)
 	writeJSON(w, 200, map[string]any{"ok": true, "job": s.job(env.Name)})
 }
 
 // hSync 起一轮字典同步（Oracle → 本地 SQLite）。
-func (s *Service) hSync(w http.ResponseWriter, r *http.Request) {
+func (s *GPAPI) hSync(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Env string `json:"env"`
 	}
@@ -871,46 +574,30 @@ func (s *Service) hSync(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 400, map[string]any{"ok": false, "error": "请求体不是 JSON"})
 		return
 	}
-	envs, err := s.gpEnvs()
+	env, err := s.findEnv(body.Env)
 	if err != nil {
-		writeJSON(w, 500, map[string]any{"ok": false, "error": err.Error()})
+		writeJSON(w, 404, map[string]any{"ok": false, "error": err.Error()})
 		return
 	}
-	var env *config.NamedSsh
-	for i := range envs {
-		if envs[i].Name == body.Env {
-			env = &envs[i]
-			break
-		}
-	}
-	if env == nil {
-		writeJSON(w, 404, map[string]any{"ok": false, "error": "环境不存在：" + body.Env})
-		return
-	}
-	if cur := s.job(env.Name); cur.State == "running" {
+	if cur := s.job(env.Name); cur.State == jobs.StateRunning {
 		writeJSON(w, 200, map[string]any{"ok": true, "job": cur})
 		return
 	}
-	s.setJob(env.Name, func(j *jobs.Job) {
-		s.jobs.Start(env.Name, "sync")
-	})
+	s.jobs.Start(env.Name, "sync")
 	go s.runSync(*env)
 	writeJSON(w, 200, map[string]any{"ok": true, "job": s.job(env.Name)})
 }
 
-func (s *Service) runMirror(env config.NamedSsh, mode string) {
-	fail := func(err error) {
-		s.setJob(env.Name, func(j *jobs.Job) {
-			j.State = "error"
-			j.Error = err.Error()
-			j.Ended = time.Now()
-		})
-	}
+func (s *GPAPI) runMirror(env config.NamedSsh, mode string) {
 	out, err := mirror.Pull(env, mode, func(done, total int, msg string) {
 		s.progressCount(env.Name, done, total, msg)
 	})
 	if err != nil {
-		fail(err)
+		s.setJob(env.Name, func(j *jobs.Job) {
+			j.State = jobs.StateError
+			j.Error = err.Error()
+			j.Ended = time.Now()
+		})
 		return
 	}
 	doneBase, totalBase := 0, 0
@@ -925,10 +612,118 @@ func (s *Service) runMirror(env config.NamedSsh, mode string) {
 		}
 	}
 	s.setJob(env.Name, func(j *jobs.Job) {
-		j.State = "done"
+		j.State = jobs.StateDone
 		j.Done = int64(doneBase)
 		j.Total = int64(totalBase)
 		j.Result = out
 		j.Ended = time.Now()
 	})
+}
+
+// runSync 跑一次字典同步，把结果写进 job。实际同步在 internal/dict 的 SyncEnv。
+func (s *GPAPI) runSync(env config.NamedSsh) {
+	ctx, cancel := context.WithTimeout(context.Background(), dictlib.SyncTimeout)
+	defer cancel()
+	st, err := dictlib.SyncEnv(ctx, env,
+		func(msg string) { s.progress(env.Name, msg) },
+		func(done, total int) {
+			s.setJob(env.Name, func(j *jobs.Job) {
+				j.Done = int64(done)
+				j.Total = int64(total)
+			})
+		})
+	s.setJob(env.Name, func(j *jobs.Job) {
+		j.Ended = time.Now()
+		if err != nil {
+			j.State = jobs.StateError
+			j.Error = err.Error()
+			return
+		}
+		j.State = jobs.StateDone
+		j.Done = int64(st.Tables)
+		j.Total = int64(st.Tables)
+		j.Result = map[string]any{
+			"path": st.Path, "tables": st.Tables, "columns": st.Columns,
+			"indexes": st.Indexes, "constraints": st.Constraints,
+			"sizeMB": st.SizeMB, "messages": st.Messages,
+		}
+	})
+}
+
+// ---------------------------------------------------------------- 会话
+
+// hSessionNew 建一条会话：POST {env, prog}。
+func (s *GPAPI) hSessionNew(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		Env  string `json:"env"`
+		Prog string `json:"prog"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeJSON(w, 400, map[string]any{"ok": false, "error": "请求体不是 JSON"})
+		return
+	}
+	if body.Prog == "" {
+		writeJSON(w, 400, map[string]any{"ok": false, "error": "程序编号必填"})
+		return
+	}
+	env, err := s.findEnv(body.Env)
+	if err != nil {
+		writeJSON(w, 404, map[string]any{"ok": false, "error": err.Error()})
+		return
+	}
+	sess, err := s.sess.New(*env, body.Prog)
+	if sess != nil {
+		s.sess.Add(sess)
+	}
+	if err != nil {
+		if sess != nil {
+			writeJSON(w, 200, map[string]any{"ok": false, "error": err.Error(), "session": sess})
+			return
+		}
+		writeJSON(w, 500, map[string]any{"ok": false, "error": err.Error()})
+		return
+	}
+	writeJSON(w, 200, map[string]any{"ok": true, "session": sess})
+}
+
+func (s *GPAPI) hSessionList(w http.ResponseWriter, _ *http.Request) {
+	writeJSON(w, 200, map[string]any{"ok": true, "sessions": s.sess.List()})
+}
+
+// hSessionExec 执行一条 fgldb 命令：POST {id, cmd}。
+func (s *GPAPI) hSessionExec(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		ID  string `json:"id"`
+		Cmd string `json:"cmd"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeJSON(w, 400, map[string]any{"ok": false, "error": "请求体不是 JSON"})
+		return
+	}
+	sess := s.sess.ByID(body.ID)
+	if sess == nil {
+		writeJSON(w, 404, map[string]any{"ok": false, "error": "会话不存在或已关闭"})
+		return
+	}
+	out, err := sess.Exec(body.Cmd, 30*time.Second)
+	res := map[string]any{"ok": err == nil, "output": out, "file": sess.File, "line": sess.Line}
+	if err != nil {
+		res["error"] = err.Error()
+	}
+	writeJSON(w, 200, res)
+}
+
+func (s *GPAPI) hSessionClose(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		ID string `json:"id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeJSON(w, 400, map[string]any{"ok": false, "error": "请求体不是 JSON"})
+		return
+	}
+	if !s.sess.Close(body.ID) {
+		writeJSON(w, 404, map[string]any{"ok": false, "error": "会话不存在"})
+		return
+	}
+	writeJSON(w, 200, map[string]any{"ok": true})
 }

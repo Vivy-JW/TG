@@ -15,7 +15,6 @@ import (
 	"tt/internal/config"
 	"tt/internal/debug"
 	dictserver "tt/internal/dict/server"
-	"tt/internal/gp"
 	"tt/internal/web"
 )
 
@@ -135,7 +134,7 @@ func newServeCmd() *cobra.Command {
 				var once sync.Once
 				stopWeb := func() { once.Do(cancel) }
 
-				gpSvc := gp.New(path)
+				gpSvc := web.NewGPAPI(path)
 				// 与 T100 的 /api/hosts 保存路径一致：GP 环境写入后让调试服务重读。
 				gpSvc.SetReloader(debugSrv.ReloadConfig)
 

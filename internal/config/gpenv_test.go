@@ -1,16 +1,15 @@
-package gp
+package config
 
 import (
 	"testing"
 
-	"tt/internal/config"
 	"tt/internal/dbconfig"
 )
 
-func testGpEnv() config.NamedSsh {
-	return config.NamedSsh{
+func testGpEnv() NamedSsh {
+	return NamedSsh{
 		Name: "TOPTEST",
-		SSHConfig: config.SSHConfig{
+		SSHConfig: SSHConfig{
 			Host: "172.16.1.22", Port: 22, User: "tiptop", Password: "ssh-pwd",
 		},
 		Product:   "gp",
@@ -30,7 +29,7 @@ func strptr(s string) *string { return &s }
 // 只改主机时，service / 密码 / 目录都必须原样保留。
 func TestApplyEnvPatchHostOnlyPreservesEverythingElse(t *testing.T) {
 	env := testGpEnv()
-	applyEnvPatch(&env, gpEnvPatch{Host: strptr("10.0.0.9")})
+	ApplyEnvPatch(&env, EnvPatch{Host: strptr("10.0.0.9")})
 
 	if env.Host != "10.0.0.9" {
 		t.Fatalf("host = %q", env.Host)
@@ -52,7 +51,7 @@ func TestApplyEnvPatchHostOnlyPreservesEverythingElse(t *testing.T) {
 // 表单只提交账号名（密码留空）时，按账号名沿用旧口令；service 不动。
 func TestApplyEnvPatchAccountWithoutPasswordKeepsOld(t *testing.T) {
 	env := testGpEnv()
-	applyEnvPatch(&env, gpEnvPatch{DB: &gpDBPatch{
+	ApplyEnvPatch(&env, EnvPatch{DB: &DBPatch{
 		Host:     strptr("172.16.1.23"),
 		Accounts: &[]dbconfig.DBAcct{{Account: "ds"}},
 	}})
@@ -71,12 +70,12 @@ func TestApplyEnvPatchAccountWithoutPasswordKeepsOld(t *testing.T) {
 // 显式提交新密码才覆盖；只改 service 时密码不动。
 func TestApplyEnvPatchServiceAndPassword(t *testing.T) {
 	env := testGpEnv()
-	applyEnvPatch(&env, gpEnvPatch{DB: &gpDBPatch{Service: strptr("toptest2")}})
+	ApplyEnvPatch(&env, EnvPatch{DB: &DBPatch{Service: strptr("toptest2")}})
 	if env.DB.Service != "toptest2" || env.DB.Accounts[0].Password != "db-pwd" {
 		t.Fatalf("service-only patch: %+v", env.DB)
 	}
 
-	applyEnvPatch(&env, gpEnvPatch{DB: &gpDBPatch{
+	ApplyEnvPatch(&env, EnvPatch{DB: &DBPatch{
 		Accounts: &[]dbconfig.DBAcct{{Account: "ds", Password: "new-pwd"}},
 	}})
 	if env.DB.Accounts[0].Password != "new-pwd" {
@@ -91,7 +90,7 @@ func TestPatchFromEnvBlankPasswordKeepsOld(t *testing.T) {
 	legacy.Password = ""
 	legacy.DB.Accounts = []dbconfig.DBAcct{{Account: "ds"}}
 
-	applyEnvPatch(&env, patchFromEnv(legacy))
+	ApplyEnvPatch(&env, PatchFromEnv(legacy))
 	if env.Password != "ssh-pwd" {
 		t.Fatalf("ssh password lost: %q", env.Password)
 	}
@@ -109,7 +108,7 @@ func TestMergeTestEnvUsesSavedDBPassword(t *testing.T) {
 		Type: "oracle", Host: "172.16.1.23", Port: 1521, Service: "",
 		Accounts: []dbconfig.DBAcct{{Account: "ds"}},
 	}
-	got := mergeTestEnv(req, saved)
+	got := MergeTestEnv(req, saved)
 	if got.Password != "ssh-pwd" {
 		t.Fatalf("ssh password = %q", got.Password)
 	}
@@ -122,16 +121,30 @@ func TestMergeTestEnvUsesSavedDBPassword(t *testing.T) {
 }
 
 // 多账号时只提交首个账号，其余账号与口令不能被抹掉。
-func TestMergeGPAccountsPreservesOtherAccounts(t *testing.T) {
+func TestMergeAccountsPreservesOtherAccounts(t *testing.T) {
 	db := &dbconfig.Connection{Accounts: []dbconfig.DBAcct{
 		{Account: "ds", Password: "ds"},
 		{Account: "dsdata", Password: "dsdata"},
 	}}
-	mergeGPAccounts(db, []dbconfig.DBAcct{{Account: "ds", Password: "new"}})
+	MergeAccounts(db, []dbconfig.DBAcct{{Account: "ds", Password: "new"}})
 	if len(db.Accounts) != 2 {
 		t.Fatalf("accounts = %+v", db.Accounts)
 	}
 	if db.Accounts[0].Password != "new" || db.Accounts[1].Password != "dsdata" {
 		t.Fatalf("accounts = %+v", db.Accounts)
+	}
+}
+
+// 实例名与路径推导：/u1/<实例>/tiptop 与 /u1/<实例>/topcust。
+func TestRootsRoundTrip(t *testing.T) {
+	top, cust := RootsForInstance("toptest")
+	if top != "/u1/toptest/tiptop" || cust != "/u1/toptest/topcust" {
+		t.Fatalf("roots = %q %q", top, cust)
+	}
+	if got := InstanceFromWorkspace(top); got != "toptest" {
+		t.Fatalf("instance = %q", got)
+	}
+	if ValidInstance("top test") || ValidInstance("") {
+		t.Fatalf("ValidInstance 放过了非法实例名")
 	}
 }
