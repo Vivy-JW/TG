@@ -466,16 +466,158 @@ func (l *Live) QueryACCMeta(input, lang string) (*db.ACCMeta, error) { return ni
 func (l *Live) QueryACCValues(category string, ent int, lang string, includeInactive bool) ([]db.ACCValue, error) {
 	return []db.ACCValue{}, nil
 }
+
+// ---- 开窗定义 r.q：GP 用 gab_file + gac_file ----
+//
+// 与 T100 的差别：GP 没有整段 SQL 模板（dzca003），也没有 arg1~9 的参数档（dzcb_t）。
+// 这里只负责把定义读出来；SQL 由命令层按 cl_create_qry() 的规则现拼
+// （见 gp.QryDef.BuildSQL），所以 WinHeaderRow.SQL 留空。
+
+// winLangCode 语系码：0 = 繁中，2 = 简中（gae_file.gae03 / gaq_file.gaq02 同用）。
+func winLangCode(lang string) string { return progNameCol(lang) }
+
+// winTitleExpr 是标题的取法：先看 gae_file 的 wintitle 行，没有就退回
+// lib-213 的消息文案 + 第一张表的 gat03 —— 与 cl_create_qry.4gl 的垫背逻辑一致。
+// codeExpr / custExpr 是外层 gab_file 的代号与客制旗标表达式。
+func winTitleExpr(codeExpr, custExpr, lang string) string {
+	word := "查询"
+	if winLangCode(lang) == "0" {
+		word = "查詢"
+	}
+	return fmt.Sprintf(`TRIM(COALESCE(NULLIF(TRIM(t.gae04), ''),
+		%s || ' ' || (SELECT MAX(gf.gat03) KEEP (DENSE_RANK FIRST ORDER BY gc.gac02)
+		                FROM gac_file gc
+		                JOIN gat_file gf ON TRIM(gf.gat01) = TRIM(gc.gac05) AND gf.gat02 = %s
+		               WHERE TRIM(gc.gac01) = %s
+		                 AND COALESCE(gc.gac12, ' ') = %s
+		                 AND gc.gac05 IS NOT NULL AND TRIM(gc.gac05) <> 'formonly')))`,
+		lit(word), lit(winLangCode(lang)), codeExpr, custExpr)
+}
+
+// QueryWinList 列出全部开窗定义：代号 / 客制旗标 / 标题 / HardCode / 栏位数。
 func (l *Live) QueryWinList(lang, keyword string) ([]db.WinListRow, error) {
-	return []db.WinListRow{}, nil
+	rows, err := l.q(fmt.Sprintf(`
+		SELECT TRIM(b.gab01), TRIM(COALESCE(b.gab11, '')),
+		       %s, TRIM(COALESCE(b.gab07, '')),
+		       (SELECT COUNT(*) FROM gac_file c
+		         WHERE TRIM(c.gac01) = TRIM(b.gab01)
+		           AND COALESCE(c.gac12, ' ') = COALESCE(b.gab11, ' ')
+		           AND c.gac02 <> -1)
+		  FROM gab_file b
+		  LEFT JOIN gae_file t
+		         ON TRIM(t.gae01) = TRIM(b.gab01) AND t.gae02 = 'wintitle'
+		        AND t.gae03 = %s AND COALESCE(t.gae11, ' ') = COALESCE(b.gab11, ' ')
+		 WHERE 1=1%s
+		 ORDER BY TRIM(b.gab01)`,
+		winTitleExpr("TRIM(b.gab01)", "COALESCE(b.gab11, ' ')", lang),
+		lit(winLangCode(lang)), kwWhere("b.gab01", "t.gae04", keyword)))
+	if err != nil {
+		return nil, err
+	}
+	var out []db.WinListRow
+	for _, r := range rows {
+		out = append(out, db.WinListRow{
+			ID:       get(r, 0),
+			Cust:     get(r, 1),
+			Desc:     get(r, 2),
+			HardCode: get(r, 3),
+			ColCount: get(r, 4),
+		})
+	}
+	return out, nil
 }
+
+// QueryWinHeaders 取一条开窗的单头（标准/客制各一行）。
 func (l *Live) QueryWinHeaders(id, lang string) ([]db.WinHeaderRow, error) {
-	return []db.WinHeaderRow{}, nil
+	code := strings.TrimSpace(id)
+	if code == "" {
+		return []db.WinHeaderRow{}, nil
+	}
+	rows, err := l.q(fmt.Sprintf(`
+		SELECT TRIM(b.gab01), TRIM(COALESCE(b.gab11, '')),
+		       TRIM(COALESCE(b.gab02, '')), TRIM(COALESCE(b.gab03, '')),
+		       TRIM(COALESCE(b.gab04, '')), TRIM(COALESCE(b.gab05, '')),
+		       TRIM(COALESCE(b.gab06, '')), TRIM(COALESCE(b.gab07, '')),
+		       TRIM(COALESCE(b.gab08, '')), %s
+		  FROM gab_file b
+		  LEFT JOIN gae_file t
+		         ON TRIM(t.gae01) = TRIM(b.gab01) AND t.gae02 = 'wintitle'
+		        AND t.gae03 = %s AND COALESCE(t.gae11, ' ') = COALESCE(b.gab11, ' ')
+		 WHERE UPPER(TRIM(b.gab01)) = UPPER(%s)
+		 ORDER BY TRIM(COALESCE(b.gab11, ''))`,
+		winTitleExpr("TRIM(b.gab01)", "COALESCE(b.gab11, ' ')", lang),
+		lit(winLangCode(lang)), lit(code)))
+	if err != nil {
+		return nil, err
+	}
+	var out []db.WinHeaderRow
+	for _, r := range rows {
+		out = append(out, db.WinHeaderRow{
+			ID:          get(r, 0),
+			Cust:        get(r, 1),
+			InputWhere:  get(r, 2),
+			JoinTables:  get(r, 3),
+			Distinct:    get(r, 4),
+			ConstrWhere: get(r, 5),
+			Memo:        get(r, 6),
+			HardCode:    get(r, 7),
+			Unlocked:    get(r, 8),
+			Desc:        get(r, 9),
+		})
+	}
+	return out, nil
 }
+
+// QueryWinParams GP 没有参数档（T100 的 dzcb_t 对端），返回空集。
 func (l *Live) QueryWinParams(id, lang string) ([]db.WinParamRow, error) {
 	return []db.WinParamRow{}, nil
 }
-func (l *Live) QueryWinCols(id string) ([]db.WinColRow, error) { return []db.WinColRow{}, nil }
+
+// QueryWinCols 取一条开窗的全部显现栏位：gac_file + gaq_file 显示名 + 列类型。
+func (l *Live) QueryWinCols(id, lang string) ([]db.WinColRow, error) {
+	code := strings.TrimSpace(id)
+	if code == "" {
+		return []db.WinColRow{}, nil
+	}
+	rows, err := l.q(fmt.Sprintf(`
+		SELECT TRIM(COALESCE(g.gac12, '')), TRIM(TO_CHAR(g.gac02)),
+		       TRIM(COALESCE(g.gac06, '')), TRIM(COALESCE(g.gac05, '')),
+		       TRIM(COALESCE(TO_CHAR(g.gac09), '')), TRIM(COALESCE(g.gac10, '')),
+		       TRIM(COALESCE(g.gac07, '')), TRIM(COALESCE(g.gac11, '')),
+		       TRIM(COALESCE(g.gac13, '')), TRIM(COALESCE(g.gac15, '')),
+		       TRIM(COALESCE(q.gaq03, '')), TRIM(COALESCE(c.data_type, ''))
+		  FROM gac_file g
+		  LEFT JOIN gaq_file q
+		         ON TRIM(q.gaq01) = TRIM(g.gac06) AND q.gaq02 = %s
+		  LEFT JOIN all_tab_columns c
+		         ON c.owner = %s AND c.table_name = UPPER(TRIM(g.gac05))
+		        AND c.column_name = UPPER(TRIM(g.gac06))
+		 WHERE UPPER(TRIM(g.gac01)) = UPPER(%s)
+		 ORDER BY g.gac02`,
+		lit(winLangCode(lang)), lit(l.owner), lit(code)))
+	if err != nil {
+		return nil, err
+	}
+	var out []db.WinColRow
+	for _, r := range rows {
+		out = append(out, db.WinColRow{
+			Cust:       get(r, 0),
+			Seq:        get(r, 1),
+			Field:      get(r, 2),
+			Table:      get(r, 3),
+			Width:      get(r, 4),
+			Return:     get(r, 5),
+			Type:       get(r, 6),
+			Outer:      get(r, 7),
+			Constraint: get(r, 8),
+			ConnectTo:  get(r, 9),
+			Label:      get(r, 10),
+			DataType:   get(r, 11),
+		})
+	}
+	return out, nil
+}
+
 func (l *Live) QueryParam(code string) ([]db.ParamDefRow, error) {
 	return []db.ParamDefRow{}, nil
 }

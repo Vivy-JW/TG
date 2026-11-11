@@ -43,7 +43,7 @@ type Source interface {
 	QueryWinList(lang, keyword string) ([]WinListRow, error)
 	QueryWinHeaders(id, lang string) ([]WinHeaderRow, error)
 	QueryWinParams(id, lang string) ([]WinParamRow, error)
-	QueryWinCols(id string) ([]WinColRow, error)
+	QueryWinCols(id, lang string) ([]WinColRow, error)
 	// msg 系统消息档:gzze_t(azzi920 维护;按编号/语句/语言多条件查)+ gzzal_t 作业名称
 	QueryMsgs(q MsgQuery) ([]MsgRow, error)
 	QueryMsgLangs(q MsgQuery) ([]string, error) // 同条件去掉语言:该编号有哪些语言行

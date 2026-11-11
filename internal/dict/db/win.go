@@ -11,6 +11,9 @@ type WinListRow struct {
 	PageSize string // dzca004 每页显现数据笔数
 	HardCode string // dzca006 (Y=hardcode 跳过自动产生)
 	Industry string // dzca007 行业别
+
+	// ColCount TOP GP：gac_file 里这条开窗有几个栏位（T100 不填）。
+	ColCount string
 }
 
 // QueryWinList returns all reusable windows (dzca_t), optionally filtered by
@@ -47,6 +50,8 @@ func (d *DB) QueryWinList(lang, keyword string) ([]WinListRow, error) {
 }
 
 // WinHeaderRow holds a window definition header (dzca_t + dzcal_t).
+//
+// TOP GP 用 gab_file，多出下面五个字段（拼 SQL 用）；T100 查询不填，保持零值。
 type WinHeaderRow struct {
 	ID       string // dzca001
 	Cust     string // dzca002
@@ -58,6 +63,12 @@ type WinHeaderRow struct {
 	Industry string // dzca007
 	Desc     string // dzcal003 (指定语言别)
 	Memo     string // dzcal004
+
+	JoinTables  string // gab03 Joint Tables
+	InputWhere  string // gab02 Input Mode WHERE
+	ConstrWhere string // gab05 Construct Mode WHERE
+	Distinct    string // gab04 Using Unique Setting
+	Unlocked    string // gab08 Detail Records Should Be UnLocked
 }
 
 // QueryWinHeaders returns all header variants (标准/客制) of one window.
@@ -132,6 +143,8 @@ func (d *DB) QueryWinParams(id, lang string) ([]WinParamRow, error) {
 }
 
 // WinColRow holds a display column setting (dzcc_t).
+//
+// TOP GP 用 gac_file，字段全在下面；T100 查询只填上面九个，GP 专有字段保持零值。
 type WinColRow struct {
 	Cust     string // dzcc009
 	Seq      string // dzcc002 显现顺序
@@ -142,10 +155,19 @@ type WinColRow struct {
 	CaseConv string // dzcc006 数据大小写
 	Format   string // dzcc010 显示格式
 	Label    string // dzcc007 画面标签缀字
+
+	Table      string // gac05 Table
+	Width      string // gac09 Width
+	Return     string // gac10 Return (Y=回传给调用程序，也用来定 ORDER BY)
+	Type       string // gac07 Type (0=Edit 1=CheckBox 2=DateEdit 3=ComboBox)
+	Outer      string // gac11 Outer (Y=外连接)
+	Constraint string // gac13 Input Constraint
+	ConnectTo  string // gac15 Connect to (串查的下一段开窗)
+	DataType   string // all_tab_columns.data_type (判断要不要 to_char)
 }
 
 // QueryWinCols returns the display column settings of one window.
-func (d *DB) QueryWinCols(id string) ([]WinColRow, error) {
+func (d *DB) QueryWinCols(id, lang string) ([]WinColRow, error) {
 	query := `
 		SELECT COALESCE(c.dzcc009, ''), c.dzcc002,
 		       COALESCE(c.dzcc003, ''),

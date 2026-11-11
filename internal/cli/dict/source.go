@@ -39,6 +39,10 @@ var (
 	// 只有少数文案与类别码表要按产品分流,所以用状态而不是给每条命令加参数。
 	srcProduct string
 
+	// srcCompany 本次直查的营运据点(资料库编号 = schema)。GP 的开窗定义要拿它
+	// 给拼出来的 SQL 加表名前缀，让人把语句拷出去也能跑。
+	srcCompany string
+
 	// srcTarget 当前数据源的"落脚点"(环境/账号/库/路径)—— openQuerySource 时填好,
 	// 由查询命令打进输出信封。它是"我这次到底查的是哪儿"的唯一答案。
 	srcTarget *dbconfig.Target
@@ -295,6 +299,7 @@ func openRemoteSource(target, entRaw string) error {
 	dataSrc = l
 	srcLocal = false
 	srcProduct = "gp"
+	srcCompany = company
 	return nil
 }
 

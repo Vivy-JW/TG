@@ -2,9 +2,11 @@ package dict
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"tt/internal/dict/db"
+	"tt/internal/gp"
 	"tt/internal/output"
 
 	"github.com/spf13/cobra"
@@ -96,6 +98,9 @@ func runWinList() error {
 		}
 		return err
 	}
+	if srcProduct == "gp" {
+		return printWinListGP(rows)
+	}
 	items := mergeWinList(rows)
 	if len(items) == 0 {
 		fmt.Println(emptyHint("开窗定义"))
@@ -155,12 +160,15 @@ func runWinDetail(id string) error {
 	if len(headers) == 0 {
 		return notFoundErr("开窗定义 %s 不存在", id).WithHint("列出全部开窗定义：tt dict r.q")
 	}
+	if srcProduct == "gp" {
+		return runWinDetailGP(id, headers)
+	}
 
 	params, err := GetDB().QueryWinParams(id, winLang)
 	if err != nil && !db.IsMissingTable(err) {
 		return err
 	}
-	cols, err := GetDB().QueryWinCols(id)
+	cols, err := GetDB().QueryWinCols(id, winLang)
 	if err != nil && !db.IsMissingTable(err) {
 		return err
 	}
@@ -283,6 +291,242 @@ const winTagLegend = `
   :TODAY               当前日期
 
 回传约定: dzcc005='Y' 的字段按显现顺序构成 g_qryparam.return1~return9 (多选时 '|' 分隔)。`
+
+// ---- TOP GP：gab_file + gac_file 的开窗定义 ----
+//
+// GP 没有 T100 那种"整段 SQL 模板"(dzca003)：SQL 是运行期由 cl_create_qry() 按
+// gab02/gab05 的条件片段 + gac 的栏位表清单现拼的。这里按同一套规则拼出来给人看
+// （规则见 gp.QryDef.BuildSQL），栏位清单则直接来自 gac_file。
+
+// gpWinListItem 是 GP 开窗列表的一行。
+type gpWinListItem struct {
+	Code     string `json:"开窗代号"`
+	Title    string `json:"标题"`
+	ColCount string `json:"栏位数"`
+	Cust     string `json:"客制"`
+	HardCode string `json:"HardCode"`
+}
+
+// gpWinColItem 是 GP 开窗里的一个显现栏位。
+type gpWinColItem struct {
+	Seq        string `json:"顺序"`
+	Table      string `json:"表格"`
+	Field      string `json:"字段"`
+	Label      string `json:"显示名"`
+	Width      string `json:"宽度"`
+	Return     string `json:"回传"`
+	Widget     string `json:"控件"`
+	Outer      string `json:"OUTER"`
+	Constraint string `json:"输入约束"`
+	ConnectTo  string `json:"串查"`
+	DataType   string `json:"列类型"`
+}
+
+// gpWinDef 是 GP 开窗的一个版本（标准 / 客制）。
+type gpWinDef struct {
+	Cust        string         `json:"客制"`
+	Title       string         `json:"标题"`
+	HardCode    string         `json:"HardCode"`
+	Unlocked    string         `json:"单身可改"`
+	Distinct    string         `json:"DISTINCT"`
+	JoinTables  string         `json:"JOIN 表"`
+	InputWhere  string         `json:"Input WHERE"`
+	ConstrWhere string         `json:"Construct WHERE"`
+	Memo        string         `json:"备注"`
+	SQL         string         `json:"SQL"`
+	Cols        []gpWinColItem `json:"开窗栏位"`
+}
+
+// gpWinDetail 是 GP 开窗的完整定义。
+type gpWinDetail struct {
+	Code string     `json:"开窗代号"`
+	Defs []gpWinDef `json:"开窗定义"`
+}
+
+const gpWinNoSQL = "（这条开窗是 HardCode 程序：SQL 由程序自己写，不由 gac_file 拼）"
+
+func printWinListGP(rows []db.WinListRow) error {
+	items := mergeWinListGP(rows)
+	if len(items) == 0 {
+		fmt.Println(emptyHint("开窗定义"))
+		return nil
+	}
+	headers := []string{"开窗代号", "标题", "栏位数", "客制", "HardCode"}
+	var tableRows [][]string
+	for _, it := range items {
+		tableRows = append(tableRows, []string{it.Code, it.Title, it.ColCount, it.Cust, it.HardCode})
+	}
+	if Format() != output.FormatTable {
+		return emit(items, headers, tableRows)
+	}
+	output.PrintTable(headers, tableRows)
+	return nil
+}
+
+// mergeWinListGP 把同一开窗的标准/客制两行并成一行。
+func mergeWinListGP(rows []db.WinListRow) []gpWinListItem {
+	var items []gpWinListItem
+	for _, r := range rows {
+		label := custLabel(r.Cust)
+		if len(items) > 0 && strings.EqualFold(items[len(items)-1].Code, r.ID) {
+			it := &items[len(items)-1]
+			if !strings.Contains(it.Cust, label) {
+				it.Cust += "," + label
+			}
+			continue
+		}
+		items = append(items, gpWinListItem{
+			Code:     r.ID,
+			Title:    r.Desc,
+			ColCount: r.ColCount,
+			Cust:     label,
+			HardCode: winHardCodeLabel(r.HardCode),
+		})
+	}
+	return items
+}
+
+func runWinDetailGP(id string, headers []db.WinHeaderRow) error {
+	if IsCSV() {
+		return fmt.Errorf("详情模式不支持 --csv，请使用列表模式或 --json")
+	}
+	cols, err := GetDB().QueryWinCols(id, winLang)
+	if err != nil && !db.IsMissingTable(err) {
+		return err
+	}
+
+	detail := gpWinDetail{Code: id}
+	for _, h := range headers {
+		def := gpWinDef{
+			Cust:        custLabel(h.Cust),
+			Title:       h.Desc,
+			HardCode:    winHardCodeLabel(h.HardCode),
+			Unlocked:    yesNoLabel(h.Unlocked, "可改", "不可改"),
+			Distinct:    yesNoLabel(h.Distinct, "是", "否"),
+			JoinTables:  h.JoinTables,
+			InputWhere:  h.InputWhere,
+			ConstrWhere: h.ConstrWhere,
+			Memo:        h.Memo,
+		}
+		defSQL := gp.QryDef{
+			Code:        h.ID,
+			Title:       h.Desc,
+			InputWhere:  h.InputWhere,
+			JoinTables:  h.JoinTables,
+			Distinct:    strings.EqualFold(h.Distinct, "Y"),
+			ConstrWhere: h.ConstrWhere,
+			Memo:        h.Memo,
+			HardCode:    strings.EqualFold(h.HardCode, "Y"),
+			Cust:        strings.TrimSpace(h.Cust) != "",
+		}
+		for _, c := range cols {
+			if c.Cust != h.Cust {
+				continue
+			}
+			def.Cols = append(def.Cols, gpWinColItem{
+				Seq:        c.Seq,
+				Table:      c.Table,
+				Field:      c.Field,
+				Label:      c.Label,
+				Width:      c.Width,
+				Return:     yesNoLabel(c.Return, "Y", "N"),
+				Widget:     gpWidgetLabel(c.Type),
+				Outer:      yesNoLabel(c.Outer, "Y", ""),
+				Constraint: c.Constraint,
+				ConnectTo:  c.ConnectTo,
+				DataType:   c.DataType,
+			})
+			defSQL.Cols = append(defSQL.Cols, gp.QryCol{
+				No:         atoiOr(c.Seq, 0),
+				Table:      c.Table,
+				Field:      c.Field,
+				Label:      c.Label,
+				Width:      atoiOr(c.Width, 0),
+				Return:     strings.EqualFold(c.Return, "Y"),
+				Type:       atoiOr(c.Type, 0),
+				Outer:      strings.EqualFold(c.Outer, "Y"),
+				Constraint: c.Constraint,
+				ConnectTo:  c.ConnectTo,
+				DateType:   strings.EqualFold(c.DataType, "DATE"),
+			})
+		}
+		if defSQL.HardCode {
+			def.SQL = gpWinNoSQL
+		} else {
+			def.SQL = defSQL.BuildSQL(gp.QrySQLOpt{Schema: srcCompany, Oracle: true})
+		}
+		detail.Defs = append(detail.Defs, def)
+	}
+
+	if Format() == output.FormatTable {
+		printWinDetailGP(&detail)
+		return nil
+	}
+	return emitOne(detail)
+}
+
+func printWinDetailGP(d *gpWinDetail) {
+	fmt.Printf("=== %s ===\n", d.Code)
+	for _, h := range d.Defs {
+		fmt.Printf("\n[%s]\n", h.Cust)
+		fmt.Printf("标题:      %s\n", orDash(h.Title))
+		fmt.Printf("HardCode:  %s\n", h.HardCode)
+		fmt.Printf("单身可改:  %s\n", h.Unlocked)
+		fmt.Printf("DISTINCT:  %s\n", h.Distinct)
+		fmt.Printf("JOIN 表:   %s\n", orDash(h.JoinTables))
+		fmt.Printf("Input WHERE:     %s\n", orDash(h.InputWhere))
+		fmt.Printf("Construct WHERE: %s\n", orDash(h.ConstrWhere))
+		fmt.Printf("备注:      %s\n", orDash(h.Memo))
+
+		fmt.Println("\nSQL:")
+		for _, line := range strings.Split(h.SQL, "\n") {
+			fmt.Println("  " + line)
+		}
+
+		if len(h.Cols) > 0 {
+			fmt.Printf("\n开窗栏位 (gac_file, %d):\n", len(h.Cols))
+			headers := []string{"顺序", "表格", "字段", "显示名", "宽度", "回传", "控件", "OUTER", "输入约束", "串查"}
+			var rows [][]string
+			for _, c := range h.Cols {
+				rows = append(rows, []string{c.Seq, c.Table, c.Field, c.Label, c.Width,
+					c.Return, c.Widget, c.Outer, c.Constraint, c.ConnectTo})
+			}
+			output.PrintTable(headers, rows)
+		}
+	}
+}
+
+// gpWidgetLabel 把 gac07 的栏位型态翻成人话（0=Edit 1=CheckBox 2=DateEdit 3=ComboBox）。
+func gpWidgetLabel(code string) string {
+	switch strings.TrimSpace(code) {
+	case "0":
+		return "Edit"
+	case "1":
+		return "CheckBox"
+	case "2":
+		return "DateEdit"
+	case "3":
+		return "ComboBox"
+	default:
+		return code
+	}
+}
+
+// yesNoLabel 只把 'Y' 翻成 yes，其余（含空）翻成 no。
+func yesNoLabel(v, yes, no string) string {
+	if strings.EqualFold(strings.TrimSpace(v), "Y") {
+		return yes
+	}
+	return no
+}
+
+func atoiOr(s string, def int) int {
+	n, err := strconv.Atoi(strings.TrimSpace(s))
+	if err != nil {
+		return def
+	}
+	return n
+}
 
 func init() {
 	winCmd.Flags().StringVar(&winKW, "kw", "", "按识别码/说明过滤 (仅列表模式)")
