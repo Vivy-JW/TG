@@ -27,6 +27,7 @@ import (
 
 	"tt/internal/config"
 	"tt/internal/dbconfig"
+	"tt/internal/dict/live"
 	"tt/internal/envmove"
 	"tt/internal/host"
 )
@@ -738,6 +739,12 @@ func mergeTestEnv(req, saved config.NamedSsh) config.NamedSsh {
 	if env.CustRoot == "" {
 		env.CustRoot = saved.CustRoot
 	}
+	if env.Company == "" {
+		env.Company = saved.Company
+	}
+	if env.CompanyName == "" {
+		env.CompanyName = saved.CompanyName
+	}
 	if env.Instance != "" {
 		env.Workspace, env.CustRoot = gpRootsForInstance(env.Instance)
 	}
@@ -788,10 +795,17 @@ func mergeTestEnv(req, saved config.NamedSsh) config.NamedSsh {
 	return env
 }
 
-// hTest 测 SSH 通不通（数据库连通性走统一层的 /api/conntest）。
+// hTest 按页签分别测，三者互不牵连：
+//
+//	what=ssh  只测 SSH（连得上 + 能开 SFTP + $TOP 存在）
+//	what=db   只测库（用表单里的账号直接 ping，不经过 SSH）
+//	what=site 只测据点（按据点连库，看 zta_file 有没有这家公司的字典行）
+//
+// what 为空时按老行为把 ssh 和 db 都测一遍（旧前端还在这么调）。
 func (s *Service) hTest(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		Env config.NamedSsh `json:"env"`
+		Env  config.NamedSsh `json:"env"`
+		What string          `json:"what"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		writeJSON(w, 400, map[string]any{"ok": false, "error": "请求体不是 JSON"})
@@ -805,62 +819,104 @@ func (s *Service) hTest(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
+	what := strings.ToLower(strings.TrimSpace(body.What))
 	res := map[string]any{}
+	if what == "" || what == "ssh" {
+		res["ssh"] = testSSH(env)
+	}
+	if what == "" || what == "db" {
+		res["db"] = testDB(env)
+	}
+	if what == "site" {
+		res["site"] = testSite(r.Context(), env)
+	}
+	writeJSON(w, 200, map[string]any{"ok": true, "result": res})
+}
+
+// testSSH 只测 SSH 这一项：端口能连、能开 SFTP、$TOP 可读。
+func testSSH(env config.NamedSsh) map[string]any {
 	conn, err := host.Dial(config.SSHConfig{Host: env.Host, Port: env.Port, User: env.User, Password: env.Password})
 	if err != nil {
-		res["ssh"] = map[string]any{"ok": false, "msg": err.Error()}
-		writeJSON(w, 200, map[string]any{"ok": true, "result": res})
-		return
+		return map[string]any{"ok": false, "msg": err.Error()}
 	}
 	defer conn.Close()
 	sc, err := conn.SFTP()
 	if err != nil {
-		res["ssh"] = map[string]any{"ok": false, "msg": "SSH 通了，但打不开 SFTP: " + err.Error()}
-		writeJSON(w, 200, map[string]any{"ok": true, "result": res})
-		return
+		return map[string]any{"ok": false, "msg": "SSH 通了，但打不开 SFTP: " + err.Error()}
 	}
 	defer sc.Close()
-	top := env.Workspace
-	msg := "已连接"
-	if top != "" {
+	if top := env.Workspace; top != "" {
 		if st, err := sc.Stat(top); err != nil || !st.IsDir() {
-			res["ssh"] = map[string]any{"ok": false, "msg": "连上了，但 $TOP 不存在：" + top}
-			writeJSON(w, 200, map[string]any{"ok": true, "result": res})
-			return
+			return map[string]any{"ok": false, "msg": "连上了，但 $TOP 不存在：" + top}
 		}
-		msg = "已连接，$TOP 可读"
+		return map[string]any{"ok": true, "msg": "已连接，" + env.User + "@" + env.Host + "，$TOP 可读"}
 	}
-	res["ssh"] = map[string]any{"ok": true, "msg": msg}
+	return map[string]any{"ok": true, "msg": "已连接，" + env.User + "@" + env.Host}
+}
 
-	// 顺带测一下库（与 T100 的「测试连接」同一个思路：SSH 通 + 库通才算真好）。
-	if env.DB != nil && env.DB.Host != "" {
-		var acct, pwd string
-		for _, a := range env.DB.Accounts {
-			if a.Account != "" {
-				acct, pwd = a.Account, a.Password
-				break
-			}
-		}
-		switch {
-		case acct == "":
-			res["db"] = map[string]any{"ok": false, "msg": "没有数据库账号"}
-		default:
-			db, derr := sql.Open("oracle", gpDSN(env.DB, acct, pwd))
-			if derr != nil {
-				res["db"] = map[string]any{"ok": false, "msg": derr.Error()}
-			} else {
-				ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-				if perr := db.PingContext(ctx); perr != nil {
-					res["db"] = map[string]any{"ok": false, "msg": perr.Error()}
-				} else {
-					res["db"] = map[string]any{"ok": true, "msg": "已连接 " + acct + "@" + env.DB.Host + "/" + env.DB.Service}
-				}
-				cancel()
-				db.Close()
-			}
+// testDB 只测数据库这一项：拿表单里的账号直接连库 ping 一下，不依赖 SSH。
+func testDB(env config.NamedSsh) map[string]any {
+	if env.DB == nil || env.DB.Host == "" {
+		return map[string]any{"ok": false, "msg": "还没有填数据库主机"}
+	}
+	var acct, pwd string
+	for _, a := range env.DB.Accounts {
+		if a.Account != "" {
+			acct, pwd = a.Account, a.Password
+			break
 		}
 	}
-	writeJSON(w, 200, map[string]any{"ok": true, "result": res})
+	if acct == "" {
+		return map[string]any{"ok": false, "msg": "没有数据库账号"}
+	}
+	db, err := sql.Open("oracle", gpDSN(env.DB, acct, pwd))
+	if err != nil {
+		return map[string]any{"ok": false, "msg": err.Error()}
+	}
+	defer db.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	if err := db.PingContext(ctx); err != nil {
+		return map[string]any{"ok": false, "msg": err.Error()}
+	}
+	return map[string]any{"ok": true, "msg": "已连接 " + acct + "@" + env.DB.Host + "/" + env.DB.Service}
+}
+
+// testSite 只测据点这一项：按据点连库，看 zta_file 里有没有这家公司的字典行，
+// 顺带把 azp_file 里的名字捞出来。据点写错时不报错、只是查出来空 —— 这个按钮
+// 就是用来提前发现这种"静默查空"的。
+func testSite(ctx context.Context, env config.NamedSsh) map[string]any {
+	if env.DB == nil || env.DB.Host == "" {
+		return map[string]any{"ok": false, "msg": "还没有填数据库主机"}
+	}
+	company := Company(env)
+	if !siteCodeRE.MatchString(company) {
+		return map[string]any{"ok": false, "msg": "据点代号只能由字母、数字、下划线组成：" + company}
+	}
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+	l, err := live.OpenCompany(ctx, *env.DB, company)
+	if err != nil {
+		return map[string]any{"ok": false, "msg": err.Error()}
+	}
+	defer l.Close()
+
+	_, rows, err := l.Connector().Query(ctx, `SELECT COUNT(*) FROM zta_file WHERE lower(zta02) = '`+company+`'`)
+	if err != nil {
+		return map[string]any{"ok": false, "msg": "连上了，但读 zta_file 失败：" + err.Error()}
+	}
+	n := 0
+	if len(rows) > 0 && len(rows[0]) > 0 {
+		n, _ = strconv.Atoi(strings.TrimSpace(rows[0][0]))
+	}
+	if n == 0 {
+		return map[string]any{"ok": false, "msg": "连上了，但 zta_file 里没有据点「" + company + "」的字典行（代号写错了？）"}
+	}
+	msg := "据点 " + company + " 可连：zta_file 有 " + strconv.Itoa(n) + " 张表"
+	if name := siteNameFor(ctx, l, company); name != "" {
+		msg += "（" + name + "）"
+	}
+	return map[string]any{"ok": true, "msg": msg}
 }
 
 // hMirror 起一轮源码镜像（只拉 *.4gl）。mode=incr 增量，其它当全量。

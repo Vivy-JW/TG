@@ -16,12 +16,31 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"tt/internal/config"
 	"tt/internal/dbconfig"
 	"tt/internal/dict/live"
 )
+
+// siteCodeRE 据点代号的合法字符。据点代号会成为 Oracle schema 名，拼进 SQL 前
+// 必须限死字符集 —— erpdb 的 Query 只收 SQL 文本、没有绑定参数。
+var siteCodeRE = regexp.MustCompile(`^[A-Za-z0-9_$#]+$`)
+
+// siteNameFor 在已经连上的库上取据点名称（azp_file.azp02）；取不到返回空串。
+// 连接由调用方持有，这里不再另开一次 —— 测试据点时只连一次库。
+func siteNameFor(ctx context.Context, l *live.Live, company string) string {
+	if !siteCodeRE.MatchString(company) {
+		return ""
+	}
+	_, rows, err := l.Connector().Query(ctx,
+		`SELECT azp02 FROM azp_file WHERE lower(azp01) = '`+strings.ToLower(company)+`'`)
+	if err != nil || len(rows) == 0 || len(rows[0]) == 0 {
+		return ""
+	}
+	return strings.TrimSpace(rows[0][0])
+}
 
 // Site 一个营运据点：代号 + 名称。
 type Site struct {

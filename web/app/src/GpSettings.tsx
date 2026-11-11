@@ -19,6 +19,20 @@ interface DbAcc { account: string; password?: string; hasPassword?: boolean }
 /** 一个营运据点（azp_file 的一行）：代号 + 名称。 */
 interface SiteRow { code: string; name: string }
 
+/** /api/gp/test 单项结果。 */
+interface TestRes { ok: boolean; msg: string }
+
+/** 一项测试的结果行：✔/✘ + 文案。 */
+function TestLine({ label, res }: { label: string; res?: TestRes }) {
+  if (!res) return null
+  return (
+    <p className="text-[11px] leading-relaxed">
+      <span className={cn('mr-1', res.ok ? 'text-emerald-500' : 'text-red-500')}>{res.ok ? '✔' : '✘'}</span>
+      <span className="text-muted-foreground">{label}：{res.msg}</span>
+    </p>
+  )
+}
+
 export interface GpEnv {
   name: string
   host?: string
@@ -196,7 +210,9 @@ export function GpSites({ only, create, initial, onSaved, onDiscard, onDraftChan
   const [siteBusy, setSiteBusy] = useState(false)
   const [siteMsg, setSiteMsg] = useState('')
   const [sites, setSites] = useState<SiteRow[]>([])
-  const [test, setTest] = useState<{ ssh?: { ok: boolean; msg: string }; db?: { ok: boolean; msg: string } } | null>(null)
+  // 每个页签各存各的结果：互不覆盖，切回去还能看到上次测的。
+  const [test, setTest] = useState<{ ssh?: TestRes; db?: TestRes; site?: TestRes } | null>(null)
+  const [testBusy, setTestBusy] = useState<'' | 'ssh' | 'db' | 'site'>('')
 
   // 基线 = 上一次读入/保存成功时的“表单值”（不含密码）；脏 = 碰过且与基线不同。
   const baselineRef = useRef('')
@@ -431,16 +447,22 @@ export function GpSites({ only, create, initial, onSaved, onDiscard, onDraftChan
     setMsg('已复制一份，密码需重新输入；修改任意字段后会自动保存')
   }
 
-  const runTest = async () => {
+  // 三个页签各测各自的：ssh 只测 SSH、db 只测库、site 只测据点。
+  // 后端按 what 分流（internal/gp/gp.go 的 hTest），结果也只回这一项。
+  const runTest = async (what: 'ssh' | 'db' | 'site') => {
     if (!cur) return
-    setBusy(true); setTest(null); setMsg('')
+    setTestBusy(what); setMsg('')
     try {
       const r = await g.call('/api/gp/test', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ env: payload(cur) }),
+        body: JSON.stringify({ env: payload(cur), what }),
       })
-      if (r.ok) setTest(r.result); else setMsg(r.error || '测试失败')
-    } catch (e) { setMsg('测试失败：' + String(e)) } finally { setBusy(false) }
+      if (!r.ok) { setMsg(r.error || '测试失败'); return }
+      const res = (r.result || {})[what]
+      setTest((prev) => ({ ...(prev || {}), [what]: res }))
+    } catch (e) {
+      setMsg('测试失败：' + String(e))
+    } finally { setTestBusy('') }
   }
 
   // 「从服务器刷新」：连库读 azp_file（固定 ds schema）把据点**全表**取回来，
@@ -555,6 +577,12 @@ export function GpSites({ only, create, initial, onSaved, onDiscard, onDraftChan
               </span>
             </Field>
           </div>
+          <div className="mt-4 space-y-1">
+            <Button size="sm" variant="outline" disabled={testBusy !== ''} onClick={() => void runTest('ssh')}>
+              {testBusy === 'ssh' ? '测试中…' : '测试 SSH 连接'}
+            </Button>
+            <TestLine label="SSH" res={test?.ssh} />
+          </div>
         </TabsContent>
 
         <TabsContent value="db" forceMount className="mt-3 min-h-0 flex-1 overflow-auto data-[state=inactive]:hidden">
@@ -588,8 +616,13 @@ export function GpSites({ only, create, initial, onSaved, onDiscard, onDraftChan
               </div>
             </Field>
           </div>
+          <div className="mt-4 space-y-1">
+            <Button size="sm" variant="outline" disabled={testBusy !== ''} onClick={() => void runTest('db')}>
+              {testBusy === 'db' ? '测试中…' : '测试数据库连接'}
+            </Button>
+            <TestLine label="数据库" res={test?.db} />
+          </div>
         </TabsContent>
-
 
         <TabsContent value="site" forceMount className="mt-3 flex min-h-0 flex-1 flex-col gap-2 overflow-auto data-[state=inactive]:hidden">
           <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
@@ -645,20 +678,14 @@ export function GpSites({ only, create, initial, onSaved, onDiscard, onDraftChan
             </div>
           )}
           {siteMsg && <p className="text-[11px] text-muted-foreground">{siteMsg}</p>}
+          <div className="mt-auto space-y-1 pt-2">
+            <Button size="sm" variant="outline" disabled={testBusy !== ''} onClick={() => void runTest('site')}>
+              {testBusy === 'site' ? '测试中…' : '测试据点'}
+            </Button>
+            <TestLine label="据点" res={test?.site} />
+          </div>
         </TabsContent>
 
-        <div className="mt-3 flex items-center gap-2">
-          <Button size="sm" variant="outline" disabled={busy} onClick={() => void runTest()}>测试连接</Button>
-        </div>
-
-        {test && (
-          <div className="mt-2 space-y-1 text-xs">
-            <div><span className={cn('mr-1', test.ssh?.ok ? 'text-emerald-500' : 'text-red-500')}>{test.ssh?.ok ? '✔' : '✘'}</span>SSH：{test.ssh?.msg}</div>
-            {test.db && (
-              <div><span className={cn('mr-1', test.db.ok ? 'text-emerald-500' : 'text-red-500')}>{test.db.ok ? '✔' : '✘'}</span>数据库：{test.db.msg}</div>
-            )}
-          </div>
-        )}
         {msg && <div className="mt-2 text-xs text-muted-foreground">{msg}</div>}
       </Tabs>
     </div>
