@@ -12,18 +12,14 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/pkg/sftp"
 
 	"tt/internal/config"
 	"tt/internal/dbconfig"
@@ -32,6 +28,7 @@ import (
 	"tt/internal/dict/live"
 	"tt/internal/envmove"
 	"tt/internal/host"
+	"tt/internal/mirror"
 )
 
 // Job 一个后台动作（镜像/同步）的进度。同一环境同时只跑一个。
@@ -224,45 +221,6 @@ func gpInstanceFromWorkspace(workspace string) string {
 	return ""
 }
 
-// mirrorDir 该环境的镜像目录：环境自己指定优先，否则 <默认根>/<环境名>。
-func mirrorDir(e config.NamedSsh) string {
-	if e.MirrorDir != "" {
-		return e.MirrorDir
-	}
-	base := os.Getenv("TT_GP_MIRROR_DIR")
-	if base == "" {
-		home, _ := os.UserHomeDir()
-		base = filepath.Join(home, ".tt", "gp-mirror")
-	}
-	return filepath.Join(base, e.Name)
-}
-
-type manifest struct {
-	Files   int     `json:"files"`
-	SizeMB  float64 `json:"sizeMB"`
-	Source  string  `json:"source"`
-	Updated string  `json:"at"`
-}
-
-func readManifest(dir string) (manifest, bool) {
-	b, err := os.ReadFile(filepath.Join(dir, "manifest.json"))
-	if err != nil {
-		return manifest{}, false
-	}
-	var m manifest
-	if json.Unmarshal(b, &m) != nil {
-		return manifest{}, false
-	}
-	return m, true
-}
-
-func writeManifest(dir string, files int, sizeMB float64, source string) {
-	_ = os.MkdirAll(dir, 0o755)
-	m := manifest{Files: files, SizeMB: sizeMB, Source: source, Updated: time.Now().Format("2006-01-02 15:04:05")}
-	b, _ := json.MarshalIndent(m, "", "  ")
-	_ = os.WriteFile(filepath.Join(dir, "manifest.json"), b, 0o644)
-}
-
 // hMeta 环境清单 + 本地状态。只读 manifest/文件状态，不遍历目录、不打开 SQLite。
 func (s *Service) hMeta(w http.ResponseWriter, _ *http.Request) {
 	envs, err := s.gpEnvs()
@@ -295,9 +253,9 @@ func (s *Service) hMeta(w http.ResponseWriter, _ *http.Request) {
 	}
 	out := make([]envView, 0, len(envs))
 	for _, e := range envs {
-		md := mirrorDir(e)
+		md := mirror.Dir(e)
 		mv := map[string]any{"path": md}
-		if m, ok := readManifest(md); ok {
+		if m, ok := mirror.ReadManifest(md); ok {
 			mv["exists"] = true
 			mv["files"] = m.Files
 			mv["sizeMB"] = m.SizeMB
@@ -1002,51 +960,24 @@ func (s *Service) runMirror(env config.NamedSsh, mode string) {
 			j.Ended = time.Now()
 		})
 	}
-	if env.Workspace == "" {
-		fail(fmt.Errorf("这个环境没配 $TOP 源码根"))
-		return
-	}
-	conn, err := host.Dial(config.SSHConfig{Host: env.Host, Port: env.Port, User: env.User, Password: env.Password})
+	out, err := mirror.Pull(env, mode, func(done, total int, msg string) {
+		s.progressCount(env.Name, done, total, msg)
+	})
 	if err != nil {
 		fail(err)
 		return
 	}
-	defer conn.Close()
-	sc, err := conn.SFTP()
-	if err != nil {
-		fail(err)
-		return
-	}
-	defer sc.Close()
-
-	base := mirrorDir(env)
-	out := map[string]any{}
-	total, bytes := 0, int64(0)
 	doneBase, totalBase := 0, 0
-	for _, src := range []struct{ label, path string }{
-		{"tiptop", env.Workspace},
-		{"topcust", env.CustRoot},
-	} {
-		if src.path == "" {
-			continue
+	for _, v := range out {
+		if st, ok := v.(map[string]any); ok {
+			if n, ok := st["processed"].(int); ok {
+				doneBase += n
+			}
+			if n, ok := st["total"].(int); ok {
+				totalBase += n
+			}
 		}
-		dst := filepath.Join(base, src.label)
-		st, err := mirrorTree(conn, sc, src.path, dst, mode, func(done, total int, msg string) {
-			s.progressCount(env.Name, doneBase+done, totalBase+total, msg)
-		})
-		if err != nil {
-			fail(fmt.Errorf("%s: %w", src.label, err))
-			return
-		}
-		st["src"] = env.User + "@" + env.Host + ":" + src.path
-		st["dst"] = dst
-		out[src.label] = st
-		doneBase += st["processed"].(int)
-		totalBase += st["total"].(int)
-		total += st["files"].(int)
-		bytes += int64(st["bytes"].(int64))
 	}
-	writeManifest(base, total, float64(bytes)/1048576.0, "mirror")
 	s.setJob(env.Name, func(j *Job) {
 		j.State = "done"
 		j.Done = int64(doneBase)
@@ -1054,196 +985,4 @@ func (s *Service) runMirror(env config.NamedSsh, mode string) {
 		j.Result = out
 		j.Ended = time.Now()
 	})
-}
-
-// mirrorTree 把 src 下所有 *.4gl 拉进 dst。
-//
-// 差异判定：大小 + mtime。mtime 在下载时按服务器写回，所以下一次能直接比 ——
-// 只比大小会漏掉「长度一样但内容改了」的源码。
-type mirrorFile struct {
-	rpath, rrel string
-	size        int64
-	mt          time.Time
-}
-
-// collectByFind 用服务器侧一条 find 拿完整清单，避免逐目录 SFTP ReadDir。
-// 输出用 NUL 分隔（文件名里可以有空格/换行/制表符，不能按行切）。
-// find 不支持 -printf 或执行失败时返回错误，由调用方回退到 ReadDir。
-func collectByFind(conn *host.SSHConn, src string) ([]mirrorFile, error) {
-	q := "'" + strings.ReplaceAll(src, "'", `'\''`) + "'"
-	cmd := "find " + q + ` -type f -iname '*.4gl' -printf '%P\0%s\0%T@\0' 2>/dev/null`
-	out, err := conn.Output(cmd, 2*time.Minute)
-	if err != nil {
-		return nil, err
-	}
-	parts := strings.Split(out, "\x00")
-	if len(parts) > 0 && parts[len(parts)-1] == "" {
-		parts = parts[:len(parts)-1]
-	}
-	if len(parts)%3 != 0 {
-		return nil, fmt.Errorf("find 输出格式不完整（%d 段）", len(parts))
-	}
-	files := make([]mirrorFile, 0, len(parts)/3)
-	for i := 0; i+2 < len(parts); i += 3 {
-		rel := parts[i]
-		size, err := strconv.ParseInt(parts[i+1], 10, 64)
-		if err != nil {
-			return nil, fmt.Errorf("解析 %q 大小失败：%w", rel, err)
-		}
-		sec, err := strconv.ParseFloat(parts[i+2], 64)
-		if err != nil {
-			return nil, fmt.Errorf("解析 %q 修改时间失败：%w", rel, err)
-		}
-		files = append(files, mirrorFile{
-			rpath: strings.TrimSuffix(src, "/") + "/" + rel,
-			rrel:  strings.TrimPrefix(rel, "/"),
-			size:  size,
-			mt:    time.Unix(int64(sec), 0),
-		})
-	}
-	sort.Slice(files, func(i, j int) bool { return files[i].rrel < files[j].rrel })
-	return files, nil
-}
-
-func mirrorTree(conn *host.SSHConn, sc *sftp.Client, src, dst, mode string, progress func(done, total int, msg string)) (map[string]any, error) {
-	var files []mirrorFile
-	t0 := time.Now()
-
-	files, err := collectByFind(conn, src)
-	if err != nil {
-		// find 不可用（BusyBox/权限/路径含不支持字符）时保留原逐目录实现。
-		files = nil
-		var collect func(rdir, rel string) error
-		collect = func(rdir, rel string) error {
-			entries, err := sc.ReadDir(rdir)
-			if err != nil {
-				return nil // 没权限的目录跳过，不拖垮整轮
-			}
-			sort.Slice(entries, func(i, j int) bool { return entries[i].Name() < entries[j].Name() })
-			for _, e := range entries {
-				rpath := strings.TrimSuffix(rdir, "/") + "/" + e.Name()
-				rrel := strings.TrimPrefix(rel+"/"+e.Name(), "/")
-				if e.IsDir() {
-					if err := collect(rpath, rrel); err != nil {
-						return err
-					}
-					continue
-				}
-				if !strings.HasSuffix(strings.ToLower(e.Name()), ".4gl") {
-					continue
-				}
-				files = append(files, mirrorFile{rpath: rpath, rrel: rrel, size: e.Size(), mt: e.ModTime()})
-			}
-			return nil
-		}
-		if err := collect(src, ""); err != nil {
-			return nil, err
-		}
-	}
-
-	total := len(files)
-	if progress != nil {
-		progress(0, total, "")
-	}
-	got, skipped, processed := 0, 0, 0
-	var bytes int64
-	var pruned int
-	for _, f := range files {
-		processed++
-		lpath := filepath.Join(dst, filepath.FromSlash(f.rrel))
-		if mode != "full" {
-			if st, err := os.Stat(lpath); err == nil && st.Size() == f.size && st.ModTime().Unix() == f.mt.Unix() {
-				skipped++
-				if progress != nil && (processed%50 == 0 || processed == total) {
-					progress(processed, total, fmt.Sprintf("  %d/%d 个（跳过 %d）", processed, total, skipped))
-				}
-				continue
-			}
-		}
-		if err := os.MkdirAll(filepath.Dir(lpath), 0o755); err != nil {
-			continue
-		}
-		rf, err := sc.Open(f.rpath)
-		if err != nil {
-			continue
-		}
-		lf, err := os.Create(lpath)
-		if err != nil {
-			rf.Close()
-			continue
-		}
-		n, cerr := io.Copy(lf, rf)
-		lf.Close()
-		rf.Close()
-		if cerr != nil {
-			continue
-		}
-		_ = os.Chtimes(lpath, f.mt, f.mt)
-		got++
-		bytes += n
-		if progress != nil && (processed%50 == 0 || processed == total) {
-			progress(processed, total, fmt.Sprintf("  %d/%d 个 … %.1f MB", processed, total, float64(bytes)/1048576))
-		}
-	}
-	// 与 T100 对齐：只有全量模式清理本地残留；增量不动已有文件。
-	if mode == "full" {
-		n, err := pruneStale(dst, files)
-		if err != nil {
-			return nil, err
-		}
-		pruned = n
-	}
-	return map[string]any{
-		"files": got, "skipped": skipped, "processed": processed, "total": total,
-		"pruned": pruned, "bytes": bytes, "sizeMB": float64(bytes) / 1048576,
-		"elapsed": time.Since(t0).Seconds(),
-	}, nil
-}
-
-// pruneStale 全量模式下删除 dst 里服务器已不存在的 *.4gl，并清掉空目录。
-// 只处理 .4gl，和 GP 镜像目录只收 .4gl 的范围一致；增量模式不调用。
-func pruneStale(dst string, files []mirrorFile) (int, error) {
-	if _, err := os.Stat(dst); err != nil {
-		return 0, nil
-	}
-	keep := make(map[string]bool, len(files))
-	for _, f := range files {
-		keep[filepath.FromSlash(f.rrel)] = true
-	}
-	var stale []string
-	var dirs []string
-	err := filepath.Walk(dst, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return nil // 无权限的条目跳过，不拖垮整轮
-		}
-		if info.IsDir() {
-			if path != dst {
-				dirs = append(dirs, path)
-			}
-			return nil
-		}
-		if !strings.HasSuffix(strings.ToLower(info.Name()), ".4gl") {
-			return nil
-		}
-		rel, err := filepath.Rel(dst, path)
-		if err != nil {
-			return nil
-		}
-		if !keep[rel] {
-			stale = append(stale, path)
-		}
-		return nil
-	})
-	if err != nil {
-		return 0, err
-	}
-	for _, p := range stale {
-		_ = os.Remove(p)
-	}
-	// 从最深目录往回删，避免留下空壳。
-	sort.Slice(dirs, func(i, j int) bool { return len(dirs[i]) > len(dirs[j]) })
-	for _, d := range dirs {
-		_ = os.Remove(d) // 非空会失败，正好保留
-	}
-	return len(stale), nil
 }

@@ -1,4 +1,4 @@
-package gp
+package mirror
 
 import (
 	"os"
@@ -20,7 +20,7 @@ func TestPruneStaleOnlyFullSet(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	n, err := pruneStale(dst, []mirrorFile{{rrel: "keep.4gl"}})
+	n, err := pruneStale(dst, []file{{rrel: "keep.4gl"}})
 	if err != nil {
 		t.Fatal(err)
 	}
