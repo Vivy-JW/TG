@@ -97,16 +97,21 @@ type NamedSsh struct {
 	Instance string `json:"instance,omitempty"`
 	// CustRoot TOP GP 的 $CUST 客制根（服务器上的路径）。T100 不用。
 	CustRoot string `json:"custRoot,omitempty"`
-	// Company 营运据点代号（azp_file.azp01 的小写形式 = zta_file.zta02 =
+	// Company 资料库编号（azp_file.azp03 的小写形式 = zta_file.zta02 =
 	// Oracle schema 名：ds ↔ DS）。空 = "ds"。
 	//
-	// 为什么必须有这一项：GP 一个库里装了几十家公司，字典表按据点代号分行存
-	// （同一个表名，ds / digiwin / puran 各一行）。连库账号**不等于**据点 ——
+	// 为什么不叫"据点代号"：据点编号是 azp01，资料库编号是 azp03，两者不是
+	// 一回事（实测 30 个据点里 15 个不同：COF → cof_demo、DEMO1 → demo1、
+	// DIGIWIN → digiwin），aooi901（工厂基本资料维护作业）里也是分开的两个
+	// 栏位。查字典要的是 schema，所以这里存 azp03，UI 上从据点表里挑。
+	//
+	// 为什么必须有这一项：GP 一个库里装了几十家公司，字典表按资料库编号分行
+	// 存（同一个表名，ds / digiwin / puran 各一行）。连库账号**不等于**它 ——
 	// 实测这套库账号叫 digiwin、而它的 schema 是 DIGIWIN，zta_file 里
 	// zta02='ds' 有 2,962 行、'digiwin' 只有 2,902 行；两边混用会出现
 	// "本地查得到、远程说表不存在"，且表格总数对不上。
 	//
-	// 用法：**只影响实际查库**（直查要按据点选 schema 与字典行）。
+	// 用法：**只影响实际查库**（直查要按资料库编号选 schema 与字典行）。
 	// 本地字典库的同步是固定按 "ds" 取的，见 internal/gp/dict.go 的 runSync。
 	Company string `json:"company,omitempty"`
 	// CompanyName 营运据点名字（azp_file.azp02），从服务器刷新时抄下来。

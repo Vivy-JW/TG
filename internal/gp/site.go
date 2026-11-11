@@ -28,24 +28,34 @@ import (
 // 必须限死字符集 —— erpdb 的 Query 只收 SQL 文本、没有绑定参数。
 var siteCodeRE = regexp.MustCompile(`^[A-Za-z0-9_$#]+$`)
 
-// siteNameFor 在已经连上的库上取据点名称（azp_file.azp02）；取不到返回空串。
+// siteNameFor 在已经连上的库上按资料库编号取据点名称（azp_file.azp02）；取不到返回空串。
 // 连接由调用方持有，这里不再另开一次 —— 测试据点时只连一次库。
-func siteNameFor(ctx context.Context, l *live.Live, company string) string {
-	if !siteCodeRE.MatchString(company) {
+func siteNameFor(ctx context.Context, l *live.Live, schema string) string {
+	if !siteCodeRE.MatchString(schema) {
 		return ""
 	}
 	_, rows, err := l.Connector().Query(ctx,
-		`SELECT azp02 FROM azp_file WHERE lower(azp01) = '`+strings.ToLower(company)+`'`)
+		`SELECT azp02 FROM azp_file WHERE lower(azp03) = '`+strings.ToLower(schema)+`'`)
 	if err != nil || len(rows) == 0 || len(rows[0]) == 0 {
 		return ""
 	}
 	return strings.TrimSpace(rows[0][0])
 }
 
-// Site 一个营运据点：代号 + 名称。
+// Site 一个营运据点：据点编号 + 名称 + 资料库编号。
+//
+// azp03 在 aooi901 的字段说明里叫「资料库编号」（默认 ds），也就是 zta_file.zta02
+// 与 Oracle schema。它跟据点编号 azp01 **不是一回事**：实测 30 个据点里有 15 个
+// 两者不同（COF → cof_demo、DEMO1 → demo1、DIGIWIN → digiwin），所以查字典要用
+// azp03，不能拿 azp01 小写去猜。
+//
+// azp053 = 'Y' 表示该据点有实际的 ERP 数据库；p_cron / p_flownoty / p_zta 取
+// 资料库清单时都是 WHERE azp053='Y'，所以 N 的行不该进候选。
 type Site struct {
-	Code string `json:"code"`
-	Name string `json:"name"`
+	Code   string `json:"code"`
+	Name   string `json:"name"`
+	Schema string `json:"schema"`
+	HasDB  bool   `json:"hasDB"`
 }
 
 // ListSites 连库把 azp_file 的据点全表取回来（按代号排序）。
@@ -59,11 +69,12 @@ func ListSites(ctx context.Context, c dbconfig.Connection) ([]Site, error) {
 	}
 	defer l.Close()
 
-	cols, rows, err := l.Connector().Query(ctx, `SELECT azp01, azp02 FROM azp_file ORDER BY azp01`)
+	cols, rows, err := l.Connector().Query(ctx,
+		`SELECT azp01, azp02, azp03, azp053 FROM azp_file ORDER BY azp01`)
 	if err != nil {
 		return nil, fmt.Errorf("查 azp_file 失败：%w", err)
 	}
-	if len(cols) < 2 {
+	if len(cols) < 4 {
 		return nil, fmt.Errorf("azp_file 的列不对：%v", cols)
 	}
 	out := make([]Site, 0, len(rows))
@@ -72,7 +83,12 @@ func ListSites(ctx context.Context, c dbconfig.Connection) ([]Site, error) {
 		if code == "" {
 			continue
 		}
-		out = append(out, Site{Code: code, Name: strings.TrimSpace(r[1])})
+		out = append(out, Site{
+			Code:   code,
+			Name:   strings.TrimSpace(r[1]),
+			Schema: strings.ToLower(strings.TrimSpace(r[2])),
+			HasDB:  strings.EqualFold(strings.TrimSpace(r[3]), "Y"),
+		})
 	}
 	return out, nil
 }
@@ -136,7 +152,7 @@ func (s *Service) hSite(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 502, map[string]any{"ok": false, "error": err.Error()})
 		return
 	}
-	writeJSON(w, 200, map[string]any{"ok": true, "found": found, "code": site.Code, "name": site.Name})
+	writeJSON(w, 200, map[string]any{"ok": true, "found": found, "code": site.Code, "name": site.Name, "schema": site.Schema, "hasDB": site.HasDB})
 }
 
 // findEnv 按名字取一个 GP 环境（大小写不敏感）。找不到返回 404 级错误。

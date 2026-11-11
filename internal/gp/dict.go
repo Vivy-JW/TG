@@ -163,9 +163,13 @@ func DictPath(e config.NamedSsh) string { return dictPath(e) }
 // 直查（dict r.t --env <环境>）才按营运据点选 schema。
 const SyncCompany = "ds"
 
-// Company 返回该 GP 环境直查时用的营运据点代号（zta_file.zta02），空 = "ds"。
+// Company 返回该 GP 环境直查时用的资料库编号（azp_file.azp03 = zta_file.zta02），空 = "ds"。
 //
-// 为什么不是"账号就是据点"：GP 一个库里装了几十家公司，字典表按据点代号分行
+// 为什么是 azp03 而不是据点编号 azp01：aooi901 里「资料库编号」是独立栏位，
+// 默认 'ds'，两者实测有 15/30 不同（COF → cof_demo、DEMO1 → demo1）；拿据点
+// 编号小写去猜 schema 会查到空。
+//
+// 为什么不是"账号就是它"：GP 一个库里装了几十家公司，字典表按资料库编号分行
 // 存；连库账号只决定以谁的身份登录。本项目这套库里账号叫 digiwin，而
 // zta02='ds' 有 2,962 张表、'digiwin' 只有 2,902 张 —— 混着用就会出现
 // "本地查得到、远程说表不存在"，表格总数也对不上。

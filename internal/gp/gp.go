@@ -889,19 +889,19 @@ func testSite(ctx context.Context, env config.NamedSsh) map[string]any {
 	if env.DB == nil || env.DB.Host == "" {
 		return map[string]any{"ok": false, "msg": "还没有填数据库主机"}
 	}
-	company := Company(env)
-	if !siteCodeRE.MatchString(company) {
-		return map[string]any{"ok": false, "msg": "据点代号只能由字母、数字、下划线组成：" + company}
+	schema := Company(env)
+	if !siteCodeRE.MatchString(schema) {
+		return map[string]any{"ok": false, "msg": "资料库编号只能由字母、数字、下划线组成：" + schema}
 	}
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
-	l, err := live.OpenCompany(ctx, *env.DB, company)
+	l, err := live.OpenCompany(ctx, *env.DB, schema)
 	if err != nil {
 		return map[string]any{"ok": false, "msg": err.Error()}
 	}
 	defer l.Close()
 
-	_, rows, err := l.Connector().Query(ctx, `SELECT COUNT(*) FROM zta_file WHERE lower(zta02) = '`+company+`'`)
+	_, rows, err := l.Connector().Query(ctx, `SELECT COUNT(*) FROM zta_file WHERE lower(zta02) = '`+schema+`'`)
 	if err != nil {
 		return map[string]any{"ok": false, "msg": "连上了，但读 zta_file 失败：" + err.Error()}
 	}
@@ -910,10 +910,10 @@ func testSite(ctx context.Context, env config.NamedSsh) map[string]any {
 		n, _ = strconv.Atoi(strings.TrimSpace(rows[0][0]))
 	}
 	if n == 0 {
-		return map[string]any{"ok": false, "msg": "连上了，但 zta_file 里没有据点「" + company + "」的字典行（代号写错了？）"}
+		return map[string]any{"ok": false, "msg": "连上了，但 zta_file 里没有资料库「" + schema + "」的字典行（编号写错了？）"}
 	}
-	msg := "据点 " + company + " 可连：zta_file 有 " + strconv.Itoa(n) + " 张表"
-	if name := siteNameFor(ctx, l, company); name != "" {
+	msg := "资料库 " + schema + " 可连：zta_file 有 " + strconv.Itoa(n) + " 张表"
+	if name := siteNameFor(ctx, l, schema); name != "" {
 		msg += "（" + name + "）"
 	}
 	return map[string]any{"ok": true, "msg": msg}

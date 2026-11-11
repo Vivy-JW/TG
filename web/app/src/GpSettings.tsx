@@ -16,8 +16,8 @@ import { useToast } from './toast'
 
 interface DbAcc { account: string; password?: string; hasPassword?: boolean }
 
-/** 一个营运据点（azp_file 的一行）：代号 + 名称。 */
-interface SiteRow { code: string; name: string }
+/** 一个营运据点（azp_file 的一行）：据点编号 + 名称 + 资料库编号（azp03，查字典用的 schema）。 */
+interface SiteRow { code: string; name: string; schema?: string; hasDB?: boolean }
 
 /** /api/gp/test 单项结果。 */
 interface TestRes { ok: boolean; msg: string }
@@ -503,9 +503,12 @@ export function GpSites({ only, create, initial, onSaved, onDiscard, onDraftChan
   // 当前选中的据点：空 = ds（后端同样的默认）。azp_file 里没有 ds 这种系统库，
   // 所以"选中值不在清单里"时补一行显示出来，别让人以为没选中。
   const curCode = (cur.company || '').trim().toLowerCase() || 'ds'
-  const shownRows: SiteRow[] = sites.some((s) => s.code.toLowerCase() === curCode)
+  // 比较的是资料库编号（azp03）：配置里存的是 schema，不是据点编号 ——
+  // COF 这种据点编号跟它的 cof_demo 是两个值。
+  const schemaOf = (s: SiteRow) => (s.schema || '').trim().toLowerCase()
+  const shownRows: SiteRow[] = sites.some((s) => schemaOf(s) === curCode)
     ? sites
-    : [{ code: curCode, name: cur.companyName || '' }, ...sites]
+    : [{ code: curCode, name: cur.companyName || '', schema: curCode, hasDB: true }, ...sites]
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -643,30 +646,31 @@ export function GpSites({ only, create, initial, onSaved, onDiscard, onDraftChan
               <Table container={false}>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
+                    <TableHead className="w-12 text-right">编号</TableHead>
                     <TableHead className="w-44">营运据点</TableHead>
-                    <TableHead>营运据点名称</TableHead>
+                    <TableHead>schema（资料库编号 azp03）</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {shownRows.map((s) => {
-                    const sel = s.code.toLowerCase() === curCode
-                    const missing = !sites.some((x) => x.code.toLowerCase() === s.code.toLowerCase())
+                  {shownRows.map((s, i) => {
+                    const schema = (s.schema || '').trim().toLowerCase()
+                    const sel = schema === curCode
+                    const noDB = s.hasDB === false
                     return (
-                      <TableRow key={s.code}
-                        onClick={() => patch({ company: s.code.toLowerCase(), companyName: s.name })}
-                        className={cn('cursor-pointer', sel ? 'bg-accent/70 hover:bg-accent/70' : 'hover:bg-accent/40')}>
+                      <TableRow key={s.code + '/' + schema}
+                        onClick={() => patch({ company: schema, companyName: s.name })}
+                        title={s.name}
+                        className={cn('cursor-pointer', sel ? 'bg-accent/70 hover:bg-accent/70' : 'hover:bg-accent/40', noDB && 'opacity-50')}>
+                        <TableCell className="text-right font-mono text-[11px] text-muted-foreground">{i + 1}</TableCell>
                         <TableCell className="font-mono text-xs">
                           <span className="flex items-center gap-1">
                             {sel && <Check className="h-3.5 w-3.5 text-primary" />}
-                            {s.code.toLowerCase()}
+                            {s.code}
+                            {noDB && <span className="text-[10px] text-muted-foreground">（未建库）</span>}
                           </span>
                         </TableCell>
-                        <TableCell className="text-xs">
-                          {s.name || (
-                            <span className="text-muted-foreground">
-                              {missing ? '（不在 azp_file 里，ds 这类系统库就是这样）' : '—'}
-                            </span>
-                          )}
+                        <TableCell className="font-mono text-xs">
+                          {schema || <span className="text-muted-foreground">—</span>}
                         </TableCell>
                       </TableRow>
                     )
