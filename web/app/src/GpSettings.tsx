@@ -509,13 +509,11 @@ export function GpSites({ only, create, initial, onSaved, onDiscard, onDraftChan
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="mb-3 flex items-center gap-2">
-        <span className="rounded-[3px] bg-primary/15 px-1.5 py-0.5 text-[10px] font-semibold text-primary">TOP GP</span>
-        <span className="text-[11px] text-muted-foreground">TOP GP 没有 ENT；填实例名即可，$TOP / $CUST 由后台推导；营运据点在单独页签里选。</span>
-        {saveState !== 'idle' && (
-          <span className="ml-auto text-[11px] text-muted-foreground">{saveState === 'saving' ? '保存中…' : '已保存'}</span>
-        )}
-      </div>
+      {saveState !== 'idle' && (
+        <div className="mb-2 flex justify-end">
+          <span className="text-[11px] text-muted-foreground">{saveState === 'saving' ? '保存中…' : '已保存'}</span>
+        </div>
+      )}
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as 'ssh' | 'db' | 'site')} className="flex min-h-0 flex-1 flex-col">
         <div className="flex items-center gap-2">
