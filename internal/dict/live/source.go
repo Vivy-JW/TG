@@ -440,21 +440,7 @@ func (l *Live) QuerySubProgInfo(code, lang string) (*db.SubProgInfo, error) { re
 func (l *Live) QuerySubProgList(lang, keyword string) ([]db.SubProgListItem, error) {
 	return []db.SubProgListItem{}, nil
 }
-func (l *Live) QueryCheckList(lang, keyword string) ([]db.CheckListRow, error) {
-	return []db.CheckListRow{}, nil
-}
-func (l *Live) QueryCheckHeaders(id, lang string) ([]db.CheckHeaderRow, error) {
-	return []db.CheckHeaderRow{}, nil
-}
-func (l *Live) QueryCheckParams(id, lang string) ([]db.CheckParamRow, error) {
-	return []db.CheckParamRow{}, nil
-}
-func (l *Live) QueryCheckConds(id string) ([]db.CheckCondRow, error) {
-	return []db.CheckCondRow{}, nil
-}
-func (l *Live) QuerySpecRows(tableName, lang string) ([]db.SpecRow, error) {
-	return []db.SpecRow{}, nil
-}
+
 func (l *Live) QuerySccList(lang, keyword string) ([]db.SccListRow, error) {
 	return []db.SccListRow{}, nil
 }

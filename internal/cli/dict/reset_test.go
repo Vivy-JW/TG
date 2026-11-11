@@ -52,10 +52,9 @@ func resetDictPackageState(t *testing.T) {
 	// 字符串
 	t.Cleanup(snapVars(
 		&dbPath, &srcConfigPath, &dictEnt, &dictCompany, &srcDetail, &srcProduct, &srcCompany,
-		&checkKW, &checkLang,
-		&dbSyncTable, &discoverType, &discoverHost,
+			&dbSyncTable, &discoverType, &discoverHost,
 		&msgLang, &msgText, &msgType, &msgStatus, &msgProg,
-		&paramLang, &specLang, &docListMode,
+		&paramLang, &docListMode,
 		&progKW, &progLang, &progTablesMode,
 		&sccKW, &sccLang,
 		&tableKW, &tableLang, &tableCols,
@@ -188,10 +187,9 @@ func TestOpenQuerySourceLocalSucceedsWhenDBExists(t *testing.T) {
 // 但它挡得住最常见的那种：**新加一个包级 var，两处都忘了**。
 var dictMutableVars = []string{
 	"dbPath", "srcConfigPath", "queryLimit", "srcQueryLimit", "dictEnt", "dictCompany", "dictFull", "srcProduct", "srcDetail", "srcCompany",
-	"checkKW", "checkLang",
 	"dbSyncTable", "discoverType", "discoverHost", "discoverSave", "dbListSecrets",
 	"msgLang", "msgText", "msgType", "msgStatus", "msgProg", "msgFull",
-	"paramLang", "specLang", "docListMode",
+	"paramLang", "docListMode",
 	"progKW", "progLang", "progTablesMode", "progSub",
 	"sccKW", "sccLang",
 	"tableKW", "tableLang", "tableCols", "tableBrief", "tableWho", "tableFields", "sccBrief",
@@ -205,7 +203,7 @@ var dictMutableVars = []string{
 var dictReadOnlyVars = []string{
 	"helpCmdFamilies", "baseHelpFunc",
 	"msgTypeValues", "msgStatusValues",
-	"msgColumns", "specCSVHeaders", "tableDetailColumns", "tableSummaryColumns",
+	"msgColumns", "tableDetailColumns", "tableSummaryColumns",
 }
 
 var (

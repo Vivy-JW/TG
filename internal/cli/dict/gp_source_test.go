@@ -10,7 +10,6 @@ import (
 	_ "modernc.org/sqlite"
 
 	"tt/internal/cli/common"
-	"tt/internal/dict/db"
 )
 
 // gpConfig 造一份只有一个 GP 环境的 config.json，字典库目录指向 dir。
@@ -101,10 +100,7 @@ func TestLocalGPEnvReadsDict(t *testing.T) {
 	if info.TableCount != 1 {
 		t.Errorf("TableCount = %d，期望 1", info.TableCount)
 	}
-	// 校验带值这一族 GP 没有：要么空集、要么"缺表"（命令层据此说 GP 没有这类数据）。
-	if rows, err := GetDB().QueryCheckList("zh_CN", ""); err != nil && !db.IsMissingTable(err) {
-		t.Errorf("GP 没有校验带值族，应 空集 或 缺表，得到 (%d, %v)", len(rows), err)
-	}
+
 }
 
 // TestLocalGPEnvMissingDict：还没同步过要直接说清楚怎么补，而不是

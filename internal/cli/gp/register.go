@@ -1,6 +1,6 @@
 // Package gp 是 TOP GP 的查询命令组。
 //
-// 它刻意不并进 tt dict：T100 的 r.t / desc / r.v / scc / r.q / prog 查的是
+// 它刻意不并进 tt dict：T100 的 r.t / scc / r.q / prog 查的是
 // T100 字典表，GP 的 p_zta / p_link / p_ze 查的是另一套 Oracle 表，字段和语义
 // 都不一样。并进去只会让 tt dict 到处长 GP 特判。
 //

@@ -27,9 +27,7 @@
 | 族 | 中文名 | 依赖命令 | 表 |
 |---|---|---|---|
 | `table` | 表字典 | `r.t` | 表档 / 字段档 / 键值档 / 索引档等 9 张 |
-| `check` | 校验带值 | `r.v` | `dzcd_t` 系 5 张 |
 | `scc` | 系统分类码 | `scc` | `gzca_t` 系 4 张 |
-| `spec` | 字段画面规格 | `desc` | `dzep_t` |
 | `win` | 可复用开窗 | `r.q` | `dzca_t` 系 5 张 |
 | `msg` | 系统消息 | `msg` | `gzze_t`、`gzzal_t` |
 | `param` | 参数定义 | `sysp` / `docp` | `gzsz_t` 系 3 张 |

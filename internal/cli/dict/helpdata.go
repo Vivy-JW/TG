@@ -15,9 +15,7 @@ import (
 // 命令不在表里(db/mirror/spill 等)不显示提示。
 var helpCmdFamilies = map[string][]string{
 	"r.t":  {"table", "progtable"},
-	"r.v":  {"check"},
 	"scc":  {"scc"},
-	"desc": {"spec"},
 	"r.q":  {"win"},
 	"msg":  {"msg"},
 	"sysp": {"param"},

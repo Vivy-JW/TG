@@ -1459,11 +1459,11 @@ export function SettingsView() {
                   本地那份 SQLite 从哪来、查的时候走哪条路。原先分成两张卡,第一张只放一个下拉,
                   第二张才是"这份数据怎么来的",读的人得自己把两处接起来。 */}
               <Card id="card-dict-query" title="查询数据源"
-                description="r.t / r.v / desc / scc / r.q 等查询命令走哪条路取数。">
+                description="r.t / scc / r.q / prog / msg 等查询命令走哪条路取数。">
                 <SettingRow
                   id="query.source"
                   label="数据源"
-                  description="在线走该环境直查；本地只读该环境自己的 SQLite，各环境互不干扰。本地快照目前只支持 T100 字典；TOP GP 的本地库暂不参与 r.t / r.v / desc 查询。"
+                  description="在线走该环境直查；本地只读该环境自己的 SQLite，各环境互不干扰。TOP GP 的本地库参与 r.t / prog / msg 查询；r.q 目前直查远程。"
                   control={
                     <Select
                       value={dict.querySource === '' ? 'online' : dict.querySource}

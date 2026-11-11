@@ -33,15 +33,13 @@ type Family struct {
 var Families = []Family{
 	{Key: "table", Name: "表字典", Commands: []string{"r.t"},
 		Tables: []string{"dzea_t", "dzeal_t", "dzeb_t", "dzebl_t", "dzec_t", "dzed_t", "dzee_t", "dzef_t", "dzeg_t"}},
-	{Key: "check", Name: "校验带值", Commands: []string{"r.v"},
-		Tables: []string{"dzcd_t", "dzcdl_t", "dzce_t", "dzcel_t", "dzch_t"}},
+
 	{Key: "scc", Name: "系统分类码", Commands: []string{"scc"},
 		Tables: []string{"gzca_t", "gzcal_t", "gzcb_t", "gzcbl_t"}},
 	// ACC 的定义/注册元数据（gzaa/gzaal/gzac/gzad）；oocq/oocql 是业务值，不进默认字典同步。
 	{Key: "acc", Name: "应用分类码定义", Commands: []string{"acc"},
 		Tables: []string{"gzaa_t", "gzaal_t", "gzac_t", "gzad_t"}},
-	{Key: "spec", Name: "字段画面规格", Commands: []string{"desc"},
-		Tables: []string{"dzep_t"}},
+
 	{Key: "win", Name: "可复用开窗", Commands: []string{"r.q"},
 		Tables: []string{"dzca_t", "dzcal_t", "dzcb_t", "dzcbl_t", "dzcc_t"}},
 	{Key: "msg", Name: "系统消息", Commands: []string{"msg"},

@@ -26,12 +26,7 @@ type Source interface {
 	QuerySubProgInfo(code, lang string) (*SubProgInfo, error) // 未收录返回 (nil, nil)
 	QuerySubProgList(lang, keyword string) ([]SubProgListItem, error)
 	// rv 校验带值:dzcd_t/dzce_t/dzch_t
-	QueryCheckList(lang, keyword string) ([]CheckListRow, error)
-	QueryCheckHeaders(id, lang string) ([]CheckHeaderRow, error)
-	QueryCheckParams(id, lang string) ([]CheckParamRow, error)
-	QueryCheckConds(id string) ([]CheckCondRow, error)
 	// desc 字段规格:dzep_t(附 dzeb_t/dzebl_t 名称)
-	QuerySpecRows(tableName, lang string) ([]SpecRow, error)
 	// scc 系统分类码:gzca_t/gzcb_t
 	QuerySccList(lang, keyword string) ([]SccListRow, error)
 	QuerySccHeader(id, lang string) (*SccHeaderRow, error) // 未命中返回 (nil, nil)

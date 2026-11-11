@@ -16,7 +16,7 @@ var Group = &cobra.Command{
 	Short: "TDict - ERP 数据字典查询工具",
 	Long: `查询 ERP 数据字典。
 
-查询数据源（r.t/r.v/desc/scc/r.q）：环境一律点名。
+查询数据源（r.t/scc/r.q/prog/msg）：环境一律点名。
   --env <环境>              直查该环境的远程库（金仓/Oracle）
   --env local:<环境>        查该环境自己的本地 SQLite 镜像
                             （<数据目录>/dict/<环境>.db，由 tt dict db sync --env <环境> 同步）
