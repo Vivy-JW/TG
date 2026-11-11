@@ -646,13 +646,12 @@ export function GpSites({ only, create, initial, onSaved, onDiscard, onDraftChan
               <Table container={false}>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
-                    <TableHead className="w-12 text-right">编号</TableHead>
                     <TableHead className="w-44">营运据点</TableHead>
                     <TableHead>schema（资料库编号 azp03）</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {shownRows.map((s, i) => {
+                  {shownRows.map((s) => {
                     const schema = (s.schema || '').trim().toLowerCase()
                     const sel = schema === curCode
                     const noDB = s.hasDB === false
@@ -661,7 +660,6 @@ export function GpSites({ only, create, initial, onSaved, onDiscard, onDraftChan
                         onClick={() => patch({ company: schema, companyName: s.name })}
                         title={s.name}
                         className={cn('cursor-pointer', sel ? 'bg-accent/70 hover:bg-accent/70' : 'hover:bg-accent/40', noDB && 'opacity-50')}>
-                        <TableCell className="text-right font-mono text-[11px] text-muted-foreground">{i + 1}</TableCell>
                         <TableCell className="font-mono text-xs">
                           <span className="flex items-center gap-1">
                             {sel && <Check className="h-3.5 w-3.5 text-primary" />}
