@@ -54,7 +54,6 @@ func resetDictPackageState(t *testing.T) {
 		&dbPath, &srcConfigPath, &dictEnt, &dictCompany, &srcDetail, &srcProduct, &srcCompany,
 			&dbSyncTable, &discoverType, &discoverHost,
 		&msgLang, &msgText, &msgType, &msgStatus, &msgProg,
-		&paramLang, &docListMode,
 		&progKW, &progLang, &progTablesMode,
 
 		&tableKW, &tableLang, &tableCols,
@@ -189,7 +188,6 @@ var dictMutableVars = []string{
 	"dbPath", "srcConfigPath", "queryLimit", "srcQueryLimit", "dictEnt", "dictCompany", "dictFull", "srcProduct", "srcDetail", "srcCompany",
 	"dbSyncTable", "discoverType", "discoverHost", "discoverSave", "dbListSecrets",
 	"msgLang", "msgText", "msgType", "msgStatus", "msgProg", "msgFull",
-	"paramLang", "docListMode",
 	"progKW", "progLang", "progTablesMode", "progSub",
 	"tableKW", "tableLang", "tableCols", "tableBrief", "tableWho", "tableFields",
 	"winKW", "winLang",

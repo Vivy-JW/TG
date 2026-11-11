@@ -78,16 +78,6 @@ func TestShapeProgTablesNames(t *testing.T) {
 	}
 }
 
-func TestNormalizeDocListMode(t *testing.T) {
-	for in, want := range map[string]string{"": "full", "full": "full", "none": "none", "count": "count"} {
-		if got, err := normalizeDocListMode(in); err != nil || got != want {
-			t.Fatalf("normalizeDocListMode(%q) = %q,%v", in, got, err)
-		}
-	}
-	if _, err := normalizeDocListMode("bad"); err == nil {
-		t.Fatal("非法 --doclist 应报错")
-	}
-}
 
 func TestTableSummaryOnlyIncludesFieldsWhenAsked(t *testing.T) {
 	d := sampleTable()

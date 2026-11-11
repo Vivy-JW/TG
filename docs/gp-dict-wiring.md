@@ -139,8 +139,8 @@
 | 23 | `QueryWinList` | `gab_file` + `gae_file`（wintitle） | ✅ 已接（`r.q` 列表） |
 | 24/25 | `QueryWinHeaders/Params` | `gab_file` 单头；GP 没有开窗参数这一层（`dzcb_t` 无对端） | ✅ 单头 / ⬜ 参数 |
 | 26 | `QueryWinCols` | `gac_file` + `gaq_file` 显示名 + `all_tab_columns` 列类型 | ✅ 已接 |
-| 27 | `QueryParam` | 没有参数定义档 | ⬜ |
-| 28 | `QueryDocTypes` | 没有单据性质档 | ⬜ |
+| 27 | `QueryParam`（`sysp`） | **命令已删**（2026-11-11）。GP 没有参数定义档：参数是各模块参数档里的列（`aaa_file`/`aaz_file`/`apz_file`…，表说明含"参数"的 77 张） | — |
+| 28 | `QueryDocTypes`（`docp`） | **命令已删**。GP 没有单据性质档，也没有"参数绑定单据别"这层 | — |
 
 ### 3.5 消息
 

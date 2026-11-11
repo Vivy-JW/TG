@@ -82,79 +82,20 @@ tg dict r.t capp115_tmp --at <环境>@<企业>
 
 > Tips: 需要配置环境的命令都可以通过`--at-list`命令查看可以使用哪些环境
 
-## 系统分类码SCC
+## 系统分类码 / 应用分类码 / 参数编号：GP 没有这套
 
-系统分类码SCC是T100中所有下拉框的数据来源。示例 `CALL cl_set_combo_scc("gzpa003","75")`、`CALL cl_set_combo_scc('b_pmds048','2087')`，这是一个常见的绑定下拉框的函数调用，`gzpa003` 和 `b_pmds048` 就是前端控件的编号，而 `75` 和 `2087` 就是系统分类码SCC的值。我们可以通过查询系统分类码SCC来获取其对应的中文含义。
+T100 的三套"编号字典"在 GP 库里**一张表都没有**（`gzca_t` 系、`gzaa/gzac/gzad/gzzz/oocq/oocql` 系、`gzsz_t/gzszl_t/gzsy_t/ooac_t` 系全是 `ORA-00942`），所以 TG 不再提供 `tt dict scc` / `acc` / `sysp` / `docp` 四条命令。
 
-下面的逻辑判断是一个很典型的例子，如果不借助SCC来查询其中文含义，我们是无法理解其逻辑的，因为都是编号：
-```
-CASE 
-  WHEN g_schedule.gzpa003 = "0"
-        CALL capp115_process(ls_js)
+对应的 T100 概念，读 GP 代码时要换成这些线索：
 
-  WHEN g_schedule.gzpa003 = "1"
-        LET ls_js = capp115_transfer_argv(ls_js)
-        CALL cl_cmdrun(ls_js)
-
-  WHEN g_schedule.gzpa003 = "2"
-        CALL cl_schedule_update_data(g_jobid,ls_js)
-
-  WHEN g_schedule.gzpa003 = "3"
-        CALL cl_schedule_update_data(g_jobid,ls_js)
-END CASE  
-```
-
-如何识别代码中的SCC码? 
-
-遇到 `cl_set_combo_scc*`、`s_desc_gzcbl004_desc`、`s_fin_get_scc_value`、`q_gzcb001`，或字段定义写成 `LIKE gzcbl_t.gzcbl004` 时，就是 SCC；它的值在 `gzcb_t`。
-
-从系统分类码SCC中查询中文含义的命令：
-```bash
-tt dict scc 75 --at <环境>@<企业>
-tt dict scc 2087 --at <环境>@<企业>
-```
-
-## 应用分类码ACC
-
-ACC（应用分类码）是 T100 的配置驱动基础资料框架：azzi650 在 gzaa/gzaal定义分类、在 gzac/gzad 配置最多 20 个参考字段，azzi910 再通过 gzzz_t 把分类注册成由 aooi300/301/310 等通用程序渲染的维护作业，实际值按企业存放在oocq_t/oocql_t（oocq001 区分分类、oocq002 表示值），因此它是“一个分类 =一个可配置的小型维护作业”，不是 SCC 那种固定下拉字典；判断编号类型要看它落在 gzaa/gzzz 还是 gzca/gzcb，而不是看数字长度。
-
-如何识别代码中的ACC码?
-
-遇到 `s_desc_get_acc_desc`、`s_azzi650_chk_exist*`、`q_oocq002(_号)`（即 `q_oocq002_<分类号>`）、`cl_set_combo_acc`，或字段定义写成 `LIKE oocql_t.oocql004` 时，就是 ACC；它的值在 `oocq_t`（所有分类共用一张表）。
-
-在`tt dict acc`中查看某个acc码相关信息的命令：
+- **没有分类码/应用分类码**：GP 的下拉选项多半写死在程序里，或来自该模块自己的小档（如 `*a_file` 的维护作业）。看到 `LIKE gzcbl_t`、`cl_set_combo_scc`、`s_desc_get_acc_desc` 这类写法时，说明这段是 T100 遗留逻辑，GP 侧没有对端。
+- **没有"参数编号"**：GP 的参数就是各模块**参数档里的列** —— `aaa_file`（账套参数档）、`aaz_file`（总账会计系统参数档 128 列）、`apz_file`（应付账款）、`aza_file`（整体管理系统参数档 148 列）、`azm_file`（会计期间参数）… 表说明含"参数"的一共 77 张。想知道某一列是什么意思，直接查字段说明：
 
 ```bash
-tt dict acc show 3211 --at <环境>        # 直接按 ACC 分类号
-tt dict acc show aapi010 --at <环境>     # 或按维护作业号
-tt dict acc query 3211 --template --at <环境> > 3211-acc.json
-# 填好 3211-acc.json 的 query 后
-tt dict acc query 3211 --spec 3211-acc.json --at <环境>@<企业>
+tt dict r.t aaz_file --fields --at <环境>@<ds>
 ```
 
-在`tt dict scc`中对某个scc做数据查询的命令：
-
-```bash
-tt dict scc 75 --at <环境>@<企业>
-tt dict scc 75 --full --at <环境>@<企业>
-```
-
-## 系统参数和单据参数
-
-除了系统分类码，系统参数和单据参数也是理解程序中业务逻辑的重要手段。系统参数主要分为企业级参数(示例`E-CIR-0759`)和据点级参数(示例`S-BWF-0001`)，单据参数也称单据别参数，则是用于设置，单别参数的示例`D-BWF-0004`，大概率是类似的前缀，区分不出来的话，你可以两个查询工具都试一下
-
-查询系统参数示例：
-
-```bash
-tt dict sysp E-CIR-0759 --at <环境>@<企业>
-tt dict sysp S-BWF-0001 --at <环境>@<企业>
-```
-
-查询单据参数示例：
-
-```bash
-tt dict docp D-BWF-0004 --at <环境>@<企业>
-```
+- **没有单据性质绑定**：T100 的"单据别参数绑一堆单据性质"这层在 GP 不存在。
 
 ## 从系统消息解读报错和提示
 
@@ -201,7 +142,7 @@ tt dict r.q q_sfajwfdocno_01_wf --at <环境>@<企业>
 tt dict r.q --kw sfajwfdocno --at <环境>@<企业>
 ```
 
-过栏位的判断也是可以复用的，特征是 `v_xx`，借助工具我们可以方便地查询到其封装的SQL逻辑。
+过栏位的判断也是可以复用的，特征是 `v_xx`。（这一层 GP 侧没有 `tt dict r.v`；`v_*` 封装的 SQL 直接在源码里看，或按它过滤的表/字段用 `tt dict r.t` 反查。）
 
 ```
 AFTER FIELD wfapwf023

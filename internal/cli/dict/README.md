@@ -28,7 +28,6 @@
 | `--env` / `--conn` | 选数据源：环境名 = 在线直查；`local:<环境>` = 该环境自己的本地库（裸 `local` 缺环境会报错）；**显式指定即强制** |
 | `r.t` | 默认 summary 只给表级信息；`--fields` 加字段骨架，`--col`/`--kw` 做字段投影，`--full` 回完整字段/键值/索引 |
 | `prog --tables` | 用表矩阵投影：`none` 不查/不返回，`names` 只回表格编号（默认），`full` 保留说明与操作；`--full` 回到完整视图 |
-| `docp --doclist` | 单据性质清单：`none` 不查、`count` 只回数量、`full` 展开（默认） |
 
 `prog` / `r.t` 的 `--full` 只改变**默认摘要命令**的详细程度；信封里的 `detail`
 会明确写 `summary` 或 `full`。`--brief` 继续保留为更小的表级/值级投影。
@@ -43,7 +42,7 @@
 | 表与字段 | `r.t`（表字典与字段） |
 | 开窗 | `r.q`（可复用开窗定义与拼出来的 SQL） |
 | 程序 | `prog`（程序与作业、程序↔表格、子程序与元件） |
-| 消息与参数 | `msg`、`sysp`、`docp` |
+| 消息 | `msg`（系统消息档） |
 | 数据维护 | `db status`（按环境总览/单环境详情）/ `db sync` / `db list` / `db discover`；连库测试在 `tt db` |
 | 结果 | `spill list` / `spill show <文件\|latest>` |
 

@@ -34,15 +34,10 @@ var Families = []Family{
 	{Key: "table", Name: "表字典", Commands: []string{"r.t"},
 		Tables: []string{"dzea_t", "dzeal_t", "dzeb_t", "dzebl_t", "dzec_t", "dzed_t", "dzee_t", "dzef_t", "dzeg_t"}},
 
-
-
 	{Key: "win", Name: "可复用开窗", Commands: []string{"r.q"},
 		Tables: []string{"dzca_t", "dzcal_t", "dzcb_t", "dzcbl_t", "dzcc_t"}},
 	{Key: "msg", Name: "系统消息", Commands: []string{"msg"},
 		Tables: []string{"gzze_t", "gzzal_t"}},
-	{Key: "param", Name: "参数定义", Commands: []string{"sysp", "docp"},
-		Tables: []string{"gzsz_t", "gzszl_t", "gzsy_t"}},
-	// 程序与作业 (azzi900 程式基本資料 / azzi910 作業基本資料):
 	// 程序档 + 程序名称多语言 + 作业编号设置表(作业用 gzzz002 挂程序,一个程序可被多个作业使用)
 	// + 程序应用参数组设置表。gzzal_t 同时服务 msg 族,展平时去重。
 	{Key: "prog", Name: "程序与作业", Commands: []string{"prog"},

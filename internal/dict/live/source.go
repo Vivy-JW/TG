@@ -594,9 +594,4 @@ func (l *Live) QueryWinCols(id, lang string) ([]db.WinColRow, error) {
 	return out, nil
 }
 
-func (l *Live) QueryParam(code string) ([]db.ParamDefRow, error) {
-	return []db.ParamDefRow{}, nil
-}
-func (l *Live) QueryDocTypes(code, lang string) ([]db.DocTypeRow, error) {
-	return []db.DocTypeRow{}, nil
-}
+

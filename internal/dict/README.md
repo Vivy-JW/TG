@@ -29,7 +29,6 @@
 | `table` | 表字典 | `r.t` | 表档 / 字段档 / 键值档 / 索引档等 9 张 |
 | `win` | 可复用开窗 | `r.q` | `dzca_t` 系 5 张 |
 | `msg` | 系统消息 | `msg` | `gzze_t`、`gzzal_t` |
-| `param` | 参数定义 | `sysp` / `docp` | `gzsz_t` 系 3 张 |
 | `prog` | 程序与作业 | `prog` | 程序档 / 作业表 / 应用参数组等 4 张 |
 | `progtable` | 程序与表格 | `prog` / `r.t` | `gzdg_t` |
 | `subprog` | 子程序与元件 | `prog` | `gzde_t`、`gzdel_t` |
