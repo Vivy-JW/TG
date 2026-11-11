@@ -37,10 +37,7 @@ TT/
 │  │  ├─ common/        命令组间共享上下文（全局开关、MetaProvider、WebFS；叶子包防成环）
 │  │  ├─ db/            tt db 命令组（sql 只读 SQL / ping 本机连库 / probe 服务器连库）
 │  │  ├─ debug/         调试命令组门面（fgldb 那条线）
-│  │  ├─ dev/           tt dev 命令组（tzc/tzs 两条线，目录即分层）
-│  │  │  ├─ common/     两条线共用脚手架：错误信封、稳定紧凑 JSON、参数重排、身份后缀
-│  │  │  ├─ tzc/        .tzc 代码包线：八个动词 + uuid 小工具 + 31 项对抗自检 + Verbs() 接线清单
-│  │  │  └─ tzs/        .tzs 表单包线：cmdTzs 分发、引擎定位、manifest、detail 渲染
+
 │  │  ├─ dict/          字典命令组：表/字段/校验/开窗/消息/参数/ACC 查询
 │  │  ├─ file/          tt file 命令组：只读 SFTP 与离线镜像
 │  │  ├─ interfacecmd/  tt interface 命令组：.42f + .42s → 页面/字段/中文标签
@@ -56,20 +53,10 @@ TT/
 │  │  ├─ dbsync/        表与数据族同步（含 ACC 定义族）
 │  │  ├─ live/          远程 ERP 直查（Oracle/金仓）
 │  │  └─ server/        Web 字典接口
-│  ├─ dev/              .tzc/.tzs 设计器包管线（纯管线，无命令层）
-│  │  ├─ fence/         围栏协议：渲染/解析/字节级写回编辑
-│  │  ├─ verify/        三道闸门 + 不变量 I1–I15
-│  │  ├─ store/         工作区落盘：manifest、基线、原子写、锁
-│  │  ├─ tzs/           .tzs 引擎客户端：管道协议、manifest、doctor
-│  │  ├─ split/         写回计划与源码拆分
-│  │  ├─ tapfile/       TAP 文件格式
-│  │  ├─ tglfile/       TGL 文件格式
-│  │  ├─ fgl/           FGL 语法/块/大纲处理
-│  │  ├─ model/         包模型与稳定 JSON
-│  │  ├─ pkgfile/       .tzc/.tzs 包格式
-│  │  ├─ synth/         合成测试包
-│  │  └─ testutil/      管线测试夹具
-│  │  └─ shapes/        内置形状库（business/controls/icons/raw）
+│  ├─ dev/              设计器包管线删剩的两个包（2026-11-11 删了 fence/verify/store/tzs/split/
+│  │                     tapfile/tglfile/model/pkgfile/synth，形状库随 tzs 一起没了）
+│  │  ├─ fgl/           FGL 语法/块/大纲处理（tt outline 在用，GP 的 4gl 也吃它）
+│  │  └─ testutil/      语料根与遍历（CorpusRoot/CorpusFiles，测试夹具）
 │  ├─ entdir/           企业目录（ENT→账号）快照、指纹、新鲜期（debug 与 dict 共用）
 │  ├─ envmove/          环境改名的落点迁移（字典库/快照/镜像）与失败回滚（CLI 与 Web 共用）
 │  ├─ erpdb/            客户端直连库封装（Oracle / 金仓，一个接口两个实现）
@@ -97,27 +84,26 @@ TT/
 │  ├─ shared/           共享主题与设计系统（被 @source 扫描，改动要谨慎）
 │  └─ dist/             构建产物，被 Go 嵌入（.gitkeep 是承重墙）
 │
-├─ engine/              .tzs 表单引擎（C#，csc.exe 单独构建，只在改 engine/ 时重编）
+├─ engine/              .tzs 表单引擎（C#；T100 专用，阶段 3 待删，现已无 Go 代码引用）
 │  ├─ src/              引擎 C# 源码（tzs-server）
 │  │  └─ Designer/Fns/  设计器函数/组件操作面（读、校验、语义、会话）
 │  ├─ designer/         设计器 28 个程序集（≈10.5MB，有意入库，保证全网同版）
 │  ├─ out/              构建产物 + 探测程序（不进发行包、不能落 dist/ 下）
 │  └─ test/             引擎测试
 │
-├─ designer-src/        设计器反编译源码（只读）：16 工程 + 子包地图，注释 file:line 的核对落点
+├─ designer-src/        设计器反编译源码（只读）：16 工程 + 子包地图；阶段 3 待删（删前给 TT-src 打 zip）
 ├─ installer/           MSI 安装包定义（WiX v3；perUser 装到 %LOCALAPPDATA%\Programs\TT）
 ├─ tools/               构建辅助 Go 工具
 │  ├─ zip/              跨平台确定性打包
 │  ├─ wixremovefolders/ MSI 卸载时补空目录清理
-│  └─ tzsmini/          从语料构建 tzs-mini 夹具
+│  └─ tzsmini/          从语料构建 tzs-mini 夹具（T100 专用，阶段 3 待删）
 ├─ testdata/            测试语料
-│  ├─ tzs-mini/         3.2MB 筛小标准件工作区
+│  ├─ tzs-mini/         3.2MB 筛小标准件工作区（T100 专用，阶段 3 待删）
 │  ├─ fgl-fixtures/     FGL 解析/写回夹具
 └─ skills/              对外技能手册（评测中执行者唯一能读的东西）
-   ├─ tt-dev-tzc/       .tzc 代码包安全编辑
-   ├─ tt-erp-architecture/  T100 整体架构与代码地图
-   ├─ tt-erp-debug/     T100 作业调试
-   └─ tt-erp-read/      T100 代码阅读（含 SCC/ACC 识别）
+   ├─ tg-erp-architecture/  TOP GP 整体架构与代码地图
+   ├─ tg-erp-debug/     TOP GP 作业调试
+   └─ tg-erp-read/      TOP GP 代码阅读（含 4gl / 42f / 42s）
 ```
 
 ## 开发命令

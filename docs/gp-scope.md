@@ -75,7 +75,7 @@ m.Handle("/api/gp/", s.opt.GP)                                    // GP
 | `debugclient` | 581 | 调试面 REST 的唯一客户端 | 跟着 §5.1 的结论走 |
 | `screen` | 292 | `.42f` + `.42s` → 前端画面模型 | 纯函数 |
 | `str42s` | 141 | `.42s` → 中文标签 | 纯函数 |
-| `dev/fgl` | （在 `dev` 12895 内） | 4GL 源码分块与语义 | **要从 `dev/` 里单独搬出来**，否则跟着 `.tzc/.tzs` 一起被删 |
+| `dev/fgl` | 2242 | 4GL 源码分块与语义 | 已留下（2026-11-11 删 `dev/` 其余包时保留），`tt outline` 与 GP 的 4gl 共用 |
 
 两条判断依据：
 
@@ -89,8 +89,8 @@ m.Handle("/api/gp/", s.opt.GP)                                    // GP
 | 包 / 目录 | 行数 | 是什么 |
 |---|---|---|
 | `cli/debug` | 4547 | `tt debug`：T100 作业调试器的命令行面（停站、断点、接口日志重放） |
-| `dev`（`fence`/`model`/`pkgfile`/`split`/`store`/`synth`/`verify`/`tzs`/`tapfile`/`tglfile`/`testutil`） | 12895 | `.tzc`/`.tzs` 设计器包的读写、围栏、合成、闸门 |
-| `cli/dev`（`tzc`/`tzs`/`common`） | 5015 | `tt dev tzc` / `tt dev tzs` 命令面 |
+| ~~`dev`（`fence`/`model`/`pkgfile`/`split`/`store`/`synth`/`verify`/`tzs`/`tapfile`/`tglfile`）~~ | 12895 | `.tzc`/`.tzs` 设计器包的读写、围栏、合成、闸门 —— **已于 2026-11-11 删除**（只留 `fgl`、`testutil`） |
+| ~~`cli/dev`（`tzc`/`tzs`/`common`）~~ | 5015 | `tt dev tzc` / `tt dev tzs` 命令面 —— **已于 2026-11-11 删除**，`tt dev` 组不复存在 |
 | `designer` | 327 | 从设计器 `sites.xml` 导入环境站点 |
 | `cli/session` | 494 | `tt session`：ENT 会话的建/列/看/改/收 |
 | `cli/at` | 788 | `--at <环境>[@<企业>]` 文法与作用域表 |
@@ -104,7 +104,7 @@ m.Handle("/api/gp/", s.opt.GP)                                    // GP
 | `designer-src/` | 1188 文件 / 5.7 MB | T100 Designer 的 C# 解决方案（`T100Designer.sln`） |
 | `engine/` | 76 文件 / 11.7 MB | `.tzs` 引擎（C#，`TzsRepacker.cs` 等）+ 规格 `SPEC.md` |
 | `testdata/` | 169 文件 / 3.2 MB | `.tzs` 语料、`fgl-fixtures`、`tzs-mini` |
-| `skills/` | 4 个技能 | `tt-erp-architecture` / `-debug` / `-read` / `tt-dev-tzc`，全是 T100 的 |
+| `skills/` | 3 个技能 | 已换 GP 版（`tg-erp-architecture` / `-debug` / `-read`）；`tt-dev-tzc` 已删 |
 
 `designer-src/` 与 `engine/` 是**最大的两块死重量**：GP 侧一行都用不上，但删了在本仓库不可恢复（TT-src 只读副本还在，可兜底）。
 
@@ -222,7 +222,7 @@ TT 的 GP 面现在只有"环境 / 镜像 / 字典 / 调试会话"四件事，**
 | 编译 | `go build ./...` | 必须 |
 | 单测 | `go test ./...` | 沙箱里有 4 个包恒红，见 §8；真机应为绿 |
 | 前端 | `cd web && npm run check:app` | 只在改前端时 |
-| T100 自检 | `./tt.exe dev tzc selftest`（31 项） | 阶段 3 删掉 tzc 后自然消失 |
+| T100 自检 | ~~`./tt.exe dev tzc selftest`（31 项）~~ | 已随 `tt dev` 删除消失（2026-11-11） |
 | GP 全链路 | 配环境 → 测连通 → 同步字典 → 拉镜像 → 起 fgldb → 跑一条 `tt dict r.t` | **手工**，没有自动化；这条是"TG 还能用"的唯一判据 |
 
 ## 7. 今天实测出来的缺口（不是设计缺失，是没接线）
@@ -251,10 +251,10 @@ TT 的 GP 面现在只有"环境 / 镜像 / 字典 / 调试会话"四件事，**
 |---|---|---|
 | `internal/host` | `exec: "bash": executable file not found in %PATH%` | 测试用 bash 反解 shell 引号；本机 bash 起不来（msys fork 限制） |
 | `internal/pathinstall` | `创建临时注册表键失败: Access is denied` | 沙箱不许写 HKCU |
-| `internal/dev/tzs` | `连不上管道 tzs-cli-...: Access is denied` | 沙箱禁命名管道 |
-| `internal/cli/dev/tzc` | 同上（121s 超时后失败） | 同上 |
+| ~~`internal/dev/tzs`~~ | `连不上管道 tzs-cli-...: Access is denied` | 沙箱禁命名管道（包已于 2026-11-11 删除） |
+| ~~`internal/cli/dev/tzc`~~ | 同上（121s 超时后失败） | 同上（包已于 2026-11-11 删除） |
 
-只有 `internal/cli/dev/common` 是真缺陷（缺 `internal/cli/dev/tzs/README.md`），已由 `f4a02df` 修好。
+只有 `internal/cli/dev/common` 是真缺陷（缺 `internal/cli/dev/tzs/README.md`），已由 `f4a02df` 修好；该包已于 2026-11-11 与 `tt dev` 一起删除，现在跑 `go test ./internal/...` 只剩 `internal/host` 红。
 
 ## 9. 数字怎么来的（可复现）
 

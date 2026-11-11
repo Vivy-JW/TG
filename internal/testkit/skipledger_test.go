@@ -74,14 +74,9 @@ const (
 // 拼接出来的（如 e2e_test.go 那条，`TTZS_INSTALL` 在后半段未被捕获）。
 // 所以这张表要按**捕获得到**的名字列。
 var switchNames = []string{
-	"TDEV_DEEP", "TTZS_DEEP", "TTZS_E2E", "TTZS_FNS",
-	"TTZS_CORPUS", "TDEV_CORPUS",
-	"TTZS_EXE", "TTZS_WS", "TTZS_PKG",
-	// 表单真样本那一路（见下面 `TT_FORM_*` 那一组台账条目）：
-	// 真 .42f 与真归档语料表不随仓库走，缺了就用这三个开关指过去。
+	// 语料与表单样本：删掉 T100 的 dev 包之后，只剩这两个门槛还会出现在跳过里。
+	"TDEV_CORPUS", "TTZS_CORPUS",
 	"TT_FORM_SAMPLE_DIR", "TT_FORM_CORPUS_MAP",
-	// 现场真配对：要 .tzs 目录与 .42f **同一个现场**的那一份，两个开关得同时指对。
-	"TT_TZS_REAL_DIR", "TT_FORM_42F",
 }
 
 // skipSite 是台账里的一处跳过。
@@ -96,45 +91,11 @@ type skipSite struct {
 //
 // 条目是脚本从源码里抽出来的（避免手抄错），层与理由是人逐条标的。
 var skipLedger = []skipSite{
-	{file: "internal/cli/dev/tzc/corpus_test.go", msg: "深度语料回归未启用：设 TDEV_DEEP=1 并给足 -timeout 30m（见 README「测试与验收」）", layer: layL3, why: "需真实语料：开关 TDEV_DEEP=1"},
-	{file: "internal/cli/dev/tzs/tzs_verb_e2e_test.go", msg: "需要真引擎：设 TTZS_E2E=1（可选 TTZS_EXE），见本文件顶部注释", layer: layL4, why: "需真引擎：开关 TTZS_E2E=1（可选 TTZS_EXE）"},
-	{file: "internal/cli/dev/tzs/tzs_verb_e2e_test.go", msg: "找不到引擎 exe（TTZS_EXE=%s）：%v", layer: layL4, why: "需真引擎：开关 TTZS_E2E=1 + TTZS_EXE"},
-	{file: "internal/cli/dev/tzs/tzs_verb_test.go", msg: "没有引擎 exe（%v）：这条测的是期限机制本身", layer: layL4, why: "需真引擎：开关 TTZS_E2E=1（这条测的是期限机制本身）"},
-	{file: "internal/dev/pkgfile/zipshape_test.go", msg: "语料里没找到设计器形态的 .tap 包", layer: layL3Missing, why: "需真实语料：这一类形态只在真语料里出现"},
-	{file: "internal/dev/pkgfile/zipshape_test.go", msg: "语料里没有 Zip64 形态的 .tap 包", layer: layL3Missing, why: "需真实语料：这一类形态只在真语料里出现"},
-	{file: "internal/dev/store/store_test.go", msg: "环境里没有 git，跳过 git 相关断言", layer: layEnv, why: "本机没装 git（装了才跑 git 相关断言）"},
 	// 「发现环境」对真实设计器文件的冒烟检查:它**必须**在没装设计器的机器上跳过,
 	// 而那个跳过正是它的价值所在 —— 有设计器的机器(开发机)会真的拿 .NET 生成的密文
 	// 解一遍,没有的机器不假红。所以这两条不影响「全绿」这个结论。
 	{file: "internal/designer/sites_local_test.go", msg: "没有 APPDATA,跳过本机真实文件检查", layer: layEnv, why: "非 Windows / 环境异常时没有 %APPDATA%，定位不到设计器目录；合成密文的用例仍然全跑"},
 	{file: "internal/designer/sites_local_test.go", msg: "这台机器没有设计器站点清单,跳过", layer: layEnv, why: "未安装 T100 设计器或从未保存过站点。**不影响「全绿」这个结论**：参数是否正确由合成密文的往返用例保证，这条只是拿真实 .NET 密文再验一次（装了设计器的机器上必跑）"},
-	{file: "internal/dev/tapfile/tapfile_test.go", msg: "%s 下没有 .tap", layer: layL3Missing, why: "语料在，但里面没有 .tap"},
-	{file: "internal/dev/tzs/chain_test.go", msg: "语料里没有 %s —— 这条链要一个真实的数据绑定叶子；换个语料就得同时改 chainQuery", layer: layL3Missing, why: "需真实语料里那个数据绑定叶子；换语料要同时改 chainQuery"},
-	{file: "internal/dev/tzs/chain_test.go", msg: "%s 的祖先目录里没有 mta/，且没给 TTZS_WS —— 工作区绝不替你选", layer: layL3, why: "需真工作区：开关 TTZS_WS（工作区绝不替你选）"},
-	{file: "internal/dev/tzs/chain_test.go", msg: "%s 里没有 %s（find_component 回 matchCount=%d）—— 这条链要一个已知存在的代号", layer: layL3Missing, why: "需真实语料里那个已知存在的代号"},
-	{file: "internal/dev/tzs/chain_test.go", msg: "%s 的 %s 没有 posX 这个布局属性（可写属性：%s）", layer: layL3Missing, why: "需真实语料里带 posX 布局属性的叶子"},
-	{file: "internal/dev/tzs/chain_test.go", msg: "%s 的 posX=%q 不是整数，无法「+1」出一个必然不同的值", layer: layL3Missing, why: "需真实语料里 posX 是整数的叶子（要 +1 出一个必然不同的值）"},
-	{file: "internal/dev/tzs/corpus_test.go", msg: "语料深度回归未启用：设 TTZS_DEEP=1 并给足 -timeout 30m（见 corpus_test.go 顶部注释）", layer: layL3, why: "需真实语料：开关 TTZS_DEEP=1"},
-	{file: "internal/dev/tzs/corpus_test.go", msg: "找不到引擎 exe（TTZS_EXE=%s）：%v；先在 engine/ 里跑 build.sh", layer: layL4, why: "需真引擎：开关 TTZS_E2E=1 + TTZS_EXE（先跑 engine/build.sh）"},
-	{file: "internal/dev/tzs/corpus_test.go", msg: "%s 旁边没有 RoundTrip.exe：%v", layer: layL4, why: "需真引擎：TTZS_EXE 旁边的 RoundTrip.exe（engine/build.sh 产出）"},
-	{file: "internal/dev/tzs/corpus_test.go", msg: "没有真实语料（%s / %s 都没指到一个目录）：设 TTZS_CORPUS，或准备 %s", layer: layL3, why: "需真实语料：开关 TTZS_CORPUS"},
-	{file: "internal/dev/tzs/corpus_test.go", msg: "%s 下没有 .tzs（排除掉 %s 之后）", layer: layL3Missing, why: "语料在，但里面没有 .tzs"},
-	{file: "internal/dev/tzs/corpus_test.go", msg: "没有真实语料：设 TTZS_CORPUS（或 TDEV_CORPUS），或准备 %s", layer: layL3, why: "需真实语料：开关 TTZS_CORPUS（或 TDEV_CORPUS）"},
-	{file: "internal/dev/tzs/corpus_test.go", msg: "%s 下没有 .tzs", layer: layL3Missing, why: "语料在，但里面没有 .tzs"},
-	{file: "internal/dev/tzs/fns_test.go", msg: "函数面关卡未启用：设 %s=1（它会对每个语料包驱动一遍全部写函数，见 fns_test.go 顶部）", layer: layL4, why: "需真引擎 + 真语料：开关 TTZS_FNS=1（它自己对每个包起一个 --stdio 进程驱动全部写函数）"},
-	{file: "internal/dev/tzs/fns_test.go", msg: "找不到引擎 exe（TTZS_EXE=%s）：%v；先在 engine/ 里跑 build.sh", layer: layL4, why: "需真引擎：开关 TTZS_EXE 指到 tzs-server.exe（或先跑 engine/build.sh）"},
-	{file: "internal/dev/tzs/corpus_test.go", msg: "pin 里 %d 条路径在本机一条都不存在（语料根=%s）：pin 描述的是另一份语料，", layer: layL3, why: "pin 描述的是另一份语料：用 TTZS_CORPUS 指到正确那份"},
-	{file: "internal/dev/tzs/corpus_test.go", msg: "语料里没有包", layer: layL3Missing, why: "语料在，但里面没有包"},
-	{file: "internal/dev/tzs/corpus_test.go", msg: "没有一个工作区能验（都缺 mta/mod-fd.spec，或包打不开）", layer: layL3, why: "需真工作区：开关 TTZS_WS"},
-	{file: "internal/dev/tzs/corpus_test.go", msg: "没验到（语料里没有推得出工作区的包）", layer: layL3Missing, why: "需真实语料里能推出工作区的包"},
-	{file: "internal/dev/tzs/dryrun_test.go", msg: "没验到（语料里挑不出可写的目标）", layer: layL3Missing, why: "需真实语料里可写的目标"},
-	{file: "internal/dev/tzs/e2e_test.go", msg: "需要真引擎：设 TTZS_E2E=1 + 引擎 exe + 工作区（TTZS_EXE / TTZS_WS，", layer: layL4, why: "需真引擎：开关 TTZS_E2E=1 + TTZS_EXE + TTZS_WS"},
-	{file: "internal/dev/tzs/e2e_test.go", msg: "找不到引擎 exe（%s）：%v", layer: layL4, why: "需真引擎：开关 TTZS_E2E=1 + TTZS_EXE"},
-	{file: "internal/dev/tzs/e2e_test.go", msg: "没给工作区（TTZS_WS 或 config.local.json 的 workspace）。", layer: layL4, why: "需真工作区：开关 TTZS_WS（工作区绝不替你选）"},
-	{file: "internal/dev/tzs/e2e_test.go", msg: "没给 TTZS_PKG（一个本工作区内的真 .tzs 路径）：逻辑键寻址要用真包验", layer: layL4, why: "需真包：开关 TTZS_PKG（逻辑键寻址要用真包验）"},
-	{file: "internal/dev/tzs/e2e_test.go", msg: "没给 TTZS_PKG（本工作区内的真 .tzs 路径）：任务级动词要用真包验", layer: layL4, why: "需真包：开关 TTZS_PKG（任务级动词要用真包验）"},
-	{file: "internal/dev/tzs/oplog_test.go", msg: "工作区 %s 里没有包，这条用例没法跑", layer: layL3, why: "需真工作区且里面有包：开关 TTZS_WS"},
-	{file: "internal/dev/verify/verify_test.go", msg: "fence.Parse 自己就拦住了（%v）—— 这条测的是 gate1，不是解析层", layer: layPremise, why: "解析层先拦住了（那更好）—— 这条测试的对象就不存在了，如实说明而不是假装通过"},
 	{file: "internal/testkit/corpus.go", msg: "没有真实语料：设 TDEV_CORPUS 或 TTZS_CORPUS 指到一份，或准备 %s", layer: layL3, why: "需真实语料：开关 TDEV_CORPUS / TTZS_CORPUS"},
 	{file: "internal/testkit/corpus.go", msg: "%s 下没有 %s", layer: layL3Missing, why: "语料在，但里面没有该扩展名的文件"},
 	// ---- WP2（会话寻址重构）的契约测试：等 WP3/WP4/WP4c 把冻结契约落地 ----
@@ -200,9 +161,6 @@ var skipLedger = []skipSite{
 	// 注意这批文件的归属：`dev/tzs`、`form42f` 都另有切片在改。
 	// 台账只登记**当前源文件里的字面量**；那些文件里的跳过文案一改（含标点），
 	// 这里就会红 —— 那是对的：文案是"这条跳过在说什么"。
-	{file: "internal/dev/tzs/form42f_check_test.go", msg: "没有真样本（%s 打不开：%v）—— 设 TT_FORM_SAMPLE_DIR 指向 fixtures/forms/", layer: layL3, why: "需真样本：开关 TT_FORM_SAMPLE_DIR"},
-	{file: "internal/dev/tzs/form42f_check_test.go", msg: "没有仓库自带的最小语料（%s：%v）—— 它是仓库本体，缺了用 `go run ./tools/tzsmini` 重新生成", layer: layL3Missing, why: "仓库自带的最小语料缺了：它是仓库本体，补救是重新生成（go run ./tools/tzsmini），没有开关可点名"},
-	{file: "internal/dev/tzs/form42f_realpair_test.go", msg: "没有现场真配对样本：%s —— 设 TT_TZS_REAL_DIR 与 TT_FORM_42F 指向真 .tzs 目录与真 .42f（契约 C7.3：缺样本写明原因，不拿合成件顶替）", layer: layL3, why: "需真现场配对样本：开关 TT_TZS_REAL_DIR + TT_FORM_42F"},
 	// D8：本机 bash 会展开**单引号内**的命令替换（WSL/中间层特性），`$(…)` 与反引号那两类
 	// 用例在这台机器上测不出真结果。不是 `shQuote` 的问题（它是标准写法），换一台 POSIX 环境
 	// 就有意义 —— 所以归 L0-环境，不是"缺开关"。
@@ -271,7 +229,7 @@ func TestSkipLedger(t *testing.T) {
 	found := scanSkipSites(t)
 
 	// 防空转：扫描坏了的话（路径变了、正则被改坏），下面所有比对都会"通过"。
-	if len(found) < 20 {
+	if len(found) < 8 {
 		t.Fatalf("只扫到 %d 处 t.Skip —— 扫描本身坏了，此后的比对等于空转", len(found))
 	}
 

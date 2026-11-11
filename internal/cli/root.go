@@ -27,13 +27,12 @@ import (
 	"tt/internal/cli/common"
 	"tt/internal/cli/db"
 	"tt/internal/cli/debug"
-	"tt/internal/cli/dev"
 	"tt/internal/cli/dict"
 	"tt/internal/cli/file"
-	"tt/internal/cli/site"
 	"tt/internal/cli/interfacecmd"
 	"tt/internal/cli/outline"
 	"tt/internal/cli/session"
+	"tt/internal/cli/site"
 	"tt/internal/output"
 )
 
@@ -55,9 +54,6 @@ config.json、同一个本地 Web 服务（tt serve）。
   tt file …      服务器文件：ls/find/grep/head/cat 只读浏览 + 离线镜像（source/interface）
   tt debug …     作业调试：起会话、停站现场、断点、步进、接口日志重放
   tt session …   会话：建 / 列 / 看 / 改 ENT / 结束 / 收掉
-  tt dev tzc …   .tzc 代码包：export 渲染围栏工作区，apply 走三道闸门写回
-  tt dev tzs …   .tzs 表单包：export 只读解压；读写表单走引擎的具名动词
-                 （tt dev tzs <动词> --args '<JSON 对象>'），不是拼 XML
   tt interface … 前端画面：合成 .42f + .42s（页面 / 字段 / 中文标签）
   tt outline …   4GL 源码大纲：函数 / UI 块与行范围
   tt env / config / serve / install / update   环境、配置、本地服务、安装、自更新
@@ -76,7 +72,6 @@ file 没有 put/rm；调试重放与镜像打包在服务器上留下的临时�
 // 旧命令名别名：合并前各自的二进制名，让既有脚本与 AI skill 不改即可用。
 var legacyAliases = map[string]string{
 	"tdebug": "debug",
-	"tdev":   "dev",
 	"tdict":  "dict",
 }
 
@@ -90,7 +85,6 @@ func init() {
 		"输出形态: json(默认,带环境信息的信封) | csv(带 # 环境头) | table(人读表格)")
 	pf.BoolVarP(&common.Verbose, "verbose", "v", false, "显示解析细节（如实际使用的数据源路径）")
 	// 环境一律点名:没有"默认环境"可回落(见 config.Hosts 的注释)。认它的命令见各自 --help。
-	// tt dev tzs 也认它 —— 工作区按环境配,不给环境就没有该用哪个工作区可言。
 	pf.StringVar(&common.Env, "env", "", "指定环境名（config.json hosts.sshs 中的 name；环境一律点名，没有默认环境可回落）")
 	// --conn 是合并前 tdict 的叫法，保留为别名，但不出现在 --help 里
 	pf.StringVar(&common.Env, "conn", "", "指定环境名（--env 的别名）")
@@ -108,13 +102,6 @@ func init() {
 	debug.Register(rootCmd)
 	file.Register(rootCmd)
 	db.Register(rootCmd)
-	// 把 --env 的读写方式注入 dev 包:它不能直接 import cli/common(与 dev/common 撞包名)。
-	// 读:tzs 用它取该环境的 workspace;写:takeRootFlags 摘到 --env 时落到同一个 common.Env。
-	dev.SetEnvNameFunc(
-		func() string { return common.Env },
-		func(v string) { common.Env = v },
-	)
-	dev.Register(rootCmd)
 	dict.Register(rootCmd)
 	// 顶层 site：营运据点（azp_file）。--at 到处要写据点编号，所以它自己一层。
 	rootCmd.AddCommand(site.NewSiteCmd())
@@ -154,7 +141,6 @@ func Execute(web fs.FS) {
 
 	// Unix 写法（find -name/-type/-maxdepth）在 pflag 里是非法缩写，先归一化。
 	os.Args = file.NormalizeFindArgs(os.Args)
-
 
 	// --at-list：cobra 解析之前就处理掉（ValidateArgs 比 pre-run 早，
 	// 而 tt debug start --at-list 本来就不带作业名）。

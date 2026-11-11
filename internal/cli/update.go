@@ -39,10 +39,8 @@ import (
 	"tt/internal/cli/common"
 	"tt/internal/cli/debug"
 	"tt/internal/config"
-	"tt/internal/dev/tzs"
 	"tt/internal/output"
 	"tt/internal/update"
-	"tt/internal/winproc"
 )
 
 // exitUpdateAvailable "有可用更新"。它不是失败，见上面那段说明。
@@ -361,7 +359,6 @@ func runUpdate(cmd *cobra.Command, f updateFlags, checkOnlyMode bool) error {
 			plan.RestartArgs = append(plan.RestartArgs, "--listen", addr)
 		}
 	}
-	plan.StopPIDs = append(plan.StopPIDs, enginePIDs(env.dataDir)...)
 
 	// 技能与二进制要同版：agent 目录里那一份不随升级自动变（见 update.SkillsStamp）。
 	// 目标由前台算（戳文件在数据目录），更新器只负责拿新装的 exe 去刷。
@@ -510,33 +507,6 @@ func stagePortable(ctx context.Context, zipPath, exePath, target string, errOut 
 			Hint:    "发布资产与 tag 对不上；这次升级中止，请反馈"}
 	}
 	return root, nil
-}
-
-// enginePIDs 收集各工作区正在跑的 .tzs 引擎守护进程。
-//
-// 必须停：引擎的 exe 就在安装目录里（<exe 目录>\tzs\tzs-server.exe），它锁着文件，
-// 覆盖会失败。状态文件的形状归 internal/dev/tzs，这里只借它的读入口。
-func enginePIDs(dataDir string) []int {
-	st, err := tzs.LoadState(dataDir)
-	if err != nil || st == nil {
-		return nil
-	}
-	var pids []int
-	for _, ws := range st.Keys() {
-		e := st.Entry(ws)
-		if e == nil {
-			continue
-		}
-		if e.PID > 0 && winproc.Alive(e.PID) {
-			pids = append(pids, e.PID)
-		}
-		for _, orphan := range e.Orphans {
-			if orphan > 0 && winproc.Alive(orphan) {
-				pids = append(pids, orphan)
-			}
-		}
-	}
-	return pids
 }
 
 // confirm 问一句。非交互环境（stdin 不是终端）**拒绝**而不是当作"是"：

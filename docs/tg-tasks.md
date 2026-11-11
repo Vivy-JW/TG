@@ -53,7 +53,7 @@
 
 ## 阶段 3 删 T100 领域层
 
-- ☐ `tt dev tzc` / `tt dev tzs`（10 条命令）
+- ☑ `tt dev tzc` / `tt dev tzs`（10 条命令，2026-11-11 连同 `internal/dev` 的 fence/model/pkgfile/split/store/synth/tapfile/tglfile/tzs/verify 一起删了；只留 `dev/fgl` 与 `dev/testutil`）
 - ☐ 删 `engine/` + `designer-src/`（1264 文件 ≈17 MB），删前给 TT-src 打 zip
 - ☐ 确认 `engine/designer/` 28 个厂商 DLL（10.5 MB）不进 TG 发行包
 - ☐ `tt interface`（3 条，.42f/.42s 合成）
@@ -61,7 +61,7 @@
 - ☐ `tt file mirror` → profile（`debug` 只 `*.4gl`，`source` 收 4gl+42f+42s+inc）
 - ☐ `tt db sql` 去掉"强制 `环境@企业`"
 - ☐ 从命令层摘掉 `target` / `entdir`
-- ☐ `skills/` 换成 GP 版（`tt-dev-tzc` 直接删；工作树里已有未提交的 `tg-erp-*` 改名）
+- ☑ `skills/` 换成 GP 版（`tt-dev-tzc` 已删，`tt-erp-*` 已改名 `tg-erp-*`，commit a42a1a2）
 
 ## 阶段 4 安全与发版
 

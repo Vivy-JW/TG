@@ -30,24 +30,19 @@ go list -f '{{.ImportPath}}|{{join .Imports " "}}' ./internal/... | grep 'tt/int
 | `form42f` | `.42f` 编译表单 → 字段表 + 页面布局。纯函数，零 IO |
 | `str42s` | `.42s` 编译字符串表 → 中文标签。纯函数，零 IO |
 | `dict/db` | 本地 SQLite 字典查询 + `Source` 接口（GP 的 `t_*` 表） |
-| `dev/fgl` | 4GL 源码结构：分块、语义 |
-| `dev/model` | tzc 领域模型 Region / Document / EnvContext + 行号定位 |
-| `dev/tapfile` | TAP 文件的 CDATA 感知、字节保真改写 |
-| `dev/tglfile` | `.tgl` 框架骨架里的标记：区段边界、插入点、锚点 |
+| `dev/fgl` | 4GL 源码结构：分块、语义（`tt outline` 与 GP 的 4gl 共用）|
 | `testenv` | 本机测试环境的配置（`config.local.json` + 环境变量） |
 
-### L1 · 文件与格式（7 个）
+### L1 · 文件与格式（4 个）
 
 | 包 | 只该管这些 |
 |---|---|
 | `config` | **配置文件的唯一读写层**：位置解析、`Open`/`Save`/`Edit`、原子写、打码、缓存清单、缓存清理、字典库落点。只认「节 + 键」，**不认业务字段** |
-| `dev/fence` | 围栏协议：Document ⇄ 带围栏的文本，字节级写回 |
-| `dev/pkgfile` | `.tzc` / `.tzs` 包格式的只读视图 |
-| `dev/testutil` | 合成测试包夹具（不依赖真语料） |
+| `dev/testutil` | 测试语料定位与遍历（`CorpusRoot`/`CorpusFiles`）；原合成包夹具随 tzc/tzs 一起删了 |
 | `erpdb` | 客户端直连库封装：Oracle / 金仓，一个接口两个实现 |
 | `screen` | `.42f` 布局 + `.42s` 标签 → 前端画面模型 |
 
-### L2 · 共享服务（16 个）
+### L2 · 共享服务（11 个）
 
 | 包 | 只该管这些 |
 |---|---|
@@ -61,37 +56,28 @@ go list -f '{{.ImportPath}}|{{join .Imports " "}}' ./internal/... | grep 'tt/int
 | `mirror` | 4GL 源码镜像：服务器侧 `find` 清单、增量判定、`pruneStale`、`manifest.json` |
 | `gpsession` | GP 调试的 pty 会话：登录选实例 → `r.d2` → 等 `(fgldb) `→ `info line main`；`Manager` 管多会话 |
 | `dict/live` | 远程 ERP 库（Oracle / 金仓）直查，实现 `dict/db` 的 `Source` 接口 |
-| `dev/store` | 工作区落盘：manifest、基线、原子写、锁 |
-| `dev/split` | Document' → TapOp + TglPatch 的写回计划 |
-| `dev/synth` | Package → Document 合成，复刻设计器 `LoadContent` 的行为 |
-| `dev/tzs` | `.tzs` 引擎（外部 C# exe）客户端：管道协议、manifest、doctor、守护进程生命周期 |
 | `cli/common` | CLI 命令组共享的上下文：全局开关、MetaProvider、WebFS。叶子包，用来防成环 |
-| `cli/dev/common` | tzc / tzs 两条线共用脚手架：错误信封、稳定紧凑 JSON、参数重排、身份后缀 |
 
-### L3 · 能力内核（9 个）
+### L3 · 能力内核（6 个）
 
 | 包 | 只该管这些 |
 |---|---|
 | `debug` | 调试子系统：会话、断点、执行日志、企业快照、源码镜像；外加 HTTP+WS 服务（`api.go`）与只读 SQL |
 | `dict/server` | 字典侧 REST：字典同步 / 本地库状态（源码镜像已改由 `/api/gp/mirror` 走 `internal/mirror`） |
-| `dev/verify` | 三道闸门 + 不变量 I1–I15 |
 | `web` | 统一本地服务的 HTTP 层：REST/WS 路由、嵌 SPA、设置页后端；`gpapi.go` 是 `/api/gp/*`（meta/env/test/site/mirror/sync/会话）；`jobs` 是统一的 job 注册表 |
 | `cli/file` | 服务器文件命令组：只读看/取文件 + 离线镜像管理 |
 | `cli/interfacecmd` | `tt interface`：42f + 42s → 画面 |
 | `cli/outline` | `tt outline`：4GL → 块树 |
-| `cli/dev/tzs` | `tt dev tzs` 的动词（经引擎读写表单） |
 
-### L4–L7 · 命令层（9 个）
+### L4–L7 · 命令层（8 个）
 
 | 包 | 只该管这些 |
 |---|---|
 | `cli/at` | `--at` 文法、作用域表、`--at-list` |
 | `debugclient` | 调试面 REST 的**唯一客户端** |
-| `cli/dev/tzc` | `tt dev tzc` 八个动词 + uuid 生成 + 31 项对抗自检 |
 | `cli/dict` | `tt dict` 命令组：表 / 程序 / 消息 / 开窗（r.q）+ 字典库运维 |
 | `cli/site` | 顶层 `tt site`：营运据点（azp_file）清单与单查；`cli/dict` 里另有表/程序/消息/开窗与字典同步 |
 | `cli/db` | `tt db`：本机 ping / 服务器 probe / 只读 SQL |
-| `cli/dev` | `tt dev` 分发（tzc / tzs 两条线） |
 | `cli/session` | `tt session` 命令组 |
 | `cli/debug` | `tt debug` 命令组 |
 | `cli` | 根命令 + 全局开关 + 自身管理命令（env / config / cache / serve / install / update / version） |
@@ -117,7 +103,7 @@ go list -f '{{.ImportPath}}|{{join .Imports " "}}' ./internal/... | grep 'tt/int
 
 ```bash
 go list -f '{{.ImportPath}}: {{join .Imports " "}}' ./internal/... \
-  | grep -E '^tt/internal/(config|dbconfig|output|host|entdir|safesql|target|session|screen|form42f|str42s|dict/db|dev/(model|fgl|fence|pkgfile|store|split|synth|verify|tzs|tapfile|tglfile|testutil)):' \
+  | grep -E '^tt/internal/(config|dbconfig|output|host|entdir|safesql|target|session|screen|form42f|str42s|dict/db|dev/(fgl|testutil)):' \
   | grep -E 'net/http|cobra|internal/cli|internal/web'
 # 无输出 = 合格
 ```
@@ -131,7 +117,7 @@ go list -f '{{.ImportPath}}: {{join .Imports " "}}' ./internal/... \
 | 新输出格式 | `output` |
 | 新配置节 | `config` 的 `Section` + 由该节的主人去建强类型模型 |
 | 新 HTTP 端点 | 能力的 `*/server` 或 `*/api.go`；`web` 里只挂一行 |
-| 新的 4GL / `.tzc` / `.tzs` 格式细节 | `dev/` 下对应的那一层 |
+| 新的 4GL 格式细节 | `dev/fgl`（`.tzc` / `.tzs` 那套已随 `tt dev` 一起删） |
 | 测试夹具 | `testkit` 或 `dev/testutil` |
 
 ## 四、谁管什么（唯一性清单）
