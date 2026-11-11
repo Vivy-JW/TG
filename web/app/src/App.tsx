@@ -29,7 +29,7 @@ function useDocTitleBlink() {
   const file = useStore((s) => s.stop?.file)
   const line = useStore((s) => s.stop?.line)
   useEffect(() => {
-    const base = 'TT'
+    const base = 'TG'
     const setT = (t: string) => { document.title = t }
     if (!sessionId) { setT(base); return }
     let timer: number | undefined

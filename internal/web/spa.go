@@ -76,7 +76,7 @@ func serveIndex(w http.ResponseWriter, fsys fs.FS, title string) {
 // 这个页面告诉用户还差哪一步。
 func writeLanding(w http.ResponseWriter, title string) {
 	if title == "" {
-		title = "TT"
+		title = "TG"
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	fmt.Fprintf(w, `<!doctype html>
