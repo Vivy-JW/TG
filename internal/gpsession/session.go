@@ -1,6 +1,4 @@
-package gp
-
-// GP 调试会话（Go 实现）。
+// Package gpsession 管 TOP GP 的调试会话：起 PTY、进程序目录、拉 r.d2、收发 fgldb 命令。
 //
 // 走 PTY，原因只有一个：`r.d2` 不是 PATH 里的程序，而是**交互式 ksh 里的别名**
 // （实测 `command -v r.d2` 为空，`alias` 里能看到它定义的一部分）。
@@ -8,7 +6,12 @@ package gp
 // （模块链接是 r.d2 自己做的，profile 里没有）。
 //
 // PTY 的坑是 ksh 的行编辑：长命令写快了会吞字符、重绘时满屏退格。解法是登录后
-// 立刻 `stty -noecho -icanon` 关掉行编辑与回显 —— 之后命令原样进、输出原样出。
+// 每条命令写入前先等提示符空闲（见 waitPrompt）。
+//
+// 与 T100 的 internal/debug 不是一回事：那边是 gendbg 语义的调试器模型（RunProg/
+// LaunchRef/断点状态机），GP 这边只有 pty + r.d2，没有断点协议。所以单独一个包，
+// 不塞进 internal/debug，也不占用 internal/session（那里是 T100 的序号/世代号规则）。
+package gpsession
 
 import (
 	"crypto/rand"
@@ -23,7 +26,7 @@ import (
 	"tt/internal/host"
 )
 
-// prompt 是 fgldb 的提示符。所有命令都以它为界。
+// fgldbPrompt 是 fgldb 的提示符。所有命令都以它为界。
 const fgldbPrompt = "(fgldb) "
 
 var (
@@ -52,6 +55,17 @@ type Session struct {
 	mu  sync.Mutex
 	buf strings.Builder
 }
+
+// Manager 当前活着的会话（按会话 ID 索引）。
+//
+// 一条会话是一个 telnet 级的长连接，进程退出就没了 —— 所以只放内存，不落盘。
+type Manager struct {
+	mu sync.Mutex
+	m  map[string]*Session
+}
+
+// NewManager 建一个空的管理器。
+func NewManager() *Manager { return &Manager{m: map[string]*Session{}} }
 
 func randID() string {
 	b := make([]byte, 4)
@@ -150,6 +164,8 @@ func pickInstance(text, inst string) string {
 }
 
 // dirCandidates 程序可能在 $CUST 或 $TOP 的 4gl / 42m 下，挨个试。
+//
+// 目前建会话走的是 shell 变量（见 New 的注释），这个函数留给"要报告的候选目录"用。
 func dirCandidates(env config.NamedSsh, prog string) []string {
 	mod := prog
 	if len(mod) > 3 {
@@ -166,8 +182,9 @@ func dirCandidates(env config.NamedSsh, prog string) []string {
 	return out
 }
 
-// newSession 建一条 GP 调试会话：登录 → 选实例 → 关行编辑 → 进目录 → r.d2。
-func (s *Service) newSession(env config.NamedSsh, prog string) (*Session, error) {
+// New 建一条 GP 调试会话：登录 → 选实例 → 进目录 → r.d2。失败时返回的 sess 可能是半成品
+// （状态 error + 错误文字），由调用方决定要不要留着重试。
+func (m *Manager) New(env config.NamedSsh, prog string) (*Session, error) {
 	if prog == "" {
 		return nil, fmt.Errorf("TOP GP 会话必须给程序编号")
 	}
@@ -229,12 +246,50 @@ func (s *Service) newSession(env config.NamedSsh, prog string) (*Session, error)
 
 	// 5) 让调试器报一次入口位置，顺便拿到源码文件名与行号
 	if o, err := sess.Exec("info line main", 15*time.Second); err == nil {
-		if m := lineAtRe.FindStringSubmatch(o); m != nil {
-			sess.File = m[2]
-			fmt.Sscanf(m[1], "%d", &sess.Line)
+		if mm := lineAtRe.FindStringSubmatch(o); mm != nil {
+			sess.File = mm[2]
+			fmt.Sscanf(mm[1], "%d", &sess.Line)
 		}
 	}
 	return sess, nil
+}
+
+// Add 把会话登记进管理器（New 成功或半成功时由调用方调）。
+func (m *Manager) Add(s *Session) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.m[s.ID] = s
+}
+
+// ByID 按 ID 找会话；没有返回 nil。
+func (m *Manager) ByID(id string) *Session {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.m[id]
+}
+
+// List 当前所有会话。
+func (m *Manager) List() []*Session {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	out := make([]*Session, 0, len(m.m))
+	for _, v := range m.m {
+		out = append(out, v)
+	}
+	return out
+}
+
+// Close 收掉一条会话并从表里摘掉；ID 不存在时什么都不做。
+func (m *Manager) Close(id string) bool {
+	m.mu.Lock()
+	s := m.m[id]
+	delete(m.m, id)
+	m.mu.Unlock()
+	if s == nil {
+		return false
+	}
+	s.Close()
+	return true
 }
 
 // Exec 发一条 fgldb 命令，返回到下一个提示符之间的输出。

@@ -2,9 +2,11 @@ package gp
 
 // 会话的 HTTP 面：建 / 列 / 执行命令 / 关闭。
 //
-// 与 T100 调试面的差别只在"建会话时跑什么"（见 session.go 的 newSession）；
+// 与 T100 调试面的差别只在"建会话时跑什么"（见 internal/gpsession 的 Manager.New）；
 // 对外的形状（id / env / prog / state / 停站位置）刻意保持一致，
 // 前端将来可以从 /debug/api 平移到 /api/gp 而不用改数据结构。
+//
+// 会话本身不住在这个包里：它是一条 pty 的生命周期，归 internal/gpsession 管。
 
 import (
 	"encoding/json"
@@ -13,12 +15,6 @@ import (
 
 	"tt/internal/config"
 )
-
-func (s *Service) sessByID(id string) *Session {
-	s.sessMu.Lock()
-	defer s.sessMu.Unlock()
-	return s.sess[id]
-}
 
 // hSessionNew 建一条会话：POST {env, prog}。
 func (s *Service) hSessionNew(w http.ResponseWriter, r *http.Request) {
@@ -50,11 +46,9 @@ func (s *Service) hSessionNew(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 404, map[string]any{"ok": false, "error": "环境不存在：" + body.Env})
 		return
 	}
-	sess, err := s.newSession(*env, body.Prog)
+	sess, err := s.sess.New(*env, body.Prog)
 	if sess != nil {
-		s.sessMu.Lock()
-		s.sess[sess.ID] = sess
-		s.sessMu.Unlock()
+		s.sess.Add(sess)
 	}
 	if err != nil {
 		if sess != nil {
@@ -68,13 +62,7 @@ func (s *Service) hSessionNew(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Service) hSessionList(w http.ResponseWriter, _ *http.Request) {
-	s.sessMu.Lock()
-	out := make([]*Session, 0, len(s.sess))
-	for _, v := range s.sess {
-		out = append(out, v)
-	}
-	s.sessMu.Unlock()
-	writeJSON(w, 200, map[string]any{"ok": true, "sessions": out})
+	writeJSON(w, 200, map[string]any{"ok": true, "sessions": s.sess.List()})
 }
 
 // hSessionExec 执行一条 fgldb 命令：POST {id, cmd}。
@@ -87,7 +75,7 @@ func (s *Service) hSessionExec(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 400, map[string]any{"ok": false, "error": "请求体不是 JSON"})
 		return
 	}
-	sess := s.sessByID(body.ID)
+	sess := s.sess.ByID(body.ID)
 	if sess == nil {
 		writeJSON(w, 404, map[string]any{"ok": false, "error": "会话不存在或已关闭"})
 		return
@@ -108,14 +96,9 @@ func (s *Service) hSessionClose(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 400, map[string]any{"ok": false, "error": "请求体不是 JSON"})
 		return
 	}
-	sess := s.sessByID(body.ID)
-	if sess == nil {
+	if !s.sess.Close(body.ID) {
 		writeJSON(w, 404, map[string]any{"ok": false, "error": "会话不存在"})
 		return
 	}
-	sess.Close()
-	s.sessMu.Lock()
-	delete(s.sess, body.ID)
-	s.sessMu.Unlock()
 	writeJSON(w, 200, map[string]any{"ok": true})
 }

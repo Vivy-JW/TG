@@ -16,6 +16,7 @@ import (
 	"tt/internal/config"
 	dictlib "tt/internal/dict"
 	"tt/internal/dict/dbsync"
+	"tt/internal/web/jobs"
 )
 
 // Sync 同步一个环境的字典，阻塞到完成；onProgress 逐条收到进度（可为 nil）。
@@ -28,8 +29,8 @@ func (s *Service) Sync(env config.NamedSsh, onProgress func(string)) error {
 	if s.job(env.Name).State == "running" {
 		return fmt.Errorf("环境 %s 的字典同步已经在跑", env.Name)
 	}
-	s.setJob(env.Name, func(j *Job) {
-		*j = Job{State: "running", Kind: "sync", Started: time.Now()}
+	s.setJob(env.Name, func(j *jobs.Job) {
+		s.jobs.Start(env.Name, "sync")
 	})
 
 	done := make(chan struct{})
@@ -73,7 +74,7 @@ func (s *Service) Sync(env config.NamedSsh, onProgress func(string)) error {
 // 留足余量但不至于把连接一直挂着。
 func (s *Service) runSync(env config.NamedSsh) {
 	finish := func(st *dbsync.Stats, err error) {
-		s.setJob(env.Name, func(j *Job) {
+		s.setJob(env.Name, func(j *jobs.Job) {
 			j.Ended = time.Now()
 			if err != nil {
 				j.State = "error"
@@ -125,7 +126,7 @@ func (s *Service) runSync(env config.NamedSsh) {
 			return dbsync.SyncGP(ctx, src, dst, lib, account, rep, onCount, meta)
 		},
 		OnCount: func(done, total int) {
-			s.setJob(env.Name, func(j *Job) {
+			s.setJob(env.Name, func(j *jobs.Job) {
 				j.Done = int64(done)
 				j.Total = int64(total)
 			})

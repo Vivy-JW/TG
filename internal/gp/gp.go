@@ -20,38 +20,27 @@ import (
 	"sync"
 	"time"
 
-
 	"tt/internal/config"
 	"tt/internal/dbconfig"
 	dictlib "tt/internal/dict"
 	"tt/internal/dict/dbsync"
 	"tt/internal/dict/live"
 	"tt/internal/envmove"
+	"tt/internal/gpsession"
 	"tt/internal/host"
 	"tt/internal/mirror"
+	"tt/internal/web/jobs"
 )
 
-// Job 一个后台动作（镜像/同步）的进度。同一环境同时只跑一个。
-type Job struct {
-	State     string         `json:"state"` // idle | running | done | error
-	Kind      string         `json:"kind"`  // mirror | sync
-	Done      int64          `json:"done,omitempty"`
-	Total     int64          `json:"total,omitempty"`
-	Progress  []string       `json:"progress,omitempty"`
-	Error     string         `json:"error,omitempty"`
-	Result    map[string]any `json:"result,omitempty"`
-	Elapsed   string         `json:"elapsed,omitempty"`
-	StartedAt string         `json:"startedAt,omitempty"`
-	Started   time.Time      `json:"-"`
-	Ended     time.Time      `json:"-"`
-}
-
 // Service 是 /api/gp/ 的处理器。
+//
+// 后台任务（镜像/同步）的进度表与调试会话都不住在这里：
+// 前者是 web 面的事（internal/web/jobs），后者是 pty 生命周期（internal/gpsession）。
+// 这个包只负责环境配置（/api/gp/env、meta、三个连接测试）与路由装配。
 type Service struct {
 	cfgPath string
 
-	mu   sync.Mutex
-	jobs map[string]*Job
+	jobs *jobs.Registry
 
 	// cfgMu 串行化 GP 侧的配置写入。设置页改成 500ms 自动保存后，一次输入风暴
 	// 可能同时排进多个保存请求；config.EditHosts 是裸读-改-写，不串行就会互相覆盖。
@@ -61,8 +50,7 @@ type Service struct {
 	// 与 T100 的 /api/hosts 保存路径同一机制；否则改完 GP 环境，调试服务仍拿旧清单（实测 404）。
 	reload func() error
 
-	sessMu sync.Mutex
-	sess   map[string]*Session
+	sess *gpsession.Manager
 }
 
 // SetReloader 注入配置写入后的重载回调。应在开始服务前调用。
@@ -70,62 +58,20 @@ func (s *Service) SetReloader(f func() error) { s.reload = f }
 
 // New 建一个 GP 服务。cfgPath 是 config.json 的路径（与统一服务同一份）。
 func New(cfgPath string) *Service {
-	return &Service{cfgPath: cfgPath, jobs: map[string]*Job{}, sess: map[string]*Session{}}
+	return &Service{cfgPath: cfgPath, jobs: jobs.New(), sess: gpsession.NewManager()}
 }
 
-func (s *Service) job(name string) *Job {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	j, ok := s.jobs[name]
-	if !ok {
-		return &Job{State: "idle"}
-	}
-	cp := *j
-	cp.Progress = append([]string(nil), j.Progress...)
-	if !j.Started.IsZero() {
-		end := j.Ended
-		if end.IsZero() {
-			end = time.Now()
-		}
-		cp.Elapsed = end.Sub(j.Started).Round(time.Second).String()
-		cp.StartedAt = j.Started.Format(time.RFC3339)
-	}
-	return &cp
-}
+// job / setJob / progress / progressCount 是给本包内 runMirror、runSync 用的薄壳；
+// 真正的状态机在 internal/web/jobs，这里只保留调用点好读的名字。
+func (s *Service) job(name string) *jobs.Job { return s.jobs.Get(name) }
 
-func (s *Service) setJob(name string, f func(*Job)) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	j, ok := s.jobs[name]
-	if !ok {
-		j = &Job{State: "idle"}
-		s.jobs[name] = j
-	}
-	f(j)
-}
+func (s *Service) setJob(name string, f func(*jobs.Job)) { s.jobs.Update(name, f) }
 
-func (s *Service) progress(name, msg string) {
-	s.setJob(name, func(j *Job) {
-		j.Progress = append(j.Progress, msg)
-		if len(j.Progress) > 40 {
-			j.Progress = j.Progress[len(j.Progress)-40:]
-		}
-	})
-}
+func (s *Service) progress(name, msg string) { s.jobs.Note(name, msg) }
 
 // progressCount 同时更新“已完成/总数”和一条进度文字；镜像与字典同步共用。
 func (s *Service) progressCount(name string, done, total int, msg string) {
-	s.setJob(name, func(j *Job) {
-		j.Done = int64(done)
-		j.Total = int64(total)
-		if msg == "" {
-			return
-		}
-		j.Progress = append(j.Progress, msg)
-		if len(j.Progress) > 40 {
-			j.Progress = j.Progress[len(j.Progress)-40:]
-		}
-	})
+	s.jobs.Count(name, done, total, msg)
 }
 
 // Handler 返回挂在 /api/gp/ 下的处理器（路径自带 /api/gp 前缀）。
@@ -249,7 +195,7 @@ func (s *Service) hMeta(w http.ResponseWriter, _ *http.Request) {
 		DB              map[string]any `json:"db,omitempty"`
 		Mirror          map[string]any `json:"mirror"`
 		Dict            map[string]any `json:"dict"`
-		Job             *Job           `json:"job"`
+		Job             *jobs.Job      `json:"job"`
 	}
 	out := make([]envView, 0, len(envs))
 	for _, e := range envs {
@@ -909,8 +855,8 @@ func (s *Service) hMirror(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 200, map[string]any{"ok": true, "job": cur})
 		return
 	}
-	s.setJob(env.Name, func(j *Job) {
-		*j = Job{State: "running", Kind: "mirror", Started: time.Now()}
+	s.setJob(env.Name, func(j *jobs.Job) {
+		s.jobs.Start(env.Name, "mirror")
 	})
 	go s.runMirror(*env, body.Mode)
 	writeJSON(w, 200, map[string]any{"ok": true, "job": s.job(env.Name)})
@@ -945,8 +891,8 @@ func (s *Service) hSync(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 200, map[string]any{"ok": true, "job": cur})
 		return
 	}
-	s.setJob(env.Name, func(j *Job) {
-		*j = Job{State: "running", Kind: "sync", Started: time.Now()}
+	s.setJob(env.Name, func(j *jobs.Job) {
+		s.jobs.Start(env.Name, "sync")
 	})
 	go s.runSync(*env)
 	writeJSON(w, 200, map[string]any{"ok": true, "job": s.job(env.Name)})
@@ -954,7 +900,7 @@ func (s *Service) hSync(w http.ResponseWriter, r *http.Request) {
 
 func (s *Service) runMirror(env config.NamedSsh, mode string) {
 	fail := func(err error) {
-		s.setJob(env.Name, func(j *Job) {
+		s.setJob(env.Name, func(j *jobs.Job) {
 			j.State = "error"
 			j.Error = err.Error()
 			j.Ended = time.Now()
@@ -978,7 +924,7 @@ func (s *Service) runMirror(env config.NamedSsh, mode string) {
 			}
 		}
 	}
-	s.setJob(env.Name, func(j *Job) {
+	s.setJob(env.Name, func(j *jobs.Job) {
 		j.State = "done"
 		j.Done = int64(doneBase)
 		j.Total = int64(totalBase)
