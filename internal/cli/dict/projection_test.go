@@ -52,16 +52,6 @@ func TestProjectTableFieldsMissing(t *testing.T) {
 	}
 }
 
-func TestBriefSccDetail(t *testing.T) {
-	d := &sccDetail{ID: "8504", Header: sccHeaderView{Name: "状态"}, Values: []sccValueView{{Val: "1", Desc: "启用", Sort: "1"}}}
-	b := briefSccDetail(d)
-	if b.ID != "8504" || b.Name != "状态" || len(b.Values) != 1 || b.Values[0].Desc != "启用" {
-		t.Fatalf("SCC 投影不对: %+v", b)
-	}
-	if b.Values[0].Val != "1" {
-		t.Fatalf("值不对: %+v", b.Values[0])
-	}
-}
 
 func TestNormalizeProgTables(t *testing.T) {
 	for in, want := range map[string]string{"": "names", "full": "full", "none": "none", "names": "names"} {
@@ -127,7 +117,7 @@ func TestSummaryCommandsExposeFullFlag(t *testing.T) {
 		_ = name
 		_ = cmd
 	}
-	for name, cmd := range map[string]*cobra.Command{"prog": progCmd, "scc": sccCmd, "r.t": tableCmd} {
+	for name, cmd := range map[string]*cobra.Command{"prog": progCmd, "r.t": tableCmd} {
 		if cmd.Flags().Lookup("full") == nil {
 			t.Errorf("%s 缺少 --full", name)
 		}

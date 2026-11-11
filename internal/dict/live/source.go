@@ -441,17 +441,7 @@ func (l *Live) QuerySubProgList(lang, keyword string) ([]db.SubProgListItem, err
 	return []db.SubProgListItem{}, nil
 }
 
-func (l *Live) QuerySccList(lang, keyword string) ([]db.SccListRow, error) {
-	return []db.SccListRow{}, nil
-}
-func (l *Live) QuerySccHeader(id, lang string) (*db.SccHeaderRow, error) { return nil, nil }
-func (l *Live) QuerySccValues(id, lang string) ([]db.SccValueRow, error) {
-	return []db.SccValueRow{}, nil
-}
-func (l *Live) QueryACCMeta(input, lang string) (*db.ACCMeta, error) { return nil, nil }
-func (l *Live) QueryACCValues(category string, ent int, lang string, includeInactive bool) ([]db.ACCValue, error) {
-	return []db.ACCValue{}, nil
-}
+
 
 // ---- 开窗定义 r.q：GP 用 gab_file + gac_file ----
 //

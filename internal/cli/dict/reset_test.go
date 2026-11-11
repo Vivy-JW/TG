@@ -56,7 +56,7 @@ func resetDictPackageState(t *testing.T) {
 		&msgLang, &msgText, &msgType, &msgStatus, &msgProg,
 		&paramLang, &docListMode,
 		&progKW, &progLang, &progTablesMode,
-		&sccKW, &sccLang,
+
 		&tableKW, &tableLang, &tableCols,
 		&winKW, &winLang,
 		&common.ConfigPath, &common.Env, &common.Format, &common.Version,
@@ -64,7 +64,7 @@ func resetDictPackageState(t *testing.T) {
 	// 布尔
 	t.Cleanup(snapVars(
 		&discoverSave, &dbListSecrets, &msgFull,
-		&progSub, &tableBrief, &tableWho, &tableFields, &sccBrief, &srcLocal, &dictFull,
+		&progSub, &tableBrief, &tableWho, &tableFields, &srcLocal, &dictFull,
 		&common.JSON, &common.CSV, &common.Verbose,
 	))
 	// 整数
@@ -191,8 +191,7 @@ var dictMutableVars = []string{
 	"msgLang", "msgText", "msgType", "msgStatus", "msgProg", "msgFull",
 	"paramLang", "docListMode",
 	"progKW", "progLang", "progTablesMode", "progSub",
-	"sccKW", "sccLang",
-	"tableKW", "tableLang", "tableCols", "tableBrief", "tableWho", "tableFields", "sccBrief",
+	"tableKW", "tableLang", "tableCols", "tableBrief", "tableWho", "tableFields",
 	"winKW", "winLang",
 	"dataSrc", "srcLocal", "srcTarget", "srcNotes", "srcStarted",
 	"dbCfg",

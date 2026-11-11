@@ -28,45 +28,20 @@
 | `--env` / `--conn` | 选数据源：环境名 = 在线直查；`local:<环境>` = 该环境自己的本地库（裸 `local` 缺环境会报错）；**显式指定即强制** |
 | `r.t` | 默认 summary 只给表级信息；`--fields` 加字段骨架，`--col`/`--kw` 做字段投影，`--full` 回完整字段/键值/索引 |
 | `prog --tables` | 用表矩阵投影：`none` 不查/不返回，`names` 只回表格编号（默认），`full` 保留说明与操作；`--full` 回到完整视图 |
-| `scc` / `--brief` | 默认 summary 只回值→说明；`--full` 回单头、排序、扩展列；`--human` 批量逐条展示 |
 | `docp --doclist` | 单据性质清单：`none` 不查、`count` 只回数量、`full` 展开（默认） |
 
-`prog` / `scc` / `r.t` 的 `--full` 只改变**默认摘要命令**的详细程度；信封里的 `detail`
+`prog` / `r.t` 的 `--full` 只改变**默认摘要命令**的详细程度；信封里的 `detail`
 会明确写 `summary` 或 `full`。`--brief` 继续保留为更小的表级/值级投影。
 
 帮助末尾会附一行"本地数据齐不齐"（依赖哪个数据族、哪些表缺）—— 那与数据族定义同源。
 
-## ACC 应用分类码
-
-ACC 不是 SCC 那种固定下拉字典，而是由 `gzaa/gzaal`（分类）、`gzac/gzad`
-（参考字段）、`gzzz/gzzal`（维护作业）共同描述的“可配置维护作业”；值在
-`oocq/oocql`，按企业隔离。
-
-```text
-tt dict acc show  <作业|分类> [--full]        # 定义 + 维护作业 + 参考字段
-tt dict acc query <作业|分类> --template      # 输出可填充的 query 框架
-tt dict acc query <作业|分类> --spec <文件|-> # 校验并执行 query 框架
-```
-
-`show` 不需要企业；`query --spec` 必须点名企业（`--at <环境>@<企业>` 或 `--ent`）。
-`query --template` 输出 `fields[].key`（`value` / `desc` / `status` / `parent` /
-`ref1..ref20`）和空 `query`；AI 只填 `query`，字段/操作符由工具校验，绝不把
-字段名或值拼进 SQL。`--template` 的完整 JSON 输出可以直接保存后交给 `--spec`，工具会取其中的 `query`。
-
-`--human` 只换渲染，不丢信封：来源、计数、截断和 notes 会以 `#` 头打在表格前。
-
-值查询默认最多 20 条，结果带 `total/returned/truncated`。值表是业务数据，
-默认不进入字典同步；本地库只同步 ACC 定义/注册元数据，值请用
-`--at <环境>@<企业>` 直查。代码扫描不属于 ACC 查询：它只能产生候选证据，不能
-证明“谁在用这个 ACC”。
 
 ## 命令一览
 
 | 组 | 命令 |
 |---|---|
 | 表与字段 | `r.t`（表字典与字段） |
-| 分类与开窗 | `scc`（系统分类码）、`r.q`（可复用开窗） |
-| 应用分类码 | `acc show`（定义/作业/参考字段）、`acc query --template` / `--spec`（受约束的值查询） |
+| 开窗 | `r.q`（可复用开窗定义与拼出来的 SQL） |
 | 程序 | `prog`（程序与作业、程序↔表格、子程序与元件） |
 | 消息与参数 | `msg`、`sysp`、`docp` |
 | 数据维护 | `db status`（按环境总览/单环境详情）/ `db sync` / `db list` / `db discover`；连库测试在 `tt db` |

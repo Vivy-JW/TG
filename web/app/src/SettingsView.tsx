@@ -1459,7 +1459,7 @@ export function SettingsView() {
                   本地那份 SQLite 从哪来、查的时候走哪条路。原先分成两张卡,第一张只放一个下拉,
                   第二张才是"这份数据怎么来的",读的人得自己把两处接起来。 */}
               <Card id="card-dict-query" title="查询数据源"
-                description="r.t / scc / r.q / prog / msg 等查询命令走哪条路取数。">
+                description="r.t / r.q / prog / msg 等查询命令走哪条路取数。">
                 <SettingRow
                   id="query.source"
                   label="数据源"

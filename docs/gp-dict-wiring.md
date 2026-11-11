@@ -130,15 +130,15 @@
 | 17 | `QuerySpecRows`（`desc`） | **命令已删**（2026-11-11）。GP 的字段规格 22 列里只能给 6～8 列，值不值不足以撑一个命令 |
 | 13–16 | `QueryCheck*`（`r.v`） | **命令已删**。GP 没有校验带值这套 |
 
-### 3.4 分类码 / ACC / 开窗 / 参数
+### 3.4 分类码 / ACC / 开窗 / 参数（SCC、ACC 已删；开窗已接）
 
 | # | 方法 | GP 来源 | 结论 |
 |---|---|---|---|
-| 18–20 | `QueryScc*` | 没有分类码字典（`gzca_t` 不存在） | ⬜ |
-| 21–22 | `QueryACC*` | 没有（`oocq/oocql/gzzz` 不存在；`ooc_file` 只有 4 行会计科目） | ⬜ |
-| 23 | `QueryWinList` | **可以映射**到 `gac_file` 的 `q_*` 查询（15,327 行里的 distinct 查询名） | 🟡 半个 |
-| 24/25 | `QueryWinHeaders/Params` | 没有"开窗头/参数"这一层（GP 的开窗是 4GL 代码 + 查询） | ⬜ |
-| 26 | `QueryWinCols` | `gac_file` 给了每个查询用了哪些表的哪些字段 | 🟡 半个 |
+| 18–20 | `QueryScc*`（`scc`） | **命令已删**（2026-11-11）。GP 没有分类码字典（`gzca_t` 不存在） | — |
+| 21–22 | `QueryACC*`（`acc`） | **命令已删**。GP 没有（`oocq/oocql/gzzz` 不存在；`ooc_file` 只有 4 行会计科目） | — |
+| 23 | `QueryWinList` | `gab_file` + `gae_file`（wintitle） | ✅ 已接（`r.q` 列表） |
+| 24/25 | `QueryWinHeaders/Params` | `gab_file` 单头；GP 没有开窗参数这一层（`dzcb_t` 无对端） | ✅ 单头 / ⬜ 参数 |
+| 26 | `QueryWinCols` | `gac_file` + `gaq_file` 显示名 + `all_tab_columns` 列类型 | ✅ 已接 |
 | 27 | `QueryParam` | 没有参数定义档 | ⬜ |
 | 28 | `QueryDocTypes` | 没有单据性质档 | ⬜ |
 
@@ -197,5 +197,6 @@
 
 - **DTO 留空 vs 给 GP 窄结构**：倾向留空。T100 的 `ProgInfo` 有 14 个字段，GP 只能给 5 个；
   但脚本/前端已经在按 T100 的形状取，改形状的破坏面更大。
-- **空实现报不报错**：不报错（exit 0 + 空数组 + `notes`），否则脚本里 `tt dict scc list`
-  在 GP 上就成了一条失败命令——而它本来只是"GP 没有 SCC"。
+- **空实现报不报错**：不报错（exit 0 + 空数组 + `notes`），否则脚本里 `tt dict r.t ima_file`
+  在 GP 上就成了一条失败命令——而它本来只是"GP 没有某张字典表"。
+  实际做法：GP 根本没有对端的族（`r.v` / `desc` / `scc` / `acc`）直接删命令，不留空壳。

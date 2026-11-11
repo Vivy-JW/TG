@@ -25,15 +25,7 @@ type Source interface {
 	// 子程序与元件:gzde_t(子程序及应用元件基本数据表,参考作业 azzi901)+ gzdel_t(说明)
 	QuerySubProgInfo(code, lang string) (*SubProgInfo, error) // 未收录返回 (nil, nil)
 	QuerySubProgList(lang, keyword string) ([]SubProgListItem, error)
-	// rv 校验带值:dzcd_t/dzce_t/dzch_t
-	// desc 字段规格:dzep_t(附 dzeb_t/dzebl_t 名称)
-	// scc 系统分类码:gzca_t/gzcb_t
-	QuerySccList(lang, keyword string) ([]SccListRow, error)
-	QuerySccHeader(id, lang string) (*SccHeaderRow, error) // 未命中返回 (nil, nil)
-	QuerySccValues(id, lang string) ([]SccValueRow, error)
-	// 应用分类码 ACC：定义在 gzaa/gzac/gzad，作业注册在 gzzz，值在 oocq/oocql。
-	QueryACCMeta(input, lang string) (*ACCMeta, error) // 未命中返回 (nil, nil)
-	QueryACCValues(category string, ent int, lang string, includeInactive bool) ([]ACCValue, error)
+
 	// rq 可复用开窗:dzca_t/dzcb_t/dzcc_t
 	QueryWinList(lang, keyword string) ([]WinListRow, error)
 	QueryWinHeaders(id, lang string) ([]WinHeaderRow, error)
