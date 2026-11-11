@@ -1,6 +1,7 @@
 package dict
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -14,6 +15,7 @@ var (
 	progKW         string
 	progLang       string
 	progSub        bool
+	progLinks      bool
 	progTablesMode string
 )
 
@@ -62,6 +64,12 @@ JSON 形状（单编号响应会在 notes 里提示批量写法）：
 		if _, err := normalizeProgTables(progTablesMode); err != nil {
 			return err
 		}
+		if progLinks {
+			if len(args) != 1 {
+				return output.Errorf("USAGE", 2, "--links 要且只要一个作业/程序代号,例:tt dict prog abmi600 --links")
+			}
+			return runProgLinks(args[0])
+		}
 		if len(args) > 0 {
 			srcDetail = "summary"
 			if dictFull {
@@ -86,6 +94,74 @@ JSON 形状（单编号响应会在 notes 里提示批量写法）：
 		}
 		return runProgDetail(codes[0])
 	},
+}
+
+// progLinkResult 一个作业/程序的完整链接清单(gal_file)。
+type progLinkResult struct {
+	Program      string           `json:"program"`
+	Count        int              `json:"count"`
+	EntryCount   int              `json:"entryCount"`
+	EntryModules []string         `json:"entryModules"`
+	Links        []db.ProgLinkRow `json:"links"`
+}
+
+// runProgLinks 查 gal_file:一个作业/程序会链到多个模块,入口行是 gal03 == gal01。
+// 本地字典库不同步这张表,所以 dataSrc 为本地时 QueryProgLinks 会给明确的指路错误。
+func runProgLinks(code string) error {
+	code = strings.TrimSpace(code)
+	if code == "" {
+		return output.Errorf("USAGE", 2, "作业/程序代号不能为空")
+	}
+	rows, err := GetDB().QueryProgLinks(code)
+	if err != nil {
+		if errors.Is(err, db.ErrProgLinksRemoteOnly) {
+			return output.Errorf("USAGE", 2, "%v：去掉 --env local: 前缀（或改用 --at <环境>）再查", err).
+				WithHint("例：tt dict prog " + code + " --links --at <环境>")
+		}
+		return err
+	}
+	if len(rows) == 0 {
+		return notFoundErr("gal_file 没有作业 %q 的链接记录", code).
+			WithHint("确认作业代号(不要带模块前缀);表结构用 tt dict r.t <表>,程序用途用 tt dict prog <程序>")
+	}
+
+	res := progLinkResult{Program: code, Links: rows}
+	seen := make(map[string]bool, len(rows))
+	for _, r := range rows {
+		if !r.Entry {
+			continue
+		}
+		res.EntryCount++
+		if r.Module != "" && !seen[r.Module] {
+			seen[r.Module] = true
+			res.EntryModules = append(res.EntryModules, r.Module)
+		}
+	}
+	res.Count = len(rows)
+
+	headers := []string{"模块", "链接程序", "链接标记", "入口"}
+	tableRows := make([][]string, 0, len(rows))
+	for _, r := range rows {
+		entry := ""
+		if r.Entry {
+			entry = "Y"
+		}
+		tableRows = append(tableRows, []string{r.Module, r.LinkedProg, r.LinkFlag, entry})
+	}
+	if Format() != output.FormatTable {
+		return emit(res, headers, tableRows)
+	}
+
+	fmt.Printf("%s 的程序链接(gal_file):%d 行,入口 %d 个", code, res.Count, res.EntryCount)
+	if len(res.EntryModules) > 0 {
+		fmt.Printf(",入口模块 %s", strings.Join(res.EntryModules, ","))
+	}
+	fmt.Println()
+	output.PrintTable(headers, tableRows)
+	if res.EntryCount == 0 {
+		fmt.Println("(没有 gal03 == gal01 的入口行;这份链接数据可能不完整)")
+	}
+	return nil
 }
 
 // runProgDetail 打印一个程序编号的详情:程序信息 + 使用它的作业。
@@ -685,6 +761,7 @@ func init() {
 	progCmd.Flags().StringVar(&progKW, "kw", "", "按程序编号/中文名称搜索 (无编号时的列表模式)")
 	progCmd.Flags().StringVar(&progLang, "lang", "zh_CN", "程序名称语言别 (gzzal002, 默认 zh_CN)")
 	progCmd.Flags().BoolVar(&progSub, "sub", false, "无编号时:列出/搜索子程序与元件(gzde_t)而不是主程序")
+	progCmd.Flags().BoolVar(&progLinks, "links", false, "查程序链接(gal_file):链到哪些模块、入口模块是哪个(要远程库)")
 	progCmd.Flags().StringVar(&progTablesMode, "tables", "names", "用表矩阵: none | names | full（默认 names）")
 	progCmd.Flags().BoolVar(&dictFull, "full", false, "完整视图：用表展开为 full（等同于显式 --tables full）")
 	Group.AddCommand(progCmd)

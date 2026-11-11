@@ -448,7 +448,7 @@ export function GpSites({ only, create, initial, onSaved, onDiscard, onDraftChan
   }
 
   // 三个页签各测各自的：ssh 只测 SSH、db 只测库、site 只测据点。
-  // 后端按 what 分流（internal/gp/gp.go 的 hTest），结果也只回这一项。
+  // 后端按 what 分流（internal/web/gpapi.go 的 hTest），结果也只回这一项。
   const runTest = async (what: 'ssh' | 'db' | 'site') => {
     if (!cur) return
     setTestBusy(what); setMsg('')
@@ -698,5 +698,5 @@ export function GpSites({ only, create, initial, onSaved, onDiscard, onDraftChan
  * SettingsView 自己实现的（`SettingsView.tsx:1939` 起），所以那三张卡在界面上不存在。
  * 2026-11-09 删除死代码；其中「查询数据源」按 docs/gp-scope.md §10 Q6 处理：等 §4.D
  * 字典层改造成 GP 自己的之后（本地镜像 / 在线直查才有语义），在 SettingsView 里新建并接线
- * （`GET /api/gp/meta` 回读 querySource + 保存端点 + `tt gp` 本地库查询）。
+ * （`GET /api/gp/meta` 回读 querySource + 保存端点 + `tt dict` 本地库查询）。
  */

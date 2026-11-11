@@ -197,7 +197,7 @@ func openLocalSource(env string) error {
 		}
 		resolvedPath, err = resolveDBPath(dbPath)
 	} else if e, ok := gpEnvNamed(env); ok {
-		// TOP GP 的本地字典库由 tt gp sync(或 tt dict db sync)产出，位置在 gp.DictPath。
+		// TOP GP 的本地字典库由 tt dict db sync 产出，位置在 dict.DictPath。
 		resolvedPath = dictlib.DictPath(e)
 		if _, statErr := os.Stat(resolvedPath); statErr != nil {
 			return output.Errorf(output.CodeUsage, 2,

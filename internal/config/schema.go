@@ -112,7 +112,7 @@ type NamedSsh struct {
 	// "本地查得到、远程说表不存在"，且表格总数对不上。
 	//
 	// 用法：**只影响实际查库**（直查要按资料库编号选 schema 与字典行）。
-	// 本地字典库的同步是固定按 "ds" 取的，见 internal/gp/dict.go 的 runSync。
+	// 本地字典库的同步是固定按 "ds" 取的，见 internal/dict/dbsync 的 SyncGP。
 	Company string `json:"company,omitempty"`
 	// CompanyName 营运据点名字（azp_file.azp02），从服务器刷新时抄下来。
 	//

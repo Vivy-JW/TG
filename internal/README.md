@@ -89,7 +89,7 @@ go list -f '{{.ImportPath}}|{{join .Imports " "}}' ./internal/... | grep 'tt/int
 | `debugclient` | 调试面 REST 的**唯一客户端** |
 | `cli/dev/tzc` | `tt dev tzc` 八个动词 + uuid 生成 + 31 项对抗自检 |
 | `cli/dict` | `tt dict` 命令组：表 / 程序 / 消息 / 开窗（r.q）+ 字典库运维 |
-| `cli/gp` | `tt gp` 与顶层 `tt site`：直查表/程序/消息、GP 字典同步、营运据点清单 |
+| `cli/site` | 顶层 `tt site`：营运据点（azp_file）清单与单查；`cli/dict` 里另有表/程序/消息/开窗与字典同步 |
 | `cli/db` | `tt db`：本机 ping / 服务器 probe / 只读 SQL |
 | `cli/dev` | `tt dev` 分发（tzc / tzs 两条线） |
 | `cli/session` | `tt session` 命令组 |

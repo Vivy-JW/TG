@@ -1,31 +1,34 @@
-package gp
+package site
 
 // 顶层命令 tg site：把 GP 的营运据点（azp_file）列出来。
 //
-// 为什么挂在顶层、不并进 tg gp：`--at` 到处都要写据点编号
+// 为什么挂在顶层：`--at` 到处都要写据点编号
 // （tg dict r.t ima_file --at 22主机@COF），据点本身是"这个环境里能选哪些库"，
-// 不该藏在某个产品组下面；而且它跟 T100 的 ENT 是同一个位置的概念
-// （tg env ents ↔ tg site list），摆在顶层才对称。
+// 不该藏在某个产品组下面。
 //
 // 只读：连库查 azp_file，不碰配置、不写库。
 
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	"tt/internal/cli/common"
+	"tt/internal/config"
 	dictlib "tt/internal/dict"
 	"tt/internal/output"
 )
 
 const siteLong = `营运据点取自 GP 的 azp_file（aooi901 工厂基本资料维护作业维护的那张表）。
 
-每个据点有两个编号，别混：
-  据点编号    azp01，如 COF / DEMO1 / DIGIWIN —— 人记得住的是这个
-  资料库编号  azp03，如 cof_demo / demo1 / digiwin —— 查字典用的是这个（= Oracle schema）
+三个字段要分清：
+
+  据点编号   azp01，画面上看到的工厂代号（001 / COF / SYSTEM …）
+  资料库编号 azp03，Oracle 的 schema，也就是 zta_file.zta02
+  名称       azp02
 
 两者的值经常不同（实测 30 个据点里 15 个不同），所以 --at 里写哪个都认：
 先按据点编号找，找不到再按资料库编号找。
@@ -45,6 +48,48 @@ func NewSiteCmd() *cobra.Command {
 	return c
 }
 
+// siteEnv 取本次要连的环境（--env 或 --at 都写进 common.Env）。
+func siteEnv() (config.NamedSsh, error) {
+	name := strings.TrimSpace(common.Env)
+	if name == "" {
+		return config.NamedSsh{}, output.Errorf("USAGE", 2, "要指定环境：--env <环境> 或 --at <环境>").
+			WithHint("环境清单在 config.json 的 hosts.sshs，用 tt site list --env <环境> 开始")
+	}
+	path, err := common.ResolveConfig(false)
+	if err != nil {
+		return config.NamedSsh{}, err
+	}
+	hosts, err := config.LoadHosts(path)
+	if err != nil {
+		return config.NamedSsh{}, output.Errorf("CONFIG", 2, "读配置失败: %v", err)
+	}
+	e := hosts.ByName(name)
+	if e == nil {
+		return config.NamedSsh{}, output.Errorf("NOT_FOUND", 4, "环境 %q 不存在", name).
+			WithHint("可用的环境：tt env list")
+	}
+	if e.DB == nil {
+		return config.NamedSsh{}, output.Errorf("DB", 2, "环境 %q 没有配置数据库连接", e.Name).
+			WithHint("在设置 → 站点管理 → 数据库里配置该环境的 Oracle 连接")
+	}
+	return *e, nil
+}
+
+// siteMeta 出处信头：营运据点走远程直查。
+func siteMeta(env config.NamedSsh) output.Meta {
+	m := output.Meta{
+		Source:   "live",
+		Env:      env.Name,
+		SSHHost:  env.Host,
+		Readonly: true,
+	}
+	if env.DB != nil {
+		m.Target = env.DB.Address()
+		m.Dialect = env.DB.Type
+	}
+	return m
+}
+
 func newSiteListCmd() *cobra.Command {
 	var all bool
 	cmd := &cobra.Command{
@@ -57,17 +102,13 @@ func newSiteListCmd() *cobra.Command {
 默认只列能查字典的，免得选了一个查不动的。`,
 		Args: cobra.NoArgs,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			t, err := resolveTarget(false)
+			env, err := siteEnv()
 			if err != nil {
 				return err
 			}
-			if t.env.DB == nil {
-				return envErr(t, "DB", 2, "环境 %q 没有配置数据库连接", t.env.Name).
-					WithHint("在设置 → 站点管理 → 数据库里配置该环境的 Oracle 连接")
-			}
-			sites, err := dictlib.ListSites(context.Background(), *t.env.DB)
+			sites, err := dictlib.ListSites(context.Background(), *env.DB)
 			if err != nil {
-				return envErr(t, "GP_SITE", 5, "读营运据点失败: %v", err)
+				return output.Errorf("GP_SITE", 5, "读营运据点失败: %v", err)
 			}
 			hidden := 0
 			if !all {
@@ -83,14 +124,14 @@ func newSiteListCmd() *cobra.Command {
 			}
 
 			if common.IsJSON() {
-				meta := metaNotes(t.meta, "营运据点 azp_file")
+				meta := siteMeta(env)
 				meta.TotalRows = len(sites)
 				meta.Returned = len(sites)
-				return output.Emit(stdout, output.Options{
+				return output.Emit(os.Stdout, output.Options{
 					Format: common.OutputFormat(),
 					Meta:   meta,
 					Data: map[string]any{
-						"环境":   t.env.Name,
+						"环境":   env.Name,
 						"据点":   sites,
 						"条数":   len(sites),
 						"隐藏":   hidden,
@@ -128,25 +169,23 @@ func newSiteShowCmd() *cobra.Command {
 不会静默查出一片空。`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
-			t, err := resolveTarget(false)
+			env, err := siteEnv()
 			if err != nil {
 				return err
 			}
-			if t.env.DB == nil {
-				return envErr(t, "DB", 2, "环境 %q 没有配置数据库连接", t.env.Name).
-					WithHint("在设置 → 站点管理 → 数据库里配置该环境的 Oracle 连接")
-			}
-			site, err := dictlib.ResolveSchema(context.Background(), *t.env.DB, strings.TrimSpace(args[0]))
+			site, err := dictlib.ResolveSchema(context.Background(), *env.DB, strings.TrimSpace(args[0]))
 			if err != nil {
-				return envErr(t, "GP_SITE", 4, "%v", err)
+				return output.Errorf("GP_SITE", 4, "%v", err)
 			}
 			if common.IsJSON() {
-				meta := metaNotes(t.meta, "营运据点 azp_file")
-				return output.Emit(stdout, output.Options{
+				meta := siteMeta(env)
+				meta.TotalRows = 1
+				meta.Returned = 1
+				return output.Emit(os.Stdout, output.Options{
 					Format: common.OutputFormat(),
 					Meta:   meta,
 					Data: map[string]any{
-						"环境":    t.env.Name,
+						"环境":    env.Name,
 						"据点编号":  site.Code,
 						"资料库编号": site.Schema,
 						"名称":    site.Name,

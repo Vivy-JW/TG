@@ -28,7 +28,7 @@
 
 1. **GP 用得上吗？** 用不上就是 T100 领域层——不管它写得多好。
 2. **它是 Genero 的规范，还是 T100 的约定？** 前者（4GL 语法、`.42f` 格式、fgldb 提示符）GP 一定用；后者（企业 ENT、`.tzc`）GP 一定不用。混着的那几个包就是 §5 的手术；`zta_file` 之类的**表**则进 §4.D 的换表，不删包。
-3. **谁 import 它？** 光看名字会骗人：`dict/live` 名字在 T100 字典包下，实际是"直连 ERP 库执行一条只读 SQL"，GP 的 `tt gp link/msg` 正在用它（`cli/gp/register.go:164`）。
+3. **谁 import 它？** 光看名字会骗人：`dict/live` 名字在 T100 字典包下，实际是"直连 ERP 库执行一条只读 SQL"，GP 的 `tt dict prog --links` 与 `tt dict msg` 正在用它（`internal/cli/dict/prog.go`、`internal/dict/live`）。
 
 ## 2. 底座（留，只改名）
 
@@ -43,7 +43,7 @@
 | `output` | 473 | 唯一输出出口（JSON/CSV/表格） |
 | `erpdb` | 447 | Oracle / 金仓直连，GP 是 Oracle，长期要 |
 | `winproc` | 389 | 起脱离进程、判活、杀 |
-| `safesql` | 359 | 只读 SQL 白名单。GP 的 `tt gp` 查询同样走它 |
+| `safesql` | 359 | 只读 SQL 白名单。GP 的 `tt dict` 查询同样走它 |
 | `pathinstall` | 263 | 用户 PATH 增删 |
 | `envmove` | 243 | 环境改名计划 / 回滚（GP 环境改名也在用） |
 | `dbconfig` | 240 | 连接字段类型，纯类型 |
@@ -205,7 +205,7 @@ GP **没有 ENT**（`cli/gp/register.go` 的包注释明写"GP 没有 T100 的 E
 
 ### 阶段 1（并行）：GP 自给自足
 
-TT 的 GP 面现在只有"环境 / 镜像 / 字典 / 调试会话"四件事，**且全在 Web API 上**。命令行只有 `tt gp table|link|msg` 三条查询。这个阶段把 GP 侧该有的补上，T100 代码一行不动。
+TT 的 GP 面现在只有"环境 / 镜像 / 字典 / 调试会话"四件事，**且全在 Web API 上**。命令行只有 `tt gp table|link|msg` 三条查询（**2026-11-11 已改**：`tt gp` 删除，改为 `tt dict r.t` / `tt dict prog --links` / `tt dict msg`，据点清单用 `tt site`）。这个阶段把 GP 侧该有的补上，T100 代码一行不动。
 
 ### 阶段 2（替换）：共享件去 T100 化
 
@@ -223,14 +223,14 @@ TT 的 GP 面现在只有"环境 / 镜像 / 字典 / 调试会话"四件事，**
 | 单测 | `go test ./...` | 沙箱里有 4 个包恒红，见 §8；真机应为绿 |
 | 前端 | `cd web && npm run check:app` | 只在改前端时 |
 | T100 自检 | `./tt.exe dev tzc selftest`（31 项） | 阶段 3 删掉 tzc 后自然消失 |
-| GP 全链路 | 配环境 → 测连通 → 同步字典 → 拉镜像 → 起 fgldb → 跑一条 `tt gp table` | **手工**，没有自动化；这条是"TG 还能用"的唯一判据 |
+| GP 全链路 | 配环境 → 测连通 → 同步字典 → 拉镜像 → 起 fgldb → 跑一条 `tt dict r.t` | **手工**，没有自动化；这条是"TG 还能用"的唯一判据 |
 
 ## 7. 今天实测出来的缺口（不是设计缺失，是没接线）
 
 这八条都有代码证据，改起来都不大，但会决定用户第一次打开 TG 的印象。
 
 1. **`tt debug` 完全不认 GP 环境。** `internal/cli/debug` 全包搜不到一处 `Product` 判断。对着 GP 环境跑 `tt debug`，它会按 T100 的路径去解析作业、企业、源码镜像——报错大概是"找不到作业"，而不是"这是 GP 环境"。
-2. **GP 调试没有命令行面。** 只有 `/api/gp/session/{new,list,exec,close}`；`tt gp` 只有 `table|link|msg`。也就是说：**GP 版的"调试"今天只有 Web 能做，命令行做不了**。而 TT 的定位是 CLI-first。
+2. **GP 调试没有命令行面。** 只有 `/api/gp/session/{new,list,exec,close}`；~~`tt gp` 只有 `table|link|msg`~~（已删，现为 `tt dict …`）。也就是说：**GP 版的"调试"今天只有 Web 能做，命令行做不了**。而 TT 的定位是 CLI-first。
 3. **`tt file mirror` 是 T100 专用。** 帮助原文"管理 T100 本地镜像（source: 4gl/42f/42s/inc）"。GP 的镜像只有 `/api/gp/mirror`，且**只拉 `*.4gl`**（`internal/gp/gp.go:990` 的 `find ... -iname '*.4gl'`），GP 的 `42f/42s/inc` 不在镜像里。**已定（Q3）**：按 profile 补，默认 `debug` 只 4gl、`source` 收全四类。
 4. **前端有两个端点不存在（GP 页的"查询数据源"其实是三处断线）。**
    - `web/app/src/gpEnvs.ts:40` 的 `gpPickDir` POST `/api/gp/pickdir` → 后端只有 `POST /api/pickdir`（`internal/web/server.go:161` 挂的 `internal/web/pickdir.go`，本机回环、返回 `{ok,path,canceled}`）。返回 404，函数吞掉异常返回空串，**表现是"选目录按钮没反应"**。T100 侧 `web/app/src/api.ts:487` 调的正是 `/api/pickdir`，改一行 URL 就对齐。
@@ -240,7 +240,7 @@ TT 的 GP 面现在只有"环境 / 镜像 / 字典 / 调试会话"四件事，**
    **pickdir 已修**（改调 `/api/pickdir`，前端 `tsc --noEmit` 与 `check:app` 全绿，dist 已重建）。`/api/gp/settings` 与 `querySource` 两处按 **Q6 = a** 处理：控件先**不渲染**（`GpSettings.tsx` 顶部的 `SHOW_QUERY_SOURCE = false`，代码保留），等 §4.D 字典改造落地后连同后端一起接通——现在渲染它只会给用户一个点了报错的死控件。
 5. **`skills/` 没有 GP 技能。** 分发的 4 个技能全是 T100 的；GP 那套（`gp-erp-architecture`/`-debug`/`-read`）现在只在本机 `.agents/skills` 之外。用户装完 TG，Agent 拿到的是 T100 文档——这是**对外发版前必须换的**。
 6. **`internal/README.md` 的包地图里没有 `internal/gp`。** 55 个包的清单从 `cli/at` 到 `cli` 都有，唯独这个 2067 行、带 9 个端点的子系统没登记（整份文档里 `gp` 出现 0 次）。
-7. **GP 字典只有三条命令，本地库与 Oracle 的口径还不一致。** `tt gp` 只有 `table|link|msg`；本地库已同步 `t_table`/`t_column`/`t_index`/`t_constraint`/`t_module`/`t_prog`/`t_prog_link` 七张表（实测：2,962 张表 / 60,870 个字段 / 6,465 支程序，同步耗时 1 分 7 秒、11.7 MB）。改造字典层（§4.D）就是把这七张表接到 `db.Source` 的 30 个查询方法上（逐方法接线见 [gp-dict-wiring.md](gp-dict-wiring.md)）。实测还暴露三处**已经存在**的不一致：①`internal/dict/dbsync/gp.go:186` 把公司别与 schema 写死成 `"ds"`/`"DS"`（后随的 `if env.DB.Service != ""` 是死分支）；②表档跟着公司别走（2,962 张，61 张无物理表）、字段跟着 schema 走（2,901 张物理表 / 60,870 字段），24 个视图与备份表在表档里没有；③`t_prog_link` 恒为 0 行，导致 `LookupModule` 的 p_link 覆盖等于没生效（实测 `gal_file` 只有 17,810 行、入口行 5,561 行，填这张表没有任何性能问题）。
+7. **GP 字典只有三条命令，本地库与 Oracle 的口径还不一致。** ~~`tt gp` 只有 `table|link|msg`~~（2026-11-11 已改为 `tt dict`）；本地库已同步 `t_table`/`t_column`/`t_index`/`t_constraint`/`t_module`/`t_prog`/`t_prog_link` 七张表（实测：2,962 张表 / 60,870 个字段 / 6,465 支程序，同步耗时 1 分 7 秒、11.7 MB）。改造字典层（§4.D）就是把这七张表接到 `db.Source` 的 30 个查询方法上（逐方法接线见 [gp-dict-wiring.md](gp-dict-wiring.md)）。实测还暴露三处**已经存在**的不一致：①`internal/dict/dbsync/gp.go:186` 把公司别与 schema 写死成 `"ds"`/`"DS"`（后随的 `if env.DB.Service != ""` 是死分支）；②表档跟着公司别走（2,962 张，61 张无物理表）、字段跟着 schema 走（2,901 张物理表 / 60,870 字段），24 个视图与备份表在表档里没有；③`t_prog_link` 恒为 0 行，导致 `LookupModule` 的 p_link 覆盖等于没生效（实测 `gal_file` 只有 17,810 行、入口行 5,561 行，填这张表没有任何性能问题）。
 8. **`GET /api/gp/meta` 明文回吐口令。** 实测响应体里带环境的**明文 SSH 口令**与库账号的**明文口令**（形如 `"password":"<明文>"`，本文档不记录其值）——前端只用到 `hasPassword: true`，根本不需要明文。虽然服务只听 127.0.0.1，但本机任何进程/浏览器页面都能读到；`hMeta` 应改成只回 `hasPassword`。这是**对外发版前必须扫掉**的一条。
 
 ## 8. 沙箱跑不出来的测试（别误判成代码坏了）
@@ -278,4 +278,4 @@ Get-ChildItem internal -Directory | ForEach-Object {
 - ~~**Q3**：GP 镜像要不要扩到 `42f/42s/inc`~~ —— **已定（2026-11-09）：做 profile**。默认 `debug`（只 4gl，调试够用且快），`source` 收 4gl+42f+42s+inc，与 `tt file mirror` 同构（§7.3）。
 - ~~**Q4**：`designer-src/` + `engine/`（16 MB、1264 文件）什么时候删~~ —— **已定（2026-11-09）：阶段 3 与 T100 代码同批删**；删前把 `TT-src` 打 zip 存到仓库外（它没有 git 历史）。注意 `engine/designer/` 那 28 个设计器 DLL（10.5 MB）是厂商二进制、且原本随发行包分发，TG 发版绝不能带。
 - ~~**Q5**：阶段 3 的改名要不要一次性做~~ —— **已定（2026-11-09）：分三批**。①对外标识（二进制名、MSI 产品名、PATH 写入名、文档自称）②数据与配置（`~/.tt`→`~/.tg` 带一次性迁移、`TT_WEB_DIR`、`.tt-serve.json`、`TT_*` 变量读旧名兼容）③代码内部（`module tt`→`module tg` 全仓 import 重写 + 重生成 `commands.html`）。每批一个 commit、可单独回滚。
-- ~~**Q6**：GP 页的"查询数据源"怎么处理（§7.4）~~ —— **已定（2026-11-09）：先隐藏，字典改造后接通**。`GpSettings.tsx` 里 `SHOW_QUERY_SOURCE = false`，卡片代码保留不删；理由是原建议"A 删控件"随 §4.D 作废——字典改造成 GP 的之后，"本地镜像 / 远程直查"才有语义。接通时要做三件：`GET /api/gp/meta` 回读 `querySource`、`POST /api/gp/settings`（或改走共享 `PUT /api/hosts`）、`tt gp` 补本地 `.db` 查询路径。
+- ~~**Q6**：GP 页的"查询数据源"怎么处理（§7.4）~~ —— **已定（2026-11-09）：先隐藏，字典改造后接通**。`GpSettings.tsx` 里 `SHOW_QUERY_SOURCE = false`，卡片代码保留不删；理由是原建议"A 删控件"随 §4.D 作废——字典改造成 GP 的之后，"本地镜像 / 远程直查"才有语义。接通时要做三件：`GET /api/gp/meta` 回读 `querySource`、`POST /api/gp/settings`（或改走共享 `PUT /api/hosts`）、本地 `.db` 查询路径（已完成：`tt dict … --env local:<环境>`，`tt gp` 组已于 2026-11-11 删除）。

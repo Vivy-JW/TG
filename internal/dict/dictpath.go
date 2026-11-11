@@ -1,11 +1,10 @@
 // Package dict 是 TOP GP 的字典层：本地字典库的位置口径、营运据点解析、
 // 开窗 SQL 拼装、程序查模块。
 //
-// 这些东西原来住在 internal/gp 里，见 docs/gp-scope.md 的分层说明：
-// internal/gp 是"GP 环境"（/api/gp/* 的设置页、会话、镜像），而字典是另一件事。
-// 更直接的证据是依赖方向：internal/gp/site.go 要 import internal/dict/live 才能查库，
-// 而 internal/cli/dict 又 import internal/gp —— 两头互相要，只能靠"都在 gp 包"绕开。
-// 搬到 internal/dict 之后 cli/dict 不再依赖 gp，字典层自成一体。
+// 这些东西原来挤在一个包里：那个包既管 /api/gp/* 的设置页与会话，又管字典。
+// 依赖方向能说明问题：它会 import internal/dict/live 才能查库，而 internal/cli/dict
+// 又反过来 import 它 —— 两头互相要。现在字典层自成一体，执行面在 internal/web。
+// 分层说明见 docs/gp-scope.md。
 package dict
 
 import (
@@ -27,8 +26,8 @@ const SyncCompany = "ds"
 // DictPath 返回本地 GP 字典库路径。
 // 环境可单独指定 DictDir，否则落在 GP 数据目录下。
 //
-// 导出给 CLI 的 tt gp table 用：Web 的字典同步与 CLI 查询必须落到同一个
-// <环境>.db，路径规则只能有一份实现。
+// 导出给 CLI 与 Web 共用：字典同步与 CLI 查询必须落到同一个 <环境>.db，
+// 路径规则只能有一份实现。
 func DictPath(e config.NamedSsh) string { return dictPath(e) }
 
 // dictPath 本地字典库路径。环境可单独指定 DictDir，否则落在 gp 数据目录下。

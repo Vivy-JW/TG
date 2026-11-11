@@ -8,7 +8,7 @@
 
 ## 0. 怎么验的
 
-- 连接：`oracle://<库账号>@<主机>:<端口>/<服务名>`（正是 `tt gp` 字典同步用的那条路径：
+- 连接：`oracle://<库账号>@<主机>:<端口>/<服务名>`（正是 `tt dict db sync` 字典同步用的那条路径：
   `internal/dict/dbsync/gp.go` 取 `env.DB.Accounts[0]`，不查企业目录）。
 - 查询面：`all_tables` / `all_tab_columns` / `all_indexes` / `all_constraints`（物理字典）
   + GP 自己的 `GA*_FILE`、`ZT*_FILE`、`ZE_FILE`。
@@ -90,7 +90,7 @@
 | `t_prog` | 6,465 | `gaz02='2'`（简体名）；键是**作业编号**（`07448`/`123`），不是 4GL 程序名 |
 | `t_prog_link` | **0** | 建表但同步**不填**（见 §5.3） |
 
-同步完成后 `tt gp table ima_file --human` 直接可用：314 个字段，中文名、类型、可空、格式码（`001`/`036`…）都在。
+同步完成后 `tt dict r.t ima_file --format table` 直接可用：314 个字段，中文名、类型、可空、格式码（`001`/`036`…）都在。
 
 **对账结论（拿 Oracle 逐个表比）**：`all_tab_columns` 在 `DS` 下是 2,925 个对象/61,823 个字段，
 本地是 2,901 张表/60,870 个字段，**逐表比没有一个表少字段**——差的 24 个对象（953 个字段）全是
@@ -158,7 +158,7 @@
    `db.accounts[0]`，公司别默认取账号名，允许在环境配置里覆盖。
 2. **本地库路径两套。** `tt dict` 的 `local:<环境>` 指向 T100 字典库，GP 的库在
    `internal/gp.DictPath()`（`~/.tt/gp-dict/<环境>.db`）。改法同上一条。
-3. **命令组还没挂 GP。** `tt gp` 只有 `table|link|msg`，`tt dict` 的 10 个子命令都还没对 GP 开。
+3. ~~**命令组还没挂 GP。** `tt gp` 只有 `table|link|msg`，`tt dict` 的 10 个子命令都还没对 GP 开。~~ —— 2026-11-11 已收口：`tt gp` 整组删除，表/程序/消息/开窗/同步/据点都在 `tt dict` 与 `tt site`。
 
 ## 5. 现有同步的三个口径问题（实测发现）
 

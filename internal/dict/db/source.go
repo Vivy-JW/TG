@@ -25,6 +25,9 @@ type Source interface {
 	// 子程序与元件:gzde_t(子程序及应用元件基本数据表,参考作业 azzi901)+ gzdel_t(说明)
 	QuerySubProgInfo(code, lang string) (*SubProgInfo, error) // 未收录返回 (nil, nil)
 	QuerySubProgList(lang, keyword string) ([]SubProgListItem, error)
+	// 程序链接:GP 的 gal_file(程序 → 模块),入口行是 gal03 == gal01。
+	// 本地字典库不同步这张表,只有远程实现(本地实现返回明确的错误)。
+	QueryProgLinks(prog string) ([]ProgLinkRow, error)
 
 	// rq 可复用开窗:dzca_t/dzcb_t/dzcc_t
 	QueryWinList(lang, keyword string) ([]WinListRow, error)

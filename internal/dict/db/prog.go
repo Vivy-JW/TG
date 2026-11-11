@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -24,20 +25,20 @@ import (
 type ProgInfo struct {
 	Code      string `json:"编号"`
 	IsProg    bool   `json:"是程序"`
-	Name      string `json:"程序名称"`   // gzzal003(指定语言)
-	ShortName string `json:"程序简称"`   // gzzal005
-	Category  string `json:"程序类别"`   // gzza002
+	Name      string `json:"程序名称"` // gzzal003(指定语言)
+	ShortName string `json:"程序简称"` // gzzal005
+	Category  string `json:"程序类别"` // gzza002
 	// CategoryName 是程序类别码的中文名。产品口径不同(T100 与 TOP GP 的 M/T 含义
 	// 不一样)，所以由数据源自己给：T100 侧留空、由命令层按 T100 码表翻译；
 	// GP 侧由 gpdb 填 GP 码表的名字。空值不出现在输出里。
 	CategoryName string `json:"程序类别名称,omitempty"`
-	Module       string `json:"归属模块"` // gzza003
-	Cust      string `json:"客制"`     // gzza011
-	RefMain   string `json:"引用主程序"`  // gzza008
-	RunCmd    string `json:"系统运行指令"` // gzza004
-	Status    string `json:"状态码"`    // gzzastus
-	IsJob     bool   `json:"是作业"`
-	JobProg   string `json:"作业挂的程序"` // gzzz002(该编号作为作业登记时)
+	Module       string `json:"归属模块"`   // gzza003
+	Cust         string `json:"客制"`     // gzza011
+	RefMain      string `json:"引用主程序"`  // gzza008
+	RunCmd       string `json:"系统运行指令"` // gzza004
+	Status       string `json:"状态码"`    // gzzastus
+	IsJob        bool   `json:"是作业"`
+	JobProg      string `json:"作业挂的程序"` // gzzz002(该编号作为作业登记时)
 	// 下面两项只在“这个编号本身是作业”时有值：同名作业靠它们区分。
 	JobParamGrp string `json:"应用参数组"` // gzzz003
 	JobExtra    string `json:"额外参数"`  // gzzz004
@@ -93,6 +94,25 @@ type TableProgRow struct {
 	ProgName string `json:"程序名称"`
 	Ops      string `json:"操作"`
 }
+
+// ProgLinkRow 程序链接的一行:gal_file(程序 → 模块)。
+// Entry 为真表示 gal03 == gal01(这一行是入口模块,程序名等于作业代号)。
+type ProgLinkRow struct {
+	Module     string `json:"module"`
+	LinkedProg string `json:"linkedProg"`
+	LinkFlag   string `json:"linkFlag,omitempty"`
+	Entry      bool   `json:"entry"`
+}
+
+// QueryProgLinks 本地字典库回答不了:gal_file 没有进同步清单
+// (整表 30 万行级,只有查链接时才用得上),所以只给一句明确的指路,
+// 而不是返回空列表让人以为"这个程序没有链接"。
+func (d *DB) QueryProgLinks(string) ([]ProgLinkRow, error) {
+	return nil, ErrProgLinksRemoteOnly
+}
+
+// ErrProgLinksRemoteOnly 程序链接只有远程库能回答(见 QueryProgLinks)。
+var ErrProgLinksRemoteOnly = errors.New("程序链接(gal_file)只在远程库里,本地字典库不同步这张表")
 
 // mergeOps 把同一目标的多个操作类别合并成固定顺序的字符串(S/I/U/D,再按字母补未知码)。
 func mergeOps(ops []string) string {

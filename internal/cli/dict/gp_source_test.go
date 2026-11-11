@@ -35,7 +35,7 @@ func gpConfig(t *testing.T, dir string) string {
 }`)
 }
 
-// makeGPDict 在 dir 下造一个最小的 <环境>.db（tt gp sync 产出的那几张表）。
+// makeGPDict 在 dir 下造一个最小的 <环境>.db（tt dict db sync 产出的那几张表）。
 func makeGPDict(t *testing.T, dir, env string) string {
 	t.Helper()
 	if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -65,7 +65,7 @@ func makeGPDict(t *testing.T, dir, env string) string {
 	return p
 }
 
-// TestLocalGPEnvReadsDict：local:<GP 环境> 落到 tt gp sync 产出的本地库，
+// TestLocalGPEnvReadsDict：local:<GP 环境> 落到 tt dict db sync 产出的本地库，
 // 不需要企业（ENT）、不连远程库。
 func TestLocalGPEnvReadsDict(t *testing.T) {
 	resetDictPackageState(t)

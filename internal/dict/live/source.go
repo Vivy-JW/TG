@@ -366,6 +366,41 @@ func (l *Live) QueryTablePrograms(table, lang string) ([]db.TableProgRow, error)
 	return db.GroupTablePrograms(rows, get), nil
 }
 
+// ---- 程序链接 ----
+
+// QueryProgLinks 查 gal_file(程序 → 模块)。入口行是 gal03 == gal01,
+// 也就是"程序名等于作业代号"的那一行 —— 不能只取 MAX(gal02) 压成一行,
+// 否则会选中子程序所在的模块。
+func (l *Live) QueryProgLinks(prog string) ([]db.ProgLinkRow, error) {
+	prog = strings.TrimSpace(prog)
+	if prog == "" {
+		return nil, nil
+	}
+	rows, err := l.q(fmt.Sprintf(`
+		SELECT COALESCE(gal01, ''), COALESCE(gal02, ''), COALESCE(gal03, ''), COALESCE(gal04, '')
+		  FROM gal_file
+		 WHERE UPPER(gal01) = UPPER(%s)
+		 ORDER BY CASE WHEN UPPER(gal03) = UPPER(gal01) THEN 0 ELSE 1 END,
+		          gal02, gal03`, lit(prog)))
+	if err != nil {
+		return nil, err
+	}
+	out := make([]db.ProgLinkRow, 0, len(rows))
+	for _, r := range rows {
+		head := strings.TrimSpace(get(r, 0))
+		module := strings.ToLower(strings.TrimSpace(get(r, 1)))
+		linked := strings.TrimSpace(get(r, 2))
+		flag := strings.TrimSpace(get(r, 3))
+		out = append(out, db.ProgLinkRow{
+			Module:     module,
+			LinkedProg: linked,
+			LinkFlag:   flag,
+			Entry:      strings.EqualFold(linked, head),
+		})
+	}
+	return out, nil
+}
+
 // ---- 消息 ----
 
 // msgWhereGP 拼 ze_file 的 WHERE(编号/文本/语言)。

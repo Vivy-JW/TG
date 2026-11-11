@@ -30,7 +30,7 @@ import (
 	"tt/internal/cli/dev"
 	"tt/internal/cli/dict"
 	"tt/internal/cli/file"
-	"tt/internal/cli/gp"
+	"tt/internal/cli/site"
 	"tt/internal/cli/interfacecmd"
 	"tt/internal/cli/outline"
 	"tt/internal/cli/session"
@@ -49,8 +49,8 @@ config.json、同一个本地 Web 服务（tt serve）。
 （--at <环境>[@<企业>] 或 --env，没有默认环境；不知道填什么就加 --at-list）。
 
 能力分组：
-  tt dict …      数据字典：表/字段/校验/开窗/消息/参数/程序与作业
-  tt gp …        TOP GP：p_zta 表结构 / p_link 程序链接 / p_ze 错误消息
+  tt dict …      数据字典：表/程序/消息/开窗（r.q）+ 本地字典库同步与状态
+  tt site …      营运据点（azp_file）：列全部据点 / 看一个
   tt db …        数据库：连通性测试（ping / probe）与只读 SQL（sql）
   tt file …      服务器文件：ls/find/grep/head/cat 只读浏览 + 离线镜像（source/interface）
   tt debug …     作业调试：起会话、停站现场、断点、步进、接口日志重放
@@ -78,53 +78,6 @@ var legacyAliases = map[string]string{
 	"tdebug": "debug",
 	"tdev":   "dev",
 	"tdict":  "dict",
-}
-
-// normalizeGPMsgArgs 把 tt gp msg -0101 的第一个位置参数改写成 --code=-0101。
-//
-// 只处理 gp msg / p_ze，并且只处理“短横线 + 数字”开头的编号；其他参数原样保留。
-// 先跳过 gp msg 后的 --flag[=value]，再检查第一个位置参数，避免把 --env 的
-// 值误当成编号。
-func normalizeGPMsgArgs(args []string) []string {
-	// 这些长 flag 的值不是位置参数，跳过值再继续找编号。
-	// --json/--csv/--human/--verbose 等是布尔 flag，不能把后一个参数当值跳掉。
-	valueFlags := map[string]bool{
-		"--env": true, "--conn": true, "--at": true,
-		"--format": true, "--config": true, "--lang": true, "--code": true,
-	}
-	for i := 0; i+2 < len(args); i++ {
-		if args[i] != "gp" {
-			continue
-		}
-		if args[i+1] != "msg" && args[i+1] != "p_ze" {
-			continue
-		}
-		for j := i + 2; j < len(args); j++ {
-			a := args[j]
-			if a == "--" {
-				return args
-			}
-			if strings.HasPrefix(a, "--") {
-				name := a
-				if k := strings.IndexByte(name, '='); k >= 0 {
-					name = name[:k]
-				}
-				if !strings.Contains(a, "=") && valueFlags[name] && j+1 < len(args) {
-					j++ // 跳过这个 flag 的值
-				}
-				continue
-			}
-			if a == "-v" || a == "-h" {
-				continue // 根命令的布尔 shorthand
-			}
-			if a == "-" || len(a) < 2 || a[0] != '-' || a[1] < '0' || a[1] > '9' {
-				return args
-			}
-			args[j] = "--code=" + a
-			return args
-		}
-	}
-	return args
 }
 
 func init() {
@@ -163,9 +116,8 @@ func init() {
 	)
 	dev.Register(rootCmd)
 	dict.Register(rootCmd)
-	gp.Register(rootCmd)
-	// 顶层 site：营运据点（azp_file）。--at 到处要写据点编号，它不该藏在 tg gp 下面。
-	rootCmd.AddCommand(gp.NewSiteCmd())
+	// 顶层 site：营运据点（azp_file）。--at 到处要写据点编号，所以它自己一层。
+	rootCmd.AddCommand(site.NewSiteCmd())
 	session.Register(rootCmd)
 	interfacecmd.Register(rootCmd)
 	outline.Register(rootCmd)
@@ -203,10 +155,6 @@ func Execute(web fs.FS) {
 	// Unix 写法（find -name/-type/-maxdepth）在 pflag 里是非法缩写，先归一化。
 	os.Args = file.NormalizeFindArgs(os.Args)
 
-	// GP 的消息编号可能带前导减号（p_ze 里实际有 -0101 这种编号）。
-	// pflag 会把它当成 shorthand 而报 unknown shorthand flag，所以在 cobra
-	// 解析前改写成 --code=-0101；只动 gp msg/p_ze 的第一个位置参数。
-	os.Args = normalizeGPMsgArgs(os.Args)
 
 	// --at-list：cobra 解析之前就处理掉（ValidateArgs 比 pre-run 早，
 	// 而 tt debug start --at-list 本来就不带作业名）。

@@ -3,7 +3,7 @@ package dict
 // 字典同步的“跑一次”入口：Web 的后台任务与 CLI 的命令都落到这里。
 //
 // 为什么放在 internal/dict 而不是 web 面：同步的输入是一个 GP 环境、输出是一个
-// 本地 SQLite，与 HTTP 无关；CLI（tt gp sync / tt dict db sync）也要用它，
+// 本地 SQLite，与 HTTP 无关；CLI（tt dict db sync）也要用它，
 // 而 CLI 不该为了同步去 import internal/web。
 //
 // 这里只做三件事：校验连接配置、按固定据点（ds）跑 dbsync.Run、把进度回调透出去。
