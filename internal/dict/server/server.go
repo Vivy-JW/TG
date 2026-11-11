@@ -43,12 +43,7 @@ type Server struct {
 	// 与 mirror 同一个 mirrorMu 保护。
 	mirrorCancel context.CancelFunc
 
-	// 数据库同步任务(单实例:同一时间只允许一个)
-	syncMu    sync.Mutex
-	sync      dbSyncJob
-	syncStart time.Time
-	// syncCancel 同上,对应 POST /api/dbsync/stop。
-	syncCancel context.CancelFunc
+
 }
 
 // New 创建服务实例。cfgPath 是配置文件的读写位置。
@@ -91,9 +86,7 @@ func (s *Server) dbPathFor(env string) string {
 //	GET    /api/mirror         镜像根 + 各环境镜像现状 + 拉取任务状态
 //	POST   /api/mirror/pull    启动一次源码镜像拉取
 //	POST   /api/mirror/stop    取消正在跑的拉取(用户点「停止」)
-//	GET    /api/dbsync         同步目标 + 可同步环境 + 同步任务状态
-//	POST   /api/dbsync         启动一次字典同步
-//	POST   /api/dbsync/stop    取消正在跑的同步
+
 //	(未知 /api/ 路径)        404 JSON(见 hUnknownAPI)
 //
 // 主机/环境的读写走共享的顶层 /api/hosts;dbprobe / dbaccverify / conntest、
@@ -110,9 +103,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/mirror", s.hMirrorGet)
 	mux.HandleFunc("POST /api/mirror/pull", s.hMirrorPull)
 	mux.HandleFunc("POST /api/mirror/stop", s.hMirrorStop)
-	mux.HandleFunc("GET /api/dbsync", s.hDBSyncGet)
-	mux.HandleFunc("POST /api/dbsync", s.hDBSyncPost)
-	mux.HandleFunc("POST /api/dbsync/stop", s.hDBSyncStop)
+
 	// API 路径掉到这里说明接口不存在(写错了,或者是已经移到统一层的那些,如
 	// /api/install)。必须回 404 JSON 而不是落到下面的 HTML 兜底页 —— 后者会让调用方
 	// 拿到 200 + HTML,解析失败时报的错与真实原因(接口不存在)完全对不上。

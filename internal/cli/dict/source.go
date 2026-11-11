@@ -26,8 +26,8 @@ import (
 	"tt/internal/config"
 	"tt/internal/dbconfig"
 	"tt/internal/dict/db"
+	 dictlib "tt/internal/dict"
 	"tt/internal/dict/live"
-	"tt/internal/gp"
 	"tt/internal/output"
 )
 
@@ -198,7 +198,7 @@ func openLocalSource(env string) error {
 		resolvedPath, err = resolveDBPath(dbPath)
 	} else if e, ok := gpEnvNamed(env); ok {
 		// TOP GP 的本地字典库由 tt gp sync(或 tt dict db sync)产出，位置在 gp.DictPath。
-		resolvedPath = gp.DictPath(e)
+		resolvedPath = dictlib.DictPath(e)
 		if _, statErr := os.Stat(resolvedPath); statErr != nil {
 			return output.Errorf(output.CodeUsage, 2,
 				"环境 %s 还没有本地字典库（%s）。\n先同步一次： tt dict db sync --env %s",
@@ -271,7 +271,7 @@ func openRemoteSource(target, entRaw string) error {
 	if err != nil {
 		return err
 	}
-	company := gp.Company(*ref.Env)
+	company := dictlib.Company(*ref.Env)
 	// --company 覆盖配置：同一个库里不同公司的字典本来就是两套，允许按此单次切换。
 	if c := strings.ToLower(strings.TrimSpace(dictCompany)); c != "" {
 		company = c
@@ -279,7 +279,7 @@ func openRemoteSource(target, entRaw string) error {
 	// --at <环境>@<据点>：据点编号（azp01）或资料库编号（azp03）都认，连库解析成 schema。
 	// 优先级最高：命令行上点名的那个据点就是这次要查的那个。
 	if atpkg.Site != "" {
-		site, err := gp.ResolveSchema(context.Background(), *cc, atpkg.Site)
+		site, err := dictlib.ResolveSchema(context.Background(), *cc, atpkg.Site)
 		if err != nil {
 			return err
 		}
@@ -373,7 +373,7 @@ func dictDBSyncTarget(env string) string {
 		return config.AbsPath(p)
 	}
 	if e, ok := gpEnvNamed(env); ok {
-		return gp.DictPath(e)
+		return dictlib.DictPath(e)
 	}
 	return config.DictDBPathForEnv(dictCfgPath(), env)
 }

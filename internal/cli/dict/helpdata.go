@@ -13,11 +13,11 @@ import (
 
 // helpCmdFamilies 数据命令 → 它依赖的数据族,用于 --help 末尾的「本地数据」提示。
 // 命令不在表里(db/mirror/spill 等)不显示提示。
+// 键只列 GP 侧有本地投影的命令(r.q 全靠直查、没有本地族,故不在此表)。
 var helpCmdFamilies = map[string][]string{
 	"r.t":  {"table", "progtable"},
-	"r.q":  {"win"},
 	"msg":  {"msg"},
-	"prog": {"prog", "progtable", "subprog"},
+	"prog": {"prog", "progtable"},
 }
 
 // baseHelpFunc 是 cobra 的默认 help 实现。用一个无父命令的临时命令取出来,

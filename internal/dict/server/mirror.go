@@ -12,6 +12,14 @@ import (
 	"tt/internal/host"
 )
 
+// isGPEnv 判断一个环境是不是 TOP GP（config.hosts.sshs[].product == "gp"）。
+//
+// 字典侧这组镜像接口是 T100 的历史遗留：GP 的镜像走 /api/gp/mirror、字典走
+// /api/gp/sync，遇到 GP 环境必须拒掉，否则同一个环境会有两套镜像目录。
+func isGPEnv(e *config.NamedSsh) bool {
+	return e != nil && strings.EqualFold(strings.TrimSpace(e.Product), "gp")
+}
+
 // mirrorJob 一次(或最近一次)源码镜像拉取的状态;前端据它画进度条。
 type mirrorJob struct {
 	Running   bool   `json:"running"`

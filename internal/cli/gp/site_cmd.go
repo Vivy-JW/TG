@@ -17,7 +17,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"tt/internal/cli/common"
-	gpcore "tt/internal/gp"
+	dictlib "tt/internal/dict"
 	"tt/internal/output"
 )
 
@@ -65,13 +65,13 @@ func newSiteListCmd() *cobra.Command {
 				return envErr(t, "DB", 2, "环境 %q 没有配置数据库连接", t.env.Name).
 					WithHint("在设置 → 站点管理 → 数据库里配置该环境的 Oracle 连接")
 			}
-			sites, err := gpcore.ListSites(context.Background(), *t.env.DB)
+			sites, err := dictlib.ListSites(context.Background(), *t.env.DB)
 			if err != nil {
 				return envErr(t, "GP_SITE", 5, "读营运据点失败: %v", err)
 			}
 			hidden := 0
 			if !all {
-				kept := make([]gpcore.Site, 0, len(sites))
+				kept := make([]dictlib.Site, 0, len(sites))
 				for _, s := range sites {
 					if s.HasDB {
 						kept = append(kept, s)
@@ -136,7 +136,7 @@ func newSiteShowCmd() *cobra.Command {
 				return envErr(t, "DB", 2, "环境 %q 没有配置数据库连接", t.env.Name).
 					WithHint("在设置 → 站点管理 → 数据库里配置该环境的 Oracle 连接")
 			}
-			site, err := gpcore.ResolveSchema(context.Background(), *t.env.DB, strings.TrimSpace(args[0]))
+			site, err := dictlib.ResolveSchema(context.Background(), *t.env.DB, strings.TrimSpace(args[0]))
 			if err != nil {
 				return envErr(t, "GP_SITE", 4, "%v", err)
 			}

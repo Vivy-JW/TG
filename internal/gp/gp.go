@@ -27,6 +27,8 @@ import (
 
 	"tt/internal/config"
 	"tt/internal/dbconfig"
+	dictlib "tt/internal/dict"
+	"tt/internal/dict/dbsync"
 	"tt/internal/dict/live"
 	"tt/internal/envmove"
 	"tt/internal/host"
@@ -304,8 +306,8 @@ func (s *Service) hMeta(w http.ResponseWriter, _ *http.Request) {
 		} else {
 			mv["exists"] = false
 		}
-		dv := map[string]any{"path": dictPath(e)}
-		if ex, mb := dictStat(e); ex {
+		dv := map[string]any{"path": dictlib.DictPath(e)}
+		if ex, mb := dictlib.Stat(e); ex {
 			dv["exists"] = true
 			dv["sizeMB"] = mb
 		} else {
@@ -869,7 +871,7 @@ func testDB(env config.NamedSsh) map[string]any {
 	if acct == "" {
 		return map[string]any{"ok": false, "msg": "没有数据库账号"}
 	}
-	db, err := sql.Open("oracle", gpDSN(env.DB, acct, pwd))
+	db, err := sql.Open("oracle", dbsync.DSN(*env.DB, acct, pwd))
 	if err != nil {
 		return map[string]any{"ok": false, "msg": err.Error()}
 	}
@@ -889,8 +891,8 @@ func testSite(ctx context.Context, env config.NamedSsh) map[string]any {
 	if env.DB == nil || env.DB.Host == "" {
 		return map[string]any{"ok": false, "msg": "还没有填数据库主机"}
 	}
-	schema := Company(env)
-	if !siteCodeRE.MatchString(schema) {
+	schema := dictlib.Company(env)
+	if !dictlib.ValidSiteCode(schema) {
 		return map[string]any{"ok": false, "msg": "资料库编号只能由字母、数字、下划线组成：" + schema}
 	}
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
@@ -913,7 +915,7 @@ func testSite(ctx context.Context, env config.NamedSsh) map[string]any {
 		return map[string]any{"ok": false, "msg": "连上了，但 zta_file 里没有资料库「" + schema + "」的字典行（编号写错了？）"}
 	}
 	msg := "资料库 " + schema + " 可连：zta_file 有 " + strconv.Itoa(n) + " 张表"
-	if name := siteNameFor(ctx, l, schema); name != "" {
+	if name := dictlib.SiteNameFor(ctx, l, schema); name != "" {
 		msg += "（" + name + "）"
 	}
 	return map[string]any{"ok": true, "msg": msg}

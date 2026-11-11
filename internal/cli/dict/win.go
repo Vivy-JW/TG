@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"tt/internal/dict/db"
-	"tt/internal/gp"
+	dictlib "tt/internal/dict"
 	"tt/internal/output"
 
 	"github.com/spf13/cobra"
@@ -296,7 +296,7 @@ const winTagLegend = `
 //
 // GP 没有 T100 那种"整段 SQL 模板"(dzca003)：SQL 是运行期由 cl_create_qry() 按
 // gab02/gab05 的条件片段 + gac 的栏位表清单现拼的。这里按同一套规则拼出来给人看
-// （规则见 gp.QryDef.BuildSQL），栏位清单则直接来自 gac_file。
+// （规则见 dictlib.QryDef.BuildSQL），栏位清单则直接来自 gac_file。
 
 // gpWinListItem 是 GP 开窗列表的一行。
 type gpWinListItem struct {
@@ -408,7 +408,7 @@ func runWinDetailGP(id string, headers []db.WinHeaderRow) error {
 			ConstrWhere: h.ConstrWhere,
 			Memo:        h.Memo,
 		}
-		defSQL := gp.QryDef{
+		defSQL := dictlib.QryDef{
 			Code:        h.ID,
 			Title:       h.Desc,
 			InputWhere:  h.InputWhere,
@@ -436,7 +436,7 @@ func runWinDetailGP(id string, headers []db.WinHeaderRow) error {
 				ConnectTo:  c.ConnectTo,
 				DataType:   c.DataType,
 			})
-			defSQL.Cols = append(defSQL.Cols, gp.QryCol{
+			defSQL.Cols = append(defSQL.Cols, dictlib.QryCol{
 				No:         atoiOr(c.Seq, 0),
 				Table:      c.Table,
 				Field:      c.Field,
@@ -453,7 +453,7 @@ func runWinDetailGP(id string, headers []db.WinHeaderRow) error {
 		if defSQL.HardCode {
 			def.SQL = gpWinNoSQL
 		} else {
-			def.SQL = defSQL.BuildSQL(gp.QrySQLOpt{Schema: srcCompany, Oracle: true})
+			def.SQL = defSQL.BuildSQL(dictlib.QrySQLOpt{Schema: srcCompany, Oracle: true})
 		}
 		detail.Defs = append(detail.Defs, def)
 	}

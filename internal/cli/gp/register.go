@@ -26,8 +26,8 @@ import (
 	"tt/internal/cli/common"
 	"tt/internal/config"
 	"tt/internal/dbconfig"
+	dictlib "tt/internal/dict"
 	"tt/internal/dict/live"
-	"tt/internal/gp"
 	"tt/internal/output"
 )
 
@@ -132,7 +132,7 @@ func resolveTarget(allowLocal bool) (*target, error) {
 	if local {
 		t.meta.Source = "local"
 		t.meta.Dialect = "sqlite"
-		t.meta.LocalDBPath = gp.DictPath(env)
+		t.meta.LocalDBPath = dictlib.DictPath(env)
 	}
 	if !local && env.DB != nil {
 		t.meta.Dialect = env.DB.Type
@@ -171,7 +171,7 @@ func openLive(ctx context.Context, t *target) (*live.Live, error) {
 			WithHint("在设置 → 站点管理 → 数据库里配置该环境的 Oracle 连接").
 			WithMeta(t.meta)
 	}
-	l, err := live.OpenCompany(ctx, *t.env.DB, gp.Company(t.env))
+	l, err := live.OpenCompany(ctx, *t.env.DB, dictlib.Company(t.env))
 	if err != nil {
 		return nil, output.Errorf("CONNECT", 5, "连接 GP 数据库失败: %v", err).
 			WithHint("先 tt db ping --env " + t.env.Name + " 验证连通性").

@@ -67,11 +67,11 @@ func (s *LocalStatus) Summary(keys ...string) string {
 // InspectLocal 只读检查本地库对各数据族的覆盖情况(表是否存在 + 行数)。
 // 库文件不存在时返回 Exists=false 而不是报错。
 func InspectLocal(path string) (*LocalStatus, error) {
-	st := &LocalStatus{Path: path, Families: make([]FamilyStatus, 0, len(Families))}
+	st := &LocalStatus{Path: path, Families: make([]FamilyStatus, 0, len(GPFamilies))}
 	fi, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			for _, f := range Families {
+			for _, f := range GPFamilies {
 				st.Families = append(st.Families, FamilyStatus{Family: f, Missing: append([]string(nil), f.Tables...)})
 			}
 			return st, nil
@@ -86,7 +86,7 @@ func InspectLocal(path string) (*LocalStatus, error) {
 	}
 	defer d.Close()
 
-	for _, f := range Families {
+	for _, f := range GPFamilies {
 		counts, err := d.TableRowCounts(f.Tables)
 		if err != nil {
 			return nil, err

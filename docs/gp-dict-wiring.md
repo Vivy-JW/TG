@@ -9,7 +9,7 @@
 ## 0. 怎么验的
 
 - 连接：`oracle://<库账号>@<主机>:<端口>/<服务名>`（正是 `tt gp` 字典同步用的那条路径：
-  `internal/gp/dict.go` 取 `env.DB.Accounts[0]`，不查企业目录）。
+  `internal/dict/dbsync/gp.go` 取 `env.DB.Accounts[0]`，不查企业目录）。
 - 查询面：`all_tables` / `all_tab_columns` / `all_indexes` / `all_constraints`（物理字典）
   + GP 自己的 `GA*_FILE`、`ZT*_FILE`、`ZE_FILE`。
 - 本文所有行数都是实测值；标 **⬜** 的方法，是**实测确认 GP 侧没有对应表**，不是"没查到"。
@@ -164,7 +164,7 @@
 
 这三个不是"要不要接线"的问题，是**现在就已经存在的不一致**：
 
-1. **`t_table` 的公司别与 schema 是硬编码的。** `internal/gp/dict.go:186` 写着
+1. **`t_table` 的公司别与 schema 是硬编码的。** `internal/dict/dbsync/gp.go:186` 写着
    `lib, owner := "ds", "DS"`，紧跟着 `if env.DB.Service != "" { owner = "DS" }` 是**死分支**
    （两边一样）。后果：换个公司/实例，`t_table` 里还是 `ds` 的表。
 2. **`t_table` 与 `t_column` 口径不一致。** `t_table` 只收公司 `ds` 的 2,962 张（其中 61 张
@@ -173,7 +173,7 @@
    查一张"有表头、没物理表"的表，字段列表为空。
 3. **`t_prog_link` 建了表却不填，`LookupModule` 的 p_link 覆盖等于没生效。** `dict.go:111-114` 说
    "`gal_file` 很大，全表扫会让 50 秒的同步卡到数分钟"——实测 **17,810 行**、入口行（`gal03=gal01`）
-   **5,561 行**，一条 `SELECT` 就扫完了。现在 `t_prog_link` 恒为 0 行，`internal/gp/lookup.go:44`
+   **5,561 行**，一条 `SELECT` 就扫完了。现在 `t_prog_link` 恒为 0 行，`internal/dict/lookup.go:44`
    的第一步永远查空，只能掉到 `t_prog.module` 兜底；而 `t_prog` 的键是**作业编号**（`07448`），
    不是程序名（`csfi300_icd`），所以对 `csfi300_icd` 这类程序**两步都查不到**，最终退回
    `gpModuleOf` 取前缀。填了这张表，`csfi300_icd` 才能正确解析到 `CSF`（实测该程序在 `gal_file`

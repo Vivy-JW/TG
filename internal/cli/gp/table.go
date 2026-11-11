@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"tt/internal/cli/common"
-	gpcore "tt/internal/gp"
+	dictlib "tt/internal/dict"
 	"tt/internal/output"
 )
 
@@ -127,7 +127,7 @@ func runTable(name string, brief bool) error {
 	t.meta.Dialect = "sqlite"
 	t.meta.Target = ""
 	t.meta.ViaTunnel = false
-	t.meta.LocalDBPath = gpcore.DictPath(t.env)
+	t.meta.LocalDBPath = dictlib.DictPath(t.env)
 	if _, err := os.Stat(t.meta.LocalDBPath); err != nil {
 		return envErr(t, "NOT_SYNCED", 3, "环境 %q 还没有本地 GP 字典：%s", t.env.Name, t.meta.LocalDBPath).
 			WithHint("先在设置 → 数据字典同步该环境，或运行 tt serve 后在页面同步")

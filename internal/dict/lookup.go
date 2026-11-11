@@ -1,4 +1,4 @@
-package gp
+package dict
 
 import (
 	"database/sql"

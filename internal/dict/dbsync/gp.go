@@ -1,28 +1,21 @@
-package gp
+package dbsync
 
-// GP 字典同步（Go 实现）：Oracle 的 zta_file / gat_file / gaq_file / gaz_file …
+// GP 字典同步：Oracle 的 zta_file / gat_file / gaq_file / gaz_file …
 // 拉进本地 SQLite（<dictDir>/<环境>.db），供离线查询。
 //
-// SQL 与表结构照搬 ttgp 那套 Python 实现：两边共用同一份 .db，
-// 谁写的都能被另一边读，迁移期间不会出现"两套库"。
+// 只做"读远端、写 dst"：连库、临时库、原子替换、meta 落盘都在 run.go 的 Run 里，
+// 这样 CLI 与 Web 两条路共用同一套落盘语义。
 
 import (
 	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"net/url"
-	"os"
-	"path/filepath"
 	"sort"
 	"strings"
-	"time"
 
 	_ "github.com/sijms/go-ora/v2"
 	_ "modernc.org/sqlite"
-
-	"tt/internal/config"
-	"tt/internal/dbconfig"
 )
 
 const gpSchemaSQL = `
@@ -148,58 +141,6 @@ SELECT g.gaz01, g.gaz03
 	sqlGPModule = `SELECT gao01, gao02, gao04 FROM gao_file`
 )
 
-// DictPath 返回本地 GP 字典库路径。
-// 环境可单独指定 DictDir，否则落在 gp 数据目录下。
-//
-// 导出给 CLI 的 tt gp table 用：Web 的字典同步与 CLI 查询必须落到同一个
-// <环境>.db，路径规则只能有一份实现。
-func DictPath(e config.NamedSsh) string { return dictPath(e) }
-
-// SyncCompany 是本地字典库**固定**取自的据点代号。
-//
-// ds 是 GP 的系统示范据点：zta_file 里 2,962 张表（另一家 2,902），
-// 表档/字段档最全。字典同步是"把 GP 的表清单抄一份到本地"，抄哪一份都行，
-// 但要**确定**是同一份 —— 所以写死，不跟配置里的营运据点联动。
-// 直查（dict r.t --env <环境>）才按营运据点选 schema。
-const SyncCompany = "ds"
-
-// Company 返回该 GP 环境直查时用的资料库编号（azp_file.azp03 = zta_file.zta02），空 = "ds"。
-//
-// 为什么是 azp03 而不是据点编号 azp01：aooi901 里「资料库编号」是独立栏位，
-// 默认 'ds'，两者实测有 15/30 不同（COF → cof_demo、DEMO1 → demo1）；拿据点
-// 编号小写去猜 schema 会查到空。
-//
-// 为什么不是"账号就是它"：GP 一个库里装了几十家公司，字典表按资料库编号分行
-// 存；连库账号只决定以谁的身份登录。本项目这套库里账号叫 digiwin，而
-// zta02='ds' 有 2,962 张表、'digiwin' 只有 2,902 张 —— 混着用就会出现
-// "本地查得到、远程说表不存在"，表格总数也对不上。
-//
-// 只用于直查；本地字典库的同步固定用 SyncCompany。
-func Company(e config.NamedSsh) string {
-	if s := strings.ToLower(strings.TrimSpace(e.Company)); s != "" {
-		return s
-	}
-	return SyncCompany
-}
-
-// dictPath 本地字典库路径。环境可单独指定 DictDir，否则落在 gp 数据目录下。
-func dictPath(e config.NamedSsh) string {
-	dir := e.DictDir
-	if dir == "" {
-		dir = os.Getenv("TT_GP_DICT_DIR")
-	}
-	if dir == "" {
-		home, _ := os.UserHomeDir()
-		dir = filepath.Join(home, ".tt", "gp-dict")
-	}
-	return filepath.Join(dir, e.Name+".db")
-}
-
-func gpDSN(db *dbconfig.Connection, account, password string) string {
-	return fmt.Sprintf("oracle://%s:%s@%s:%d/%s",
-		url.QueryEscape(account), url.QueryEscape(password), db.Host, db.Port, db.Service)
-}
-
 func clean(s sql.NullString) string { return strings.TrimSpace(s.String) }
 
 // mergeOpCodes 把一张表上的多个操作码合成一个字符串：S/I/U/D 固定在前，
@@ -220,106 +161,27 @@ func mergeOpCodes(set map[string]bool) string {
 	return strings.Join(append(out, rest...), "/")
 }
 
-// Sync 同步一个环境的字典，阻塞到完成；onProgress 逐条收到进度（可为 nil）。
+// SyncGP 把 GP 字典整份同步到 dst（本地 SQLite，表结构已由 dbsync.Run 建好）。
 //
-// Web 侧走 /api/gp/sync 的后台任务，CLI 侧走这里 —— 两条路都落到同一个
-// <环境>.db（路径只有 DictPath 一份实现），跑的是同一个 runSync，所以
-// "命令行同步完的库，界面里查得到"这件事不靠约定，靠同一份代码。
-func (s *Service) Sync(env config.NamedSsh, onProgress func(string)) error {
-	if s.job(env.Name).State == "running" {
-		return fmt.Errorf("环境 %s 的字典同步已经在跑", env.Name)
-	}
-	s.setJob(env.Name, func(j *Job) {
-		*j = Job{State: "running", Kind: "sync", Started: time.Now()}
-	})
-
-	done := make(chan struct{})
-	go func() {
-		s.runSync(env)
-		close(done)
-	}()
-
-	seen := 0
-	flush := func() {
-		j := s.job(env.Name)
-		for seen < len(j.Progress) {
-			if onProgress != nil {
-				onProgress(j.Progress[seen])
-			}
-			seen++
+// 一个函数跑完八张表：执行顺序有意义 —— t_table 先落，col_count 由后面按
+// t_column 回填；t_prog 要等 zz/zr/gal 都拉完才能一起写。中途出错靠 fail()
+// 记下第一条错因，函数体不做清理：临时库的创建、替换成正式库、meta 落盘
+// 都由 dbsync.Run 负责，出错时它会把临时文件删掉。
+//
+// rep 是进度回调（Web 会把它写成 job 的进度行），onCount 是进度条计数
+// （表字典写完一张加一格），meta 收尾要写进 meta 表。
+func SyncGP(ctx context.Context, src, dst *sql.DB, lib, account string, rep func(string), onCount func(done, total int), meta map[string]string) (err error) {
+	fail := func(e error) {
+		if err == nil {
+			err = e
 		}
 	}
-	tick := time.NewTicker(200 * time.Millisecond)
-	defer tick.Stop()
-	for {
-		select {
-		case <-done:
-			flush()
-			j := s.job(env.Name)
-			switch j.State {
-			case "done":
-				return nil
-			case "error":
-				return fmt.Errorf("%s", j.Error)
-			default:
-				return fmt.Errorf("同步没有正常结束（state=%s）", j.State)
-			}
-		case <-tick.C:
-			flush()
-		}
-	}
-}
-
-// runSync 把 GP 字典整份同步到本地 SQLite。
-func (s *Service) runSync(env config.NamedSsh) {
-	fail := func(err error) {
-		s.setJob(env.Name, func(j *Job) {
-			j.State = "error"
-			j.Error = err.Error()
-			j.Ended = time.Now()
-		})
-	}
-	if env.DB == nil || env.DB.Host == "" {
-		fail(fmt.Errorf("这个环境没配数据库"))
-		return
-	}
-	var account, password string
-	for _, a := range env.DB.Accounts {
-		account, password = a.Account, a.Password
-		if account != "" {
-			break
-		}
-	}
-	if account == "" {
-		fail(fmt.Errorf("这个环境的数据库没有账号"))
-		return
-	}
-
-	s.progress(env.Name, "连接 "+env.DB.Host+":"+fmt.Sprint(env.DB.Port)+"/"+env.DB.Service+" …")
-	// 本地字典库**固定按 ds 取**（用户 2026-11-10 定调）：ds 是系统示范据点，
-	// 表档最全（2,962 张），拿来当"查得到 GP 有哪些表"的底库。这是常量，
-	// 不看配置里的营运据点 —— 营运据点只决定**直查**连哪个 schema。
-	// 想换底库就改这一行，不要接到 Company(env) 上。
-	lib := SyncCompany
 	owner := strings.ToUpper(lib)
-
-	oc, err := sql.Open("oracle", gpDSN(env.DB, account, password))
-	if err != nil {
-		fail(err)
-		return
-	}
-	defer oc.Close()
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
-	defer cancel()
-	if err := oc.PingContext(ctx); err != nil {
-		fail(fmt.Errorf("连不上数据库：%w", err))
-		return
-	}
-	s.progress(env.Name, "已连上（账号 "+account+"，字典据点 "+lib+"）")
+	rep("已连上（账号 " + account + "，字典据点 " + lib + "）")
 
 	// 表字典
 	tables := map[string]struct{ module, cn string }{}
-	rows, err := oc.QueryContext(ctx, sqlGPTables, lib)
+	rows, err := src.QueryContext(ctx, sqlGPTables, lib)
 	if err != nil {
 		fail(fmt.Errorf("查 zta_file 失败：%w", err))
 		return
@@ -348,15 +210,12 @@ func (s *Service) runSync(env config.NamedSsh) {
 		tabs = append(tabs, tabRow{t, clean(cn), mod, tt, strings.ToUpper(clean(kind)), ""})
 	}
 	rows.Close()
-	s.progress(env.Name, fmt.Sprintf("表字典 zta_file：%d 张", len(tabs)))
-	s.setJob(env.Name, func(j *Job) {
-		j.Done = 0
-		j.Total = int64(len(tabs))
-	})
+	rep(fmt.Sprintf("表字典 zta_file：%d 张", len(tabs)))
+	onCount(0, len(tabs))
 
 	// 字段中文说明（全局，按字段名贴）
 	gaq := map[string]struct{ cn, remark, fmtv string }{}
-	if r2, err := oc.QueryContext(ctx, sqlGPGAQ); err == nil {
+	if r2, err := src.QueryContext(ctx, sqlGPGAQ); err == nil {
 		for r2.Next() {
 			var name, cn, remark, fmtv sql.NullString
 			if r2.Scan(&name, &cn, &remark, &fmtv) != nil {
@@ -373,7 +232,7 @@ func (s *Service) runSync(env config.NamedSsh) {
 		seq, dlen, dprec, dscale                          int
 	}
 	var cols []colRow
-	r3, err := oc.QueryContext(ctx, sqlGPCols, owner)
+	r3, err := src.QueryContext(ctx, sqlGPCols, owner)
 	if err != nil {
 		fail(fmt.Errorf("查 all_tab_columns 失败：%w", err))
 		return
@@ -397,12 +256,12 @@ func (s *Service) runSync(env config.NamedSsh) {
 		})
 	}
 	r3.Close()
-	s.progress(env.Name, fmt.Sprintf("字段：%d 个", len(cols)))
+	rep(fmt.Sprintf("字段：%d 个", len(cols)))
 
 	// 索引 + 约束：只保留字典里登记过的表；与 T100 一样把索引/约束当作表结构的一部分。
 	type idxRow struct{ tab, idx, uniq, cols string }
 	var indexes []idxRow
-	r6, err := oc.QueryContext(ctx, sqlGPIndexes, owner)
+	r6, err := src.QueryContext(ctx, sqlGPIndexes, owner)
 	if err != nil {
 		fail(fmt.Errorf("查 all_indexes 失败：%w", err))
 		return
@@ -419,11 +278,11 @@ func (s *Service) runSync(env config.NamedSsh) {
 		indexes = append(indexes, idxRow{t, strings.ToLower(clean(idx)), clean(uniq), strings.ToLower(clean(cols))})
 	}
 	r6.Close()
-	s.progress(env.Name, fmt.Sprintf("索引：%d 条", len(indexes)))
+	rep(fmt.Sprintf("索引：%d 条", len(indexes)))
 
 	type consRow struct{ tab, cons, ctype, status, validated, cols string }
 	var constraints []consRow
-	r7, err := oc.QueryContext(ctx, sqlGPConstraints, owner)
+	r7, err := src.QueryContext(ctx, sqlGPConstraints, owner)
 	if err != nil {
 		fail(fmt.Errorf("查 all_constraints 失败：%w", err))
 		return
@@ -442,13 +301,13 @@ func (s *Service) runSync(env config.NamedSsh) {
 		})
 	}
 	r7.Close()
-	s.progress(env.Name, fmt.Sprintf("约束：%d 条", len(constraints)))
+	rep(fmt.Sprintf("约束：%d 条", len(constraints)))
 
 	// 程序类别 / 系统运行指令（zz_file）+ 程序 → 表（zr_file）。
 	// 两族都失败不影响主流程：主数据（表/字段）已经拿到。
 	type progExtra struct{ category, runCmd string }
 	extras := map[string]progExtra{}
-	if r8, err := oc.QueryContext(ctx, sqlGPZZ); err == nil {
+	if r8, err := src.QueryContext(ctx, sqlGPZZ); err == nil {
 		for r8.Next() {
 			var prog, cat, cmd sql.NullString
 			if r8.Scan(&prog, &cat, &cmd) != nil {
@@ -461,11 +320,11 @@ func (s *Service) runSync(env config.NamedSsh) {
 			extras[p] = progExtra{strings.ToUpper(clean(cat)), clean(cmd)}
 		}
 		r8.Close()
-		s.progress(env.Name, fmt.Sprintf("程序类别 zz_file：%d 条", len(extras)))
+		rep(fmt.Sprintf("程序类别 zz_file：%d 条", len(extras)))
 	}
 
 	twNames := map[string]string{}
-	if r9, err := oc.QueryContext(ctx, sqlGPProgTW); err == nil {
+	if r9, err := src.QueryContext(ctx, sqlGPProgTW); err == nil {
 		for r9.Next() {
 			var prog, name sql.NullString
 			if r9.Scan(&prog, &name) != nil {
@@ -479,7 +338,7 @@ func (s *Service) runSync(env config.NamedSsh) {
 	// 程序 → 表：把同一 (程序,表) 的多行操作码合成一条，写入时按 S/I/U/D 排序。
 	type ptKey struct{ prog, tab string }
 	ptOps := map[ptKey]map[string]bool{}
-	if r10, err := oc.QueryContext(ctx, sqlGPZR); err == nil {
+	if r10, err := src.QueryContext(ctx, sqlGPZR); err == nil {
 		for r10.Next() {
 			var prog, tab, op sql.NullString
 			if r10.Scan(&prog, &tab, &op) != nil {
@@ -498,13 +357,13 @@ func (s *Service) runSync(env config.NamedSsh) {
 			}
 		}
 		r10.Close()
-		s.progress(env.Name, fmt.Sprintf("程序用表 zr_file：%d 条", len(ptOps)))
+		rep(fmt.Sprintf("程序用表 zr_file：%d 条", len(ptOps)))
 	}
 
 	// 错误消息（ze_file）。同样失败不影响主流程。
 	type msgRow struct{ code, lang, text, mdate string }
 	var msgs []msgRow
-	if r11, err := oc.QueryContext(ctx, sqlGPZe); err == nil {
+	if r11, err := src.QueryContext(ctx, sqlGPZe); err == nil {
 		for r11.Next() {
 			var code, lang, text, mdate sql.NullString
 			if r11.Scan(&code, &lang, &text, &mdate) != nil {
@@ -517,35 +376,18 @@ func (s *Service) runSync(env config.NamedSsh) {
 			msgs = append(msgs, msgRow{c, clean(lang), clean(text), clean(mdate)})
 		}
 		r11.Close()
-		s.progress(env.Name, fmt.Sprintf("错误消息 ze_file：%d 条", len(msgs)))
+		rep(fmt.Sprintf("错误消息 ze_file：%d 条", len(msgs)))
 	}
 
-	// 写 SQLite（先写临时文件，完成后原子替换，避免中途失败留下半个库）
-	path := dictPath(env)
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		fail(err)
-		return
-	}
-	tmp := path + ".tmp"
-	_ = os.Remove(tmp)
-	lc, err := sql.Open("sqlite", tmp)
-	if err != nil {
-		fail(err)
-		return
-	}
-	if _, err := lc.Exec(gpSchemaSQL); err != nil {
-		lc.Close()
-		fail(fmt.Errorf("建 SQLite 失败：%w", err))
-		return
-	}
-	tx, _ := lc.Begin()
+	// 写 SQLite。dst 是 dbsync.Run 开好的临时库，这里只管写。
+	tx, _ := dst.Begin()
 	if tx != nil {
 		st, _ := tx.Prepare(`INSERT OR REPLACE INTO t_table(tab,tab_cn,module,tab_type,kind,col_count,remark,raw) VALUES(?,?,?,?,?,?,?,?)`)
 		if st != nil {
 			for i, t := range tabs {
 				raw, _ := json.Marshal(t)
 				_, _ = st.Exec(t.tab, t.cn, t.module, t.ttype, t.kind, 0, t.remark, string(raw))
-				s.setJob(env.Name, func(j *Job) { j.Done = int64(i + 1) })
+				onCount(i+1, len(tabs))
 			}
 			st.Close()
 		}
@@ -571,20 +413,14 @@ func (s *Service) runSync(env config.NamedSsh) {
 			stk.Close()
 		}
 		_, _ = tx.Exec(`UPDATE t_table SET col_count = (SELECT COUNT(*) FROM t_column c WHERE c.tab = t_table.tab)`)
-		_, _ = tx.Exec(`INSERT OR REPLACE INTO meta(key,value) VALUES('synced_at', ?)`, time.Now().Format("2006-01-02 15:04:05"))
-		_, _ = tx.Exec(`INSERT OR REPLACE INTO meta(key,value) VALUES('indexes', ?)`, fmt.Sprint(len(indexes)))
-		_, _ = tx.Exec(`INSERT OR REPLACE INTO meta(key,value) VALUES('constraints', ?)`, fmt.Sprint(len(constraints)))
-		_, _ = tx.Exec(`INSERT OR REPLACE INTO meta(key,value) VALUES('owner', ?)`, owner)
-		// 这份本地库代表哪个字典据点：库文件按环境命名，换据点再同步会覆盖同一份文件，
-		// 所以至少把"它是什么"记下来（tt dict db status / 排障时看 meta）。
-		_, _ = tx.Exec(`INSERT OR REPLACE INTO meta(key,value) VALUES('company', ?)`, lib)
-		_, _ = tx.Exec(`INSERT OR REPLACE INTO meta(key,value) VALUES('tables', ?)`, fmt.Sprint(len(tabs)))
+		// meta 表由 dbsync.Run 在收尾时统一写（synced_at / owner / company / 各表计数），
+		// 这里不再重复写，避免两处格式不一致。
 		_ = tx.Commit()
 	}
 
 	// 作业目录 + 模块（失败不影响主流程）
-	if r4, err := oc.QueryContext(ctx, sqlGPProg); err == nil {
-		stp, _ := lc.Prepare(`INSERT OR REPLACE INTO t_prog(prog,name,module,memo,name2,category,run_cmd,name_tw) VALUES(?,?,?,?,?,?,?,?)`)
+	if r4, err := src.QueryContext(ctx, sqlGPProg); err == nil {
+		stp, _ := dst.Prepare(`INSERT OR REPLACE INTO t_prog(prog,name,module,memo,name2,category,run_cmd,name_tw) VALUES(?,?,?,?,?,?,?,?)`)
 		if stp != nil {
 			n := 0
 			for r4.Next() {
@@ -599,13 +435,13 @@ func (s *Service) runSync(env config.NamedSsh) {
 				n++
 			}
 			stp.Close()
-			s.progress(env.Name, fmt.Sprintf("作业目录 gaz_file：%d 条", n))
+			rep(fmt.Sprintf("作业目录 gaz_file：%d 条", n))
 		}
 		r4.Close()
 	}
 	// 程序 → 表：十几万行级别，放一个事务里写；逐条 autocommit 会把同步拖成分钟级。
 	if len(ptOps) > 0 {
-		if tx2, err := lc.Begin(); err == nil {
+		if tx2, err := dst.Begin(); err == nil {
 			if stx, err := tx2.Prepare(`INSERT OR REPLACE INTO t_prog_table(prog,tab,ops) VALUES(?,?,?)`); err == nil {
 				for k, set := range ptOps {
 					_, _ = stx.Exec(k.prog, k.tab, mergeOpCodes(set))
@@ -614,10 +450,10 @@ func (s *Service) runSync(env config.NamedSsh) {
 			}
 			_ = tx2.Commit()
 		}
-		s.progress(env.Name, fmt.Sprintf("程序用表：%d 条关系", len(ptOps)))
+		rep(fmt.Sprintf("程序用表：%d 条关系", len(ptOps)))
 	}
 	if len(msgs) > 0 {
-		if tx3, err := lc.Begin(); err == nil {
+		if tx3, err := dst.Begin(); err == nil {
 			if stz, err := tx3.Prepare(`INSERT OR REPLACE INTO t_msg(code,lang,text,mdate) VALUES(?,?,?,?)`); err == nil {
 				for _, m := range msgs {
 					_, _ = stz.Exec(m.code, m.lang, m.text, m.mdate)
@@ -626,10 +462,10 @@ func (s *Service) runSync(env config.NamedSsh) {
 			}
 			_ = tx3.Commit()
 		}
-		s.progress(env.Name, fmt.Sprintf("错误消息：%d 条", len(msgs)))
+		rep(fmt.Sprintf("错误消息：%d 条", len(msgs)))
 	}
-	if r5, err := oc.QueryContext(ctx, sqlGPModule); err == nil {
-		stm, _ := lc.Prepare(`INSERT OR REPLACE INTO t_module(module,form_dir,rep_dir) VALUES(?,?,?)`)
+	if r5, err := src.QueryContext(ctx, sqlGPModule); err == nil {
+		stm, _ := dst.Prepare(`INSERT OR REPLACE INTO t_module(module,form_dir,rep_dir) VALUES(?,?,?)`)
 		if stm != nil {
 			for r5.Next() {
 				var m, f, rp sql.NullString
@@ -642,39 +478,11 @@ func (s *Service) runSync(env config.NamedSsh) {
 		}
 		r5.Close()
 	}
-	lc.Close()
-
-	_ = os.Remove(path)
-	if err := os.Rename(tmp, path); err != nil {
-		fail(err)
-		return
-	}
-	st, _ := os.Stat(path)
-	mb := 0.0
-	if st != nil {
-		mb = float64(st.Size()) / 1048576
-	}
-	s.progress(env.Name, fmt.Sprintf("已写入 %s（%.1f MB）", path, mb))
-	s.setJob(env.Name, func(j *Job) {
-		j.State = "done"
-		j.Done = int64(len(tabs))
-		j.Total = int64(len(tabs))
-		j.Result = map[string]any{
-			"path": path, "tables": len(tabs), "columns": len(cols),
-			"indexes": len(indexes), "constraints": len(constraints), "sizeMB": mb,
-			"messages": len(msgs),
-		}
-		j.Ended = time.Now()
-	})
-}
-
-// dictStat 读本地字典库的文件状态（存在/大小），与 T100 的 dbSyncView 同一口径：
-// 只 os.Stat，不打开 SQLite。表数是数据字典页按需查询的信息，不该挂在环境清单上。
-func dictStat(e config.NamedSsh) (exists bool, sizeMB float64) {
-	path := dictPath(e)
-	st, err := os.Stat(path)
-	if err != nil {
-		return false, 0
-	}
-	return true, float64(st.Size()) / 1048576
+	onCount(len(tabs), len(tabs))
+	meta["tables"] = fmt.Sprint(len(tabs))
+	meta["columns"] = fmt.Sprint(len(cols))
+	meta["indexes"] = fmt.Sprint(len(indexes))
+	meta["constraints"] = fmt.Sprint(len(constraints))
+	meta["messages"] = fmt.Sprint(len(msgs))
+	return nil
 }

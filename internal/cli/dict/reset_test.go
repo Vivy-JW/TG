@@ -52,7 +52,7 @@ func resetDictPackageState(t *testing.T) {
 	// 字符串
 	t.Cleanup(snapVars(
 		&dbPath, &srcConfigPath, &dictEnt, &dictCompany, &srcDetail, &srcProduct, &srcCompany,
-			&dbSyncTable, &discoverType, &discoverHost,
+			&discoverType, &discoverHost,
 		&msgLang, &msgText, &msgType, &msgStatus, &msgProg,
 		&progKW, &progLang, &progTablesMode,
 
@@ -186,7 +186,7 @@ func TestOpenQuerySourceLocalSucceedsWhenDBExists(t *testing.T) {
 // 但它挡得住最常见的那种：**新加一个包级 var，两处都忘了**。
 var dictMutableVars = []string{
 	"dbPath", "srcConfigPath", "queryLimit", "srcQueryLimit", "dictEnt", "dictCompany", "dictFull", "srcProduct", "srcDetail", "srcCompany",
-	"dbSyncTable", "discoverType", "discoverHost", "discoverSave", "dbListSecrets",
+	"discoverType", "discoverHost", "discoverSave", "dbListSecrets",
 	"msgLang", "msgText", "msgType", "msgStatus", "msgProg", "msgFull",
 	"progKW", "progLang", "progTablesMode", "progSub",
 	"tableKW", "tableLang", "tableCols", "tableBrief", "tableWho", "tableFields",

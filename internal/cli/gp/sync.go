@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"tt/internal/cli/common"
+	 dictlib "tt/internal/dict"
 	"tt/internal/gp"
 	"tt/internal/output"
 )
@@ -64,9 +65,9 @@ Web 的「同步字典」按钮与这条命令走同一段代码、落到同一�
 				return envErr(t, "GP_SYNC", 5, "GP 字典同步失败: %v", err)
 			}
 
-			dict := gp.DictPath(t.env)
+			dict := dictlib.DictPath(t.env)
 			elapsed := time.Since(started).Round(time.Second)
-			company := gp.SyncCompany
+			company := dictlib.SyncCompany
 			if !common.IsJSON() {
 				fmt.Printf("同步完成：%s（字典据点 %s，用时 %s）\n", dict, company, elapsed)
 				return nil

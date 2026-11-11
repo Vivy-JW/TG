@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	gpsvc "tt/internal/gp"
+	dictlib "tt/internal/dict"
 )
 
 // gpReMenu 登录器问实例的那一行。
@@ -53,7 +53,7 @@ func gpInstance(env string, roots ...string) string {
 func (s *Session) pLinkModule(prog string) (string, bool) {
 	for i := range s.cfg.SSHs {
 		if s.cfg.SSHs[i].Name == s.envName {
-			return gpsvc.LookupModule(s.cfg.SSHs[i], prog)
+			return dictlib.LookupModule(s.cfg.SSHs[i], prog)
 		}
 	}
 	return "", false
