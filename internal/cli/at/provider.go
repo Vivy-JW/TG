@@ -16,12 +16,34 @@ import (
 	"tt/internal/debug"
 )
 
+// productGP 是 GP 环境的产品标识（config.json hosts.sshs[].product）。
+const productGP = "gp"
+
 // EnvInfo 渲染与环境校验共用的最小环境信息。
 type EnvInfo struct {
 	Name     string
 	Zone     string
 	Dialect  string // oracle | kingbase
 	DBTarget string // host:port/service（未配库为空）
+	Product  string // gp | t100（空 = 老配置里没写，按 T100 处理）
+	Company  string // GP 的资料库编号（azp_file.azp03），空 = ds
+}
+
+// productOf 读某环境的产品标识；读不到配置就返回空串（不拦人）。
+//
+// 为什么 --at 要看产品：`<环境>@<x>` 在 T100 里 x 是企业编号（纯数字），
+// 在 TOP GP 里 x 是据点编号（字母）。同一个写法两种含义，必须按环境分派。
+func productOf(env string) string {
+	envs, _, err := LoadEnvs()
+	if err != nil {
+		return ""
+	}
+	for _, e := range envs {
+		if e.Name == env {
+			return strings.ToLower(strings.TrimSpace(e.Product))
+		}
+	}
+	return ""
 }
 
 // LoadEnvs 读环境清单（纯本地）。
@@ -36,7 +58,7 @@ func LoadEnvs() ([]EnvInfo, string, error) {
 	}
 	out := make([]EnvInfo, 0, len(root.Hosts.SSHs))
 	for _, e := range root.Hosts.SSHs {
-		info := EnvInfo{Name: e.Name, Zone: e.Zone}
+		info := EnvInfo{Name: e.Name, Zone: e.Zone, Product: e.Product, Company: e.Company}
 		if e.DB != nil {
 			info.Dialect = e.DB.Type
 			info.DBTarget = e.DB.Address()

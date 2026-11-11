@@ -164,6 +164,8 @@ func init() {
 	dev.Register(rootCmd)
 	dict.Register(rootCmd)
 	gp.Register(rootCmd)
+	// 顶层 site：营运据点（azp_file）。--at 到处要写据点编号，它不该藏在 tg gp 下面。
+	rootCmd.AddCommand(gp.NewSiteCmd())
 	session.Register(rootCmd)
 	interfacecmd.Register(rootCmd)
 	outline.Register(rootCmd)
@@ -208,6 +210,15 @@ func Execute(web fs.FS) {
 
 	// --at-list：cobra 解析之前就处理掉（ValidateArgs 比 pre-run 早，
 	// 而 tt debug start --at-list 本来就不带作业名）。
+	//
+	// 它比 flag 解析还早，所以 --config 得在这里先认一遍 —— 否则
+	// `tg dict r.t --at-list --config D:\...\config.json` 列的是默认配置里的环境，
+	// 用户会照着别处的清单填 --at，然后在校验时才发现"环境不存在"。
+	if strings.Contains(strings.Join(os.Args[1:], " "), "--at-list") {
+		if p := scanConfigFlag(os.Args[1:]); p != "" {
+			common.ConfigPath = p
+		}
+	}
 	if cmd, ok := at.ListTarget(rootCmd, os.Args[1:]); ok {
 		code, err := at.PrintContract(os.Stdout, cmd)
 		if err != nil {
@@ -238,6 +249,27 @@ func Execute(web fs.FS) {
 		}
 		os.Exit(1)
 	}
+}
+
+// scanConfigFlag 从原始参数里取 --config 的值（cobra 之前先认一遍，只给 --at-list 用）。
+//
+// 支持 `--config X`、`--config=X`、`-c X`、`-c=X` 四种写法 —— 与 pflag 对同名
+// 长短标志的接受范围一致；找不到返回空串。
+func scanConfigFlag(args []string) string {
+	for i, a := range args {
+		for _, name := range []string{"--config", "-c"} {
+			if a == name {
+				if i+1 < len(args) {
+					return args[i+1]
+				}
+				return ""
+			}
+			if strings.HasPrefix(a, name+"=") {
+				return strings.TrimPrefix(a, name+"=")
+			}
+		}
+	}
+	return ""
 }
 
 // alreadyReported 由"自己已经把失败打出去了"的命令组实现 —— 根命令据此跳过 reportError。

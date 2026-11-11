@@ -13,6 +13,7 @@ package at
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -63,20 +64,36 @@ var (
 	List bool
 	// Ent --at 解析出的企业编号（0 = 未带企业）。
 	Ent int
+	// Site --at 解析出的据点/资料库编号（GP 环境；空 = 没带）。
+	// 存小写：azp01 是大写（COF），而解析成 schema 后是 cof_demo。
+	Site string
 )
 
 // Value 是 --at 解析后的结果。
 type Value struct {
-	Raw    string
-	Env    string
-	Ent    int
-	HasEnt bool
+	Raw     string
+	Env     string
+	Ent     int
+	HasEnt  bool
+	Site    string
+	SiteRaw string // 原样（保留大小写，只用于报错文案）
+	HasSite bool
 }
 
-// Parse 解析 --at 的取值：`<环境>` 或 `<环境>@<企业>`。
+// siteRE 据点/资料库编号的合法字符（T100 的企业编号是纯数字，GP 的是字母开头）。
 //
-// 从**最后一个 @** 右侧取企业编号且必须是正整数；环境名里含 @ 也不会被切错。
-// 右侧不是数字时按用法错报 —— 不猜“那大概是个没写企业的环境名”。
+// 限死字符集是因为它会拼进 SQL 当 schema 名（erpdb 的 Query 只收 SQL 文本、
+// 没有绑定参数），而且它最终会成为 --at 的一部分。
+var siteRE = regexp.MustCompile(`^[A-Za-z0-9_$#-]{1,20}$`)
+
+// Parse 解析 --at 的取值：`<环境>`、`<环境>@<企业>`，或 GP 的 `<环境>@<据点>`。
+//
+// 从**最后一个 @** 右侧取值：纯数字=企业编号（T100），字母开头=据点/资料库编号
+// （GP）。环境名里含 @ 也不会被切错。右侧两边都不像时按用法错报 ——
+// 不猜“那大概是个没写企业的环境名”。
+//
+// 这里不做产品判断（Parse 是纯函数、不读配置）：同一个写法在两类环境含义不同，
+// 由 Apply 按环境产品分派。
 func Parse(raw string) (Value, error) {
 	s := strings.TrimSpace(raw)
 	if s == "" {
@@ -91,11 +108,17 @@ func Parse(raw string) (Value, error) {
 	if env == "" {
 		return Value{}, fmt.Errorf("--at %q 少了环境名：写 <环境>@<企业>", s)
 	}
-	n, err := strconv.Atoi(num)
-	if err != nil || n <= 0 {
-		return Value{}, fmt.Errorf("--at %q 的企业部分不是正整数（%q）；写法是 <环境>@<企业>，如 主机109@99（不知道填什么就加 --at-list）", s, num)
+	if n, err := strconv.Atoi(num); err == nil {
+		if n <= 0 {
+			return Value{}, fmt.Errorf("--at %q 的企业部分不是正整数（%q）；写法是 <环境>@<企业>，如 主机109@99（不知道填什么就加 --at-list）", s, num)
+		}
+		return Value{Raw: s, Env: env, Ent: n, HasEnt: true}, nil
 	}
-	return Value{Raw: s, Env: env, Ent: n, HasEnt: true}, nil
+	if siteRE.MatchString(num) {
+		return Value{Raw: s, Env: env, Site: strings.ToLower(num), SiteRaw: num, HasSite: true}, nil
+	}
+	return Value{}, fmt.Errorf("--at %q 的 %q 既不是企业编号（纯数字），也不是据点/资料库编号（字母、数字、_ $ # -，20 字内）；"+
+		"写法是 <环境>@<企业>（T100）或 <环境>@<据点编号>（TOP GP），不知道填什么就加 --at-list", s, num)
 }
 
 // Apply 是根命令的 PersistentPreRunE：把 --at 落到各命令本来就读取的地方。
@@ -116,22 +139,38 @@ func Apply(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	// 同一个 @ 写法在两类环境含义不同，所以先看环境是哪个产品再分派。
+	// product 为空按 T100 处理（老配置没有这个字段，而 GP 环境一定会写 gp）。
+	prod := productOf(v.Env)
+	switch {
+	case v.HasSite && prod != productGP:
+		return fmt.Errorf("--at %q：环境 %s 是 T100，@ 右边只能是企业编号（纯数字）；%q 更像据点/资料库编号 —— "+
+			"是不是把据点码填到企业号的位置了？", raw, v.Env, v.Site)
+	case v.HasEnt && prod == productGP:
+		return fmt.Errorf("--at %q：环境 %s 是 TOP GP，@ 右边写据点编号（如 22主机@COF），不是数字企业号；"+
+			"据点清单：tg site list --env %s", raw, v.Env, v.Env)
+	}
+
 	switch scope {
 	case None:
 		return rejectNone(cmd)
 	case Env:
-		if v.HasEnt {
-			return fmt.Errorf("%s 只接受 <环境>：去掉 @%d（这条命令不按企业解析账号）", cmd.CommandPath(), v.Ent)
+		if v.HasEnt || v.HasSite {
+			return fmt.Errorf("%s 只接受 <环境>：去掉 @%s（这条命令不按企业/据点收窄）", cmd.CommandPath(), rightOf(v))
 		}
 	case EnvFilter:
-		if v.HasEnt {
-			return fmt.Errorf("%s 的 --at 只用来收窄“在哪个环境里找会话”，不带企业；"+
-				"要断言那条会话属于某个企业，请用 --session %s/%d", cmd.CommandPath(), v.Env, v.Ent)
+		if v.HasEnt || v.HasSite {
+			return fmt.Errorf("%s 的 --at 只用来收窄“在哪个环境里找会话”，不带企业/据点；"+
+				"要断言那条会话属于某个企业，请用 --session %s/%s", cmd.CommandPath(), v.Env, rightOf(v))
 		}
 	case EnvEnt:
-		// 环境必给，企业可选
+		// 环境必给，企业/据点可选
 	case EnvEntReq:
-		if !v.HasEnt {
+		if !v.HasEnt && !v.HasSite {
+			if prod == productGP {
+				return fmt.Errorf("%s 需要 <环境>@<据点编号>：据点决定查哪个资料库；现成的取值：%s --at-list",
+					cmd.CommandPath(), cmd.CommandPath())
+			}
 			return fmt.Errorf("%s 需要 <环境>@<企业>：企业编号决定用哪个账号连库；现成的取值：%s --at-list",
 				cmd.CommandPath(), cmd.CommandPath())
 		}
@@ -142,15 +181,28 @@ func Apply(cmd *cobra.Command, _ []string) error {
 		return fmt.Errorf("--at 与 --env 给了两个不同的环境（%s / %s）：二选一", v.Env, cur)
 	}
 
-	if v.Env == "local" {
+	// local 有两种写法：裸 `local`（T100 的本地字典副本）与 `local:<环境>`
+	// （GP 的本地字典副本，按环境分目录）。从前只认前者，后者会被当成环境名
+	// 去查配置，报“不存在的环境 local:22主机” —— 而 --env local:<环境> 是通的。
+	switch {
+	case v.Env == "local" || strings.HasPrefix(v.Env, "local:"):
 		if !allowsLocal(cmd) {
-			return fmt.Errorf("--at local 只对 tt dict 的查询命令有效（表示本地字典副本）；%s 不接受，改用 --at <环境>", cmd.CommandPath())
+			return fmt.Errorf("--at %s 只对 dict 的查询命令有效（表示本地字典副本）；%s 不接受，改用 --at <环境>",
+				v.Env, cmd.CommandPath())
 		}
-	} else if err := checkEnv(cmd, v.Env); err != nil {
-		return err
+		if rest := strings.TrimPrefix(v.Env, "local:"); v.Env != "local" && strings.TrimSpace(rest) == "" {
+			return fmt.Errorf("--at %q 少了环境名：写 local:<环境>（如 local:22主机）", v.Env)
+		}
+	default:
+		if err := checkEnv(cmd, v.Env); err != nil {
+			return err
+		}
 	}
 
 	common.Env = v.Env
+	if v.HasSite {
+		Site = v.Site
+	}
 	if v.HasEnt {
 		Ent = v.Ent
 		if f := cmd.Flag("ent"); f != nil {
@@ -182,6 +234,17 @@ func rejectNone(cmd *cobra.Command) error {
 	default:
 		return fmt.Errorf("%s 不接受 --at：它不连接环境/企业（要操作会话或查库，换一条命令）", cmd.CommandPath())
 	}
+}
+
+// rightOf 取 --at 里 @ 右边那一段（只用于报错文案）。
+func rightOf(v Value) string {
+	if v.HasEnt {
+		return strconv.Itoa(v.Ent)
+	}
+	if v.SiteRaw != "" {
+		return v.SiteRaw
+	}
+	return v.Site
 }
 
 func allowsLocal(cmd *cobra.Command) bool {

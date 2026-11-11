@@ -21,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	atpkg "tt/internal/cli/at"
 	"tt/internal/cli/common"
 	"tt/internal/config"
 	"tt/internal/dbconfig"
@@ -270,6 +271,15 @@ func openRemoteSource(target, entRaw string) error {
 	// --company 覆盖配置：同一个库里不同公司的字典本来就是两套，允许按此单次切换。
 	if c := strings.ToLower(strings.TrimSpace(dictCompany)); c != "" {
 		company = c
+	}
+	// --at <环境>@<据点>：据点编号（azp01）或资料库编号（azp03）都认，连库解析成 schema。
+	// 优先级最高：命令行上点名的那个据点就是这次要查的那个。
+	if atpkg.Site != "" {
+		site, err := gp.ResolveSchema(context.Background(), *cc, atpkg.Site)
+		if err != nil {
+			return err
+		}
+		company = site.Schema
 	}
 	srcTarget = dbconfig.NewTarget(cc, ref.Name, ref.Env.Host, ref.Env.User, ref.Env.Zone,
 		entRaw, dbconfig.RouteClientDirect)

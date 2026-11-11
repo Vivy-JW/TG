@@ -49,6 +49,8 @@ var scopes = map[string]Scope{
 	"interface":    Env,
 	"outline":      Env,
 	"env ents":     Env,
+	// 顶层 site：连库读 azp_file，只认环境（据点编号是位置参数，不走 --at）
+	"site": Env,
 
 	// ---- 会话寻址：<环境> 只用来收窄 ----
 	"debug exec":      EnvFilter,

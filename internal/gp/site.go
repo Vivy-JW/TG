@@ -169,3 +169,46 @@ func (s *Service) findEnv(name string) (*config.NamedSsh, error) {
 	}
 	return nil, fmt.Errorf("环境不存在：%s", want)
 }
+
+// ResolveSchema 把「据点编号」或「资料库编号」解析成要连的 schema。
+//
+// 先按 azp01（据点编号）找，找不到再按 azp03（资料库编号）找：实测 30 个据点里
+// 有 15 个两者不同（COF → cof_demo、SYSTEM → ds），而人记得住的多半是据点编号。
+//
+// 三种情况都报错、不静默查空：查不到这一行、azp053≠Y（该据点没建库）、连不上库。
+// 查空是最难查的失败 —— 用户会以为据点没数据，其实只是代号写错了。
+func ResolveSchema(ctx context.Context, c dbconfig.Connection, code string) (Site, error) {
+	want := strings.TrimSpace(code)
+	if want == "" {
+		return Site{}, fmt.Errorf("没有给据点编号")
+	}
+	if !siteCodeRE.MatchString(want) {
+		return Site{}, fmt.Errorf("据点/资料库编号 %q 里有不允许的字符（只收字母、数字、_ $ #）", code)
+	}
+	sites, err := ListSites(ctx, c)
+	if err != nil {
+		return Site{}, err
+	}
+	pick := func(s Site) (Site, error) {
+		if !s.HasDB {
+			return Site{}, fmt.Errorf("据点 %s（%s）的 azp053 不是 Y：这个据点没有实际的 ERP 资料库，查不了字典",
+				s.Code, s.Name)
+		}
+		if s.Schema == "" {
+			return Site{}, fmt.Errorf("据点 %s（%s）没有填资料库编号（azp03），不知道要连哪个 schema",
+				s.Code, s.Name)
+		}
+		return s, nil
+	}
+	for _, s := range sites {
+		if strings.EqualFold(s.Code, want) {
+			return pick(s)
+		}
+	}
+	for _, s := range sites {
+		if s.Schema != "" && strings.EqualFold(s.Schema, want) {
+			return pick(s)
+		}
+	}
+	return Site{}, fmt.Errorf("azp_file 里没有据点编号或资料库编号等于 %q 的行；清单：tg site list --env <环境>", code)
+}

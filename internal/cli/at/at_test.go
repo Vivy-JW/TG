@@ -33,10 +33,39 @@ func TestParse(t *testing.T) {
 		}
 	}
 
-	bad := []string{"", "   ", "@99", "主机109@", "主机109@abc", "主机109@0", "主机109@-3"}
+	bad := []string{"", "   ", "@99", "主机109@", "主机109@0", "主机109@-3", "主机109@a b", "主机109@" + strings.Repeat("x", 21)}
 	for _, raw := range bad {
 		if _, err := Parse(raw); err == nil {
 			t.Errorf("Parse(%q) 该报错", raw)
+		}
+	}
+
+	// 右边不是纯数字时按据点/资料库编号解析（GP 环境用），这里只验纯函数的行为：
+	// 是不是 GP 环境、该不该拒，由 Apply 按环境产品分派，不在 Parse 里判断。
+	sites := []struct {
+		raw  string
+		env  string
+		site string
+	}{
+		{"22主机@COF", "22主机", "cof"},
+		{"22主机@cof_demo", "22主机", "cof_demo"},
+		{"a@b@DEMO1", "a@b", "demo1"},
+		{"22主机@ICD-YYY", "22主机", "icd-yyy"},
+		{"22主机@001", "22主机", ""}, // 纯数字仍按企业编号走，不能抢
+	}
+	for _, c := range sites {
+		v, err := Parse(c.raw)
+		if err != nil {
+			t.Fatalf("Parse(%q) 不该报错: %v", c.raw, err)
+		}
+		if c.site == "" {
+			if !v.HasEnt || v.Ent != 1 {
+				t.Errorf("Parse(%q) = %+v，纯数字该按企业编号解析", c.raw, v)
+			}
+			continue
+		}
+		if v.Env != c.env || v.Site != c.site || !v.HasSite || v.HasEnt {
+			t.Errorf("Parse(%q) = %+v，想要 env=%q site=%q", c.raw, v, c.env, c.site)
 		}
 	}
 }
