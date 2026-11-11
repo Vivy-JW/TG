@@ -1656,7 +1656,7 @@ export function SettingsView() {
                             </TableCell>
                             <TableCell className="px-2">
                               <Button variant="ghost" size="sm" disabled={running}
-                                title={`从「${g.name}」拉取 GP 字典到本地 SQLite（固定按 ds 取，与营运据点无关）`}
+                                title={`从「${g.name}」拉取 GP 字典到本地 SQLite（固定按 ds 取）`}
                                 onClick={() => { void gpSync(g.name) }}>
                                 开始同步
                               </Button>
@@ -1702,12 +1702,10 @@ export function SettingsView() {
                     那些都是"用户不需要为它做决定"的信息 —— 在不在不影响他点「开始同步」,
                     备份与失败保护是服务端自动行为,位置来源看这个只读值本身也够。 */}
                 <InfoRow label="库目录" value={sync?.dir || '—'} />
-                {/* GP 的同步口径是**固定**的:ds 是系统示范据点,表档最全(2,962 张)。
-                    营运据点(设置→营运据点)只决定直查连哪个 schema,不影响这份本地库 ——
-                    写在这里是因为用户看到"本地 164 / 远程 159"时,第一反应会是"是不是据点选错了"。 */}
+                {/* GP 的同步口径是**固定**的（ds），用户不需要在这一行上做决定，
+                     所以只说结论，不解释"为什么是 ds"、也不提营运据点。 */}
                 <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
-                  TOP GP 的字典同步<b className="text-foreground/80">固定按 ds 取</b>（ds 表档最全，2,962 张表），
-                  与「营运据点」的设置无关；营运据点只影响直查（<code className="font-mono">dict r.t --env &lt;环境&gt;</code>）。
+                  TOP GP 的字典同步<b className="text-foreground/80">固定按 ds 取</b>。
                 </p>
               </Card>
 
