@@ -131,8 +131,7 @@ export function Sidebar({
       {/* 品牌行:与 DSH 的「deepseek HARNESS」同构 —— 字标 + 一个白底小徽章 + 收起按钮 */}
       <div className="flex h-14 shrink-0 items-center gap-2 px-3.5">
         <span className="text-[16px] font-semibold tracking-tight text-foreground">TT</span>
-        <div className="flex items-center gap-1" title="本工具同时支持 T100 与 TOP GP">
-          <span className="rounded-[3px] bg-secondary px-1 py-px text-[9px] font-semibold leading-[1.4] text-muted-foreground">T100</span>
+        <div className="flex items-center gap-1" title="TOP GP 版">
           <span className="rounded-[3px] bg-primary/15 px-1 py-px text-[9px] font-semibold leading-[1.4] text-primary">TOP GP</span>
         </div>
         <button onClick={onCollapse} title="收起左侧目录"
