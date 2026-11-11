@@ -1399,7 +1399,6 @@ export function SettingsView() {
                       <button className="min-w-0 flex-1 text-left"
                         onClick={() => { clearSelection(); setGpDraftId(d.id) }}>
                         <span className="flex items-center gap-1.5 truncate">
-                          <span className="rounded-[3px] bg-primary/15 px-1 text-[9px] font-semibold text-primary">TOP GP</span>
                           <span className="truncate">新环境 {i + 1}</span>
                         </span>
                         <span className="block truncate text-[11px] text-muted-foreground">未保存</span>
@@ -1412,7 +1411,6 @@ export function SettingsView() {
                         gpSel === e.name ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50')}>
                       <button className="min-w-0 flex-1 text-left" onClick={() => { setGpDraftId(null); selectGp(e.name) }}>
                         <span className="flex items-center gap-1.5 truncate">
-                          <span className="rounded-[3px] bg-primary/15 px-1 text-[9px] font-semibold text-primary">TOP GP</span>
                           <span className="truncate">{e.name}</span>
                         </span>
                         <span className="block truncate text-[11px] text-muted-foreground">{e.host}:{e.port}</span>
