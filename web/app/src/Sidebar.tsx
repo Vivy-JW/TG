@@ -130,7 +130,7 @@ export function Sidebar({
     <aside className="flex w-[272px] shrink-0 flex-col overflow-hidden bg-card">
       {/* 品牌行:与 DSH 的「deepseek HARNESS」同构 —— 字标 + 一个白底小徽章 + 收起按钮 */}
       <div className="flex h-14 shrink-0 items-center gap-2 px-3.5">
-        <span className="text-[16px] font-semibold tracking-tight text-foreground">TT</span>
+        <span className="text-[16px] font-semibold tracking-tight text-foreground">TG</span>
         <div className="flex items-center gap-1" title="TOP GP 版">
           <span className="rounded-[3px] bg-primary/15 px-1 py-px text-[9px] font-semibold leading-[1.4] text-primary">TOP GP</span>
         </div>
