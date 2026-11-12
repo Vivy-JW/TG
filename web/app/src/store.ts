@@ -32,7 +32,7 @@ export interface GpEnvBrief {
   companyName?: string
   mirrorDir?: string
   db?: { type?: string; host?: string; port?: number; sid?: string; accounts?: { account: string }[] }
-  dict?: { exists?: boolean; sizeMB?: number }
+  dict?: { exists?: boolean; sizeMB?: number; path?: string }
   mirror?: { exists?: boolean; files?: number; sizeMB?: number; path?: string }
   job?: {
     state?: string

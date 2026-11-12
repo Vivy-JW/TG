@@ -25,7 +25,7 @@ import {
   Terminal, Trash2, Zap,
 } from 'lucide-react'
 import {
-  api, type ConfigMeta, type ConfigStatus, type DBSyncEnv, type DBSyncJob, type DBSyncResp,
+  api, type ConfigMeta, type ConfigStatus,
   type DiscoveredEnv,
   type HostsDb, type HostsEnt, type HostsPatch, type HostsSsh, type HostsView, 
   type UpdateState,
@@ -53,13 +53,6 @@ import { cn } from '../../shared/utils'
 import { SETTINGS_SECTIONS, parseRoute, settingsHash } from './routing'
 
 // ---------- 表单模型 ----------
-
-// T100 与 GP 共用同一张同步/镜像表：行上带产品别，按钮据此分流到各自的接口。
-type SyncRow =
-  | { product: 't100'; t100: DBSyncEnv }
-  | { product: 'gp'; gp: GpEnvBrief }
-
-const rowName = (r: SyncRow) => r.product === 't100' ? r.t100.name : r.gp.name
 
 // 环境选中态：一个状态同时表达“选了哪个产品、哪一条”，从类型上不可能同时选中 T100 和 GP。
 // T100 用下标（新建环境还没有稳定名字）；GP 用环境名。
@@ -294,11 +287,6 @@ function GpJobProgress({ env, job }: { env: string; job: NonNullable<GpEnvBrief[
   )
 }
 
-// 阶段标签与字节格式化:原先在字典页的两个视图里,随功能一起搬进来。
-const SYNC_PHASE: Record<string, string> = {
-  open: '连接远程数据库…', table: '拉取数据表…', index: '创建主键索引…',
-  replace: '替换本地数据库…', done: '完成', error: '失败',
-}
 /**
  * 表格里的「状态」格:同一时刻只可能有一个环境在跑(后端一次只跑一个动作),
  * 所以正在跑的那个显示阶段与进度,其余显示空闲词(已有镜像 / 未拉取…) ——
@@ -534,11 +522,8 @@ export function SettingsView() {
   // tt 自身的更新:状态靠 /api/update 读(不联网),查/装都是人去点才动作
   const [upd, setUpd] = useState<UpdateState | null>(null)
   const [updBusy, setUpdBusy] = useState('')
-  // 源码镜像 / 字典同步的运行态:它们是**动作**(长跑任务 + 进度),不再是独立页面,
-  // 就住在「数据字典」分区的对应卡片里。目标环境不再是这里的一份 state ——
-  // 它由表格里被点的那一行给出(原先那份 state 只是"下拉里选中的那个",改成表格后没有了)。
-  const [sync, setSync] = useState<DBSyncResp | null>(null)
-  const [opBusy, setOpBusy] = useState('')
+  // 字典同步的运行态由 GP 环境自带的 job 字段给出（见 gpEnvs 的轮询），
+  // 这里不再持有 T100 那套 /api/dbsync 的响应快照。
   // 正在弹原生文件夹选择器的环境名；弹窗期间只禁用该行的文件夹按钮。
   // 目录选择器：前端自绘（后端 /api/fs/list 列目录）。原来这里只有一个 picking 字符串
   // 表示"正在弹系统对话框"，现在弹的是自己的弹窗，需要记 initial/title/回写动作。
@@ -1128,56 +1113,7 @@ export function SettingsView() {
 
 
   // ---- 字典同步(动作) ----
-  // 只在「数据字典」分区且正在跑的时候轮询:本页是常驻挂载的,无脑轮询会一直打后端。
-  // 环境不再需要在这里挑一个"当前项"了 —— 动作由表格里那一行给出(见 runSync 的参数)。
-  const refreshSync = useCallback(async () => {
-    try { setSync(await api.dbsync()) } catch { /* 同上 */ }
-  }, [])
-  useEffect(() => {
-    if (section !== 'data-dict') return
-    void refreshSync()
-  }, [section, refreshSync])
-  const syncRunning = !!sync?.job?.running
-  useEffect(() => {
-    if (!syncRunning) return
-    const t = window.setInterval(() => { void refreshSync() }, 800)
-    return () => window.clearInterval(t)
-  }, [syncRunning, refreshSync])
-
-  // 任务结束时再取一次：轮询随 running=false 停下，不补这一下的话
-  // 「本地库」列会一直停在“未同步”，直到切分区或刷新页面。
-  useEffect(() => {
-    if (sync?.job?.done && !sync.job.running) void refreshSync()
-  }, [sync?.job?.done, sync?.job?.running, refreshSync])
-
-  const runSync = (env: string) => {
-    if (!env) return
-    setAsk({
-      title: `同步环境「${env}」的字典数据?`,
-      desc: `目标:${(sync?.envs.find((e) => e.name === env)?.dbPath || '')}\n将覆盖本地 SQLite(原库自动备份为 .bak),约 85 万行,需数分钟。`,
-      confirmText: '开始同步',
-      run: () => void doSync(env),
-    })
-  }
-  const doSync = async (env: string) => {
-    setOpBusy('sync')
-    try {
-      await api.dbsyncRun(env)
-      await refreshSync()
-      // 成功不给提示:进度块随后就把这件事说清了
-    } catch (ex: any) {
-      toast.error('同步字典数据失败', { description: ex?.message || String(ex) })
-    } finally { setOpBusy('') }
-  }
-  /** 停止正在跑的同步:不二次确认,异步取消不等待。 */
-  const stopSync = async () => {
-    try {
-      await api.dbsyncStop()
-      await refreshSync()
-    } catch (ex: any) {
-      toast.error('停止失败', { description: ex?.message || String(ex) })
-    }
-  }
+  // 动作与进度都跟着 GP 环境走（`gpEnvs` 里的 job 字段），这里不再轮询 /api/dbsync。
 
   // 还没读到配置：失败就给失败态 + 重试，别让人永远停在"加载配置中…"
   // （实测：挡住 /api/hosts 后这一页永久转圈，恢复网络也不会自己回来 —— 只有切走再回来才重新拉）。
@@ -1204,17 +1140,15 @@ export function SettingsView() {
   // 设计器清单里有、TT 里也有的名字 —— 用于在「发现环境」弹窗里标注"已存在"。
   const existingNames = new Set(sshs.map((x) => sshName(x)))
   // isCurDefault 已删除:没有"默认环境"可判了(见上面 setDefaultEnv 的说明)。
-  // 表格里那些行级动作的共用禁用条件:别的操作在跑、或这个动作自身在跑
-  const syncBusy = syncRunning || opBusy !== ''
   // 渲染期现算的 anyDirty 已在上面算过（它同时给"刷新确认"那条 effect 用），这里不再重复
 
-  const gpNameSet = new Set(gpEnvs.map((g) => g.name))
-  const syncRows: SyncRow[] = [
-    ...(sync?.envs ?? [])
-      .filter((e) => !gpNameSet.has(e.name))
-      .map((e) => ({ product: 't100' as const, t100: e })),
-    ...gpEnvs.map((g) => ({ product: 'gp' as const, gp: g })),
-  ].sort((a, b) => rowName(a).localeCompare(rowName(b), 'zh-CN'))
+  // 「查询数据源」下拉与同步表格共用这份环境清单：都来自 /api/gp/meta 的 env.dict。
+  const dictEnvs = gpEnvs.map((g) => ({
+    name: g.name,
+    exists: !!g.dict?.exists,
+    size: Number(g.dict?.sizeMB ?? 0) * 1024 * 1024,
+    path: (g.dict as any)?.path || '',
+  }))
 
 
   // GP 的 job 按环境常驻在内存里，如果每个 done 的 job 都渲染，做完几个环境就会挂一串进度条。
@@ -1369,14 +1303,14 @@ export function SettingsView() {
                       <SelectTrigger className="h-7 w-full text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="online">在线（查询时用 --env 指定环境，实时读 Oracle）</SelectItem>
-                        {(sync?.envs ?? []).map((e) => (
+                        {dictEnvs.map((e) => (
                           <SelectItem key={e.name} value={`local:${e.name}`} disabled={!e.exists}>
-                            本地 · T100 · {e.name}{e.exists ? '' : ' · 未同步'}
+                            本地 · {e.name}{e.exists ? '' : ' · 未同步'}
                           </SelectItem>
                         ))}
                         {dict.querySource.startsWith('local:') &&
-                          !(sync?.envs ?? []).some((e) => `local:${e.name}` === dict.querySource) && (
-                          <SelectItem value={dict.querySource}>本地 · T100 · {dict.querySource.slice(6)}（不在当前同步清单）</SelectItem>
+                          !dictEnvs.some((e) => `local:${e.name}` === dict.querySource) && (
+                          <SelectItem value={dict.querySource}>本地 · {dict.querySource.slice(6)}（不在当前环境清单）</SelectItem>
                         )}
                         {dict.querySource !== '' && dict.querySource !== 'online' &&
                           dict.querySource !== 'local' && !dict.querySource.startsWith('local:') && (
@@ -1397,19 +1331,19 @@ export function SettingsView() {
                   label="库根目录（默认）"
                   description={
                     !dict.dictDir.trim()
-                      ? `留空 = 缺省目录${sync?.dir ? `：${sync.dir}` : ''}；各环境的库仍是 <根目录>/<环境>.db。`
+                      ? '留空 = 用数据目录下的 dict/；各环境的库是 <根目录>/<环境名>.db（环境自己配了 dictDir 时以它为准）。'
                       : status?.dict.exists
-                        ? '目录已存在；各环境的库仍是 <根目录>/<环境>.db。'
+                        ? '目录已存在；各环境的库是 <根目录>/<环境名>.db（环境自己配了 dictDir 时以它为准）。'
                         : '目录不存在，同步时会自动创建。'
                   }
                   control={
                     <div className="flex min-w-0 items-center gap-1">
-                      <Input className={input} value={dict.dictDir} placeholder={sync?.dir || '留空 = 缺省目录'}
+                      <Input className={input} value={dict.dictDir} placeholder="留空 = 缺省目录"
                         onChange={(e) => { setDict((s) => ({ ...s, dictDir: e.target.value })); markDirty('dict') }} />
                       <Button variant="outline" size="sm" className="h-7 shrink-0 px-2 text-[11px]"
                         onClick={() => setDirPick({
                           open: true,
-                          initial: dict.dictDir.trim() || sync?.dir || '',
+                          initial: dict.dictDir.trim(),
                           title: '选择本地库根目录',
                           onPick: (path) => { setDict((s) => ({ ...s, dictDir: path })); markDirty('dict') },
                         })}>
@@ -1425,7 +1359,7 @@ export function SettingsView() {
                 )}
                 {(() => {
                   const m = dict.querySource.match(/^local:(.+)$/)
-                  const e = m ? (sync?.envs ?? []).find((x) => x.name === m[1]) : undefined
+                  const e = m ? dictEnvs.find((x) => x.name === m[1]) : undefined
                   return m && e && !e.exists
                     ? <p className="text-[11px] leading-relaxed text-amber-600 dark:text-amber-400">
                         该环境的本地库还没同步；先点下面「开始同步」，再查本地。
@@ -1437,101 +1371,32 @@ export function SettingsView() {
                     它必须留在这张卡里 —— 上面选了「本地」就等于声明"我读本地那份",
                     而本地那份正是这张表同步出来的。 */}
                 <SectionTitle>数据同步(写入本地 SQLite)</SectionTitle>
-                {/* 这里原先内联一段失败红字(拉取/同步/停止失败),已改走统一 toast:
-                    它出现与消失都会顶动这张卡的高度,而错误详情往往好几行。
-                    保留在卡片里的只有**说明性**的一行(下面那条"没有可同步的环境"),
-                    那是"当前状态"而不是"刚才那次动作的结果"。 */}
-                {syncRows.length === 0 && (
+                {dictEnvs.length === 0 && (
                   <p className="text-[11px] text-muted-foreground">
-                    没有可同步的环境 —— 需要先在「站点管理」为环境挂上数据库连接。
+                    没有可同步的环境 —— 需要先在「站点管理」添加 TOP GP 环境并配上数据库连接。
                   </p>
                 )}
-                {syncRows.length > 0 && (
+                {dictEnvs.length > 0 && (
                   <Table>
                     <TableHeader>
                       <TableRow className="hover:bg-transparent">
                         <TableHead>环境</TableHead>
-                        <TableHead className="w-28">类型</TableHead>
                         <TableHead>地址</TableHead>
-                        <TableHead className="w-36">本地库文件</TableHead>
+                        <TableHead className="w-40">本地库文件</TableHead>
                         <TableHead className="w-28">同步结果</TableHead>
                         <TableHead className="w-24">状态</TableHead>
                         <TableHead className="w-24">操作</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {syncRows.map((row) => {
-                        if (row.product === 't100') {
-                          const e = row.t100
-                          const job = sync?.job
-                          const busy = !!job && job.env === e.name && (job.running || job.done)
-                          const failed = busy && job?.phase === 'error'
-                          return (
-                            <TableRow key={'t100:' + e.name} className="hover:bg-transparent">
-                              <TableCell className="px-2">
-                                {e.name}
-                              </TableCell>
-                              <TableCell className="px-2">{e.type}</TableCell>
-                              <TableCell className="px-2">
-                                <span className="block truncate font-mono text-[11px] text-muted-foreground" title={e.address}>{e.address}</span>
-                              </TableCell>
-                              <TableCell className="px-2">
-                                {/* 文件名固定是 <环境>.db；这里能改的只有**目录**。
-                                    右键/按钮打开目录选择器，选完写回该环境的 dictDir。 */}
-                                <div className="flex items-center gap-1">
-                                  <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-muted-foreground" title={e.dbPath}>
-                                    {e.dbPath.split(/[\\/]/).pop()}
-                                  </span>
-                                  <button
-                                    type="button"
-                                    className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground"
-                                    title={`选择「${e.name}」的库目录；现在：${e.dbPath}`}
-                                    onClick={() => {
-                                      const idx = sshs.findIndex((x) => sshName(x) === e.name)
-                                      if (idx < 0) return
-                                      setDirPick({
-                                        open: true,
-                                        initial: sshs[idx].dictDir.trim() || dict.dictDir.trim() || sync?.dir || '',
-                                        title: `选择环境「${e.name}」的库目录`,
-                                        onPick: (path) => patchSsh(idx, { dictDir: path }),
-                                      })
-                                    }}>
-                                    <FolderOpen className="h-3 w-3" />
-                                  </button>
-                                </div>
-                              </TableCell>
-                              <TableCell className="px-2" title={e.dbPath}>
-                                {e.exists
-                                  ? <span className="text-emerald-600 dark:text-emerald-400">已同步 · {fmtBytes(e.size)}</span>
-                                  : <span className="text-muted-foreground">未同步</span>}
-                              </TableCell>
-                              <TableCell className="px-2">
-                                <EnvStatus busy={busy} running={!!job?.running} idle="空闲"
-                                  error={failed ? (job?.error || job?.message || '失败') : undefined} />
-                              </TableCell>
-                              <TableCell className="px-2">
-                                {/* 表格里的行内动作一律用 ghost 文本按钮(与账号表、环境动作行一致):
-                                    一整列实心主色块会把"表格"读成"一堆按钮",行与行的主次也没了。
-                                    ghost 只是没有底色,仍是完整按钮 —— 点击区、禁用态、悬停反馈都在。 */}
-                                <Button variant="ghost" size="sm" disabled={syncBusy}
-                                  title={`从「${e.name}」拉取字典数据到本地 SQLite`}
-                                  onClick={() => void runSync(e.name)}>
-                                  开始同步
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          )
-                        }
-                        const g = row.gp
+                      {gpEnvs.map((g) => {
                         const job = g.job?.kind === 'sync' ? g.job : undefined
                         const running = job?.state === 'running'
                         const seen = !!job && (running || job.state === 'done' || job.state === 'error')
+                        const dbPath = g.dict?.path || `${g.name}.db`
                         return (
-                          <TableRow key={'gp:' + g.name} className="hover:bg-transparent">
-                            <TableCell className="px-2">
-                              {g.name}
-                            </TableCell>
-                            <TableCell className="px-2">oracle</TableCell>
+                          <TableRow key={g.name} className="hover:bg-transparent">
+                            <TableCell className="px-2">{g.name}</TableCell>
                             <TableCell className="px-2">
                               <span className="block truncate font-mono text-[11px] text-muted-foreground"
                                 title={`${g.db?.host}:${g.db?.port}/${g.db?.sid}`}>
@@ -1539,7 +1404,9 @@ export function SettingsView() {
                               </span>
                             </TableCell>
                             <TableCell className="px-2">
-                              <span className="block truncate font-mono text-[11px] text-muted-foreground">{g.name}.db</span>
+                              <span className="block truncate font-mono text-[11px] text-muted-foreground" title={dbPath}>
+                                {dbPath.split(/[\\/]/).pop()}
+                              </span>
                             </TableCell>
                             <TableCell className="px-2">
                               {g.dict?.exists
@@ -1563,41 +1430,10 @@ export function SettingsView() {
                     </TableBody>
                   </Table>
                 )}
-                {sync?.job && (sync.job.running || sync.job.done) && (
-                  <JobProgress
-                    env={sync.job.env}
-                    phaseLabel={SYNC_PHASE[sync.job.phase] || sync.job.phase}
-                    tag={sync.job.running ? '进行中' : '已结束'}
-                    pct={sync.job.phase === 'done' ? 100
-                      : sync.job.tableTotal > 0 ? Math.round((sync.job.tableIndex * 100) / sync.job.tableTotal) : 0}
-                    error={sync.job.phase === 'error' ? (sync.job.error || sync.job.message) : undefined}
-                    message={sync.job.running ? undefined
-                      : (sync.job.phase === 'cancelled' ? sync.job.message
-                        : (sync.job.phase === 'done' ? sync.job.message : undefined))}
-                    cells={[
-                      sync.job.tableTotal > 0 ? `${sync.job.tableIndex}/${sync.job.tableTotal} 表` : '—',
-                      sync.job.table || '',
-                      sync.job.tableRows > 0 ? `${sync.job.tableRows.toLocaleString()} 行` : '',
-                      sync.job.totalRows > 0 ? `共 ${sync.job.totalRows.toLocaleString()} 行` : '',
-                      sync.job.elapsed || '',
-                    ].filter(Boolean)}
-                    stopping={sync.job.phase !== 'error' && sync.job.message === '正在停止…'}
-                    onStop={sync.job.running ? () => void stopSync() : undefined}
-                  />
-                )}
                 {gpSyncJob?.job && (
                   <div className="mt-2"><GpJobProgress env={gpSyncJob.name} job={gpSyncJob.job} /></div>
                 )}
-                {sync?.job?.backup && <p className="text-[11px] text-muted-foreground">原库已备份:{sync.job.backup}</p>}
-                {sync?.job?.warning && <pre className="whitespace-pre-wrap text-[11px] text-amber-600 dark:text-amber-400">{sync.job.warning}</pre>}
 
-                {/* 本地库的落点**只读**:它是个本地缓存文件,位置由服务端算(缺省在数据目录下),
-                    让用户在设置页里挑一个路径,除了能把 CLI/Web/查询三边指向不同的库之外没有好处。
-                    本地库按环境分文件；这里只读显示库目录。
-                    原先这里还跟了一句状态说明(文件在不在、同步会先备份 .bak、位置是否来自配置):
-                    那些都是"用户不需要为它做决定"的信息 —— 在不在不影响他点「开始同步」,
-                    备份与失败保护是服务端自动行为,位置来源看这个只读值本身也够。 */}
-                <InfoRow label="库目录" value={sync?.dir || '—'} />
                 {/* GP 的同步口径是**固定**的（ds），用户不需要在这一行上做决定，
                      所以只说结论，不解释"为什么是 ds"、也不提营运据点。 */}
                 <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">

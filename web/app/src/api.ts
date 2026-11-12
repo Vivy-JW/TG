@@ -297,40 +297,6 @@ export interface CacheStatus {
   files: number
   maxAgeHours: number
 }
-// 字典同步的进度(dbsync.Run),经 GET /api/dbsync 轮询
-export interface DBSyncEnv {
-  name: string
-  type: string
-  address: string
-  dbPath: string
-  exists: boolean
-  size: number
-  modified?: string
-}
-export interface DBSyncJob {
-  running: boolean
-  env: string
-  phase: string // open|table|index|replace|done|error
-  message: string
-  table: string
-  tableIndex: number
-  tableTotal: number
-  tableRows: number
-  totalRows: number
-  tables: number
-  elapsed: string
-  target: string
-  backup?: string
-  warning?: string
-  error?: string
-  done: boolean
-  startedAt?: string
-}
-export interface DBSyncResp {
-  dir: string
-  envs: DBSyncEnv[]
-  job: DBSyncJob
-}
 
 // GET /api/config/meta:配置元信息
 export interface ConfigMeta {
@@ -474,12 +440,6 @@ export const api = {
   updateCheck: () => req<{ ok: boolean; check?: UpdateCheck; hint?: string; where?: string; error?: string }>(
     '/api/update/check', { method: 'POST' }),
   updateApply: () => req<{ ok: boolean; pid?: number; note?: string }>('/api/update/apply', { method: 'POST' }),
-  // 字典类动作(字典同步)。合并前它在 /dict/api/* 下 —— 那是字典页
-  // 私有 API;字典页并进设置页之后升到共享层,设置页因此不必跨子系统调用。
-  dbsync: () => req<DBSyncResp>('/api/dbsync'),
-  dbsyncRun: (env: string) =>
-    req<{ ok: boolean }>('/api/dbsync', { method: 'POST', body: JSON.stringify({ env }) }),
-  dbsyncStop: () => req<{ ok: boolean; error?: string }>('/api/dbsync/stop', { method: 'POST' }),
   list: () => req<{ sessions: SessionBrief[] }>(`${API_BASE}/sessions`),
   launch: (module: string, prog: string, opts?: { ssh?: string; zone?: string; session?: string; ent?: string }) =>
     req<{ sessionId: string; module?: string; prog?: string; runProg?: string }>(`${API_BASE}/sessions`, { method: 'POST', body: JSON.stringify({ module, prog, ...opts }), timeoutMs: 180000 }),
