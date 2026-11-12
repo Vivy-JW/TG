@@ -105,7 +105,7 @@ func checkEnv(cmd *cobra.Command, env string) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("%s 的 --at 指向了不存在的环境 %q。\n可用的是：%s\n（看每个环境的候选：tg env ents）",
+	return fmt.Errorf("%s 的 --at 指向了不存在的环境 %q。\n可用的是：%s\n（看每个环境的候选：tg site list --env <环境>）",
 		cmd.CommandPath(), env, strings.Join(envNames(envs), "、"))
 }
 
@@ -128,8 +128,8 @@ func checkEnt(cmd *cobra.Command, env string, ent int) error {
 		}
 		known = append(known, fmt.Sprintf("%s@%d", env, m.Ent))
 	}
-	return fmt.Errorf("%s 的 --at 指向了企业 %d，但 %s 的 ENT 清单里没有它。\n可用的是：%s\n（完整清单：tg env ents %s；没同步过就跑 tg env ents --refresh）",
-		cmd.CommandPath(), ent, env, strings.Join(known, "、"), env)
+	return fmt.Errorf("%s 的 --at 指向了企业 %d，但 %s 的 ENT 清单里没有它。\n可用的是：%s\n（TG 只支持 TOP GP：据点清单用 tg site list --env <环境>；T100 的 ENT 清单在 TG 里不再维护）",
+		cmd.CommandPath(), ent, env, strings.Join(known, "、"))
 }
 
 func envNames(envs []EnvInfo) []string {

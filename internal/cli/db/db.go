@@ -61,7 +61,7 @@ func Register(root *cobra.Command) {
 func loadCfg() (*debug.Config, string, error) {
 	env := strings.TrimSpace(common.Env)
 	if env == "" {
-		return nil, "", fmt.Errorf("需要 --at <环境> 或 --env <环境>（可用：tg env ents）")
+		return nil, "", fmt.Errorf("需要 --at <环境> 或 --env <环境>（可用：tg env list 看环境名）")
 	}
 	path, err := common.ResolveConfig(false)
 	if err != nil {

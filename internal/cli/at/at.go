@@ -8,7 +8,7 @@
 //     不允许自定义语法。
 //  2. **解析 / 校验 / 报错 / 渲染只有这一份实现**。散出去就会变成“同一条命令两种说法”。
 //  3. **--at-list 纯本地、永不拨 SSH**：值来自 config.json（环境）与 entdir 快照（企业），
-//     快照过期如实标 stale。要现况请显式跑 `tg env ents --refresh`。
+//     快照过期如实标 stale。TG 只支持 TOP GP，T100 的 ENT 清单不再维护（GP 的据点清单用 `tg site list`）。
 package at
 
 import (

@@ -12,6 +12,7 @@ import (
 	"tt/internal/cli/common"
 	"tt/internal/config"
 	"tt/internal/envmove"
+	"tt/internal/output"
 )
 
 // newEnvCmd 是统一的环境管理命令组。
@@ -49,8 +50,27 @@ func newEnvCmd() *cobra.Command {
 		RunE:  func(cmd *cobra.Command, args []string) error { return runEnvShow(cmd, args[0]) },
 	})
 
-	// 企业清单：--at 的取值来源（环境 × 企业）。用它替代“记住 ENT 号”。
-	cmd.AddCommand(newEnvEntsCmd())
+	// env ents 已移除：TG 只面向 TOP GP，企业（ENT→账号）那一套是 T100 的；
+	// GP 的“这台上有哪些库”改成营运据点清单（tg site list），由 azp03 决定 schema。
+	cmd.AddCommand(&cobra.Command{
+		Use:   "ents [<环境名>]",
+		Short: "(已移除) 企业编号清单是 T100 的 —— 请用 tg site list 看营运据点",
+		Long: `tg env ents 已移除。
+
+企业编号（ENT→数据库账号）是 T100 的概念：GP 没有 ENT，一个库一登录账号，
+"这台上能查哪几个库"由 azp_file 的营运据点数决定（azp03 = 资料库编号 = schema）:
+
+  tg site list --env <环境>               # 全部据点：据点编号 / 资料库编号 / 名称
+  tg site show <据点编号|资料库编号> --env <环境>   # 一个据点的 schema
+  tg dict r.t <表> --at <环境>@<据点编号>          # 按据点查字典`,
+		Args: cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 1 {
+				return output.Errorf("USAGE", 2, "`tg env ents %s` 已移除：TG 只支持 TOP GP，据点清单用 `tg site list --env %s`", args[0], args[0])
+			}
+			return output.Errorf("USAGE", 2, "`tg env ents` 已移除：TG 只支持 TOP GP，据点清单用 `tg site list --env <环境>`")
+		},
+	})
 
 	// env rename：环境名是跨文件的持久引用，改名必须是一次迁移，不是一个字段赋值
 	// （dict/<环境>.db、ents/<环境>.json、srccache/<环境>/ 都拿它当键）。

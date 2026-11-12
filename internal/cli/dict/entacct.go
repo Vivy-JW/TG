@@ -60,7 +60,7 @@ func resolveEntAccount(cc *dbconfig.Connection, ref *config.EnvRef, dataDir, ent
 	}
 
 	// 配置里的 ENT 清单优先：那是人显式同步过的那一份（设置页「ENT」页签 /
-	// tg env ents --refresh），存在就**不联网**。环境属于配置，账号解析也不该
+	// 的设置页），存在就**不联网**。环境属于配置，账号解析也不该
 	// 因为 VPN 没开而失败；库里的 gzou_t 只在同步那一刻才用。
 	if len(ref.Env.Ents) > 0 {
 		for _, e := range ref.Env.Ents {
@@ -70,7 +70,7 @@ func resolveEntAccount(cc *dbconfig.Connection, ref *config.EnvRef, dataDir, ent
 			acct := strings.TrimSpace(e.Account)
 			if acct == "" || acct == "-" {
 				return "", dbconfig.AcctFromPrimary, ent,
-					[]string{fmt.Sprintf("企业 %d 在配置的 ENT 清单里没有可用账号（该环境已同步 ENT；tg env ents %s 可看清单）", ent, ref.Name)}
+					[]string{fmt.Sprintf("企业 %d 在配置的 ENT 清单里没有可用账号（该环境已同步过 ENT；TG 不再提供 ENT 同步）", ent)}
 			}
 			// 账号清单里没收录时，用同步时抄下来的口令（仍按“账号清单优先”的规矩）。
 			if e.Password != "" && !inAccountList(cc, acct) {
@@ -79,7 +79,7 @@ func resolveEntAccount(cc *dbconfig.Connection, ref *config.EnvRef, dataDir, ent
 			return acct, dbconfig.AcctFromEntConfig, ent, nil
 		}
 		return "", dbconfig.AcctFromPrimary, ent,
-			[]string{fmt.Sprintf("企业 %d 不在配置的 ENT 清单里（该环境已同步 ENT；tg env ents %s 可看清单）", ent, ref.Name)}
+			[]string{fmt.Sprintf("企业 %d 不在配置的 ENT 清单里（该环境已同步过 ENT；TG 不再提供 ENT 同步）", ent)}
 	}
 
 	fp := entdir.Fingerprint(ref.Env.Host, ref.Env.User, ref.Env.Zone,
