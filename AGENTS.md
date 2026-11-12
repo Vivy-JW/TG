@@ -39,7 +39,7 @@ TT/
 │  │  ├─ debug/         调试命令组门面（fgldb 那条线）
 
 │  │  ├─ dict/          字典命令组：表/字段/校验/开窗/消息/参数/ACC 查询
-│  │  ├─ file/          tt file 命令组：只读 SFTP 与离线镜像
+│  │  ├─ file/          tg file 命令组：只读 SFTP（$TOP / $CUST 两棵树，根是实例目录）与离线镜像
 │  │  ├─ interfacecmd/  tg interface 命令组：.42f + gae_file → 页面/字段/中文标签
 │  │  ├─ outline/       tt outline 命令：.4gl → 函数/UI 块树
 │  │  └─ session/       tt session 命令组：建/列/看/改 ENT/结束/收掉/透传/起作业

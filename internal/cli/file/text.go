@@ -37,7 +37,7 @@ func openChecked(p string) (*host.RemoteFile, []byte, error) {
 	prefix := buf[:n]
 	if !allowBinary && isBinary(prefix) {
 		f.Close()
-		return nil, nil, usageErr("二进制文件（含 NUL 字节），不往终端喷：%s", display(cur.top, p)).
+		return nil, nil, usageErr("二进制文件（含 NUL 字节），不往终端喷：%s", cur.short(p)).
 			WithHint("要落盘用 tt file get <路径> -o <本地文件>；确要输出原始字节加 --human --binary（或 tt file get <路径> -o -）")
 	}
 	if _, err := f.Seek(0, io.SeekStart); err != nil {
@@ -143,12 +143,12 @@ func runText(cmd *cobra.Command, args []string, useTail bool, n int) error {
 		self, err := cur.fs.Lstat(p)
 		if err != nil {
 			if host.NotFound(err) {
-				return notFoundErr(cur.top, p)
+				return notFoundErr(cur, p)
 			}
-			return ioErr("%v", host.WrapPathErr(display(cur.top, p), err))
+			return ioErr("%v", host.WrapPathErr(cur.short(p), err))
 		}
 		if self.IsDir() {
-			return usageErr("%s 是目录：%s", cmd.CommandPath(), display(cur.top, p))
+			return usageErr("%s 是目录：%s", cmd.CommandPath(), cur.short(p))
 		}
 		f, _, err := openChecked(p)
 		if err != nil {
@@ -157,9 +157,9 @@ func runText(cmd *cobra.Command, args []string, useTail bool, n int) error {
 		lines, readErr := readTextLines(f, useTail, n)
 		f.Close()
 		if readErr != nil {
-			return ioErr("%v", host.WrapPathErr(display(cur.top, p), readErr))
+			return ioErr("%v", host.WrapPathErr(cur.short(p), readErr))
 		}
-		out = append(out, lineFile{Path: display(cur.top, p), Lines: lines})
+		out = append(out, lineFile{Path: cur.short(p), Lines: lines})
 	}
 	if wantJSON(cmd) {
 		return commonPrintJSON(map[string]any{"ok": true, "files": out})

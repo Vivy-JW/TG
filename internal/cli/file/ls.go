@@ -70,15 +70,15 @@ func newLsCmd() *cobra.Command {
 			self, err := cur.fs.Lstat(p)
 			if err != nil {
 				if host.NotFound(err) {
-					return notFoundErr(cur.top, p)
+					return notFoundErr(cur, p)
 				}
-				return ioErr("%v", host.WrapPathErr(display(cur.top, p), err))
+				return ioErr("%v", host.WrapPathErr(cur.short(p), err))
 			}
 			entries := []host.Entry{*self}
 			if self.IsDir() {
 				entries, err = cur.fs.List(p)
 				if err != nil {
-					return ioErr("%v", host.WrapPathErr(display(cur.top, p), err))
+					return ioErr("%v", host.WrapPathErr(cur.short(p), err))
 				}
 			}
 			shown := entries[:0]
@@ -89,7 +89,7 @@ func newLsCmd() *cobra.Command {
 				shown = append(shown, e)
 			}
 			if wantJSON(cmd) {
-				out := lsJSON{OK: true, Path: display(cur.top, p), Entries: make([]lsEntry, 0, len(shown))}
+				out := lsJSON{OK: true, Path: cur.short(p), Entries: make([]lsEntry, 0, len(shown))}
 				for _, e := range shown {
 					out.Entries = append(out.Entries, lsEntry{
 						Name: e.Name, Type: entryType(e), Size: e.Size,

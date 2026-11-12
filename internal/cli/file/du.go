@@ -50,7 +50,7 @@ SFTP 拿不到磁盘块占用，所以这里按文件大小累计（与 du 的�
 					Blocks int64  `json:"blocks"`
 				}
 				entry := func(d string, n int64) duEntry {
-					return duEntry{Path: display(cur.top, d), Bytes: n, Blocks: (n + 1023) / 1024}
+					return duEntry{Path: cur.short(d), Bytes: n, Blocks: (n + 1023) / 1024}
 				}
 				if summary {
 					return commonPrintJSON(map[string]any{"ok": true, "total": entry(p, sums[p])})
@@ -67,7 +67,7 @@ SFTP 拿不到磁盘块占用，所以这里按文件大小累计（与 du 的�
 				return commonPrintJSON(map[string]any{"ok": true, "dirs": out})
 			}
 			if summary {
-				printDu(sums[p], display(cur.top, p), common.Human)
+				printDu(sums[p], cur.short(p), common.Human)
 				return nil
 			}
 			dirs := make([]string, 0, len(sums))
@@ -76,7 +76,7 @@ SFTP 拿不到磁盘块占用，所以这里按文件大小累计（与 du 的�
 			}
 			sort.Strings(dirs)
 			for _, d := range dirs {
-				printDu(sums[d], display(cur.top, d), common.Human)
+				printDu(sums[d], cur.short(d), common.Human)
 			}
 			return nil
 		},
@@ -93,9 +93,9 @@ func duSums(root string) (map[string]int64, error) {
 	self, err := cur.fs.Lstat(root)
 	if err != nil {
 		if host.NotFound(err) {
-			return nil, notFoundErr(cur.top, root)
+			return nil, notFoundErr(cur, root)
 		}
-		return nil, ioErr("%v", host.WrapPathErr(display(cur.top, root), err))
+		return nil, ioErr("%v", host.WrapPathErr(cur.short(root), err))
 	}
 	if !self.IsDir() {
 		return map[string]int64{root: self.Size}, nil

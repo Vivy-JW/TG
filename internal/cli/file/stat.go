@@ -40,12 +40,12 @@ func newStatCmd() *cobra.Command {
 				e, err := cur.fs.Lstat(p)
 				if err != nil {
 					if host.NotFound(err) {
-						return notFoundErr(cur.top, p)
+						return notFoundErr(cur, p)
 					}
-					return ioErr("%v", host.WrapPathErr(display(cur.top, p), err))
+					return ioErr("%v", host.WrapPathErr(cur.short(p), err))
 				}
 				out = append(out, statJSON{
-					Path: display(cur.top, p), Type: entryType(*e), Size: e.Size,
+					Path: cur.short(p), Type: entryType(*e), Size: e.Size,
 					Mode: e.ModeText(), ModTime: e.ModTime.Format("2006-01-02 15:04:05"),
 					Link: e.Link,
 				})

@@ -49,21 +49,21 @@ func newWcCmd() *cobra.Command {
 					return err
 				}
 				if self, err := cur.fs.Lstat(p); err == nil && self.IsDir() {
-					return usageErr("wc 不支持目录：%s", display(cur.top, p))
+					return usageErr("wc 不支持目录：%s", cur.short(p))
 				}
 				f, err := cur.fs.Open(p)
 				if err != nil {
 					if host.NotFound(err) {
-						return notFoundErr(cur.top, p)
+						return notFoundErr(cur, p)
 					}
-					return ioErr("%v", host.WrapPathErr(display(cur.top, p), err))
+					return ioErr("%v", host.WrapPathErr(cur.short(p), err))
 				}
 				cnt, err := countFile(f)
 				f.Close()
 				if err != nil {
-					return ioErr("%v", host.WrapPathErr(display(cur.top, p), err))
+					return ioErr("%v", host.WrapPathErr(cur.short(p), err))
 				}
-				cnt.name = display(cur.top, p)
+				cnt.name = cur.short(p)
 				counts = append(counts, cnt)
 				total.lines += cnt.lines
 				total.words += cnt.words

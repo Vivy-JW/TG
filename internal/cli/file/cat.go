@@ -44,7 +44,7 @@ func newCatCmd() *cobra.Command {
 					if err != nil {
 						return err
 					}
-					f := catFile{Path: display(cur.top, p), Bytes: len(data)}
+					f := catFile{Path: cur.short(p), Bytes: len(data)}
 					if isBinary(data) || !utf8.Valid(data) {
 						if !allowBinary {
 							return usageErr("二进制文件（含 NUL 或非 UTF-8），不往终端喷：%s", f.Path).
@@ -91,12 +91,12 @@ func readWhole(arg string) ([]byte, string, error) {
 	self, err := cur.fs.Lstat(p)
 	if err != nil {
 		if host.NotFound(err) {
-			return nil, "", notFoundErr(cur.top, p)
+			return nil, "", notFoundErr(cur, p)
 		}
-		return nil, "", ioErr("%v", host.WrapPathErr(display(cur.top, p), err))
+		return nil, "", ioErr("%v", host.WrapPathErr(cur.short(p), err))
 	}
 	if self.IsDir() {
-		return nil, "", usageErr("cat 不支持目录：%s", display(cur.top, p)).
+		return nil, "", usageErr("cat 不支持目录：%s", cur.short(p)).
 			WithHint("用 tt file ls <目录> 看有哪些文件；逐一下载用 tt file get <路径> -o <本地文件>")
 	}
 	f, _, err := openChecked(p)
@@ -106,7 +106,7 @@ func readWhole(arg string) ([]byte, string, error) {
 	data, err := io.ReadAll(f)
 	f.Close()
 	if err != nil {
-		return nil, "", ioErr("%v", host.WrapPathErr(display(cur.top, p), err))
+		return nil, "", ioErr("%v", host.WrapPathErr(cur.short(p), err))
 	}
 	return data, p, nil
 }

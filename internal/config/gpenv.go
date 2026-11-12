@@ -239,6 +239,25 @@ func RootsForInstance(inst string) (workspace, custRoot string) {
 	return base + "/tiptop", base + "/topcust"
 }
 
+// InstanceRoot 环境对应的实例目录（/u1/<实例>），也就是 $TOP 与 $CUST 的公共父目录。
+//
+// 为什么需要它：GP 的源码是两棵并列的树（/u1/<实例>/tiptop 与 /u1/<实例>/topcust），
+// 而"看服务器文件""读源码"这类命令天生只有一个根。把根提到实例目录，两棵树就成了
+// 它的两个子目录：单根模型不用为第二棵树开特例，越界判定也仍然只有一个前缀。
+//
+// 有 instance 就按约定推 /u1/<实例>；没有就退回 workspace 的上一级
+// （/u1/toptest/tiptop → /u1/toptest）；都没有返回空串，由调用方报错。
+func InstanceRoot(e NamedSsh) string {
+	if inst := strings.TrimSpace(e.Instance); inst != "" {
+		return "/u1/" + inst
+	}
+	ws := strings.TrimSuffix(strings.TrimSpace(e.Workspace), "/")
+	if i := strings.LastIndex(ws, "/"); i > 0 {
+		return ws[:i]
+	}
+	return ""
+}
+
 // InstanceFromWorkspace 旧配置里只有 workspace 时，从 /u1/<实例>/tiptop 反推实例名。
 func InstanceFromWorkspace(workspace string) string {
 	parts := strings.Split(strings.Trim(strings.TrimSpace(workspace), "/"), "/")

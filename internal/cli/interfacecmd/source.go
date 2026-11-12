@@ -113,6 +113,7 @@ func resolveSources(opts sourceOpts) (*sourceInputs, error) {
 }
 
 // remote42F 直接从服务器读 <模块>/42f/<表单>.42f。
+// 两棵树都试：标准树在 $TOP，客制画面在 $CUST（common.ReadRemoteFile 处理）。
 func remote42F(e config.NamedSsh, form, module string) (*sourceInputs, error) {
 	base := form + ".42f"
 	cands := make([]string, 0, 3)
@@ -131,8 +132,17 @@ func remote42F(e config.NamedSsh, form, module string) (*sourceInputs, error) {
 	if err != nil {
 		return nil, err
 	}
+	return &sourceInputs{Form: form, Module: mod, Env: e.Name, Mode: "remote", Root: rootOf(e, full), Form42F: full, Form42FData: data}, nil
+}
+
+// rootOf 这个文件落在哪棵树（客制画面别把 Root 记成 $TOP）。
+func rootOf(e config.NamedSsh, full string) string {
+	cust := strings.TrimSuffix(strings.TrimSpace(e.CustRoot), "/")
 	top := strings.TrimSuffix(strings.TrimSpace(e.Workspace), "/")
-	return &sourceInputs{Form: form, Module: mod, Env: e.Name, Mode: "remote", Root: top, Form42F: full, Form42FData: data}, nil
+	if cust != "" && (full == cust || strings.HasPrefix(full, cust+"/")) {
+		return cust
+	}
+	return top
 }
 
 func envByName(name string) (*config.NamedSsh, error) {

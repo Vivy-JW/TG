@@ -39,7 +39,9 @@ type target struct {
 	ssh  *config.NamedSsh
 	conn *host.SSHConn
 	fs   *host.FS
-	top  string // 服务器 TOP（不带尾斜杠）
+	inst string // 实例目录 /u1/<实例>：越界判定的根，$TOP 与 $CUST 的父目录
+	top  string // $TOP（不带尾斜杠）：不带前缀的相对路径按它解释
+	cust string // $CUST（不带尾斜杠）：首段写 topcust/ 时走它
 }
 
 // cur 当前调用的目标；由组 PersistentPreRunE 设置，命令只读它。
@@ -52,7 +54,7 @@ func Register(root *cobra.Command) {
 		Short: "文件：看服务器文件、取文件（只读）+ 离线镜像",
 		Long: `文件：在服务器上看文件、取文件（只读），以及管理离线镜像。
 
-  tg file ls    [-la] [--human] [<路径>]                 列出目录（默认 $TOP）
+  tg file ls    [-la] [--human] [<路径>]                 列出目录（默认实例目录）
   tg file cat   <文件...>                        输出内容（多文件直接拼接）
   tg file head  [-n N] <文件...>                 前 N 行（默认 10）
   tg file tail  [-n N] <文件...>                 后 N 行（默认 10）
@@ -65,11 +67,19 @@ func Register(root *cobra.Command) {
   tg file get   <路径> [-o <本地|->]             下载一个文件（默认同名落当前目录）
   tg file mirror dir|path|pull                   离线镜像（子集 + 增量）
 
+路径怎么写（GP 的源码是两棵并列的树）：
+  $TOP  = workspace  （/u1/<实例>/tiptop）
+  $CUST = custRoot   （/u1/<实例>/topcust）
+  根的落点是两者的公共父目录 —— 实例目录 /u1/<实例>：
+    不带参数                    → 列实例目录（能看到 tiptop/ 与 topcust/）
+    azz/4gl/p_zta.4gl           → $TOP/azz/4gl/p_zta.4gl（老写法，不变）
+    tiptop/azz/4gl/x.4gl        → 同一处（显式写树名）
+    topcust/cbm/4gl/x.4gl       → $CUST/cbm/4gl/x.4gl（客制树）
+
 范围与保证：
-  只读 $TOP 之内；不跟随符号链接（--follow 可开，仍限 $TOP 内）；
+  只读实例目录之内（含两棵树）；不跟随符号链接（--follow 可开，仍限实例目录内）；
   服务器上不执行任何命令（纯 SFTP）；没有 put/rm/mv/chmod。
   --at <环境> 点名目标（不猜环境）；tg file --at-list 可看取值。
-  $TOP 取环境配置里的 workspace（客制根 $CUST 取 custRoot）：不探测、不缓存。
 
 数据默认 JSON；人读用 --human（等价 --format table）。
 
@@ -141,7 +151,7 @@ func prepare() error {
 		return output.Errorf(output.CodeConnFailed, 4, "打开 SFTP 失败: %v", err)
 	}
 	t := &target{env: ref.Name, ssh: ref.Env, conn: conn, fs: fs}
-	if err := t.resolveTop(); err != nil {
+	if err := t.resolveRoots(); err != nil {
 		t.close()
 		return err
 	}
@@ -163,44 +173,81 @@ func (t *target) close() {
 
 // ---- 路径 ----
 
-// argPath 把一个参数解析成 $TOP 内的绝对远程路径。
-// 空参数 = $TOP 本身；相对路径按 $TOP 解析；越界直接拒。
+// argPath 把一个参数解析成实例目录内的绝对远程路径。
+//
+// 解析规则（两段式，保住老用法）：
+//
+//	空参数        → 实例目录本身（ls 一下就能看到 tiptop/ 与 topcust/）
+//	首段 tiptop/  → 实例目录 + 参数（即 $TOP 下的路径）
+//	首段 topcust/ → 实例目录 + 参数（即 $CUST 下的路径）
+//	其它相对路径  → $TOP + 参数（与以前一致：azz/4gl/x.4gl 仍指 $TOP/azz/4gl/x.4gl）
+//	绝对路径      → 原样，但必须落在实例目录内
 func (t *target) argPath(arg string) (string, error) {
 	arg = strings.TrimSpace(arg)
 	if strings.ContainsRune(arg, 0) {
 		return "", usageErr("路径里含 NUL 字节")
 	}
 	var p string
-	if arg == "" {
-		p = t.top
-	} else if path.IsAbs(arg) {
+	switch {
+	case arg == "":
+		p = t.inst
+	case path.IsAbs(arg):
 		p = path.Clean(arg)
-	} else {
+	case t.treeArg(arg):
+		// 首段是树名：换成配置里的规范写法（Linux 区分大小写，
+		// 写 TOPCUST/ 不该真的去 stat /u1/<实例>/TOPCUST）。
+		base := path.Base(t.top)
+		if t.cust != "" && strings.EqualFold(firstSeg(arg), path.Base(t.cust)) {
+			base = path.Base(t.cust)
+		}
+		rest := strings.TrimPrefix(arg, firstSeg(arg))
+		p = path.Clean(path.Join(t.inst, base, strings.TrimPrefix(rest, "/")))
+	default:
 		p = path.Clean(path.Join(t.top, arg))
 	}
 	if !t.within(p) {
-		return "", usageErr("路径越出 $TOP（%s）：%s；本条命令只读 $TOP 之内", t.top, p)
+		return "", usageErr("路径越出实例目录（%s）：%s；本条命令只读实例目录之内", t.inst, p)
 	}
 	return p, nil
 }
 
-// within 判断 p 是否在 $TOP 之内（按段边界，/topx 不算在 /top 内）。
-func (t *target) within(p string) bool {
-	p = path.Clean(p)
-	return p == t.top || strings.HasPrefix(p, t.top+"/")
+// firstSeg 路径参数的第一段（没有斜杠就是整个参数）。
+func firstSeg(arg string) string {
+	if i := strings.IndexByte(arg, '/'); i >= 0 {
+		return arg[:i]
+	}
+	return arg
 }
 
-// resolveSafe 在 $TOP 内解析符号链接。
+// treeArg 首段是不是两棵树的名字（tiptop / topcust，大小写不敏感）。
+func (t *target) treeArg(arg string) bool {
+	seg := firstSeg(arg)
+	if seg == "" || seg == "." || seg == ".." {
+		return false
+	}
+	if strings.EqualFold(seg, path.Base(t.top)) {
+		return true
+	}
+	return t.cust != "" && strings.EqualFold(seg, path.Base(t.cust))
+}
+
+// within 判断 p 是否在实例目录之内（按段边界，/topx 不算在 /top 内）。
+func (t *target) within(p string) bool {
+	p = path.Clean(p)
+	return p == t.inst || strings.HasPrefix(p, t.inst+"/")
+}
+
+// resolveSafe 在实例目录内解析符号链接。
 //
 // 默认不跟随（和 grep -r / find 的默认一致）；--follow 时才跟随，且每一跳都必须
-// 仍落在 $TOP 内 —— 否则一个指到 /etc 的软链就把围栏绕过去了。
+// 仍落在实例目录内 —— 否则一个指到 /etc 的软链就把围栏绕过去了。
 func (t *target) resolveSafe(p string) (string, error) {
 	if !t.within(p) {
-		return "", usageErr("路径越出 $TOP（%s）：%s", t.top, p)
+		return "", usageErr("路径越出实例目录（%s）：%s", t.inst, p)
 	}
-	rel := strings.TrimPrefix(p, t.top)
+	rel := strings.TrimPrefix(p, t.inst)
 	rel = strings.TrimPrefix(rel, "/")
-	current := t.top
+	current := t.inst
 	hops := 0
 	for _, part := range strings.Split(rel, "/") {
 		if part == "" || part == "." {
@@ -211,19 +258,19 @@ func (t *target) resolveSafe(p string) (string, error) {
 			e, err := t.fs.Lstat(current)
 			if err != nil {
 				if host.NotFound(err) {
-					return "", notFoundErr(t.top, current)
+					return "", notFoundErr(t, current)
 				}
-				return "", ioErr("%v", host.WrapPathErr(display(t.top, current), err))
+				return "", ioErr("%v", host.WrapPathErr(t.short(current), err))
 			}
 			if !e.IsSymlink() {
 				break
 			}
 			if !followLinks {
-				return "", usageErr("符号链接默认不跟随：%s -> %s（确要跟随加 --follow）", display(t.top, current), e.Link)
+				return "", usageErr("符号链接默认不跟随：%s -> %s（确要跟随加 --follow）", t.short(current), e.Link)
 			}
 			hops++
 			if hops > 16 {
-				return "", usageErr("符号链接层数过多（>16）：%s", display(t.top, p))
+				return "", usageErr("符号链接层数过多（>16）：%s", t.short(p))
 			}
 			next := e.Link
 			if !path.IsAbs(next) {
@@ -231,7 +278,7 @@ func (t *target) resolveSafe(p string) (string, error) {
 			}
 			next = path.Clean(next)
 			if !t.within(next) {
-				return "", usageErr("符号链接指向 $TOP 之外：%s -> %s", display(t.top, current), next)
+				return "", usageErr("符号链接指向实例目录之外：%s -> %s", t.short(current), next)
 			}
 			current = next
 		}
@@ -239,14 +286,23 @@ func (t *target) resolveSafe(p string) (string, error) {
 	return current, nil
 }
 
-// display 输出用的短路径：$TOP 之内去掉前缀（相对路径可直接回喂给本组命令）。
-func display(top, p string) string {
+// short 输出用的短路径。
+//
+// $TOP 之内的仍相对 $TOP（老习惯：azz/4gl/x.4gl 可以直接回喂给本组命令）；
+// 客制树与实例目录本身相对实例目录（topcust/cbm/4gl/x.4gl）。
+func (t *target) short(p string) string {
 	p = path.Clean(p)
-	if p == top {
+	if p == t.top {
 		return "."
 	}
-	if strings.HasPrefix(p, top+"/") {
-		return strings.TrimPrefix(p, top+"/")
+	if strings.HasPrefix(p, t.top+"/") {
+		return strings.TrimPrefix(p, t.top+"/")
+	}
+	if p == t.inst {
+		return "."
+	}
+	if strings.HasPrefix(p, t.inst+"/") {
+		return strings.TrimPrefix(p, t.inst+"/")
 	}
 	return p
 }
@@ -264,9 +320,9 @@ func ioErr(format string, a ...any) *output.Error {
 	return output.Errorf(output.CodeConnFailed, 4, format, a...)
 }
 
-func notFoundErr(top, p string) *output.Error {
-	return output.Errorf(output.CodeNotFound, 1, "不存在: %s", display(top, p)).
-		WithHint("用 tg file ls <目录> 看有什么（路径相对 $TOP）")
+func notFoundErr(t *target, p string) *output.Error {
+	return output.Errorf(output.CodeNotFound, 1, "不存在: %s", t.short(p)).
+		WithHint("用 tg file ls <目录> 看有什么（路径可以写 $TOP 下的相对路径，也可以写 topcust/… 指客制树）")
 }
 
 // humanBytes 人性化大小（du -h / ls -h 用）。
@@ -318,7 +374,7 @@ func (t *target) expandArg(arg string) ([]string, error) {
 	}
 	entries, err := t.fs.List(dirPath)
 	if err != nil {
-		return nil, ioErr("%v", host.WrapPathErr(display(t.top, dirPath), err))
+		return nil, ioErr("%v", host.WrapPathErr(t.short(dirPath), err))
 	}
 	var out []string
 	for _, e := range entries {
@@ -331,7 +387,7 @@ func (t *target) expandArg(arg string) ([]string, error) {
 		}
 	}
 	if len(out) == 0 {
-		return nil, usageErr("没有匹配 %q 的文件（在 %s 下）", arg, display(t.top, dirPath))
+		return nil, usageErr("没有匹配 %q 的文件（在 %s 下）", arg, t.short(dirPath))
 	}
 	return out, nil
 }

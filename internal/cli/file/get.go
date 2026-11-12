@@ -40,21 +40,21 @@ func newGetCmd() *cobra.Command {
 			self, err := cur.fs.Lstat(p)
 			if err != nil {
 				if host.NotFound(err) {
-					return notFoundErr(cur.top, p)
+					return notFoundErr(cur, p)
 				}
-				return ioErr("%v", host.WrapPathErr(display(cur.top, p), err))
+				return ioErr("%v", host.WrapPathErr(cur.short(p), err))
 			}
 			if self.IsDir() {
-				return usageErr("get 不支持目录：%s（先用 tt file find <目录> 收窄，或 tt file ls <目录> 看文件）", display(cur.top, p))
+				return usageErr("get 不支持目录：%s（先用 tt file find <目录> 收窄，或 tt file ls <目录> 看文件）", cur.short(p))
 			}
 			limit := maxMB << 20
 			if maxMB > 0 && self.Size > limit {
 				return usageErr("文件 %s（%s）超过 --max %d MB；确要下载用 --max 0",
-					display(cur.top, p), humanBytes(self.Size), maxMB)
+					cur.short(p), humanBytes(self.Size), maxMB)
 			}
 			f, err := cur.fs.Open(p)
 			if err != nil {
-				return ioErr("%v", host.WrapPathErr(display(cur.top, p), err))
+				return ioErr("%v", host.WrapPathErr(cur.short(p), err))
 			}
 			defer f.Close()
 
@@ -104,7 +104,7 @@ func newGetCmd() *cobra.Command {
 				return output.Errorf(output.CodeLocalIO, 5, "保存失败: %v", err)
 			}
 			if wantJSON(cmd) {
-				return commonPrintJSON(map[string]any{"ok": true, "path": display(cur.top, p), "local": abs, "bytes": n})
+				return commonPrintJSON(map[string]any{"ok": true, "path": cur.short(p), "local": abs, "bytes": n})
 			}
 			fmt.Fprintf(os.Stderr, "已保存 %s（%s）\n", abs, humanBytes(n))
 			return nil

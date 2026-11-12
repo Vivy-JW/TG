@@ -10,7 +10,7 @@ import (
 )
 
 // remoteSource 直接从服务器读一个 .4gl，不落本地：
-// $TOP 取环境配置里的 workspace，找文件的具体做法在 common.ReadRemoteFile。
+// 两棵树都试（$TOP 标准树、$CUST 客制树），找文件的具体做法在 common.ReadRemoteFile。
 //
 // 为什么要有这条路：GP 的一个 $TOP 下有 1.4 万个 4gl（约 700 MB），
 // 全量镜像要十几分钟，而看一个大纲只需要一个文件。
@@ -32,6 +32,15 @@ func remoteSource(e config.NamedSsh, file string) (*sourceInputs, error) {
 	if err != nil {
 		return nil, err
 	}
+	return &sourceInputs{Path: full, Mode: "remote", Root: rootOf(e, full), Env: e.Name, Content: data}, nil
+}
+
+// rootOf 看这个文件落在哪棵树，把 Root 记成对应的根（$CUST 的文件不要记成 $TOP）。
+func rootOf(e config.NamedSsh, full string) string {
+	cust := strings.TrimSuffix(strings.TrimSpace(e.CustRoot), "/")
 	top := strings.TrimSuffix(strings.TrimSpace(e.Workspace), "/")
-	return &sourceInputs{Path: full, Mode: "remote", Root: top, Env: e.Name, Content: data}, nil
+	if cust != "" && (full == cust || strings.HasPrefix(full, cust+"/")) {
+		return cust
+	}
+	return top
 }

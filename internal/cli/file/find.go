@@ -62,12 +62,12 @@ func newFindCmd() *cobra.Command {
 				}
 				out := make([]item, 0, len(found))
 				for _, e := range found {
-					out = append(out, item{Path: display(cur.top, e.Path), Type: entryType(e), Size: e.Size})
+					out = append(out, item{Path: cur.short(e.Path), Type: entryType(e), Size: e.Size})
 				}
 				return commonPrintJSON(out)
 			}
 			for _, e := range found {
-				os.Stdout.WriteString(display(cur.top, e.Path) + "\n")
+				os.Stdout.WriteString(cur.short(e.Path) + "\n")
 			}
 			return nil
 		},
@@ -93,9 +93,9 @@ func findRun(roots []string, opt findOptions) ([]host.Entry, error) {
 		self, err := cur.fs.Lstat(root)
 		if err != nil {
 			if host.NotFound(err) {
-				return nil, notFoundErr(cur.top, root)
+				return nil, notFoundErr(cur, root)
 			}
-			return nil, ioErr("%v", host.WrapPathErr(display(cur.top, root), err))
+			return nil, ioErr("%v", host.WrapPathErr(cur.short(root), err))
 		}
 		level := []findItem{{e: *self, depth: 0}}
 		seen := map[string]bool{}
@@ -190,7 +190,7 @@ func listPathsConcurrent(paths []string) ([][]host.Entry, error) {
 	wg.Wait()
 	for i, err := range errs {
 		if err != nil {
-			return nil, ioErr("%v", host.WrapPathErr(display(cur.top, paths[i]), err))
+			return nil, ioErr("%v", host.WrapPathErr(cur.short(paths[i]), err))
 		}
 	}
 	return lists, nil

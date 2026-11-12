@@ -113,7 +113,7 @@ func newGrepCmd() *cobra.Command {
 			any := false
 			for _, r := range results {
 				if r.err != nil {
-					fmt.Fprintf(os.Stderr, "tt file grep: %s: %v\n", display(cur.top, files[r.idx]), r.err)
+					fmt.Fprintf(os.Stderr, "tt file grep: %s: %v\n", cur.short(files[r.idx]), r.err)
 					continue
 				}
 				if r.binary {
@@ -121,7 +121,7 @@ func newGrepCmd() *cobra.Command {
 				}
 				if r.skipped {
 					fmt.Fprintf(os.Stderr, "tt file grep: %s: 文件超过 %s，跳过\n",
-						display(cur.top, files[r.idx]), humanBytes(grepFileMax))
+						cur.short(files[r.idx]), humanBytes(grepFileMax))
 					continue
 				}
 				if r.matched {
@@ -149,9 +149,9 @@ func collectFiles(root string, opt grepOptions) ([]string, error) {
 	self, err := cur.fs.Lstat(root)
 	if err != nil {
 		if host.NotFound(err) {
-			return nil, notFoundErr(cur.top, root)
+			return nil, notFoundErr(cur, root)
 		}
-		return nil, ioErr("%v", host.WrapPathErr(display(cur.top, root), err))
+		return nil, ioErr("%v", host.WrapPathErr(cur.short(root), err))
 	}
 	if !self.IsDir() {
 		if includeOK(self.Name, opt.include) {
@@ -160,7 +160,7 @@ func collectFiles(root string, opt grepOptions) ([]string, error) {
 		return nil, nil
 	}
 	if !opt.recursive {
-		return nil, usageErr("%s 是目录：加 -r 递归（grep -rn <模式> <目录>）", display(cur.top, root))
+		return nil, usageErr("%s 是目录：加 -r 递归（grep -rn <模式> <目录>）", cur.short(root))
 	}
 	var files []string
 	var walk func(dir string) error
@@ -196,7 +196,7 @@ func collectFiles(root string, opt grepOptions) ([]string, error) {
 		return nil
 	}
 	if err := walk(root); err != nil {
-		return nil, ioErr("%v", host.WrapPathErr(display(cur.top, root), err))
+		return nil, ioErr("%v", host.WrapPathErr(cur.short(root), err))
 	}
 	return files, nil
 }
@@ -265,7 +265,7 @@ func grepOne(p string, re *regexp.Regexp, opt grepOptions) grepFileResult {
 	sc.Buffer(make([]byte, 64<<10), 2<<20)
 
 	var out bytes.Buffer
-	displayPath := display(cur.top, p)
+	displayPath := cur.short(p)
 	line := 0
 	matches := 0
 	for sc.Scan() {
