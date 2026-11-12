@@ -37,9 +37,9 @@ func CorpusRoot() string { return testenv.CorpusRoot() }
 // CorpusFiles 递归收集 root 下扩展名匹配（大小写不敏感）的语料文件，路径升序。
 //
 // excludePrefix 里的名字前缀会被跳过 —— 那是驱动脚本自己留下的草稿产物（_ai/_dw/_ed/
-// _del/_ac，四个 batch 脚本各自排除集的并集；见 engine/make-manifest.sh）。排除是必须的：
-// 那些文件会在两次运行之间出现或消失，把它们算进基线，基线就不可复现 —— 这正是
-// engine/corpus.manifest 存在的理由。
+// _del/_ac，四个 batch 脚本各自排除集的并集）。排除是必须的：那些文件会在两次运行之间
+// 出现或消失，把它们算进基线，基线就不可复现 —— 当年 engine/corpus.manifest 就是为此
+// 存在的（engine/ 已于 2026-11-12 删除，这里的参数约定保留）。
 func CorpusFiles(root, ext string, excludePrefix ...string) []string {
 	var out []string
 	_ = filepath.Walk(root, func(p string, info os.FileInfo, err error) error {

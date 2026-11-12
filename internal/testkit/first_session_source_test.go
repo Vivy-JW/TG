@@ -430,7 +430,7 @@ func TestNoSecondSourceForCurrentSession(t *testing.T) {
 //   - **跳过 `web/dist`**：那是构建产物（嵌进二进制的 SPA），不是源码。
 //   - **跳过 `.git`**：不是源码。
 //
-// 其余一律扫（`internal/`、`tools/`、`engine/` 之外的 Go、根目录的 `main.go`）——
+// 其余一律扫（`internal/`、`tools/` 下的 Go、根目录的 `main.go`）——
 // "全仓库"这三个字就是字面意思，少扫一个目录就等于给"取第一个会话"留了个后门。
 func repoScanFiles(t *testing.T, root string) []string {
 	t.Helper()

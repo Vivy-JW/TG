@@ -7,7 +7,7 @@ import (
 
 // TestSkeletonHasNoDesignerDir 钉住两件事：设计器目录与工作区都不是机器级配置项。
 //
-// 设计器的程序集现在随包分发（见 engine/src/Designer/Bootstrap.cs 的 Install，默认是
+// 设计器的程序集现在随包分发（原见 engine/src/Designer/Bootstrap.cs 的 Install，engine 已于 2026-11-12 删除；默认是
 // `<引擎自己的目录>\designer`），所以 config.json 里不该再出现 installDir。
 // 工作区按**环境**配（hosts.sshs[].workspace）—— 骨架里没有环境，所以也不该有它。
 //

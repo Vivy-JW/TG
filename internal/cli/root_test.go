@@ -98,7 +98,7 @@ var versionShape = regexp.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+$`)
 
 // TestRootHelpAndReadmeHaveNoStaleAdvice 断言根帮助与 README 都不再教已删除的调用。
 //
-// 读包外的文件是有先例的（`internal/dev/tzs/corpus_test.go` 读 `../../../engine/corpus.manifest`），
+// 读包外的文件是有先例的（当年 `internal/dev/tzs/corpus_test.go` 读 `../../../engine/corpus.manifest`；两者都已删），
 // 而 README.md 属于仓库本体、不是外部语料 —— 所以它**不在**就判失败，不用 Skip 糊过去。
 func TestRootHelpAndReadmeHaveNoStaleAdvice(t *testing.T) {
 	readmePath := filepath.Join("..", "..", "README.md")

@@ -17,7 +17,7 @@ rem       dictionary / schema / enterprise codes); users run `tt dict db sync`
 rem       after configuring an environment.
 rem NOTE: skills/ ships as a plain directory (not embedded in the binary) so
 rem       users can edit it; `tt install skills` copies it to the target dir.
-rem       After the merge there are six skills in there, installed together.
+rem       There are three skills in there, installed together.
 setlocal
 cd /d "%~dp0"
 
@@ -42,7 +42,7 @@ rem MSI there), so never wipe dist\ as a whole.
 if exist "%STAGE%" rmdir /s /q "%STAGE%"
 mkdir "%STAGE%"
 
-echo [1/5] Building frontend (web/dist) ...
+echo [1/4] Building frontend (web/dist) ...
 pushd web
 if not exist node_modules (
     call npm install
@@ -62,7 +62,7 @@ popd
 rem main.go embeds web/dist, so the frontend must exist before go build.
 if not exist "web\dist\index.html" (echo MISSING web\dist\index.html & exit /b 1)
 
-echo [2/5] Building tt.exe (v%VERSION%) ...
+echo [2/4] Building tt.exe (v%VERSION%) ...
 rem Built straight into the stage, never into the repo root: packaging must not
 rem leave a tt.exe behind. The exe has to sit next to skills/ (tt install skills
 rem reads <exe dir>\skills), and this stage gets skills/ in the next step.
@@ -72,7 +72,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo [3/5] Staging EMPTY config.json / config.example.json / README.md / skills ...
+echo [3/4] Staging EMPTY config.json / config.example.json / README.md / skills ...
 copy /y config.empty.json "%STAGE%\config.json" >nul || (echo COPY empty config FAILED & exit /b 1)
 copy /y config.example.json "%STAGE%\" >nul || (echo COPY config.example.json FAILED & exit /b 1)
 copy /y README.md "%STAGE%\" >nul || (echo COPY README.md FAILED & exit /b 1)
@@ -82,54 +82,7 @@ rem Portable marker: the CLI keeps its config inside the package instead of
 rem writing to the user directory (see internal/config/paths.go, IsPortable).
 type nul > "%STAGE%\.portable"
 
-rem [3b/5] Staging the .tzs engine (C#). It is built SEPARATELY -- see engine\BUILD.md.
-rem   Exactly three files, listed by name on purpose: engine\out\ also holds a dozen probe
-rem   programs (Probe / Edit / AddField / RoundTrip / Test* / E2E) that must NOT ship, so an
-rem   xcopy of the whole directory would put them all in the portable package.
-rem   tzs-cli.exe (the engine's own C# client) is DELIBERATELY NOT shipped: tt has its own Go
-rem   client (internal/dev/tzs) which is the only supported entry point. Shipping a second
-rem   client would mean two command surfaces and two exit-code tables (tzs-cli is 0/1/2/3/4,
-rem   tt is 0/1/2/4/5) for the same engine. It still builds in the repo
-rem   (engine\test\tzs-cli.cs) because the engine's own acceptance harness drives it.
-rem   Not built here: the engine needs csc + a bash script, and rebuilding it changes its MVID,
-rem   which orphans every daemon started from the previous build (engine\BUILD.md explains).
-set TZSENGINE=engine\out
-for %%f in (tzs-server.exe TzsCli.dll TzsCli.Designer.dll) do (
-    if not exist "%TZSENGINE%\%%f" (
-        echo MISSING %TZSENGINE%\%%f -- build the engine first, see engine\BUILD.md
-        exit /b 1
-    )
-)
-if not exist "%STAGE%\tzs" mkdir "%STAGE%\tzs"
-for %%f in (tzs-server.exe TzsCli.dll TzsCli.Designer.dll) do (
-    copy /y "%TZSENGINE%\%%f" "%STAGE%\tzs\" >nul || (echo COPY engine %%f FAILED & exit /b 1)
-)
-
-rem [3c/5] Staging the designer payload the engine boots from.
-rem   The engine loads the designer's assemblies from <its own directory>\designer (see
-rem   engine\src\Designer\Bootstrap.cs), so the package carries them and a run depends on THIS
-rem   package's designer version instead of on whatever the machine happens to have installed.
-rem
-rem   Only *.dll is copied -- and the repo's copy at engine\designer\ already IS exactly that set,
-rem   with the exes left out: T100Designer.exe (the GUI, not referenced by the engine's assembly
-rem   closure), AutoUpdater.exe + AppLimit's Sparkle updater (that one phones a vendor update
-rem   channel -- we do not ship it), AutoUpdater.exe.config and a shell shortcut.
-rem
-rem   The default source is that committed copy, so packaging a release needs nothing configured
-rem   and the version shipped is the version in the tree. TZSDESIGNER overrides it, for bundling
-rem   a different designer version than the one committed.
-set TZSDESIGNER_DEFAULT=engine\designer
-if "%TZSDESIGNER%"=="" set TZSDESIGNER=%TZSDESIGNER_DEFAULT%
-if not exist "%TZSDESIGNER%\SpecDesignerCommon.dll" (
-    echo NOT A DESIGNER DIRECTORY: %TZSDESIGNER%
-    echo   expected SpecDesignerCommon.dll in it. See engine\BUILD.md.
-    exit /b 1
-)
-if not exist "%STAGE%\tzs\designer" mkdir "%STAGE%\tzs\designer"
-xcopy /y /q "%TZSDESIGNER%\*.dll" "%STAGE%\tzs\designer\" >nul || (echo COPY designer FAILED & exit /b 1)
-echo     designer staged from %TZSDESIGNER%
-
-echo [4/5] Packing zip ...
+echo [4/4] Packing zip ...
 rem Recursive zip (includes the skills/ subtree); keeps the tt-portable/ top-level
 rem directory inside the archive. Go tool (tools/zip) replaced the old python
 rem script (zip.py, removed 2026-10). NO fallback by design: a failed pack must
@@ -142,6 +95,6 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo [5/5] Done: dist\tt-portable.zip
+echo Done: dist\tt-portable.zip
 dir /b dist
 endlocal

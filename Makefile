@@ -7,7 +7,7 @@ SHELL := sh
 .SHELLFLAGS := -c
 
 .DEFAULT_GOAL := all
-.PHONY: all help build test check-web web-build engine skips version-check update-live-check package msi
+.PHONY: all help build test check-web web-build skips version-check update-live-check package msi
 
 all: build test
 
@@ -25,9 +25,6 @@ check-web: ## 前端三项检查：fgltokens / fgloutline / store
 
 web-build: ## 前端构建（含 tsc 类型检查；check:app 不做类型检查）
 	cd web && npm run build
-
-engine: ## 只在真的改了 engine/ 时才跑！重编会孤儿化在跑的守护进程
-	cd engine && ./build.sh
 
 skips: ## 回读：跑了多少、跳了多少（会真跑一遍全量）
 	go test ./... -count=1 -v 2>&1 | grep -E '^--- (PASS|SKIP)' | sort | uniq -c

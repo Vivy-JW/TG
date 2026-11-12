@@ -50,4 +50,4 @@ go test ./internal/dev/...                # 各包单测
   （环境变量 > 仓库根的 `config.local.json` > 内置缺省）。本包只用它给的根去**遍历**。
 - **跳过文案与 `*testing.T` 那层语境**（"没有语料该怎么收场"） → [../../testkit/README.md](../../testkit/README.md)。
   本包**不能** import 它：本包被生产代码 import（`internal/cli/dev/selftest.go`），而它带 `testing`。
-- 语料清单的固定（`engine/corpus.manifest`） → [../../../engine/BUILD.md](../../../engine/BUILD.md)
+- 语料清单的固定（当年的 `engine/corpus.manifest`）已随 `engine/` 于 2026-11-12 删除；本包只做遍历。

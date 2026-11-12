@@ -1,13 +1,12 @@
 # tools — 打包辅助脚本与评测装置
 
 全部是 Go（`go run` 直跑，随 `go build ./...` 编译期把关）。2026-10 从 Python 脚本
-整体迁移。
+整体迁移。`tzsmini/`（`.tzs` 最小语料生成器）2026-11-12 随 `tt dev` 一起删除。
 
 | 项 | 是什么 |
 |---|---|
 | `zip/` | 把便携包暂存目录打成 zip |
 | `wixremovefolders/` | 给安装包的文件清单补上"卸载时要删的目录" |
-| `tzsmini/` | 重新生成 `testdata/tzs-mini/ws` 最小语料夹具（含 `manifest.txt`） |
 | `eval/` | 工具面评测装置（见它自己的 README） |
 
 ## `zip/`
@@ -32,11 +31,6 @@
 这四条 MSI 语义全部有单元测试钉着（[main_test.go](./wixremovefolders/main_test.go)，
 夹具模拟 heat 输出、逐条断言）—— 重写实现时丢了哪条，测试替你红。
 
-## `tzsmini/`
-
-从一份真工作区重新生成 `testdata/tzs-mini/ws` 与 `manifest.txt`（一次做两件事）。
-生成规则与"为什么留哪些文件"见 [main.go](./tzsmini/main.go) 的文件头（每条都注明是实测）。
-
 ## 判据
 
 ```bash
@@ -44,10 +38,8 @@ go build ./...                                        # 三个工具随全仓编
 go test ./tools/wixremovefolders/                     # 四条 MSI 语义逐条过
 go run ./tools/zip                                    # 打一次，检查包里确实有 skills/<名字>/SKILL.md
 build_msi.bat                                         # 走完整条打包链
-go run ./tools/tzsmini --src <真工作区> --out %TEMP%\tzsmini-check   # 对照 manifest 行数与内容
 ```
 
 ## 细节去哪
 
 - 安装包定义与用户级安装的理由 → [../installer/README.md](../installer/README.md)
-- 最小语料夹具本身 → [../testdata/tzs-mini/README.md](../testdata/tzs-mini/README.md)

@@ -21,7 +21,7 @@ TT/
 ├─ Makefile             必跑命令的快捷方式（make = build + test；深档目标自带副本闸门）
 ├─ config.example.json  配置文件样例（字段说明入口之一）
 ├─ VERSION              版本号唯一出处（两个打包脚本读它，make version-check 对照 web）
-├─ build_portable.bat   便携包构建：前端 + Go 二进制 + skills/ + 引擎 + 设计器
+├─ build_portable.bat   便携包构建：前端 + Go 二进制 + skills/
 ├─ build_msi.bat        MSI 构建：复用便携载荷，生成 perUser 安装包
 │
 ├─ .agents/             项目 Agent 技能与说明（不随发行包装到用户目录）
@@ -84,22 +84,12 @@ TT/
 │  ├─ shared/           共享主题与设计系统（被 @source 扫描，改动要谨慎）
 │  └─ dist/             构建产物，被 Go 嵌入（.gitkeep 是承重墙）
 │
-├─ engine/              .tzs 表单引擎（C#；T100 专用，阶段 3 待删，现已无 Go 代码引用）
-│  ├─ src/              引擎 C# 源码（tzs-server）
-│  │  └─ Designer/Fns/  设计器函数/组件操作面（读、校验、语义、会话）
-│  ├─ designer/         设计器 28 个程序集（≈10.5MB，有意入库，保证全网同版）
-│  ├─ out/              构建产物 + 探测程序（不进发行包、不能落 dist/ 下）
-│  └─ test/             引擎测试
-│
-├─ designer-src/        设计器反编译源码（只读）：16 工程 + 子包地图；阶段 3 待删（删前给 TT-src 打 zip）
 ├─ installer/           MSI 安装包定义（WiX v3；perUser 装到 %LOCALAPPDATA%\Programs\TT）
 ├─ tools/               构建辅助 Go 工具
 │  ├─ zip/              跨平台确定性打包
-│  ├─ wixremovefolders/ MSI 卸载时补空目录清理
-│  └─ tzsmini/          从语料构建 tzs-mini 夹具（T100 专用，阶段 3 待删）
+│  └─ wixremovefolders/ MSI 卸载时补空目录清理
 ├─ testdata/            测试语料
-│  ├─ tzs-mini/         3.2MB 筛小标准件工作区（T100 专用，阶段 3 待删）
-│  ├─ fgl-fixtures/     FGL 解析/写回夹具
+│  └─ fgl-fixtures/     FGL 解析/写回夹具（Go 侧；前端侧有一份同内容副本）
 └─ skills/              对外技能手册（评测中执行者唯一能读的东西）
    ├─ tg-erp-architecture/  TOP GP 整体架构与代码地图
    ├─ tg-erp-debug/     TOP GP 作业调试

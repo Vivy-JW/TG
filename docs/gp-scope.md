@@ -101,12 +101,12 @@ m.Handle("/api/gp/", s.opt.GP)                                    // GP
 
 | 目录 | 规模 | 是什么 |
 |---|---|---|
-| `designer-src/` | 1188 文件 / 5.7 MB | T100 Designer 的 C# 解决方案（`T100Designer.sln`） |
-| `engine/` | 76 文件 / 11.7 MB | `.tzs` 引擎（C#，`TzsRepacker.cs` 等）+ 规格 `SPEC.md` |
-| `testdata/` | 169 文件 / 3.2 MB | `.tzs` 语料、`fgl-fixtures`、`tzs-mini` |
+| ~~`designer-src/`~~ | 1188 文件 / 5.7 MB | T100 Designer 的 C# 解决方案（`T100Designer.sln`）—— **已于 2026-11-12 删除**（zip 存在仓库外） |
+| ~~`engine/`~~ | 76 文件 / 11.7 MB | `.tzs` 引擎（C#，`TzsRepacker.cs` 等）+ 规格 `SPEC.md` —— **已于 2026-11-12 删除**（含 `designer/` 28 个厂商 DLL） |
+| `testdata/` | 62 文件 / 0.06 MB | 只剩 `fgl-fixtures`（Go 侧大纲夹具）；`.tzs` 语料与 `tzs-mini` 2026-11-12 已删 |
 | `skills/` | 3 个技能 | 已换 GP 版（`tg-erp-architecture` / `-debug` / `-read`）；`tt-dev-tzc` 已删 |
 
-`designer-src/` 与 `engine/` 是**最大的两块死重量**：GP 侧一行都用不上，但删了在本仓库不可恢复（TT-src 只读副本还在，可兜底）。
+`designer-src/` 与 `engine/` 曾是**最大的两块死重量**（GP 侧一行都用不上）。2026-11-12 已删，删前打了 zip 存仓库外：`D:\Digiwin\tt_work\archive\TG-t100-designer-assets-2026-11-12.zip`。
 
 ### 4.C 领域耦合的共享件：要拆，不是删
 
@@ -276,6 +276,6 @@ Get-ChildItem internal -Directory | ForEach-Object {
 - ~~**Q1**：`debug` 合一还是各留一份~~ —— **已定（2026-11-09）**：TG 与 TT 完全独立，不与 T100 共享代码；`internal/debug` 归 TG，拔掉 T100 接线，不新建第二套（§5.1）。
 - ~~**Q2**：`dict/live` 搬到 `erpdb` 还是新建 `livedb`~~ —— **已作废（2026-11-09）**：`internal/dict` 不删，改造成 GP 的字典层（§4.D），`cli/gp` 继续用它没有断 import 的问题。
 - ~~**Q3**：GP 镜像要不要扩到 `42f/42s/inc`~~ —— **已定（2026-11-09）：做 profile**。默认 `debug`（只 4gl，调试够用且快），`source` 收 4gl+42f+42s+inc，与 `tt file mirror` 同构（§7.3）。
-- ~~**Q4**：`designer-src/` + `engine/`（16 MB、1264 文件）什么时候删~~ —— **已定（2026-11-09）：阶段 3 与 T100 代码同批删**；删前把 `TT-src` 打 zip 存到仓库外（它没有 git 历史）。注意 `engine/designer/` 那 28 个设计器 DLL（10.5 MB）是厂商二进制、且原本随发行包分发，TG 发版绝不能带。
+- ~~**Q4**：`designer-src/` + `engine/`（16 MB、1264 文件）什么时候删~~ —— **已做（2026-11-12）**：连同 `tools/tzsmini`、`testdata/tzs-mini` 一起删，打包成 `D:\Digiwin\tt_work\archive\TG-t100-designer-assets-2026-11-12.zip`（7.13 MB / 1355 条目）；`build_portable.bat` 里打 engine + designer 的两段（`[3b/5]`/`[3c/5]`）同时删掉，发行包不再带任何厂商 DLL。
 - ~~**Q5**：阶段 3 的改名要不要一次性做~~ —— **已定（2026-11-09）：分三批**。①对外标识（二进制名、MSI 产品名、PATH 写入名、文档自称）②数据与配置（`~/.tt`→`~/.tg` 带一次性迁移、`TT_WEB_DIR`、`.tt-serve.json`、`TT_*` 变量读旧名兼容）③代码内部（`module tt`→`module tg` 全仓 import 重写 + 重生成 `commands.html`）。每批一个 commit、可单独回滚。
 - ~~**Q6**：GP 页的"查询数据源"怎么处理（§7.4）~~ —— **已定（2026-11-09）：先隐藏，字典改造后接通**。`GpSettings.tsx` 里 `SHOW_QUERY_SOURCE = false`，卡片代码保留不删；理由是原建议"A 删控件"随 §4.D 作废——字典改造成 GP 的之后，"本地镜像 / 远程直查"才有语义。接通时要做三件：`GET /api/gp/meta` 回读 `querySource`、`POST /api/gp/settings`（或改走共享 `PUT /api/hosts`）、本地 `.db` 查询路径（已完成：`tt dict … --env local:<环境>`，`tt gp` 组已于 2026-11-11 删除）。

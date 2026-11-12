@@ -43,11 +43,9 @@ TG/
 ├─ main.go              程序入口
 ├─ internal/            Go 后端全部实现（cli / config / web / host / output / update …）
 ├─ web/                 前端（React + vite，构建产物被 Go 嵌入）
-├─ engine/              .tzs 表单引擎（C#）与设计器程序集
-├─ designer-src/        设计器反编译参考源码（只读）
 ├─ installer/           MSI 安装包定义（WiX v3）
 ├─ skills/              对外技能手册
-└─ testdata/            测试语料
+└─ testdata/            测试语料（4GL 大纲夹具）
 ```
 
 ## 关于许可证

@@ -14,7 +14,7 @@ f.ByColName[form42f.ColName("sfajwf012")] // → fieldId 等
    `<PhantomColumn>` / `<PhantomFormField>`。只收 FormField 会得到"看起来对、其实错"的结果
    （实测 `axmt500_wf.42f`：563 条 = TableColumn 397 + FormField 132 + PhantomFormField 22 +
    PhantomColumn 12）。由 `TestParseForm42F_CollectsTableColumns`（反证测试）守着。
-2. **绝不用 `.4fd` 的 `fieldId`** —— 设计期编号每次保存全量重排（`engine/SPEC.md:257`）。
+2. **绝不用 `.4fd` 的 `fieldId`** —— 设计期编号每次保存全量重排（原证据 `engine/SPEC.md:257`，该目录已于 2026-11-12 删除）。
    本文件解析的是**编译后**的 `.42f`，它的 `fieldId` 才稳定（表单变体内；带作用域后 100%）。
 3. **本解析器不做业务语义** —— 不查字典、不猜中文名；`cmt_*` / `lbl_*` 只是原样带出来。
 
