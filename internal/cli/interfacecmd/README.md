@@ -13,7 +13,7 @@ tg interface labels <form>    隐藏诊断：gae_file 的 token 表（--lang 选
 ```
 
 数据源优先级：`--42f` > `--dir <目录>` > `--at <环境>`（先找镜像，没有就直接连服务器读 `$TOP/<模块>/42f/<表单>.42f`）。
-`--dir` 是最终环境目录，不是全局根；镜像由 `tt file mirror pull --profile interface` 建立。
+`--dir` 是最终环境目录，不是全局根；镜像由 `tg file mirror pull --at <环境>` 建立（收两棵树的 4gl / 42f / inc）。
 
 ## 页面选择
 

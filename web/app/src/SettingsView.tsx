@@ -27,7 +27,7 @@ import {
 import {
   api, type ConfigMeta, type ConfigStatus, type DBSyncEnv, type DBSyncJob, type DBSyncResp,
   type DiscoveredEnv,
-  type HostsDb, type HostsEnt, type HostsPatch, type HostsSsh, type HostsView, type MirrorEnv, type MirrorJob, type MirrorResp,
+  type HostsDb, type HostsEnt, type HostsPatch, type HostsSsh, type HostsView, 
   type UpdateState,
 } from './api'
 import {
@@ -59,11 +59,7 @@ type SyncRow =
   | { product: 't100'; t100: DBSyncEnv }
   | { product: 'gp'; gp: GpEnvBrief }
 
-type MirrorRow =
-  | { product: 't100'; t100: MirrorEnv }
-  | { product: 'gp'; gp: GpEnvBrief }
-
-const rowName = (r: SyncRow | MirrorRow) => r.product === 't100' ? r.t100.name : r.gp.name
+const rowName = (r: SyncRow) => r.product === 't100' ? r.t100.name : r.gp.name
 
 // 环境选中态：一个状态同时表达“选了哪个产品、哪一条”，从类型上不可能同时选中 T100 和 GP。
 // T100 用下标（新建环境还没有稳定名字）；GP 用环境名。
@@ -188,20 +184,6 @@ function durSeconds(s: string): number {
   return found ? total : 0
 }
 
-// 镜像任务的数值行:**裸值**,从左到右按"先看什么"排 —— 大小(当前/总量)、速度、耗时、文件数。
-// 速度是算出来的(bytes / elapsed):后端只下发耗时字符串,不为一个展示值再加 JSON 字段。
-// 算不出来时(耗时为 0、刚开始)省掉那一格,不显示 "0 KB/s" 这种噪音。
-function mirrorCellTexts(j: MirrorJob): ReactNode[] {
-  const secs = durSeconds(j.elapsed)
-  const rate = secs > 0 ? j.bytes / secs : 0
-  return [
-    fmtBytes(j.bytes) + (j.total > 0 ? ` / ${fmtBytes(j.total)}` : ''),
-    rate > 0 ? `${(rate / 1024).toFixed(0)} KB/s` : '',
-    j.elapsed ? (secs > 0 ? `${secs.toFixed(1)}s` : j.elapsed) : '',
-    j.files > 0 ? `${j.files} 个文件` : '',
-  ].filter(Boolean)
-}
-
 /**
  * 长跑任务的进度块(镜像拉取 / 字典同步共用)。
  *
@@ -313,10 +295,6 @@ function GpJobProgress({ env, job }: { env: string; job: NonNullable<GpEnvBrief[
 }
 
 // 阶段标签与字节格式化:原先在字典页的两个视图里,随功能一起搬进来。
-const MIRROR_PHASE: Record<string, string> = {
-  connect: '连接服务器…', probe: '探测 T100 目录…', pack: '服务器打包…',
-  download: '下载并解压…', done: '完成', error: '失败',
-}
 const SYNC_PHASE: Record<string, string> = {
   open: '连接远程数据库…', table: '拉取数据表…', index: '创建主键索引…',
   replace: '替换本地数据库…', done: '完成', error: '失败',
@@ -559,7 +537,6 @@ export function SettingsView() {
   // 源码镜像 / 字典同步的运行态:它们是**动作**(长跑任务 + 进度),不再是独立页面,
   // 就住在「数据字典」分区的对应卡片里。目标环境不再是这里的一份 state ——
   // 它由表格里被点的那一行给出(原先那份 state 只是"下拉里选中的那个",改成表格后没有了)。
-  const [mirror, setMirror] = useState<MirrorResp | null>(null)
   const [sync, setSync] = useState<DBSyncResp | null>(null)
   const [opBusy, setOpBusy] = useState('')
   // 正在弹原生文件夹选择器的环境名；弹窗期间只禁用该行的文件夹按钮。
@@ -775,11 +752,6 @@ export function SettingsView() {
         dirtyRef.current[k] = sectionSnapOf(k, formsRef.current) !== sent[k]
       })
 
-      // 镜像目录保存后立刻回读：表格里的实际路径/基线随之更新，
-      // 不要让用户点“增量更新”时还用着保存前的旧路径。
-      if (keys.includes('hosts') || keys.includes('mirror')) {
-        void api.mirror().then(setMirror).catch(() => { /* 提示性信息，失败不打断保存 */ })
-      }
       void api.configStatus().then(setStatus).catch(() => {})
     } catch (ex: any) {
 
@@ -1155,26 +1127,17 @@ export function SettingsView() {
 
 
 
-  // ---- 源码镜像 / 字典同步(动作) ----
+  // ---- 字典同步(动作) ----
   // 只在「数据字典」分区且正在跑的时候轮询:本页是常驻挂载的,无脑轮询会一直打后端。
-  // 环境不再需要在这里挑一个"当前项"了 —— 动作由表格里那一行给出(见 pullMirror/runSync 的参数)。
-  const refreshMirror = useCallback(async () => {
-    try { setMirror(await api.mirror()) } catch { /* 取不到就不显示操作区,不打扰 */ }
-  }, [])
+  // 环境不再需要在这里挑一个"当前项"了 —— 动作由表格里那一行给出(见 runSync 的参数)。
   const refreshSync = useCallback(async () => {
     try { setSync(await api.dbsync()) } catch { /* 同上 */ }
   }, [])
   useEffect(() => {
     if (section !== 'data-dict') return
-    void refreshMirror(); void refreshSync()
-  }, [section, refreshMirror, refreshSync])
-  const mirrorRunning = !!mirror?.job?.running
+    void refreshSync()
+  }, [section, refreshSync])
   const syncRunning = !!sync?.job?.running
-  useEffect(() => {
-    if (!mirrorRunning) return
-    const t = window.setInterval(() => { void refreshMirror() }, 800)
-    return () => window.clearInterval(t)
-  }, [mirrorRunning, refreshMirror])
   useEffect(() => {
     if (!syncRunning) return
     const t = window.setInterval(() => { void refreshSync() }, 800)
@@ -1187,55 +1150,6 @@ export function SettingsView() {
     if (sync?.job?.done && !sync.job.running) void refreshSync()
   }, [sync?.job?.done, sync?.job?.running, refreshSync])
 
-  // 环境名由调用的那一行给出 —— 表格里每行一个按钮,不再有"先选环境"这一步。
-  // 全量重建会整目录替换,先弹确认;确认后走 doMirror(动作与确认分开,
-  // 弹窗那一侧只负责 setAsk 与描述文案)。
-  const pullMirror = (full: boolean, env: string) => {
-    if (!env) return
-    if (!full) { void doMirror(false, env); return }
-    setAsk({
-      title: `全量重建环境「${env}」?`,
-      desc: '将整目录替换本地镜像(删除服务器上已不存在的残留)。\n首次或按需执行,耗时较长。',
-      confirmText: '全量重建',
-      run: () => void doMirror(true, env),
-    })
-  }
-  // 目录选择器（前端自绘，后端 /api/fs/list 列目录）；选中后写回该环境的 mirrorDir。
-  const pickMirrorDir = (env: string, index: number, initial: string) => {
-    if (index < 0) return
-    setDirPick({
-      open: true,
-      initial,
-      title: `选择环境「${env}」的镜像目录`,
-      onPick: (path) => patchSsh(index, { mirrorDir: path }),
-    })
-  }
-
-  const doMirror = async (full: boolean, env: string) => {
-    setOpBusy('mirror')
-    try {
-      await api.mirrorPull(env, full)
-      await refreshMirror()
-      // 刻意不给"已开始…"这种成功提示:进度块马上就会出现,并写着环境、
-      // 全量/增量与进行中状态 —— 同一件事在一屏里说两遍就是噪音。
-      // (失败才留提示:失败原因只有它能说清,见下面的 catch。)
-    } catch (ex: any) {
-      toast.error('拉取源码镜像失败', { description: ex?.message || String(ex) })
-    } finally { setOpBusy('') }
-  }
-  /**
-   * 停止正在跑的拉取。不弹二次确认:这个动作本身就是"撤销误点",再让它过一道确认
-   * 等于把最需要即时性的操作拖慢一步。后端的取消是**异步**的(SFTP 读到下一个分片才返回),
-   * 所以这里不 await 到"真的停了"—— 立刻回读一次让轮询接管,按钮随即变成「正在停止…」。
-   */
-  const stopMirror = async () => {
-    try {
-      await api.mirrorStop()
-      await refreshMirror()
-    } catch (ex: any) {
-      toast.error('停止失败', { description: ex?.message || String(ex) })
-    }
-  }
   const runSync = (env: string) => {
     if (!env) return
     setAsk({
@@ -1250,12 +1164,12 @@ export function SettingsView() {
     try {
       await api.dbsyncRun(env)
       await refreshSync()
-      // 成功不给提示,理由同 doMirror(进度块随后就把这件事说清了)
+      // 成功不给提示:进度块随后就把这件事说清了
     } catch (ex: any) {
       toast.error('同步字典数据失败', { description: ex?.message || String(ex) })
     } finally { setOpBusy('') }
   }
-  /** 停止正在跑的同步(理由同 stopMirror:不二次确认,异步取消不等待)。 */
+  /** 停止正在跑的同步:不二次确认,异步取消不等待。 */
   const stopSync = async () => {
     try {
       await api.dbsyncStop()
@@ -1291,18 +1205,9 @@ export function SettingsView() {
   const existingNames = new Set(sshs.map((x) => sshName(x)))
   // isCurDefault 已删除:没有"默认环境"可判了(见上面 setDefaultEnv 的说明)。
   // 表格里那些行级动作的共用禁用条件:别的操作在跑、或这个动作自身在跑
-  const mirrorBusy = mirrorRunning || opBusy !== ''
   const syncBusy = syncRunning || opBusy !== ''
   // 渲染期现算的 anyDirty 已在上面算过（它同时给"刷新确认"那条 effect 用），这里不再重复
-  // 每个环境的按钮可用性：目录来自全局根或该环境自己的覆盖，且相关设置在自动保存后再点。
-  const mirrorRowReady = (name: string) => {
-    const ssh = sshs.find((x) => sshName(x) === name)
-    return !!(ssh?.mirrorDir.trim() || dict.mirrorDir.trim()) && !isDirty('mirror') && !isDirty('hosts')
-  }
 
-  // 一个清单装两种环境：T100 行来自 /api/dbsync、/api/mirror，GP 行来自 gpEnvs。
-  // T100 的响应里也带着 GP 环境（后端按 hosts 全量遍历），这里按名字排掉，
-  // 否则 GP 会出现两次，其中一次的按钮还是 T100 的同步/镜像逻辑。
   const gpNameSet = new Set(gpEnvs.map((g) => g.name))
   const syncRows: SyncRow[] = [
     ...(sync?.envs ?? [])
@@ -1311,16 +1216,9 @@ export function SettingsView() {
     ...gpEnvs.map((g) => ({ product: 'gp' as const, gp: g })),
   ].sort((a, b) => rowName(a).localeCompare(rowName(b), 'zh-CN'))
 
-  const mirrorRows: MirrorRow[] = [
-    ...(mirror?.envs ?? [])
-      .filter((e) => !gpNameSet.has(e.name))
-      .map((e) => ({ product: 't100' as const, t100: e })),
-    ...gpEnvs.map((g) => ({ product: 'gp' as const, gp: g })),
-  ].sort((a, b) => rowName(a).localeCompare(rowName(b), 'zh-CN'))
 
-  // T100 的 /api/mirror、/api/dbsync 只有“当前/最近一次”一个任务；GP 的 job 按环境
-  // 常驻在内存里，如果每个 done 的 job 都渲染，做完几个环境就会挂一串进度条。
-  // 这里只取“正在跑的那一个；否则最近启动的那一个”，和 T100 的展示口径一致。
+  // GP 的 job 按环境常驻在内存里，如果每个 done 的 job 都渲染，做完几个环境就会挂一串进度条。
+  // 这里只取“正在跑的那一个；否则最近启动的那一个”。
   const pickGpJob = (kind: 'sync' | 'mirror'): GpEnvBrief | undefined => {
     const rows = gpEnvs.filter((g) =>
       g.job?.kind === kind &&
@@ -1708,7 +1606,7 @@ export function SettingsView() {
               </Card>
 
               <Card id="card-dict-mirror" title="源码镜像"
-                description="把 T100 源码与画面文件(4gl/**/*.4gl + 42f + 42s/zh_CN + *.inc)拉到本地,供 AI 检索与 tt outline / tt interface 离线使用；每个环境可单独指定镜像目录。">
+                description="把 TOP GP 的源码与画面文件（*/4gl/*.4gl + */42f/* + *.inc）从服务器拉到本地镜像，$TOP 与 $CUST 两棵树都收；供离线检索与 tg outline / tg interface 使用。">
                 <SettingRow
                   id="mirror.dir"
                   label="镜像根目录（默认）"
@@ -1719,16 +1617,16 @@ export function SettingsView() {
                         ? '目录已存在；下方每个环境可单独覆盖，留空则用根目录/<环境名>。'
                         : '目录不存在，拉取时自动创建；下方每个环境可单独覆盖。'
                   }
-                  control={<Input className={input} value={dict.mirrorDir} placeholder="如 D:\t100\mirror"
+                  control={<Input className={input} value={dict.mirrorDir} placeholder="如 D:\tg\mirror"
                     onChange={(e) => { setDict((s) => ({ ...s, mirrorDir: e.target.value })); markDirty('mirror') }} />}
                 />
                 {/* 一个环境一行:镜像本来就是**按环境**分开的(每个环境一个镜像目录、一份基线),
                     原先"先在下拉里挑一个环境、再点按钮"把这件事藏进了两步操作里 ——
                     看不出总共有几个环境、各自拉没拉过。改成表之后这些直接摊开。 */}
-                {mirrorRows.length === 0 && (
-                  <p className="text-[11px] text-muted-foreground">还没有 SSH 环境,先去「站点管理」添加。</p>
+                {gpEnvs.length === 0 && (
+                  <p className="text-[11px] text-muted-foreground">还没有 TOP GP 环境,先去「站点管理」添加。</p>
                 )}
-                {mirrorRows.length > 0 && (
+                {gpEnvs.length > 0 && (
                   <Table>
                     <TableHeader>
                       <TableRow className="hover:bg-transparent">
@@ -1739,77 +1637,7 @@ export function SettingsView() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {mirrorRows.map((row) => {
-                        if (row.product === 't100') {
-                          const e = row.t100
-                          const job = mirror?.job
-                          const busy = !!job && job.env === e.name && (job.running || job.done)
-                          const failed = busy && job?.phase === 'error'
-                          const sshIndex = sshs.findIndex((x) => sshName(x) === e.name)
-                          const ssh = sshIndex >= 0 ? sshs[sshIndex] : undefined
-                          const rowReady = mirrorRowReady(e.name)
-                          const rowTitle = !(ssh?.mirrorDir.trim() || dict.mirrorDir.trim())
-                            ? '先填全局根目录，或在该环境行单独填镜像目录'
-                            : isDirty('hosts') || isDirty('mirror')
-                              ? '镜像目录正在自动保存，稍等'
-                              : ''
-                          return (
-                            <TableRow key={'t100:' + e.name} className="hover:bg-transparent">
-                              <TableCell className="px-2">
-                                {e.name}
-                              </TableCell>
-                              <TableCell className="px-2">
-                                <EnvStatus busy={busy} running={!!job?.running}
-                                  idle={e.ready ? '已有镜像' : '未拉取'}
-                                  error={failed ? (job?.error || job?.message || '失败') : undefined} />
-                              </TableCell>
-                              <TableCell className="px-1 py-1">
-                                {/* 输入框不画自己的边框，整个单元格就是输入区；hover/focus 时才浮出边界。
-                                    右侧文件夹按钮是原生选择器的入口 —— 浏览器拿不到绝对路径，只能让本机服务弹框。 */}
-                                <div className="group flex h-8 min-w-0 items-center rounded-ui border border-transparent transition-colors hover:border-border/70 focus-within:border-border focus-within:bg-background/30">
-                                  <input
-                                    className="min-w-0 flex-1 bg-transparent px-2 font-mono text-[11px] text-foreground outline-none placeholder:text-muted-foreground/70"
-                                    value={ssh?.mirrorDir || ''}
-                                    placeholder={e.path || '留空 = 用全局根目录/<环境名>'}
-                                    title={e.path || '未设置镜像目录'}
-                                    onChange={(ev) => {
-                                      if (sshIndex < 0) return
-                                      patchSsh(sshIndex, { mirrorDir: ev.target.value })
-                                    }} />
-                                  <button
-                                    type="button"
-                                    className="mr-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-40"
-                                    title="选择文件夹"
-                                    aria-label="选择文件夹"
-                                    disabled={sshIndex < 0}
-                                    onClick={() => void pickMirrorDir(
-                                      e.name, sshIndex, ssh?.mirrorDir || e.path || dict.mirrorDir)}>
-                                    <FolderOpen className="h-3.5 w-3.5" />
-                                  </button>
-                                </div>
-                              </TableCell>
-                              <TableCell className="px-2">
-                                <div className="flex items-center gap-1 whitespace-nowrap">
-                                  {/* 同上:两个都走 ghost 文本按钮。原来"增量更新"是实心主色,
-                                      一行里最重的视觉落在按钮上而不是"哪个环境、拉没拉过"。
-                                      「全量」也去掉 Download 图标:同一格两个按钮,一个带图标一个不带
-                                      会让它们看着不是一类东西;动作名已经把事说清了。 */}
-                                  <Button variant="ghost" size="sm" disabled={mirrorBusy || !rowReady}
-                                    title={rowTitle || '只拉服务器上变过的文件'}
-                                    onClick={() => void pullMirror(false, e.name)}>
-                                    增量更新
-                                  </Button>
-                                  <Button variant="ghost" size="sm" disabled={mirrorBusy || !rowReady}
-                                    title={rowTitle || '整目录替换(含服务器上已删的残留)'}
-                                    onClick={() => void pullMirror(true, e.name)}>
-                                    全量
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          )
-                        }
-                        const g = row.gp
+                      {gpEnvs.map((g) => {
                         const job = g.job?.kind === 'mirror' ? g.job : undefined
                         const running = job?.state === 'running'
                         const seen = !!job && (running || job.state === 'done' || job.state === 'error')
@@ -1867,26 +1695,6 @@ export function SettingsView() {
                       })}
                     </TableBody>
                   </Table>
-                )}
-                {mirror?.job && (mirror.job.running || mirror.job.done) && (
-                  <JobProgress
-                    env={mirror.job.env}
-                    phaseLabel={MIRROR_PHASE[mirror.job.phase] || mirror.job.phase}
-                    tag={`${mirror.job.full ? '全量' : '增量'} · ${mirror.job.running ? '进行中' : '已结束'}`}
-                    pct={mirror.job.total > 0
-                      ? Math.round((mirror.job.bytes * 100) / mirror.job.total)
-                      : mirror.job.phase === 'done' ? 100 : 0}
-                    error={mirror.job.phase === 'error' ? (mirror.job.error || mirror.job.message) : undefined}
-                    message={mirror.job.running ? undefined
-                      : (mirror.job.phase === 'cancelled' ? mirror.job.message
-                        : (mirror.job.phase === 'done' ? mirror.job.message : undefined))}
-                    cells={[
-                      ...mirrorCellTexts(mirror.job),
-                      !mirror.job.running && mirror.job.elapsed ? `${mirror.job.elapsed}` : '',
-                    ].filter(Boolean)}
-                    stopping={mirror.job.phase !== 'error' && mirror.job.message === '正在停止…'}
-                    onStop={mirror.job.running ? () => void stopMirror() : undefined}
-                  />
                 )}
                 {gpMirrorJob?.job && (
                   <div className="mt-2"><GpJobProgress env={gpMirrorJob.name} job={gpMirrorJob.job} /></div>

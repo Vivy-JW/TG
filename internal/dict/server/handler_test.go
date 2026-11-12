@@ -8,17 +8,19 @@ import (
 
 // Handler 的路径是**绝对**的(/api/…):合并后字典页那套 SPA 没了,本包的端点
 // 直接挂在共享层 /api/ 下,不再经 StripPrefix。
-func TestHandlerRoutes(t *testing.T) {
+//
+// 镜像/同步端点已随 T100 那条链一起删掉(GP 的在 internal/web 的 /api/gp/*),
+// 本包现在只剩"未知 /api/ 路径回 404 JSON"这条兜底,由下面两个用例覆盖。
+func TestHandlerHasNoDictEndpointsLeft(t *testing.T) {
 	p := writeTempConfig(t, `{"hosts":{"activeEnv":"a","sshs":[{"name":"a","host":"1.2.3.4"}]}}`)
 	s := New(p)
 
-	rec := httptest.NewRecorder()
-	s.Handler().ServeHTTP(rec, httptest.NewRequest("GET", "/api/mirror", nil))
-	if rec.Code != 200 {
-		t.Fatalf("GET /api/mirror code=%d", rec.Code)
-	}
-	if !strings.Contains(rec.Body.String(), `"envs"`) {
-		t.Fatalf("应返回镜像状态: %s", rec.Body.String())
+	for _, path := range []string{"/api/mirror", "/api/mirror/pull", "/api/mirror/stop", "/api/dbsync"} {
+		rec := httptest.NewRecorder()
+		s.Handler().ServeHTTP(rec, httptest.NewRequest("GET", path, nil))
+		if rec.Code != 404 || !strings.Contains(rec.Body.String(), "未知接口") {
+			t.Fatalf("%s 应回 404 未知接口, got %d %s", path, rec.Code, rec.Body.String())
+		}
 	}
 }
 

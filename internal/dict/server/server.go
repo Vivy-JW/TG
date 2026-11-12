@@ -19,12 +19,9 @@
 package server
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"sync"
-	"time"
 
 	"tt/internal/config"
 )
@@ -33,17 +30,6 @@ import (
 type Server struct {
 	cfgPath string // config.json 路径(读写;文件不存在时首次保存创建)
 	dbDir   string // 本地字典库目录（每个环境一个 .db；由挂载方注入，空=数据目录/dict）
-
-	// 源码镜像拉取任务(单实例:同一时间只允许一个)
-	mirrorMu    sync.Mutex
-	mirror      mirrorJob
-	mirrorStart time.Time
-	// mirrorCancel 取消正在跑的那次拉取(POST /api/mirror/stop 用)。
-	// 为 nil 表示当前没有可取消的任务 —— 停止端点据此区分"没在跑"与"正在跑"。
-	// 与 mirror 同一个 mirrorMu 保护。
-	mirrorCancel context.CancelFunc
-
-
 }
 
 // New 创建服务实例。cfgPath 是配置文件的读写位置。
@@ -77,18 +63,12 @@ func (s *Server) dbPathFor(env string) string {
 	return config.DictDBPathForEnv(s.cfgPath, env)
 }
 
-// Handler 返回字典侧的 HTTP 面(镜像/同步/BDL 文档的 REST 接口)。
+// Handler 返回字典侧的 HTTP 面。
 //
 // 路径是**绝对**的(/api/…),由 internal/web 直接挂在共享层 /api/ 下,不经 StripPrefix。
 //
-// 服务的路径(全部返回 JSON):
-//
-//	GET    /api/mirror         镜像根 + 各环境镜像现状 + 拉取任务状态
-//	POST   /api/mirror/pull    启动一次源码镜像拉取
-//	POST   /api/mirror/stop    取消正在跑的拉取(用户点「停止」)
-
-//	(未知 /api/ 路径)        404 JSON(见 hUnknownAPI)
-//
+// 本包现在只保留"未知 /api/ 路径回 404 JSON"这条兜底(见 hUnknownAPI);字典同步与
+// 源码镜像都已搬到各自的地方(GP 字典同步走 /api/gp/sync、镜像走 /api/gp/mirror)。
 // 主机/环境的读写走共享的顶层 /api/hosts;dbprobe / dbaccverify / conntest、
 // 健康检查、配置派生状态、PATH 安装也由 internal/web 各提供一份,故本包不注册这些端点
 // (它们两边都有,挂在同一进程里会撞名)。
@@ -100,9 +80,6 @@ func (s *Server) dbPathFor(env string) string {
 // 动作,与字典查询无关。
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /api/mirror", s.hMirrorGet)
-	mux.HandleFunc("POST /api/mirror/pull", s.hMirrorPull)
-	mux.HandleFunc("POST /api/mirror/stop", s.hMirrorStop)
 
 	// API 路径掉到这里说明接口不存在(写错了,或者是已经移到统一层的那些,如
 	// /api/install)。必须回 404 JSON 而不是落到下面的 HTML 兜底页 —— 后者会让调用方

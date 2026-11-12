@@ -297,33 +297,6 @@ export interface CacheStatus {
   files: number
   maxAgeHours: number
 }
-// 源码镜像拉取的进度(host.MirrorPullProgress),经 GET /api/mirror 轮询
-export interface MirrorEnv {
-  name: string
-  zone: string
-  path: string
-  ready: boolean // 本地已有完整基线(增量前提)
-}
-export interface MirrorJob {
-  running: boolean
-  env: string
-  full: boolean
-  phase: string // connect|probe|pack|download|done|error
-  message: string
-  bytes: number
-  total: number // 下载阶段为归档总字节;0=未知(pack 阶段)
-  files: number
-  elapsed: string
-  error?: string
-  note?: string
-  done: boolean
-  startedAt?: string
-}
-export interface MirrorResp {
-  mirrorDir: string
-  envs: MirrorEnv[]
-  job: MirrorJob
-}
 // 字典同步的进度(dbsync.Run),经 GET /api/dbsync 轮询
 export interface DBSyncEnv {
   name: string
@@ -501,13 +474,8 @@ export const api = {
   updateCheck: () => req<{ ok: boolean; check?: UpdateCheck; hint?: string; where?: string; error?: string }>(
     '/api/update/check', { method: 'POST' }),
   updateApply: () => req<{ ok: boolean; pid?: number; note?: string }>('/api/update/apply', { method: 'POST' }),
-  // 字典类动作(源码镜像拉取、字典同步)。合并前它们在 /dict/api/* 下 —— 那是字典页
+  // 字典类动作(字典同步)。合并前它在 /dict/api/* 下 —— 那是字典页
   // 私有 API;字典页并进设置页之后升到共享层,设置页因此不必跨子系统调用。
-  mirror: () => req<MirrorResp>('/api/mirror'),
-  mirrorPull: (env: string, full: boolean) =>
-    req<{ ok: boolean }>('/api/mirror/pull', { method: 'POST', body: JSON.stringify({ env, full }) }),
-  // 中途取消:ok=false 表示当时没有任务在跑(用户在轮询间隙多点了一次,不算错误)
-  mirrorStop: () => req<{ ok: boolean; error?: string }>('/api/mirror/stop', { method: 'POST' }),
   dbsync: () => req<DBSyncResp>('/api/dbsync'),
   dbsyncRun: (env: string) =>
     req<{ ok: boolean }>('/api/dbsync', { method: 'POST', body: JSON.stringify({ env }) }),

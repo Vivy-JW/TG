@@ -2,7 +2,8 @@
 //
 // 为什么单独一层：TT 里同一件事（跑没跑、跑到哪、完了没）有三份互不兼容的实现 ——
 // internal/dict/server 的 dbSyncJob、旧 internal/gp（已删）的 Job、internal/dict/server 的 mirrorJob，
-// 前端要为三种形状写三种解析，三个轮询端点（/api/dbsync、/api/mirror、/api/gp/meta 的 job）。
+// 前端要为三种形状写三种解析。这三份随 T100 那条链一起删掉后，只剩本包一份，
+// 由 /api/gp/meta 的 job 字段对外。
 // 而真正干活的功能包（internal/dict/dbsync、internal/mirror）**只接收一个进度回调**，
 // 根本不需要知道自己"有个 job"。所以状态机归这里，功能包归功能包。
 //
