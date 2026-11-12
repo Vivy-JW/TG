@@ -47,8 +47,9 @@ INPUT / DISPLAY / CONSTRUCT / MENU / SUB，带 1-based 行范围。
 
 数据源（优先级从高到低）：
   位置参数 <file.4gl>    本地显式文件；存在就直接读
-  --dir <目录>           在该环境镜像目录里按文件名查找
-  --at <环境>            用该环境配置的镜像目录查找（--env 同义）
+  --dir <目录>           在该目录（镜像目录）里按文件名查找
+  --at <环境>            先找该环境的本地镜像；没有就直接连服务器读
+                         $TOP/<模块>/4gl/<文件名>（--env 同义）
 
 默认输出 JSON；--human 出树或表格；--flat 改成带 depth/parent 的数组。
 --brief 省掉 selStart/selEnd；--kind 只保留指定块类型（含祖先路径）；
@@ -70,7 +71,7 @@ CSV 不提供。`,
 
 func exactFileArg(_ *cobra.Command, args []string) error {
 	if len(args) != 1 {
-		return usage("需要且只接受一个 .4gl 文件；示例：tt outline aapt320.4gl --at 109tst")
+		return usage("需要且只接受一个 .4gl 文件；示例：tg outline p_zta.4gl --at 22主机")
 	}
 	return nil
 }
@@ -91,12 +92,17 @@ func (o *options) run(file string) error {
 	if err != nil {
 		return err
 	}
-	b, err := os.ReadFile(src.Path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return notFound("4GL 文件不存在: %s", src.Path)
+	var b []byte
+	if src.Content != nil {
+		b = src.Content
+	} else {
+		b, err = os.ReadFile(src.Path)
+		if err != nil {
+			if os.IsNotExist(err) {
+				return notFound("4GL 文件不存在: %s", src.Path)
+			}
+			return output.Errorf(output.CodeLocalIO, 1, "读取 4GL 文件失败: %v", err)
 		}
-		return output.Errorf(output.CodeLocalIO, 1, "读取 4GL 文件失败: %v", err)
 	}
 	nodes := fgl.ParseOutline(string(b))
 	total := countNodes(nodes)

@@ -274,7 +274,12 @@ func load(args []string) (*screen.View, *sourceInputs, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	data, err := os.ReadFile(src.Form42F)
+	var data []byte
+	if src.Form42FData != nil {
+		data = src.Form42FData
+	} else {
+		data, err = os.ReadFile(src.Form42F)
+	}
 	if err != nil {
 		return nil, nil, fail("FORM_UNKNOWN", 1, fmt.Sprintf("读 42f 失败: %v", err))
 	}

@@ -18,7 +18,7 @@ tt outline <file.4gl> [--human] [--flat] [--kind ...] [--depth N|all] [--brief] 
 ```text
 位置参数 <file.4gl>    显式存在的文件
 --dir <目录>           该环境镜像的最终目录（内含 4gl/）
---at <环境>            配置里该环境的镜像目录；--env 同义
+--at <环境>            该环境的本地镜像；没有就连服务器读 $TOP/<模块>/4gl/<名>（--env 同义）
 ```
 
 `--dir` 与 `--at`/`--env` 不能同时给。没有默认环境；`--at` 只接受环境名，

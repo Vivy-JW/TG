@@ -12,7 +12,7 @@ tg interface fields <form>    字段扁平表；默认最多 30 个字段（--pa
 tg interface labels <form>    隐藏诊断：gae_file 的 token 表（--lang 选语系）
 ```
 
-数据源优先级：`--42f` > `--dir <环境镜像目录>` > `--at <环境>`（配置里的镜像目录）。
+数据源优先级：`--42f` > `--dir <目录>` > `--at <环境>`（先找镜像，没有就直接连服务器读 `$TOP/<模块>/42f/<表单>.42f`）。
 `--dir` 是最终环境目录，不是全局根；镜像由 `tt file mirror pull --profile interface` 建立。
 
 ## 页面选择

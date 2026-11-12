@@ -10,6 +10,8 @@ import (
 
 	"tt/internal/cli/common"
 	"tt/internal/config"
+	"tt/internal/dict"
+	"tt/internal/mirror"
 	"tt/internal/output"
 )
 
@@ -18,9 +20,10 @@ type sourceInputs struct {
 	Form        string
 	Module      string
 	Env         string
-	Mode        string // mirror | files
-	Root        string // --dir 指向的最终环境镜像目录（mirror 模式）
+	Mode        string // mirror | files | remote
+	Root        string // --dir 指向的最终环境镜像目录（mirror 模式）/ $TOP（remote 模式）
 	Form42F     string
+	Form42FData []byte // Mode=remote 时是已读到的 42f；本地模式为 nil
 	LabelSource string // gae_file(local|live:…) / off / none
 }
 
@@ -33,9 +36,9 @@ type sourceOpts struct {
 
 // resolveSources 决定这次从哪读 .42f。
 //
-// 优先级：显式 --42f > --dir > --at 对应的环境镜像目录。
-// --dir 是“最终环境目录”（内含 erp/、com/），不是全局根；这样设置页里每个
-// 环境单独指定目录的语义与 mirror 完全一致。
+// 优先级：显式 --42f > --dir > --at 的环境镜像 > --at 直读服务器。
+// 最后那条是给 GP 用的：一个 $TOP 下的 42f 有几百个且散在各模块，
+// 没拉镜像时按 <模块>/42f/<表单>.42f 直接读一个文件更快。
 func resolveSources(opts sourceOpts) (*sourceInputs, error) {
 	opts.FileF = strings.TrimSpace(opts.FileF)
 	opts.Dir = strings.TrimSpace(opts.Dir)
@@ -54,7 +57,7 @@ func resolveSources(opts sourceOpts) (*sourceInputs, error) {
 		}
 		if _, err := os.Stat(f); err != nil {
 			return nil, notFound("FORM_NOT_FOUND", 4, "42f 文件不存在: %s", f).
-				WithHint("确认路径，或先用 tt file mirror pull --at <环境> 建立镜像")
+				WithHint("确认路径；或给 --at <环境> 直接从服务器读")
 		}
 		src := &sourceInputs{
 			Form: form, Mode: "files", Module: strings.TrimSpace(opts.Module),
@@ -66,56 +69,86 @@ func resolveSources(opts sourceOpts) (*sourceInputs, error) {
 		return src, nil
 	}
 
-	// 镜像模式
-	root := opts.Dir
+	// --dir：只在这个目录里找，找不到就是找不到。
+	if opts.Dir != "" {
+		abs, err := filepath.Abs(opts.Dir)
+		if err != nil {
+			return nil, usage("解析 --dir 失败: %v", err)
+		}
+		if st, statErr := os.Stat(abs); statErr != nil || !st.IsDir() {
+			return nil, notFound("FORM_NOT_FOUND", 4, "目录不存在: %s", abs)
+		}
+		if form == "" {
+			return nil, usage("需要表单名：tg interface show <form> --dir <目录>")
+		}
+		f, mod, err := find42F(abs, form, strings.TrimSpace(opts.Module))
+		if err != nil {
+			return nil, err
+		}
+		return &sourceInputs{Form: strings.TrimSuffix(filepath.Base(f), ".42f"), Module: mod, Mode: "mirror", Root: abs, Form42F: f}, nil
+	}
+
 	env := strings.TrimSpace(common.Env)
-	if root == "" {
-		if env == "" {
-			return nil, usage("需要点名数据源：--at <环境>（用该环境的镜像目录），或 --dir <目录>，或 --42f <文件>").
-				WithHint("不知道有哪些环境：tt interface --at-list")
-		}
-		cfgPath, err := common.ResolveConfig(false)
-		if err != nil {
-			return nil, output.Errorf(output.CodeConfigBroken, 2, "%v", err)
-		}
-		rootCfg, err := config.Load(cfgPath)
-		if err != nil {
-			return nil, output.Errorf(output.CodeConfigBroken, 2, "%v", err)
-		}
-		e := rootCfg.Hosts.ByName(env)
-		if e == nil {
-			return nil, output.Errorf(output.CodeEnvUnknown, 2, "未找到环境 %q（tt env list 看全部）", env)
-		}
-		root = e.MirrorPath(rootCfg.Mirror.Dir)
-		if root == "" {
-			return nil, usage("环境 %s 的镜像目录未设置。请先执行: tt file mirror dir <目录> --at %s", env, env).
-				WithHint("或直接给 --dir <该环境的镜像目录>")
-		}
+	if env == "" {
+		return nil, usage("需要点名数据源：--at <环境>（用该环境的镜像，没有就连服务器读），或 --dir <目录>，或 --42f <文件>").
+			WithHint("不知道有哪些环境：tg interface --at-list")
 	}
-	abs, err := filepath.Abs(root)
-	if err != nil {
-		return nil, usage("解析镜像目录失败: %v", err)
-	}
-	if st, err := os.Stat(abs); err != nil || !st.IsDir() {
-		return nil, notFound("FORM_NOT_FOUND", 4, "镜像目录不存在: %s", abs).
-			WithHint("先拉取：tt file mirror pull --at <环境>")
-	}
-	form = strings.TrimSpace(form)
-	if form == "" {
-		return nil, usage("需要表单名：tt interface show <form> --at <环境>")
-	}
-	f, mod, err := find42F(abs, form, strings.TrimSpace(opts.Module))
+	e, err := envByName(env)
 	if err != nil {
 		return nil, err
 	}
+	if form == "" {
+		return nil, usage("需要表单名：tg interface show <form> --at <环境>")
+	}
+
+	// 有镜像就先在镜像里找（快）；镜像里没有就直读服务器。
+	if root := mirror.Dir(*e); root != "" {
+		if st, statErr := os.Stat(root); statErr == nil && st.IsDir() {
+			if f, mod, findErr := find42F(root, form, strings.TrimSpace(opts.Module)); findErr == nil {
+				return &sourceInputs{Form: strings.TrimSuffix(filepath.Base(f), ".42f"), Module: mod, Env: env, Mode: "mirror", Root: root, Form42F: f}, nil
+			}
+		}
+	}
+	return remote42F(*e, form, strings.TrimSpace(opts.Module))
+}
+
+// remote42F 直接从服务器读 <模块>/42f/<表单>.42f。
+func remote42F(e config.NamedSsh, form, module string) (*sourceInputs, error) {
+	base := form + ".42f"
+	cands := make([]string, 0, 3)
+	mod := strings.TrimSpace(module)
+	if mod == "" {
+		if m, ok := dict.LookupModule(e, form); ok && strings.TrimSpace(m) != "" {
+			mod = strings.ToLower(strings.TrimSpace(m))
+		}
+	} else {
+		mod = strings.ToLower(mod)
+	}
 	if mod != "" {
-		form = strings.TrimSuffix(filepath.Base(f), ".42f")
+		cands = append(cands, mod+"/42f/"+base)
 	}
-	src := &sourceInputs{
-		Form: form, Module: mod, Env: env, Mode: "mirror", Root: abs,
-		Form42F: f,
+	full, data, err := common.ReadRemoteFile(e, cands, base, common.RemoteReadLimit)
+	if err != nil {
+		return nil, err
 	}
-	return src, nil
+	top := strings.TrimSuffix(strings.TrimSpace(e.Workspace), "/")
+	return &sourceInputs{Form: form, Module: mod, Env: e.Name, Mode: "remote", Root: top, Form42F: full, Form42FData: data}, nil
+}
+
+func envByName(name string) (*config.NamedSsh, error) {
+	cfgPath, err := common.ResolveConfig(false)
+	if err != nil {
+		return nil, output.Errorf(output.CodeConfigBroken, 2, "%v", err)
+	}
+	cfg, err := config.Load(cfgPath)
+	if err != nil {
+		return nil, output.Errorf(output.CodeConfigBroken, 2, "%v", err)
+	}
+	e := cfg.Hosts.ByName(name)
+	if e == nil {
+		return nil, output.Errorf(output.CodeEnvUnknown, 2, "未找到环境 %q（tg env list 看全部）", name)
+	}
+	return e, nil
 }
 
 // find42F 在环境镜像中找一个 <form>.42f；同名多模块时要求 --module。

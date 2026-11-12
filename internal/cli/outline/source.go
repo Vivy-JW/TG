@@ -4,10 +4,12 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"tt/internal/cli/common"
 	"tt/internal/config"
+	"tt/internal/mirror"
 	"tt/internal/output"
 )
 
@@ -18,24 +20,29 @@ type sourceOpts struct {
 }
 
 type sourceInputs struct {
-	Path string // 绝对路径
-	Mode string // file | mirror
-	Root string // mirror 的最终环境目录
-	Env  string
+	Path    string // 本地绝对路径，或服务器上的完整路径
+	Mode    string // file | mirror | remote
+	Root    string // mirror 的最终环境目录 / remote 的 $TOP
+	Env     string
+	Content []byte // Mode=remote 时是已读到的源码；本地模式为 nil
 }
 
-// resolveSource 决定这次读哪个 .4gl：
+// resolveSource 决定这次读哪份 .4gl：
 //
-//	显式存在的文件 > --dir 镜像目录 > --at/--env 对应的镜像目录
+//	本地已有这个文件           → 直接读
+//	--dir <目录>               → 在该目录（可以是镜像目录）里按名字找
+//	--at/--env 有镜像          → 在 mirror.Dir(环境) 里按名字找
+//	--at/--env 没有镜像/没命中 → 直接连服务器读 $TOP/<模块>/4gl/<名>
 //
-// --dir 是最终环境目录（例如 D:\TT-Work\109tst），不是全局镜像根。
+// 为什么要最后那条直读：GP 的一个 $TOP 下有 1.4 万个 4gl（约 700 MB），
+// 全量镜像要十几分钟；看一个大纲只需要一个文件，没必要先镜像。
 // 同名文件命中多个时必须报 FILE_AMBIGUOUS，不能替调用方挑一个。
 func resolveSource(opts sourceOpts) (*sourceInputs, error) {
 	file := strings.TrimSpace(opts.File)
 	dir := strings.TrimSpace(opts.Dir)
 	env := strings.TrimSpace(opts.Env)
 	if file == "" {
-		return nil, usage("需要 .4gl 文件；示例：tt outline aapt320.4gl --at 109tst")
+		return nil, usage("需要 .4gl 文件；示例：tg outline p_zta.4gl --at 22主机")
 	}
 	if !strings.EqualFold(filepath.Ext(file), ".4gl") {
 		return nil, usage("只接受 .4gl 文件（当前 %q）", file)
@@ -44,89 +51,101 @@ func resolveSource(opts sourceOpts) (*sourceInputs, error) {
 		return nil, usage("--dir 与 --at/--env 不能同时给：选一个数据源")
 	}
 
-	// 显式存在的文件优先；--dir/--at 只负责按名字找镜像里的文件。
-	if st, err := os.Stat(file); err == nil {
-		if st.IsDir() {
-			return nil, usage("位置参数是目录，不是 .4gl 文件: %s", file)
-		}
-		abs, err := filepath.Abs(file)
-		if err != nil {
-			return nil, usage("解析文件路径失败: %v", err)
-		}
-		return &sourceInputs{Path: abs, Mode: "file"}, nil
+	// 显式存在的本地文件优先。
+	if src, ok, err := localFile(file); ok || err != nil {
+		return src, err
 	}
 
-	root, err := resolveRoot(dir, env)
+	if dir != "" {
+		abs, err := filepath.Abs(dir)
+		if err != nil {
+			return nil, usage("解析 --dir 失败: %v", err)
+		}
+		src, ok, err := sourceInDir(abs, "", file)
+		if err != nil {
+			return nil, err
+		}
+		if !ok {
+			return nil, notFound("目录 %s 里没有找到 %s", abs, file).
+				WithHint("--dir 只在这个目录里找；纯文件名会扫整棵目录树")
+		}
+		return src, nil
+	}
+
+	if env == "" {
+		return nil, notFound("4GL 文件不存在: %s", file).
+			WithHint("确认路径；或在环境镜像里/服务器上找，加 --at <环境> 或 --dir <目录>")
+	}
+
+	e, err := envNamed(env)
 	if err != nil {
 		return nil, err
 	}
-	if root == "" {
-		return nil, notFound("4GL 文件不存在: %s", file).
-			WithHint("确认路径；如果文件在环境镜像里，加 --at <环境> 或 --dir <目录>")
+	// 先看本地镜像（有就快），没有再连服务器。
+	if root := mirror.Dir(*e); root != "" {
+		if st, statErr := os.Stat(root); statErr == nil && st.IsDir() {
+			if src, ok, err := sourceInDir(root, env, file); ok || err != nil {
+				return src, err
+			}
+		}
 	}
-	if err := requireDir(root); err != nil {
-		return nil, err
-	}
+	return remoteSource(*e, file)
+}
 
+func localFile(file string) (*sourceInputs, bool, error) {
+	st, err := os.Stat(file)
+	if err != nil {
+		return nil, false, nil
+	}
+	if st.IsDir() {
+		return nil, false, usage("位置参数是目录，不是 .4gl 文件: %s", file)
+	}
+	abs, err := filepath.Abs(file)
+	if err != nil {
+		return nil, false, usage("解析文件路径失败: %v", err)
+	}
+	return &sourceInputs{Path: abs, Mode: "file"}, true, nil
+}
+
+// sourceInDir 在 root 里找 file：带路径的相对参数按原路径找，纯文件名扫全树。
+// 返回 ok=false 表示没找到（交给调用方决定下一步：镜像没命中就去服务器读）。
+func sourceInDir(root, env, file string) (*sourceInputs, bool, error) {
 	// 带路径的相对参数先按原相对路径找；不再用 basename 到处搜，
 	// 因为“a/b/c.4gl”本来就是在点名一个位置。
 	if filepath.IsAbs(file) || strings.ContainsAny(file, `/\`) {
 		if filepath.IsAbs(file) {
-			return nil, notFound("4GL 文件不存在: %s", file)
+			return nil, false, nil
 		}
 		cand := filepath.Join(root, file)
 		if st, err := os.Stat(cand); err == nil && !st.IsDir() {
-			return mirrorSource(root, env, cand), nil
+			return mirrorSource(root, env, cand), true, nil
 		}
-		return nil, notFound("4GL 文件不存在: %s（镜像根: %s）", file, root).
-			WithHint("确认相对路径；用 --dir 指向该环境的最终镜像目录")
+		return nil, false, nil
 	}
-
 	found, err := findMirrorFile(root, file)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
-	return mirrorSource(root, env, found), nil
+	if found == "" {
+		return nil, false, nil
+	}
+	return mirrorSource(root, env, found), true, nil
 }
 
-func resolveRoot(dir, env string) (root string, err error) {
-	if dir != "" {
-		abs, err := filepath.Abs(dir)
-		if err != nil {
-			return "", usage("解析 --dir 失败: %v", err)
-		}
-		return abs, nil
-	}
-	if env == "" {
-		return "", nil
-	}
+func envNamed(name string) (*config.NamedSsh, error) {
 	cfgPath, err := common.ResolveConfig(false)
 	if err != nil {
-		return "", output.Errorf(output.CodeConfigBroken, 2, "%v", err)
+		return nil, output.Errorf(output.CodeConfigBroken, 2, "%v", err)
 	}
 	cfg, err := config.Load(cfgPath)
 	if err != nil {
-		return "", output.Errorf(output.CodeConfigBroken, 2, "%v", err)
+		return nil, output.Errorf(output.CodeConfigBroken, 2, "%v", err)
 	}
-	e := cfg.Hosts.ByName(env)
+	e := cfg.Hosts.ByName(name)
 	if e == nil {
-		return "", output.Errorf(output.CodeEnvUnknown, 2, "未找到环境 %q（tt env list 看全部）", env)
+		return nil, output.Errorf(output.CodeEnvUnknown, 2, "未找到环境 %q（tg env list 看全部）", name)
 	}
-	root = e.MirrorPath(cfg.Mirror.Dir)
-	if strings.TrimSpace(root) == "" {
-		return "", usage("环境 %s 的镜像目录未设置。请先执行: tt file mirror dir <目录> --at %s", env, env).
-			WithHint("或直接给 --dir <该环境的镜像目录>")
-	}
-	return root, nil
-}
-
-func requireDir(root string) error {
-	st, err := os.Stat(root)
-	if err != nil || !st.IsDir() {
-		return notFound("镜像目录不存在: %s", root).
-			WithHint("先拉取源码镜像：tt file mirror pull --profile source --at <环境>")
-	}
-	return nil
+	return e, nil
 }
 
 func mirrorSource(root, env, path string) *sourceInputs {
@@ -137,6 +156,7 @@ func mirrorSource(root, env, path string) *sourceInputs {
 	return &sourceInputs{Path: abs, Mode: "mirror", Root: root, Env: env}
 }
 
+// findMirrorFile 在镜像里按文件名找；找不到返回 ("", nil)，交给上层去服务器读。
 func findMirrorFile(root, name string) (string, error) {
 	var hits []string
 	walkErr := filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
@@ -158,10 +178,9 @@ func findMirrorFile(root, name string) (string, error) {
 	if walkErr != nil {
 		return "", output.Errorf(output.CodeLocalIO, 1, "扫描镜像目录失败: %v", walkErr)
 	}
-	hits = sortedHits(hits)
+	sort.Strings(hits)
 	if len(hits) == 0 {
-		return "", notFound("镜像里没有找到 %s（根: %s）", name, root).
-			WithHint("确认文件名；新镜像先跑 tt file mirror pull --profile source --at <环境>")
+		return "", nil
 	}
 	if len(hits) > 1 {
 		return "", output.Errorf("FILE_AMBIGUOUS", 2,
