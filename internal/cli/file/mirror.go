@@ -300,19 +300,27 @@ func newMirrorPullCmd(full *bool) *cobra.Command {
 			if common.IsJSON() {
 				return common.PrintJSON(map[string]any{"ok": true, "env": e.Name, "dir": envDir, "mode": mode, "trees": out})
 			}
-			files, bytes := 0, int64(0)
+			files, bytes, failed := 0, int64(0), 0
+			firstFail := ""
 			for label, v := range out {
 				m, _ := v.(map[string]any)
 				n, _ := m["files"].(int)
 				b, _ := m["bytes"].(int64)
 				files += n
 				bytes += b
+				failed += intOr(m["failed"])
+				if s, _ := m["firstFail"].(string); s != "" && firstFail == "" {
+					firstFail = s
+				}
 				fmt.Printf("  %s: 下载 %d 个（跳过 %d 个），%.1f MB\n", label, n, intOr(m["skipped"]), float64(b)/1048576)
 			}
 			fmt.Printf("镜像完成: %d 个文件, %s\n", files, fmtBytes(bytes))
 			fmt.Printf("镜像目录: %s\n", envDir)
 			if mf, ok := mirror.ReadManifest(envDir); ok {
 				fmt.Printf("上次拉取: %s（%d 个文件, %.1f MB）\n", mf.Updated, mf.Files, mf.SizeMB)
+			}
+			if failed > 0 {
+				fmt.Printf("注意: %d 个文件没拉下来（首个: %s）；再跑一次增量会重试这些\n", failed, firstFail)
 			}
 			return nil
 		},

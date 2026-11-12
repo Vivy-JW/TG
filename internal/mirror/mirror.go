@@ -296,8 +296,16 @@ func tree(conn *host.SSHConn, sc *sftp.Client, src, dst, mode string, progress f
 		progress(0, total, "")
 	}
 	got, skipped, processed := 0, 0, 0
+	failed := 0
+	var firstFail string
 	var bytes int64
 	var pruned int
+	fail := func(p string, err error) {
+		failed++
+		if firstFail == "" {
+			firstFail = p + ": " + err.Error()
+		}
+	}
 	for _, f := range files {
 		processed++
 		lpath := filepath.Join(dst, filepath.FromSlash(f.rrel))
@@ -311,21 +319,25 @@ func tree(conn *host.SSHConn, sc *sftp.Client, src, dst, mode string, progress f
 			}
 		}
 		if err := os.MkdirAll(filepath.Dir(lpath), 0o755); err != nil {
+			fail(f.rrel, err)
 			continue
 		}
 		rf, err := sc.Open(f.rpath)
 		if err != nil {
+			fail(f.rrel, err)
 			continue
 		}
 		lf, err := os.Create(lpath)
 		if err != nil {
 			rf.Close()
+			fail(f.rrel, err)
 			continue
 		}
 		n, cerr := io.Copy(lf, rf)
 		lf.Close()
 		rf.Close()
 		if cerr != nil {
+			fail(f.rrel, cerr)
 			continue
 		}
 		_ = os.Chtimes(lpath, f.mt, f.mt)
@@ -345,6 +357,7 @@ func tree(conn *host.SSHConn, sc *sftp.Client, src, dst, mode string, progress f
 	}
 	return map[string]any{
 		"files": got, "skipped": skipped, "processed": processed, "total": total,
+		"failed": failed, "firstFail": firstFail,
 		"pruned": pruned, "bytes": bytes, "sizeMB": float64(bytes) / 1048576,
 		"kinds": kinds, "elapsed": time.Since(t0).Seconds(),
 	}, nil
