@@ -198,12 +198,12 @@ func (c *Config) EntAccount(ent int) (string, error) {
 			if a := strings.TrimSpace(x.Account); a != "" && a != "-" {
 				return a, nil
 			}
-			return "", fmt.Errorf("企业 %d 在配置的 ENT 清单里没有可用账号（tt env ents %s 可看，或到设置页「ENT」页签刷新）", ent, name)
+			return "", fmt.Errorf("企业 %d 在配置的 ENT 清单里没有可用账号（TG 不再同步 ENT 清单；GP 的据点用 tg site list --env %s）", ent, name)
 		}
 		if len(e.Ents) == 0 {
-			return "", fmt.Errorf("环境 %q 还没同步过 ENT 清单：跑 tt env ents %s --refresh（或设置页「ENT」页签）", name, name)
+			return "", fmt.Errorf("环境 %q 还没同步过 ENT 清单：TG 不再同步 ENT（GP 的据点用 tg site list --env %s）", name, name)
 		}
-		return "", fmt.Errorf("企业 %d 不在 %s 的 ENT 清单里（tt env ents %s 看全部）", ent, name, name)
+		return "", fmt.Errorf("企业 %d 不在 %s 的 ENT 清单里（TG 不再同步 ENT；GP 的据点用 tg site list --env %s）", ent, name, name)
 	}
 	return "", fmt.Errorf("环境 %q 不在配置里", name)
 }

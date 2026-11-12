@@ -12,27 +12,23 @@ import (
 	"tt/internal/cli/common"
 	"tt/internal/config"
 	"tt/internal/envmove"
-	"tt/internal/output"
 )
 
 // newEnvCmd 是统一的环境管理命令组。
 //
-// 合并前 TDictCli 有 `tdict env [<环境名>]`、TDebug 有 `tdebug env` 与 `tdebug topent`，
-// 三者操作的是同一份数据（一个环境清单），只是各自实现了一遍。合并后只有这一份。
+// 只保留 list / show / rename 三个动作：环境一律点名（--env / --at），
+// 没有"默认环境"可切换，也没有环境级的企业编号。
 func newEnvCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "env",
 		Short: "管理 TOP GP 环境（SSH + 数据库连接）",
-		Long: `列出/查看/切换 config.json 里 hosts.sshs 定义的 SSH 环境。
+		Long: `列出/查看 config.json 里 hosts.sshs 定义的 SSH 环境。
 
 环境清单是共用的：调试、字典查询、源码镜像、文件浏览都从同一份 hosts 里取连接，
 所以在这里加一台机器，tg 的各个命令都能立刻用。`,
-		Args: cobra.ArbitraryArgs,
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) == 0 {
-				return runEnvList(cmd)
-			}
-			return runEnvShow(cmd, args[0])
+			return runEnvList(cmd)
 		},
 	}
 
@@ -48,28 +44,6 @@ func newEnvCmd() *cobra.Command {
 		Short: "显示某个环境的连接详情（口令打码）",
 		Args:  cobra.ExactArgs(1),
 		RunE:  func(cmd *cobra.Command, args []string) error { return runEnvShow(cmd, args[0]) },
-	})
-
-	// env ents 已移除：TG 只面向 TOP GP，企业（ENT→账号）那一套是 T100 的；
-	// GP 的“这台上有哪些库”改成营运据点清单（tg site list），由 azp03 决定 schema。
-	cmd.AddCommand(&cobra.Command{
-		Use:   "ents [<环境名>]",
-		Short: "(已移除) 企业编号清单是 T100 的 —— 请用 tg site list 看营运据点",
-		Long: `tg env ents 已移除。
-
-企业编号（ENT→数据库账号）是 T100 的概念：GP 没有 ENT，一个库一登录账号，
-"这台上能查哪几个库"由 azp_file 的营运据点数决定（azp03 = 资料库编号 = schema）:
-
-  tg site list --env <环境>               # 全部据点：据点编号 / 资料库编号 / 名称
-  tg site show <据点编号|资料库编号> --env <环境>   # 一个据点的 schema
-  tg dict r.t <表> --at <环境>@<据点编号>          # 按据点查字典`,
-		Args: cobra.MaximumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) == 1 {
-				return output.Errorf("USAGE", 2, "`tg env ents %s` 已移除：TG 只支持 TOP GP，据点清单用 `tg site list --env %s`", args[0], args[0])
-			}
-			return output.Errorf("USAGE", 2, "`tg env ents` 已移除：TG 只支持 TOP GP，据点清单用 `tg site list --env <环境>`")
-		},
 	})
 
 	// env rename：环境名是跨文件的持久引用，改名必须是一次迁移，不是一个字段赋值
@@ -97,50 +71,6 @@ func newEnvCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error { return runEnvRename(cmd, args[0], args[1]) },
 	})
 
-	// env use 是**墓碑**,不是被删掉的命令:它背后的 hosts.activeEnv 已经整个移除
-	// (环境一律点名 —— 见 config.Hosts 的注释)。留一个会解释原因、并给出替代用法的
-	// 命令,好过让用户撞上"unknown command env use"而以为环境管理坏了。
-	cmd.AddCommand(&cobra.Command{
-		Use:   "use <环境名>",
-		Short: "(已移除) 默认环境这个概念已取消 —— 请每次用 --env 点名",
-		Long: `"默认环境"已移除(hosts.activeEnv 不再存在)。
-
-原因:同机多环境时,"回落到默认环境"与"上错环境"在输出上完全无法区分 ——
-而用错环境的典型症状是"查不到数据",与"数据不存在"一模一样。所以环境
-改为**一律点名**:
-
-  tg debug start <作业> --env <环境名>      # 调试:点名环境(T100 gendbg)
-  tg dict <命令> --env <环境名>             # 字典:点名环境(或 --env local:<环境> 查该环境本地副本)
-  tg file ls --at <环境>                    # 文件:点名环境(路径可以是 $TOP 或 $CUST 下的相对路径)
-
-Web 端在会话面板里选环境(那个选择是运行时的,同样不写配置文件)。`,
-		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return fmt.Errorf("`tg env use` 已移除:默认环境不再存在,请用 --env %s 点名(tg env list 看全部)", args[0])
-		},
-	})
-
-	// env topent 同样是墓碑:环境级企业编号(topent)已从配置移除,ENT 只能每次显式给。
-	cmd.AddCommand(&cobra.Command{
-		Use:   "topent <环境名> <企业编号>",
-		Short: "(已移除) 企业编号不再存在环境配置里 —— 请每次用 --ent 给",
-		Long: `环境级的默认企业编号(hosts.sshs[].topent)已移除。
-
-原因:企业编号决定**用哪个账号(schema)**连库;把它登记在环境上等于给它一个
-会被静默沿用的默认值,而用错账号的症状是"查不到数据",与"数据不存在"一样。
-所以 ENT 改为**每次显式给**:
-
-  tg debug start <作业> --env <环境名> --ent <企业编号>   # T100 gendbg
-  tg db sql --at <环境>@<企业> "<SQL>"                  # T100 的企业编号
-  tg dict <命令> --env <环境名>                         # GP:据点走 --at <环境>@<据点编号>
-
-不给 ENT 时:调试沿用登录 shell 里已有的 TOPENT(不覆盖);GP 的字典查询用账号列表首项、
-(并在输出信封的 notes 里说明)。`,
-		Args: cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return fmt.Errorf("`tg env topent` 已移除:企业编号不再存配置,请用 --ent %s 在命令上给", args[1])
-		},
-	})
 	return cmd
 }
 
