@@ -251,7 +251,7 @@ var debugDBCmd = &cobra.Command{
 	Use:        "db",
 	Short:      "（已迁移）数据库连接体检 —— 用 tt db probe",
 	Hidden:     true,
-	Deprecated: "已迁移：请用 tt db probe --at <环境>@<企业>",
+	Deprecated: "已迁移：请用 tg db probe --at <环境>",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		if dbEnt <= 0 {
 			return fmt.Errorf("需要 --at <环境>@<企业>（或 --env + --ent）：验的是这个企业的账号")

@@ -17,10 +17,9 @@ import (
 
 var scopes = map[string]Scope{
 	// ---- 数据库：连通性测试与只读 SQL ----
-	"db sql":   EnvEntReq, // 企业决定账号
-	"db probe": EnvEntReq, // 验的就是这个企业的账号
-	"db ping":  EnvEnt,    // 企业可选：不给=账号清单首项
-
+	"db sql":   Env, // GP：一个库一个账号，@ 后面没有企业也没有据点可写
+	"db probe": Env,
+	"db ping":  Env,
 	// ---- 建立连接 / 解析账号（<环境>@<企业>）----
 	"session new":   EnvEntReq,
 	"debug start":   EnvEntReq,

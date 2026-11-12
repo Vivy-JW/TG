@@ -1426,7 +1426,7 @@ var debugSQLCmd = &cobra.Command{
 	Use:        `sql "<查询语句>"`,
 	Short:      "（已迁移）执行一条只读 SQL —— 用 tt db sql",
 	Hidden:     true,
-	Deprecated: "已迁移：请用 tt db sql（--at <环境>@<企业>）",
+	Deprecated: "已迁移：请用 tg db sql --at <环境>",
 	Args:       cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		sqlText := ""

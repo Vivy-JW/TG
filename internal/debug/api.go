@@ -2435,7 +2435,7 @@ func (s *Server) hDBSQL(w http.ResponseWriter, r *http.Request) {
 	if req.Ent <= 0 {
 		writeJSON(w, 400, failureEnvelope{
 			OK: false, Code: output.CodeUsage,
-			Error: "ent 必填(要查哪个企业编号):tt db sql --at <环境>@<企业编号> " +
+			Error: "ent 必填(要查哪个企业编号):tg db sql --at <环境> " +
 				"（旧 tt debug sql 才会从会话补；新命令请显式点名）",
 		})
 		return

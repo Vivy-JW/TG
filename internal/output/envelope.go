@@ -28,12 +28,18 @@ type Meta struct {
 	Ent           int    `json:"ent,omitempty"`    // 本次实际用的企业编号
 	Account       string `json:"account,omitempty"`
 	AccountSource string `json:"accountSource,omitempty"` // accounts[0] | ent(gzou_t) | flag
-	Target        string `json:"target,omitempty"`        // 库地址 host:port/svc
-	Dialect       string `json:"dialect,omitempty"`       // oracle | kingbase | sqlite
-	Route         string `json:"route,omitempty"`         // client-direct | server-sqlplus | local-sqlite …
-	ViaTunnel     bool   `json:"viaTunnel,omitempty"`
-	Readonly      bool   `json:"readonly,omitempty"`    // 库会话是只读事务
-	LocalDBPath   string `json:"localDbPath,omitempty"` // 仅本地 SQLite 源
+	// Schema 这次查询实际落在哪个 schema（Oracle 的 owner / 金仓的 schema）。
+	//
+	// GP 一个库里装几十套表（ds / digiwin / cof_demo …），裸表名解析到"登录账号的
+	// schema"，所以这个字段必须写出来 —— 否则"查的是另一个库的 850 行"和"这表是
+	// 空的"看起来一模一样。
+	Schema      string `json:"schema,omitempty"`
+	Target      string `json:"target,omitempty"`  // 库地址 host:port/svc
+	Dialect     string `json:"dialect,omitempty"` // oracle | kingbase | sqlite
+	Route       string `json:"route,omitempty"`   // client-direct | server-sqlplus | local-sqlite …
+	ViaTunnel   bool   `json:"viaTunnel,omitempty"`
+	Readonly    bool   `json:"readonly,omitempty"`    // 库会话是只读事务
+	LocalDBPath string `json:"localDbPath,omitempty"` // 仅本地 SQLite 源
 
 	// ---- 计数与截断 ----
 	TotalRows int `json:"totalRows"`

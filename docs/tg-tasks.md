@@ -59,7 +59,7 @@
 - ☑ `tg interface`（3 条）：标签改查 gae_file，`.42s` 路径已删（2026-11-12）
 - ☑ `tt outline` 换 GP 目录结构：不换结构，改成"本地文件 > `--dir` > 镜像 > 直读服务器"（与 `tg interface` 同源，2026-11-12）
 - ☑ `tg file mirror` 改 GP 口径：两棵树 + 4gl/42f/inc，不做 profile（2026-11-12，见 handoff 第 39 条）
-- ☐ `tt db sql` 去掉"强制 `环境@企业`"
+- ☑ `tg db sql` 去掉"强制 `环境@企业`"：身份只有环境，账号取 `accounts[0]`，裸表名落在账号的 schema（信封的 schema 字段）
 - ☐ 从命令层摘掉 `target` / `entdir`
 - ☑ `skills/` 换成 GP 版（`tt-dev-tzc` 已删，`tt-erp-*` 已改名 `tg-erp-*`，commit a42a1a2）
 

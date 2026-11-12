@@ -49,8 +49,17 @@ func openSession(cfg *debug.Config, ent int, route string) (*sqlSession, string,
 		}
 		d, err := debug.OpenDirectQuery(context.Background(), *cc)
 		if err == nil {
+			acct := cc.Account
+			if acct == "" {
+				// GP：账号槽位留空 = 取账号清单首项；信封里要写出"实际用的那个"。
+				acct, err = primaryAccount(cfg)
+				if err != nil {
+					d.Close()
+					return nil, "", output.Errorf("TARGET", 2, "%v", err)
+				}
+			}
 			return &sqlSession{
-				route: dbconfig.RouteClientDirect, ent: ent, account: cc.Account,
+				route: dbconfig.RouteClientDirect, ent: ent, account: acct,
 				target: cc.Address(), viaTun: cc.ViaSSH != nil,
 				direct: d, dialect: d.Dialect(),
 			}, "", nil
@@ -72,7 +81,14 @@ func openSession(cfg *debug.Config, ent int, route string) (*sqlSession, string,
 	if err != nil {
 		return nil, "", output.Errorf("SSH_FAILED", 4, "SSH 连接失败: %v", err)
 	}
-	return &sqlSession{ent: ent, ssh: conn, mgr: debug.NewManager(cfg)}, fallbackNote, nil
+	acct := ""
+	if ent <= 0 {
+		// 服务器路线默认按 TOPENT→gzou_t 解析；GP 没有那套，直接把账号给过去。
+		if a, err := primaryAccount(cfg); err == nil {
+			acct = a
+		}
+	}
+	return &sqlSession{ent: ent, ssh: conn, mgr: debug.NewManager(cfg), account: acct}, fallbackNote, nil
 }
 
 // Query 在这条会话上跑一条只读 SQL。
@@ -80,7 +96,7 @@ func (s *sqlSession) Query(ctx context.Context, sqlText string, timeout int) (*d
 	if s.direct != nil {
 		return s.direct.Query(ctx, sqlText)
 	}
-	res, err := s.mgr.RunReadonlyQuery(s.ssh, debug.ReadonlyQueryReq{SQL: sqlText, Ent: s.ent, Timeout: timeout})
+	res, err := s.mgr.RunReadonlyQuery(s.ssh, debug.ReadonlyQueryReq{SQL: sqlText, Ent: s.ent, Account: s.account, Timeout: timeout})
 	if err != nil {
 		return nil, err
 	}
@@ -110,6 +126,9 @@ func (s *sqlSession) Close() {
 // acctSource 信封里的账号来源：直连是按 ENT 清单定的，服务器路线由 debug 侧解析。
 func (s *sqlSession) acctSource() string {
 	if s.direct != nil {
+		if s.ent <= 0 {
+			return dbconfig.AcctFromPrimary
+		}
 		return dbconfig.AcctFromEntConfig
 	}
 	return s.acctSrc
@@ -137,6 +156,9 @@ func applySessionMeta(res *debug.DBQueryResult, cfg *debug.Config, s *sqlSession
 	if s.direct != nil {
 		res.Account = s.account
 		res.AccountSource = dbconfig.AcctFromEntConfig
+		if s.ent <= 0 {
+			res.AccountSource = dbconfig.AcctFromPrimary
+		}
 		res.DBTarget = s.target
 		res.Route = dbconfig.RouteClientDirect
 		res.ViaTunnel = s.viaTun

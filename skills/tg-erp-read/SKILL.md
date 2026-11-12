@@ -163,8 +163,8 @@ END IF
 
 选择环境，执行一句查询的示例
 ```
-tg db sql --at <环境>@<企业> "select count(*) from capp115_tmp"
-tg db sql --at <环境>@<企业> "select bmaa001,bmaastus from bmaa_t where bmaa001='FCPU010100003'"
+tg db sql --at <环境> "select count(*) from capp115_tmp"
+tg db sql --at <环境> "select bmaa001,bmaastus from bmaa_t where bmaa001='FCPU010100003'"
 ```
 
 默认从本机直连该企业的库；直连建不起来会自动回退服务器 sqlplus（不静默：信封里
@@ -178,7 +178,7 @@ tg db sql --at <环境>@<企业> "select bmaa001,bmaastus from bmaa_t where bmaa
 ```
 echo '[{"id":"cnt","sql":"select count(*) c from inaj_t"},
        {"id":"one","sql":"select 1 x from dual"}]' > q.json
-tt db sql --at <环境>@<企业> --batch q.json
+tg db sql --at <环境> --batch q.json
 ```
 批次只输出 JSON：成败看逐条 `items[].ok`，行数看 `items[].rows`（顶层
 `totalRows/returned` 是语句条数）；单条失败不影响其余。

@@ -56,7 +56,6 @@ func newSQLCmd() *cobra.Command {
 	var (
 		file    string
 		batch   string
-		entFlag int
 		timeout int
 		route   string
 	)
@@ -65,13 +64,14 @@ func newSQLCmd() *cobra.Command {
 		Short: "执行一条只读 SQL（单条 SELECT/WITH；只读事务；最多 200 行）",
 		Long: `对指定环境的库执行一条**只读** SQL，用来回答"这条业务数据到底有没有/是什么"。
 
-  tt db sql --at 主机109@99 "select bmaa001,bmaastus from bmaa_t where bmaa001='FCPU010100003'"
-  tt db sql --at 主机109@99 --file q.sql          # 长语句从本地文件读
-  tt db sql --at 主机109@99 --format table "…"    # 人读表格（默认 JSON 信封）
+  tg db sql --at 22主机 "select count(*) from ima_file"
+  tg db sql --at 22主机 --file q.sql          # 长语句从本地文件读
+  tg db sql --at 22主机 --format table "select count(*) from ima_file"   # 人读表格
 
-**默认输出是 JSON 信封**：环境/ENT/账号/库地址平铺在顶层，载荷在 data。
-那几项必须看 —— 企业编号错了就是另一个 schema，拿到 0 行，而那看起来和
-"数据不存在"一模一样。
+**默认输出是 JSON 信封**：环境/账号/schema/库地址平铺在顶层，载荷在 data。
+那几项必须看 —— 裸表名落在**登录账号的 schema**（信封里 schema 字段），
+查的是哪个库从账号就定了；要查别的库写 <schema>.<表>，否则拿到的 0 行
+和"数据不存在"看起来一模一样。
 
 # 执行路线（--route）
 
@@ -92,8 +92,8 @@ route 字段说明这次实际走的是哪条。**值的渲染有差别**：直�
 
   echo '[{"id":"cnt","sql":"select count(*) c from inaj_t"},
          {"id":"one","sql":"select 1 x from dual"}]' > q.json
-  tt db sql --at 主机109@99 --batch q.json
-  tt db sql --at 主机109@99 --batch -   < q.json     # 从 stdin
+  tg db sql --at 22主机 --batch q.json
+  tg db sql --at 22主机 --batch -   < q.json     # 从 stdin
 
 输入是 JSON 数组 [{"id"?: "名字", "sql": "..."}]。**不从 SQL 文本切分号** ——
 字符串里的分号、q-quote、注释都不可靠地能切对，切错了就是查错数据。id 可省
@@ -118,7 +118,7 @@ grep -v '^# ' 切下去就是一个标准 CSV（逗号/引号/换行按 RFC4180 
   - 库会话是只读事务，常规写会被库自己挡回去；
   - **最多回 200 行**，totalRows 是下界（库侧故意多取一行判"还有更多"）；要更多请加 WHERE 收窄。
 
-不需要 tt serve 在跑；环境/企业用 --at 点名（不知道填什么：tt db sql --at-list）。`,
+不需要 tg serve 在跑；环境用 --at 点名（不知道有哪些：tg env list）。`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			sqlText := ""
@@ -139,18 +139,17 @@ grep -v '^# ' 切下去就是一个标准 CSV（逗号/引号/换行按 RFC4180 
 				if sqlText != "" || file != "" {
 					return fmt.Errorf("--batch 与「位置语句 / --file」三选一")
 				}
-				return QueryBatch(batch, entOf(entFlag), timeout, route)
+				return QueryBatch(batch, 0, timeout, route)
 			}
 			if sqlText == "" {
 				return fmt.Errorf(`需要一条查询语句（见 tt db sql --help），或用 --file / --batch 指定语句来源`)
 			}
-			return QueryOnce(sqlText, entOf(entFlag), timeout, route)
+			return QueryOnce(sqlText, 0, timeout, route)
 		},
 	}
 	cmd.Flags().StringVar(&file, "file", "", "从本地文件读语句（与位置参数二选一）")
 	cmd.Flags().StringVar(&batch, "batch", "",
 		"批量：JSON 数组 [{id?,sql}] 的文件路径（- = stdin）；一次建连跑 N 条，只输出 JSON")
-	cmd.Flags().IntVar(&entFlag, "ent", 0, "企业编号（也可用 --at <环境>@<企业>）")
 	cmd.Flags().IntVar(&timeout, "timeout", 0, "查询超时秒数（默认 30，上限 120）")
 	cmd.Flags().StringVar(&route, "route", SQLRouteAuto,
 		"执行路线: auto(直连优先,建连失败回退) | direct(只直连) | server(服务器 sqlplus)")
@@ -162,9 +161,6 @@ grep -v '^# ' 切下去就是一个标准 CSV（逗号/引号/换行按 RFC4180 
 // 顺序是刻意的：身份（ENT/环境/账号）先于连接，配置错退 2、连不上退 4 ——
 // 让"填错了"与"连不上"从一开始就不是同一类错误。
 func prepareTarget(ent int, route string) (*debug.Config, error) {
-	if ent <= 0 {
-		return nil, output.Errorf("USAGE", 2, "需要 --at <环境>@<企业>：企业编号决定用哪个账号连库（tt db sql --at-list 可看取值）")
-	}
 	if !sqlRouteValid(normalizeSQLRoute(route)) {
 		return nil, output.Errorf("USAGE", 2, "--route 只接受 auto | direct | server（收到 %q）", route)
 	}
@@ -236,9 +232,12 @@ func writeSQLResult(w io.Writer, res *debug.DBQueryResult) error {
 	if src == "" {
 		src = dbconfig.AcctFromEnt
 	}
+	// 裸表名解析到登录账号的 schema（Oracle 的 owner 与账号同名），把它写进信封：
+	// "查的是另一个库的 850 行"和"这表是空的"在输出上必须能分开。
+	schema := strings.ToUpper(strings.TrimSpace(res.Account))
 	meta := output.Meta{
 		Source: "live", Env: res.Env, SSHHost: res.SSHHost, Zone: res.Zone,
-		Ent: res.Ent, Account: res.Account, AccountSource: src,
+		Ent: res.Ent, Account: res.Account, AccountSource: src, Schema: schema,
 		Target: res.DBTarget, Dialect: res.Dialect, Route: route, Readonly: true,
 		ViaTunnel: res.ViaTunnel,
 		TotalRows: res.TotalRows, Returned: len(res.Rows),

@@ -14,29 +14,23 @@ import (
 )
 
 func newProbeCmd() *cobra.Command {
-	var entFlag int
 	cmd := &cobra.Command{
 		Use:   "probe",
-		Short: "从服务器连一次库（SSH + sqlplus/ksql；验证该企业的账号）",
-		Long: `登录服务器，用该企业账号真连一次库（Oracle 走 sqlplus，金仓走 ksql），
+		Short: "从服务器连一次库（SSH + sqlplus/ksql）",
+		Long: `登录服务器，用环境配置里的数据库账号真连一次库（Oracle 走 sqlplus，金仓走 ksql），
 回答"服务器这一侧现在连不连得上、这个账号能不能用"。
 
-  tt db probe --at 主机109@99
-  tt db probe --at 主机109@99 --json
+  tg db probe --at 22主机
+  tg db probe --at 22主机 --json
 
-与本机视角的 tt db ping 是两条不同的路：
+与本机视角的 tg db ping 是两条不同的路：
   ping  你 → 库（客户端直连，可经隧道）
-  probe 服务器 → 库（这条正是 tt db sql / 调试时实际走的链路）`,
+  probe 服务器 → 库（这条正是 tg db sql / 调试时实际走的链路）`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			ent := entOf(entFlag)
-			if ent <= 0 {
-				return output.Errorf("USAGE", 2, "需要 --at <环境>@<企业>：验的是这个企业的账号（tt db probe --at-list 可看取值）")
-			}
-			return ProbeOnce(ent)
+			return ProbeOnce(0)
 		},
 	}
-	cmd.Flags().IntVar(&entFlag, "ent", 0, "企业编号（也可用 --at <环境>@<企业>）")
 	return cmd
 }
 
@@ -46,10 +40,21 @@ func ProbeOnce(ent int) error {
 	if err != nil {
 		return output.Errorf("TARGET", 2, "%v", err)
 	}
-	if _, err := entAccount(cfg, ent); err != nil {
-		return output.Errorf("TARGET", 2, "%v", err)
+	var rep *debug.DBReport
+	if ent > 0 {
+		// T100 那条线（tg debug db 转发）：按 ENT 清单定位企业账号。
+		if _, err := entAccount(cfg, ent); err != nil {
+			return output.Errorf("TARGET", 2, "%v", err)
+		}
+		rep, err = debug.ProbeDB(cfg, ent, debug.EntListOpt{Ent: ent})
+	} else {
+		// TG/GP：一个库一个账号，直接拿 accounts[0] 去服务器侧连一次。
+		acct, aerr := primaryAccount(cfg)
+		if aerr != nil {
+			return output.Errorf("TARGET", 2, "%v", aerr)
+		}
+		rep, err = debug.ProbeDBAccount(cfg, acct)
 	}
-	rep, err := debug.ProbeDB(cfg, ent, debug.EntListOpt{Ent: ent})
 	if err != nil {
 		return output.Errorf("DB_FAILED", 4, "%v", err)
 	}
@@ -58,13 +63,12 @@ func ProbeOnce(ent int) error {
 	}
 
 	if kdb := rep.Env["database"]; kdb != "" {
-		fmt.Printf("区域: %s   数据库: 人大金仓 %s@%s:%s\n", rep.Zone, kdb, rep.Env["host"], rep.Env["port"])
+		fmt.Printf("数据库: 人大金仓 %s@%s:%s\n", kdb, rep.Env["host"], rep.Env["port"])
 		if ks := rep.Env["ksql"]; ks != "" {
 			fmt.Printf("ksql: %s\n", ks)
 		}
 	} else {
-		fmt.Printf("区域: %s   Oracle: %s:%s (service %s)\n",
-			rep.Zone, rep.Env["host"], rep.Env["port"], rep.TNS)
+		fmt.Printf("Oracle: %s:%s (service %s)\n", rep.Env["host"], rep.Env["port"], rep.TNS)
 		if sp := rep.Env["sqlplus"]; sp != "" {
 			fmt.Printf("sqlplus: %s\n", sp)
 		}
@@ -72,17 +76,23 @@ func ProbeOnce(ent int) error {
 			fmt.Printf("ORACLE_HOME: %s\n", oh)
 		}
 	}
-	fmt.Printf("\n企业(ENT) → 账号(schema)，共 %d 个（来自配置的 ENT 清单）：\n", len(rep.Mappings))
-	for _, m := range rep.Mappings {
-		mark := " "
-		if rep.Probe != nil && m.Ent == rep.Probe.Ent {
-			mark = "*"
+	if len(rep.Mappings) > 0 {
+		fmt.Printf("\n企业(ENT) → 账号(schema)，共 %d 个（来自配置的 ENT 清单）：\n", len(rep.Mappings))
+		for _, m := range rep.Mappings {
+			mark := " "
+			if rep.Probe != nil && m.Ent == rep.Probe.Ent {
+				mark = "*"
+			}
+			fmt.Printf("  %s %-6d → %s\n", mark, m.Ent, m.Account)
 		}
-		fmt.Printf("  %s %-6d → %s\n", mark, m.Ent, m.Account)
 	}
 	if rep.Probe != nil {
 		p := rep.Probe
-		fmt.Printf("\n企业 %d 连接验证: %s@%s\n", p.Ent, p.Account, rep.TNS)
+		if len(rep.Mappings) > 0 {
+			fmt.Printf("\n企业 %d 连接验证: %s@%s\n", p.Ent, p.Account, rep.TNS)
+		} else {
+			fmt.Printf("\n账号 %s 连接验证 (%s)\n", p.Account, rep.TNS)
+		}
 		if p.Host != "" {
 			fmt.Printf("  主机: %s:%s  服务名: %s\n", p.Host, p.Port, p.Service)
 		}

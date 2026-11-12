@@ -18,25 +18,27 @@ import (
 )
 
 func newPingCmd() *cobra.Command {
-	var entFlag int
 	cmd := &cobra.Command{
 		Use:   "ping",
 		Short: "从本机连一次库（客户端直连；支持 viaSsh 隧道）",
 		Long: `从**本机**连一次库，验证网络/VPN/隧道与账号口令是否可用（客户端直连视角）。
 
-  tt db ping --at 主机109          # 用环境配置里的账号清单（首项）连一次
-  tt db ping --at 主机109@99       # 用配置 ENT 清单里企业 99 的账号连一次
-  tt db ping --at 主机109@99 --json
+  tg db ping --at 22主机           # 用环境配置里的数据库账号（accounts[0]）连一次
+  tg db ping --at 22主机 --json
 
-对端能不能连用 tt db probe（服务器侧视角）；查数据用 tt db sql。`,
+对端能不能连用 tg db probe（服务器侧视角）；查数据用 tg db sql。`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			cfg, _, err := loadCfg()
 			if err != nil {
 				return output.Errorf("TARGET", 2, "%v", err)
 			}
-			ent := entOf(entFlag)
+			ent := 0
 			cc, err := dbConnFor(cfg, ent)
+			if err != nil {
+				return output.Errorf("TARGET", 2, "%v", err)
+			}
+			acct, err := entAccount(cfg, ent)
 			if err != nil {
 				return output.Errorf("TARGET", 2, "%v", err)
 			}
@@ -57,7 +59,8 @@ func newPingCmd() *cobra.Command {
 			if common.IsJSON() {
 				return common.PrintJSON(map[string]any{
 					"ok": true, "env": cfg.EnvName(), "ent": ent,
-					"account": cc.Account, "dialect": cc.Type, "target": cc.Address(),
+					"account": acct, "schema": strings.ToUpper(acct),
+					"dialect": cc.Type, "target": cc.Address(),
 					"version": oneLine,
 				})
 			}
@@ -65,14 +68,10 @@ func newPingCmd() *cobra.Command {
 			if ent > 0 {
 				who = fmt.Sprintf("%s@%d", cfg.EnvName(), ent)
 			}
-			acct := cc.Account
-			if acct == "" {
-				acct = "账号清单首项"
-			}
+
 			fmt.Printf("连接正常: %s (%s, %s) %s\n", who, acct, cc.Type, oneLine)
 			return nil
 		},
 	}
-	cmd.Flags().IntVar(&entFlag, "ent", 0, "企业编号（也可用 --at <环境>@<企业>；不给=账号清单首项）")
 	return cmd
 }

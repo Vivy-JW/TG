@@ -45,11 +45,11 @@ type DBQueryResult struct {
 	Account string `json:"account"`
 	// AccountSource 账号是怎么定的：ent(config)=配置里的 ENT 清单（标准路径），
 	// ent(gzou_t)=该环境还没同步 ENT，回落到快照/现查。信封里要如实带出去。
-	AccountSource string     `json:"accountSource,omitempty"`
-	Env           string     `json:"env,omitempty"`      // 环境名(配置里的 sshs[].name)
-	SSHHost       string     `json:"sshHost,omitempty"`  // 该环境的 SSH 主机
-	Zone          string     `json:"zone,omitempty"`     // 登录区域代码
-	DBTarget      string     `json:"dbTarget,omitempty"` // 库地址 host:port/服务名
+	AccountSource string `json:"accountSource,omitempty"`
+	Env           string `json:"env,omitempty"`      // 环境名(配置里的 sshs[].name)
+	SSHHost       string `json:"sshHost,omitempty"`  // 该环境的 SSH 主机
+	Zone          string `json:"zone,omitempty"`     // 登录区域代码
+	DBTarget      string `json:"dbTarget,omitempty"` // 库地址 host:port/服务名
 	// Route 这次实际走的执行路线（dbconfig.Route*）。空 = 沿用老行为由方言推
 	// （服务器 sqlplus/ksql），所以旧调用方与旧测试的输出一个字节不变。
 	Route         string     `json:"route,omitempty"`
@@ -115,8 +115,14 @@ func clampSQLTimeout(sec int) int {
 
 // ReadonlyQueryReq 一次只读查询的入参
 type ReadonlyQueryReq struct {
-	SQL     string
-	Ent     int // 0 = 用会话/配置的默认企业
+	SQL string
+	// Ent 企业编号：>0 时按 gzou_t/ENT 清单解析账号（T100 那条线在用）。
+	//
+	// TG 只面向 TOP GP，没有企业清单：调用方直接把 Account 填上（accounts[0]），
+	// Ent 留 0 —— 库里的账号是"哪个库的登录号"，不是"哪家企业"。
+	Ent int
+	// Account 非空时直接用它，跳过企业解析。
+	Account string
 	Timeout int // 秒;0 = 默认
 }
 
@@ -139,12 +145,17 @@ func (m *Manager) RunReadonlyQuery(conn *host.SSHConn, req ReadonlyQueryReq) (*D
 		return nil, err
 	}
 	ent := req.Ent
-	if ent <= 0 {
-		ent = m.cfg.TopentInt()
-	}
-	account, err := m.entAccount(conn, d, ent)
-	if err != nil {
-		return nil, err
+	explicit := strings.TrimSpace(req.Account)
+	account := explicit
+	if account == "" {
+		if ent <= 0 {
+			ent = m.cfg.TopentInt()
+		}
+		a, err := m.entAccount(conn, d, ent)
+		if err != nil {
+			return nil, err
+		}
+		account = a
 	}
 
 	// 库侧限行:能证安全才包装,包不了就如实标注
@@ -193,10 +204,14 @@ func (m *Manager) RunReadonlyQuery(conn *host.SSHConn, req ReadonlyQueryReq) (*D
 	}
 
 	acctSource := dbconfig.AcctFromEnt
-	for i := range m.cfg.SSHs {
-		if m.cfg.SSHs[i].Name == m.cfg.EnvName() && len(m.cfg.SSHs[i].Ents) > 0 {
-			acctSource = dbconfig.AcctFromEntConfig
-			break
+	if explicit != "" {
+		acctSource = dbconfig.AcctFromPrimary
+	} else {
+		for i := range m.cfg.SSHs {
+			if m.cfg.SSHs[i].Name == m.cfg.EnvName() && len(m.cfg.SSHs[i].Ents) > 0 {
+				acctSource = dbconfig.AcctFromEntConfig
+				break
+			}
 		}
 	}
 	res := &DBQueryResult{

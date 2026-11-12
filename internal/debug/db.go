@@ -28,7 +28,7 @@ type EntMapping = entdir.Mapping
 
 // DBProbeResult 单账号连接探查结果
 type DBProbeResult struct {
-	Ent     int    `json:"ent"`
+	Ent     int    `json:"ent,omitempty"`
 	Account string `json:"account"`
 	Host    string `json:"host"`
 	Port    string `json:"port"`
@@ -39,9 +39,9 @@ type DBProbeResult struct {
 
 // DBReport 完整探查报告
 type DBReport struct {
-	Zone     string            `json:"zone"`
+	Zone     string            `json:"zone,omitempty"`
 	TNS      string            `json:"tns"` // 显示用:oracle service / kingbase 库名
-	Mappings []EntMapping      `json:"mappings"`
+	Mappings []EntMapping      `json:"mappings,omitempty"`
 	Probe    *DBProbeResult    `json:"probe,omitempty"`
 	Env      map[string]string `json:"env,omitempty"` // 探测到的环境(sqlplus/oracleHome 等)
 }
@@ -358,6 +358,59 @@ func ProbeDB(cfg *Config, ent int, opt EntListOpt) (*DBReport, error) {
 		return nil, err
 	}
 	res := &DBProbeResult{Ent: ent, Account: account}
+	if cfg.DB.Type == "kingbase" {
+		h, p, db, _ := d.kbTarget()
+		res.Host, res.Port, res.Service = h, p, db
+	} else {
+		res.Host, res.Port, res.Service = cfg.DB.Host, strconv.Itoa(cfg.DB.Port), cfg.DB.Svc()
+	}
+	if err := dbConnectTest(conn, d, account); err != nil {
+		res.Error = err.Error()
+	} else {
+		res.Connect = true
+	}
+	report.Probe = res
+	return report, nil
+}
+
+// ProbeDBAccount 用**显式账号**探一次服务器侧连通性（TG 的 GP 环境用这个）。
+//
+// 与 ProbeDB 的差别只有身份：GP 没有 gzou_t/ENT 清单，一个库一个登录账号，
+// 所以不查企业映射、也不碰 zone —— 只有"服务器这一侧，这个账号连不连得上"。
+func ProbeDBAccount(cfg *Config, account string) (*DBReport, error) {
+	account = strings.TrimSpace(account)
+	if account == "" {
+		return nil, fmt.Errorf("没有可用的数据库账号（设置 → 站点管理 → 数据库 → 数据库账号）")
+	}
+	conn, err := host.Dial(cfg.SSH)
+	if err != nil {
+		return nil, fmt.Errorf("SSH 连接失败: %w", err)
+	}
+	defer conn.Close()
+
+	if cfg.DB == nil {
+		return nil, fmt.Errorf("当前环境未挂数据库连接(设置-环境-SSH 页选择「数据库连接」)")
+	}
+	d, err := resolveDBRun(conn, cfg)
+	if err != nil {
+		return nil, err
+	}
+	// GP 没有 zone（那是 T100 的登录区域），这里留空
+	report := &DBReport{TNS: cfg.DB.Svc()}
+	if cfg.DB.Type == "kingbase" {
+		h, p, db, _ := d.kbTarget()
+		report.TNS = db
+		report.Env = map[string]string{"ksql": d.ksql, "host": h, "port": p, "database": db}
+	} else {
+		report.Env = map[string]string{
+			"host":       cfg.DB.Host,
+			"port":       strconv.Itoa(cfg.DB.Port),
+			"service":    cfg.DB.Svc(),
+			"sqlplus":    d.oraT,
+			"oracleHome": d.oraHome,
+		}
+	}
+	res := &DBProbeResult{Account: account}
 	if cfg.DB.Type == "kingbase" {
 		h, p, db, _ := d.kbTarget()
 		res.Host, res.Port, res.Service = h, p, db
