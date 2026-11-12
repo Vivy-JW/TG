@@ -28,7 +28,6 @@ go list -f '{{.ImportPath}}|{{join .Imports " "}}' ./internal/... | grep 'tt/int
 | `session` | 会话身份规则：序号怎么分、世代号怎么发。71 行纯规则 |
 | `target` | 会话寻址的目标层：层级定义、选择器解析、契约表、失败信封。全是纯函数——不发请求、不写盘 |
 | `form42f` | `.42f` 编译表单 → 字段表 + 页面布局。纯函数，零 IO |
-| `str42s` | `.42s` 编译字符串表 → 中文标签。纯函数，零 IO |
 | `dict/db` | 本地 SQLite 字典查询 + `Source` 接口（GP 的 `t_*` 表） |
 | `dev/fgl` | 4GL 源码结构：分块、语义（`tt outline` 与 GP 的 4gl 共用）|
 | `testenv` | 本机测试环境的配置（`config.local.json` + 环境变量） |
@@ -40,7 +39,7 @@ go list -f '{{.ImportPath}}|{{join .Imports " "}}' ./internal/... | grep 'tt/int
 | `config` | **配置文件的唯一读写层**：位置解析、`Open`/`Save`/`Edit`、原子写、打码、缓存清单、缓存清理、字典库落点。只认「节 + 键」，**不认业务字段** |
 | `dev/testutil` | 测试语料定位与遍历（`CorpusRoot`/`CorpusFiles`）；原合成包夹具随 tzc/tzs 一起删了 |
 | `erpdb` | 客户端直连库封装：Oracle / 金仓，一个接口两个实现 |
-| `screen` | `.42f` 布局 + `.42s` 标签 → 前端画面模型 |
+| `screen` | `.42f` 布局 + `Labels` 接口 → 前端画面模型（标签由调用方给，GP 是 `gae_file`） |
 
 ### L2 · 共享服务（11 个）
 
@@ -53,7 +52,7 @@ go list -f '{{.ImportPath}}|{{join .Imports " "}}' ./internal/... | grep 'tt/int
 | `testkit` | 跨包测试辅助：语料发现、stdout 捕获、flag 重置、仓库本体定位 |
 | `dict/dbsync` | GP 字典同步引擎：连 Oracle 读 zta/gat/gaq/all_*/gaz/zz/zr/ze，投影成本地 SQLite 的 `t_*` 表（临时库 + 原子替换）|
 | `dict` | GP 字典层的对外面：`DictPath`/`Company`、`Site`/`ResolveSchema`、`QryDef.BuildSQL`、`LookupModule`、`SyncEnv` |
-| `mirror` | 4GL 源码镜像：服务器侧 `find` 清单、增量判定、`pruneStale`、`manifest.json` |
+| `mirror` | 源码镜像：两棵树（`$TOP`/`$CUST`）收 `4gl`/`42f`/`inc`，服务器侧 `find` 清单、增量判定、`pruneStale`、`manifest.json` |
 | `gpsession` | GP 调试的 pty 会话：登录选实例 → `r.d2` → 等 `(fgldb) `→ `info line main`；`Manager` 管多会话 |
 | `dict/live` | 远程 ERP 库（Oracle / 金仓）直查，实现 `dict/db` 的 `Source` 接口 |
 | `cli/common` | CLI 命令组共享的上下文：全局开关、MetaProvider、WebFS。叶子包，用来防成环 |
@@ -66,7 +65,7 @@ go list -f '{{.ImportPath}}|{{join .Imports " "}}' ./internal/... | grep 'tt/int
 | `dict/server` | 字典侧 REST：字典同步 / 本地库状态（源码镜像已改由 `/api/gp/mirror` 走 `internal/mirror`） |
 | `web` | 统一本地服务的 HTTP 层：REST/WS 路由、嵌 SPA、设置页后端；`gpapi.go` 是 `/api/gp/*`（meta/env/test/site/mirror/sync/会话）；`jobs` 是统一的 job 注册表 |
 | `cli/file` | 服务器文件命令组：只读看/取文件 + 离线镜像管理 |
-| `cli/interfacecmd` | `tt interface`：42f + 42s → 画面 |
+| `cli/interfacecmd` | `tg interface`：42f + `gae_file` 标签 → 画面 |
 | `cli/outline` | `tt outline`：4GL → 块树 |
 
 ### L4–L7 · 命令层（8 个）
@@ -103,7 +102,7 @@ go list -f '{{.ImportPath}}|{{join .Imports " "}}' ./internal/... | grep 'tt/int
 
 ```bash
 go list -f '{{.ImportPath}}: {{join .Imports " "}}' ./internal/... \
-  | grep -E '^tt/internal/(config|dbconfig|output|host|entdir|safesql|target|session|screen|form42f|str42s|dict/db|dev/(fgl|testutil)):' \
+  | grep -E '^tt/internal/(config|dbconfig|output|host|entdir|safesql|target|session|screen|form42f|dict/db|dev/(fgl|testutil)):' \
   | grep -E 'net/http|cobra|internal/cli|internal/web'
 # 无输出 = 合格
 ```

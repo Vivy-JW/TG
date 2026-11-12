@@ -92,7 +92,7 @@ TT/
 └─ skills/              对外技能手册（评测中执行者唯一能读的东西）
    ├─ tg-erp-architecture/  TOP GP 整体架构与代码地图
    ├─ tg-erp-debug/     TOP GP 作业调试
-   └─ tg-erp-read/      TOP GP 代码阅读（含 4gl / 42f / 42s）
+   └─ tg-erp-read/      TOP GP 代码阅读（含 4gl / 42f）
 ```
 
 ## 开发命令

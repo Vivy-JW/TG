@@ -33,7 +33,7 @@
 |---|---|---|
 | Q1 | GP 调试归 TG，`internal/debug` 保留、拔掉 T100 接线 | 不与 TT 共用抽象；连带删 `cli/debug` 的 ENT 命令 |
 | Q2 | `internal/dict` 保留，改造成 GP 字典层 | 换表不删包；原"删整个 dict"作废 |
-| Q3 | GP 镜像做成 profile | `debug` 只 `*.4gl`，`source` 收 4gl+42f+42s+inc |
+| Q3 | GP 镜像不拆 profile | 统一收 4gl + 42f + inc（两棵树）；42s 在 GP 不存在，标签走 `gae_file`（2026-11-12 改） |
 | Q4 | `designer-src/` + `engine/` 阶段 3 同批删 | 删前 TT-src 打 zip；厂商 DLL 不进 TG 发行包 |
 | Q5 | 改名分三批 | 对外 / 数据与配置 / 代码内部 |
 | Q6 | 「查询数据源」控件先隐藏，字典改造后接通 | 原控件是从未挂载的死代码，已删 |

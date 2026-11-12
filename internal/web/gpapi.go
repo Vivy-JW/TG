@@ -167,12 +167,14 @@ func (s *GPAPI) hMeta(w http.ResponseWriter, _ *http.Request) {
 	}
 	out := make([]envView, 0, len(envs))
 	for _, e := range envs {
-		md := mirror.Dir(e)
+		md := mirror.DirFor(s.cfgPath, e)
 		mv := map[string]any{"path": md}
 		if m, ok := mirror.ReadManifest(md); ok {
 			mv["exists"] = true
 			mv["files"] = m.Files
 			mv["sizeMB"] = m.SizeMB
+			mv["at"] = m.Updated
+			mv["kinds"] = m.Kinds
 		} else if st, err := os.Stat(md); err == nil && st.IsDir() {
 			mv["exists"] = true
 		} else {
@@ -589,6 +591,7 @@ func (s *GPAPI) hSync(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *GPAPI) runMirror(env config.NamedSsh, mode string) {
+	env.MirrorDir = mirror.DirFor(s.cfgPath, env) // 落点与 tg file mirror 同一套规则
 	out, err := mirror.Pull(env, mode, func(done, total int, msg string) {
 		s.progressCount(env.Name, done, total, msg)
 	})

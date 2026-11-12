@@ -1,20 +1,20 @@
 package file
 
-// tt file mirror：离线镜像（source: 4gl/42f/42s/inc；interface: 42f/42s）。
+// tg file mirror：把服务器上的源码/表单文件镜像到本地。
 //
-//   mirror dir [<目录>]              查看/设置镜像根目录（config.json 顶层 mirror.dir）
+//   mirror dir [<目录>]              查看/设置镜像根（config.json 顶层 mirror.dir，或某环境的 mirrorDir）
 //   mirror pull [<环境>] [--full]    下载/更新该环境镜像（默认增量）
-//   mirror path [<环境>]             打印该环境镜像目录的绝对路径（AI 直接前往）
+//   mirror path [<环境>]             打印该环境镜像目录 + 上次拉取时间（AI 直接前往）
 //
-// 镜像根必须显式设置（不设默认），避免隐式落盘位置。目录结构与服务器同构：
-// <根>/<环境>/erp/... com/...（source 含 4gl/**/*.4gl + 42f + 42s/zh_CN + *.inc，
-// interface 只含 42f/42s）。
+// 收哪些：两棵树（$TOP 与 $CUST）里的 `*/4gl/*.4gl`、`*/42f/*`、`*.inc`。
+// 是"离线口子"：联网时 tg file cat/grep 与 tg outline/interface 直读服务器；
+// 断网、或要反复搜同一棵树（tg file grep 是逐文件 SFTP，最吃镜像），读这份镜像。
 //
-// 它是“离线口子”：联网时 AI 用 tt file cat/grep 现读；断网时读这份子集。
+// 不收 42s：GP 上没有这类文件。表单标签在 gae_file 里，由 tg dict db sync
+// 落到本地 t_ui_text（tg interface --labels 用），属于字典线，不属于镜像线。
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -22,48 +22,47 @@ import (
 
 	"tt/internal/cli/common"
 	"tt/internal/config"
-	"tt/internal/host"
+	"tt/internal/mirror"
 )
 
 // NewMirrorCmd 构造 mirror 子树（file 组与 dict 的隐藏转发各持一棵，
 // 避免同一个 *cobra.Command 被挂到两个父命令下）。
 func NewMirrorCmd() *cobra.Command {
 	var full bool
-	var profile string
 	g := &cobra.Command{
 		Use:   "mirror",
-		Short: "管理 T100 本地镜像（source: 4gl/42f/42s/inc；interface: 只 42f/42s）",
-		Long: `把某环境（T100 服务器）的源码/界面文件镜像到本地目录。
-profile=source（默认）取四类：4gl 目录下的 .4gl 源码、42f（编译表单）、
-42s/zh_CN（编译字符串）、*.inc（4GL include）。**这四类都是本地命令的饭票**：
-tt outline 只认 4gl，tt interface 只认 42f/42s，而两者读的是同一个镜像目录。
-所以默认 profile 故意收全，不要为了省体积把它改窄（改窄只会让某个命令“找不到文件”）。
-profile=interface 只取 42f/42s，想只要画面时配一个独立目录用。
-4fd 不镜像（设计期 fieldId 不稳定）。per、其它语言目录、.4gl.src 等不拉；
-备份文件（*.bak/*.bck/*~）也排除。目录结构与服务器同构：<镜像目录>/erp/... com/...。
-每个环境可以单独指定镜像目录；未单独指定时回退到全局根目录/<环境名>。
+		Short: "管理本地源码镜像（4gl / 42f / inc，$TOP 与 $CUST 两棵树）",
+		Long: `把某环境的源码与表单文件镜像到本地目录，给 tg outline / tg interface / tg file grep 用。
+
+收三类文件（两棵树 $TOP 与 $CUST 都扫）：
+  4gl  <模块>/4gl/*.4gl     源码（tg outline 读）
+  42f  <模块>/42f/*         编译表单（tg interface 读）
+  inc  *.inc                4GL include
+
+不收 42s：GP 没有这类文件；表单标签在 gae_file，由 tg dict db sync 落到本地
+t_ui_text（tg interface --labels 用），不在镜像里。
+
+联网时这些命令都能直读服务器，镜像只是"快"和"断网可用"：
+一次全量约 400+ MB / 十几分钟，之后增量只拉改过的文件。
 
 子命令：
   dir [<目录>]      查看/设置全局根目录；加 --at <环境> 则设置该环境单独目录
   pull [<环境>]     下载/更新该环境镜像（默认增量；--full 全量重建）
-  path [<环境>]     打印该环境镜像目录的绝对路径（AI 直接前往）
+  path [<环境>]     打印该环境镜像目录的绝对路径与上次拉取时间（AI 直接前往）
 
-环境用 --at <环境> 点名（也可给位置参数，二选一）；全局根与该环境单独目录都未设置时，
-该环境的 pull/path 会提示先 dir。`,
+环境用 --at <环境> 点名（也可给位置参数，二选一）。落点优先级：
+环境自己的 mirrorDir > 全局根目录/<环境名> > TT_GP_MIRROR_DIR/<环境名> > ~/.tt/gp-mirror/<环境名>。`,
 		RunE: func(cmd *cobra.Command, _ []string) error { return cmd.Help() },
 	}
-	dirCmd := newMirrorDirCmd()
-	pullCmd := newMirrorPullCmd(&full, &profile)
-	pathCmd := newMirrorPathCmd()
-	pullCmd.Flags().BoolVar(&full, "full", false, "全量重建（本 profile 的白名单内以服务器为准，含删除服务器已不存在的文件）")
-	pullCmd.Flags().StringVar(&profile, "profile", "source", "镜像白名单：source(4gl+42f+42s+inc) | interface(只 42f/42s)")
-	g.AddCommand(dirCmd, pullCmd, pathCmd)
+	pullCmd := newMirrorPullCmd(&full)
+	pullCmd.Flags().BoolVar(&full, "full", false, "全量重建（以服务器为准，含删除服务器已不存在的镜像文件）")
+	g.AddCommand(newMirrorDirCmd(), pullCmd, newMirrorPathCmd())
 	return g
 }
 
 // ---- 配置读写 ----
 
-func mirrorConfig() (*host.Hosts, string, error) {
+func mirrorConfig() (*config.Hosts, string, error) {
 	path, err := common.ResolveConfig(false)
 	if err != nil {
 		return nil, "", err
@@ -118,15 +117,6 @@ func setEnvMirrorDir(cfgPath, env, dir string) error {
 	})
 }
 
-// mirrorEnvPath 取某环境的最终镜像目录：环境自己的 mirrorDir 优先，否则顶层根目录/<环境名>。
-func mirrorEnvPath(cfgPath string, e *host.NamedSsh) (string, error) {
-	root, err := config.Load(cfgPath)
-	if err != nil {
-		return "", err
-	}
-	return e.MirrorPath(root.Mirror.Dir), nil
-}
-
 // mirrorEnvName 取本次环境：--at 优先，位置参数也可（两者给得不一致就报错）。
 func mirrorEnvName(args []string) (string, error) {
 	flagEnv := strings.TrimSpace(common.Env)
@@ -139,12 +129,12 @@ func mirrorEnvName(args []string) (string, error) {
 		name = arg
 	}
 	if name == "" {
-		return "", usageErr("需要点名环境：tt file mirror pull --at <环境>（或 tt file mirror path --at <环境>；可用环境见 tt env list）")
+		return "", usageErr("需要点名环境：tg file mirror pull --at <环境>（或 tg file mirror path --at <环境>；可用环境见 tg env list）")
 	}
 	return name, nil
 }
 
-func mirrorEnvOf(hosts *host.Hosts, name string) (*host.NamedSsh, error) {
+func mirrorEnvOf(hosts *config.Hosts, name string) (*config.NamedSsh, error) {
 	ref, err := hosts.Resolve(name)
 	if err != nil {
 		return nil, usageErr("%v", err)
@@ -162,13 +152,13 @@ func newMirrorDirCmd() *cobra.Command {
 		Long: `不带 --at：查看或设置全局镜像根目录（config.json 顶层 mirror.dir）。
 带 --at <环境>：查看或设置该环境自己的镜像目录；不设置时回退到全局根目录/<环境名>。
 --clear 只清除某环境的单独目录（必须同时给 --at <环境>），回退到全局根目录。
+两者都没有时，落点退到 TT_GP_MIRROR_DIR/<环境名> 或 ~/.tt/gp-mirror/<环境名>。
 
-目录可为相对路径，保存时转为绝对路径。全局根目录和每个环境的单独目录都未设置时，
-该环境的 mirror pull/path 会提示先执行本命令。`,
-		Example: `  tt file mirror dir
-  tt file mirror dir D:\dev\erp-src
-  tt file mirror dir D:\dev\erp-src-109tst --at 109tst
-  tt file mirror dir --at 109tst --clear`,
+目录可为相对路径，保存时转为绝对路径。`,
+		Example: `  tg file mirror dir
+  tg file mirror dir D:\dev\erp-src
+  tg file mirror dir D:\dev\erp-src-22 --at 22主机
+  tg file mirror dir --at 22主机 --clear`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfgPath, err := common.ResolveConfig(false)
@@ -186,7 +176,7 @@ func newMirrorDirCmd() *cobra.Command {
 				}
 				e := hosts.ByName(env)
 				if e == nil {
-					return usageErr("未找到环境 %q（tt env list 看全部）", env)
+					return usageErr("未找到环境 %q（tg env list 看全部）", env)
 				}
 				if clear {
 					if len(args) == 1 {
@@ -196,15 +186,11 @@ func newMirrorDirCmd() *cobra.Command {
 						return err
 					}
 					e.MirrorDir = "" // 本地副本也要清，下面算回退路径时才是真的回退
-					dir, _ := mirrorEnvPath(cfgPath, e)
+					dir := mirror.DirFor(cfgPath, *e)
 					if common.IsJSON() {
 						return common.PrintJSON(map[string]any{"ok": true, "env": env, "dir": dir, "cleared": true})
 					}
-					if dir == "" {
-						fmt.Printf("已清除环境 %s 的单独镜像目录；全局根目录也没有，mirror pull/path 仍会报未设置。\n", env)
-					} else {
-						fmt.Printf("已清除环境 %s 的单独镜像目录，现回退到: %s\n", env, dir)
-					}
+					fmt.Printf("已清除环境 %s 的单独镜像目录，现落点: %s\n", env, dir)
 					return nil
 				}
 				if len(args) == 1 {
@@ -221,14 +207,10 @@ func newMirrorDirCmd() *cobra.Command {
 					fmt.Printf("环境 %s 的镜像目录已设置: %s\n", env, abs)
 					return nil
 				}
-				dir, _ := mirrorEnvPath(cfgPath, e)
+				dir := mirror.DirFor(cfgPath, *e)
 				custom := strings.TrimSpace(e.MirrorDir) != ""
 				if common.IsJSON() {
-					return common.PrintJSON(map[string]any{"ok": true, "env": env, "dir": dir, "configured": dir != "", "custom": custom})
-				}
-				if dir == "" {
-					fmt.Printf("环境 %s 的镜像目录未设置。请执行: tt file mirror dir <目录> --at %s\n", env, env)
-					return nil
+					return common.PrintJSON(map[string]any{"ok": true, "env": env, "dir": dir, "custom": custom})
 				}
 				fmt.Println(dir)
 				return nil
@@ -244,7 +226,7 @@ func newMirrorDirCmd() *cobra.Command {
 				if common.IsJSON() {
 					return common.PrintJSON(map[string]any{"ok": true, "dir": abs, "updated": true})
 				}
-				fmt.Printf("镜像根目录已设置: %s\n(镜像将保存在 %s\\<环境名>\\ 下；执行 tt file mirror pull --at <环境> 拉取)\n", abs, abs)
+				fmt.Printf("镜像根目录已设置: %s\n(镜像将保存在 %s\\<环境名>\\ 下；执行 tg file mirror pull --at <环境> 拉取)\n", abs, abs)
 				return nil
 			}
 			dir, ok := readMirrorDir(cfgPath)
@@ -252,7 +234,8 @@ func newMirrorDirCmd() *cobra.Command {
 				return common.PrintJSON(map[string]any{"ok": true, "dir": dir, "configured": ok})
 			}
 			if !ok {
-				fmt.Println("镜像根目录未设置。请执行: tt file mirror dir <目录>（或加 --at <环境> 只给该环境）")
+				fmt.Printf("镜像根目录未设置。请执行: tg file mirror dir <目录>（或加 --at <环境> 只给该环境）\n" +
+					"未设置时落点退到 TT_GP_MIRROR_DIR/<环境名> 或 ~/.tt/gp-mirror/<环境名>。\n")
 				return nil
 			}
 			fmt.Println(dir)
@@ -265,21 +248,17 @@ func newMirrorDirCmd() *cobra.Command {
 
 // ---- mirror pull ----
 
-func newMirrorPullCmd(full *bool, profile *string) *cobra.Command {
+func newMirrorPullCmd(full *bool) *cobra.Command {
 	return &cobra.Command{
 		Use:   "pull [<环境>]",
 		Short: "下载/更新该环境镜像（默认增量；--full 全量重建）",
-		Long: `SSH 登录环境，按 profile 的白名单打包：source 取 4gl 目录下的 .4gl + 42f + 42s/zh_CN + *.inc；interface 只取 42f/42s，供 tt interface 合成画面。
-下载到该环境的镜像目录（环境单独指定，未指定则用全局根目录/<环境名>）。默认增量：
-服务器标记**按 profile 分别记**，只拉各自自上次以来的变更文件；先拉 source 再拉 interface
-也能真的拉到 42f/42s（不会“无变更”空跑）。--full 全量重建：**只对本 profile 的白名单负责**，
-不属于它的既有文件（如给 interface 做全量时的 4gl/inc）原样保留。
-白名单升级后，下次拉取会自动转全量以补齐新增类型。
+		Long: `把该环境两棵树（$TOP 与 $CUST）里的 4gl / 42f / inc 拉到本地镜像目录。
+默认增量：按大小 + 修改时间只补有差异的文件（大小相同但改过的源码也能认出来）。
+--full 全量重建：以服务器为准，服务器上已删的文件本地也删掉；不属于白名单的残留不动。
 
-打包根（$TOP）按登录区域动态探测；探测失败直接报错。`,
-		Example: `  tt file mirror pull --at 主机109
-  tt file mirror pull --at 主机109 --profile interface
-  tt file mirror pull --at 主机109 --full`,
+不收 42s：GP 没有这类文件；表单标签在 gae_file（tg dict db sync → t_ui_text）。`,
+		Example: `  tg file mirror pull --at 22主机
+  tg file mirror pull --at 22主机 --full`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			hosts, cfgPath, err := mirrorConfig()
@@ -294,51 +273,46 @@ func newMirrorPullCmd(full *bool, profile *string) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			envDir, err := mirrorEnvPath(cfgPath, e)
-			if err != nil {
-				return err
-			}
-			if envDir == "" {
-				return usageErr("环境 %s 的镜像目录未设置。请先执行: tt file mirror dir <目录>（可加 --at %s 只给该环境）", e.Name, e.Name)
-			}
-			mode := "增量"
+			envDir := mirror.DirFor(cfgPath, *e)
+			e.MirrorDir = envDir // 固定落点：Pull 内部用 mirror.Dir(env)
+			mode := "incr"
 			if *full {
-				mode = "全量"
+				mode = "full"
 			}
-			prof, err := host.ParseMirrorProfile(*profile)
-			if err != nil {
-				return usageErr("%v", err)
+			if !common.IsJSON() {
+				label := "增量"
+				if *full {
+					label = "全量"
+				}
+				fmt.Printf("正在拉取 %s 镜像（%s）: %s -> %s\n", e.Name, label, e.Host, envDir)
 			}
-			jsonOut := common.IsJSON()
-			if !jsonOut {
-				fmt.Printf("正在拉取 %s 镜像（%s，%s）: %s -> %s\n", e.Name, mode, prof.Label(), e.Host, envDir)
-			}
-			st, err := host.MirrorPullToDirProfile(cmd.Context(), e, envDir, *full, prof)
+			out, err := mirror.Pull(*e, mode, func(done, total int, msg string) {
+				if common.IsJSON() || total == 0 {
+					return
+				}
+				if done == total || done%500 == 0 {
+					fmt.Printf("  %d/%d 个%s\n", done, total, msg)
+				}
+			})
 			if err != nil {
 				return outputErrConn(err)
 			}
-			if jsonOut {
-				return common.PrintJSON(map[string]any{
-					"ok": true, "env": e.Name, "dir": envDir,
-					"files": st.Files, "bytes": st.Bytes, "pruned": st.Pruned,
-					"elapsed": st.Elapsed, "topDir": st.TopDir, "note": st.Note,
-					"full": st.Full, "profile": string(st.Profile),
-				})
+			if common.IsJSON() {
+				return common.PrintJSON(map[string]any{"ok": true, "env": e.Name, "dir": envDir, "mode": mode, "trees": out})
 			}
-			if st.Note != "" {
-				fmt.Printf("%s\n", st.Note)
-			} else {
-				fmt.Printf("镜像完成: %d 个文件, %s, 用时 %s\n", st.Files, fmtBytes(st.Bytes), st.Elapsed)
-				if st.Pruned > 0 {
-					fmt.Printf("已清理本地残留备份文件: %d 个（如 *.bak/*.bck；本 profile 只保留 %s）\n", st.Pruned, st.Profile.Label())
-				}
+			files, bytes := 0, int64(0)
+			for label, v := range out {
+				m, _ := v.(map[string]any)
+				n, _ := m["files"].(int)
+				b, _ := m["bytes"].(int64)
+				files += n
+				bytes += b
+				fmt.Printf("  %s: 下载 %d 个（跳过 %d 个），%.1f MB\n", label, n, intOr(m["skipped"]), float64(b)/1048576)
 			}
-			if st.Full && !*full {
-				fmt.Println("(本地无完整基线或镜像白名单已升级，本次自动按全量拉取)")
-			}
+			fmt.Printf("镜像完成: %d 个文件, %s\n", files, fmtBytes(bytes))
 			fmt.Printf("镜像目录: %s\n", envDir)
-			if st.TopDir != "" {
-				fmt.Printf("服务器 TOP: %s\n", st.TopDir)
+			if mf, ok := mirror.ReadManifest(envDir); ok {
+				fmt.Printf("上次拉取: %s（%d 个文件, %.1f MB）\n", mf.Updated, mf.Files, mf.SizeMB)
 			}
 			return nil
 		},
@@ -350,10 +324,10 @@ func newMirrorPullCmd(full *bool, profile *string) *cobra.Command {
 func newMirrorPathCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "path [<环境>]",
-		Short: "打印该环境镜像目录的绝对路径（AI 直接前往）",
-		Long: `打印该环境镜像目录的绝对路径（环境单独指定，未指定则用全局根目录/<环境名>），第一行即路径本身（便于 AI/脚本取用）。
-目录尚未拉取时会在路径后附提示。`,
-		Example: `  tt file mirror path --at 主机109`,
+		Short: "打印该环境镜像目录的绝对路径与上次拉取时间（AI 直接前往）",
+		Long: `打印该环境镜像目录的绝对路径（第一行即路径本身，便于 AI/脚本取用），并附上次拉取时间。
+目录尚未拉取时会在路径后给提示。`,
+		Example: `  tg file mirror path --at 22主机`,
 		Args:    cobra.MaximumNArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
 			hosts, cfgPath, err := mirrorConfig()
@@ -368,25 +342,40 @@ func newMirrorPathCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			p, err := mirrorEnvPath(cfgPath, e)
-			if err != nil {
-				return err
-			}
-			if p == "" {
-				return usageErr("环境 %s 的镜像目录未设置。请先执行: tt file mirror dir <目录>（可加 --at %s 只给该环境）", e.Name, e.Name)
-			}
-			_, statErr := os.Stat(p)
-			exists := statErr == nil
+			p := mirror.DirFor(cfgPath, *e)
+			mf, ok := mirror.ReadManifest(p)
 			if common.IsJSON() {
-				return common.PrintJSON(map[string]any{"ok": true, "env": e.Name, "path": p, "exists": exists})
+				v := map[string]any{"ok": true, "env": e.Name, "path": p, "exists": ok}
+				if ok {
+					v["files"] = mf.Files
+					v["sizeMB"] = mf.SizeMB
+					v["at"] = mf.Updated
+					v["kinds"] = mf.Kinds
+				}
+				return common.PrintJSON(v)
 			}
 			fmt.Println(p)
-			if !exists {
-				fmt.Printf("(该环境尚未拉取；先执行 tt file mirror pull --at %s)\n", e.Name)
+			if !ok {
+				fmt.Printf("(该环境尚未拉取；先执行 tg file mirror pull --at %s)\n", e.Name)
+				return nil
 			}
+			fmt.Printf("(上次拉取 %s，%d 个文件，%.1f MB)\n", mf.Updated, mf.Files, mf.SizeMB)
 			return nil
 		},
 	}
+}
+
+// intOr 把 map 里的数字转 int（JSON 解出来的可能是 float64，这里只管本进程内构造的值）。
+func intOr(v any) int {
+	switch n := v.(type) {
+	case int:
+		return n
+	case int64:
+		return int(n)
+	case float64:
+		return int(n)
+	}
+	return 0
 }
 
 // fmtBytes 字节数人性化显示。

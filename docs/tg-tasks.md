@@ -57,8 +57,8 @@
 - ☑ 删 `engine/` + `designer-src/`（1264 文件 ≈17 MB），删前打了 zip 到仓库外（2026-11-12，commit 见 handoff 第 35 条）
 - ☑ 确认 `engine/designer/` 28 个厂商 DLL（10.5 MB）不进 TG 发行包（engine 整个删了，`build_portable.bat` 的 staging 段也删了）
 - ☑ `tg interface`（3 条）：标签改查 gae_file，`.42s` 路径已删（2026-11-12）
-- ☐ `tt outline` 换 GP 目录结构或删
-- ☐ `tt file mirror` → profile（`debug` 只 `*.4gl`，`source` 收 4gl+42f+42s+inc）
+- ☑ `tt outline` 换 GP 目录结构：不换结构，改成"本地文件 > `--dir` > 镜像 > 直读服务器"（与 `tg interface` 同源，2026-11-12）
+- ☑ `tg file mirror` 改 GP 口径：两棵树 + 4gl/42f/inc，不做 profile（2026-11-12，见 handoff 第 39 条）
 - ☐ `tt db sql` 去掉"强制 `环境@企业`"
 - ☐ 从命令层摘掉 `target` / `entdir`
 - ☑ `skills/` 换成 GP 版（`tt-dev-tzc` 已删，`tt-erp-*` 已改名 `tg-erp-*`，commit a42a1a2）

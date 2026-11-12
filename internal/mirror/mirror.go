@@ -1,7 +1,12 @@
-// Package mirror 把 TOP GP 服务器上的 4GL 源码镜像到本地。
+// Package mirror 把 TOP GP 服务器上的源码与表单文件镜像到本地。
 //
-// 只收 *.4gl：GP 的源码根是 $TOP（正式区）与 $CUST（客制区）两棵，
-// 42f/42s/4fd 这些编译产物不在镜像范围里（要读就直连服务器或用字典）。
+// 收三类：`*/4gl/*.4gl`（源码，tg outline 读）、`*/42f/*`（编译表单，tg interface 读）、
+// `*.inc`（4GL include，grep/cat 读）。GP 的根是 $TOP（正式区）与 $CUST（客制区）两棵，
+// 都在镜像范围里。
+//
+// 不收 42s：T100 的 42s 是"把标签编译进文件"，GP 没有这类文件 —— 它的表单标签在
+// gae_file 里（由 tg dict db sync 落成本地 t_ui_text），属于字典线，不属于镜像线。
+// 标签怎么取见 internal/dict 与 tg interface --labels。
 //
 // 与字典（internal/dict）分开成两个包，是因为两者的落点、增量规则、失败影响都不同：
 // 字典换库失败只影响查询，镜像换目录失败会让调试器找不到源码。
@@ -27,9 +32,24 @@ import (
 // Dir 该环境的镜像目录：环境自己指定优先，否则 <默认根>/<环境名>。
 //
 // 默认根可以用 TT_GP_MIRROR_DIR 覆盖（多套环境放同一块盘时用）。
-func Dir(e config.NamedSsh) string {
-	if e.MirrorDir != "" {
+//
+// 注意：这里不读 config.json 顶层 mirror.dir —— 需要那个兜底时用 DirFor。
+func Dir(e config.NamedSsh) string { return DirFor("", e) }
+
+// DirFor 同 Dir，但会先看 config.json 顶层 mirror.dir（tg file mirror dir 写的全局根）。
+//
+// 优先级：环境自己的 mirrorDir > 全局根/<环境名> > TT_GP_MIRROR_DIR/<环境名> > ~/.tt/gp-mirror/<环境名>。
+// cfgPath 为空（不知道配置在哪）时跳过全局根这一层。
+func DirFor(cfgPath string, e config.NamedSsh) string {
+	if strings.TrimSpace(e.MirrorDir) != "" {
 		return e.MirrorDir
+	}
+	if cfgPath != "" {
+		if root, err := config.Load(cfgPath); err == nil {
+			if d := strings.TrimSpace(root.Mirror.Dir); d != "" {
+				return filepath.Join(d, e.Name)
+			}
+		}
 	}
 	base := os.Getenv("TT_GP_MIRROR_DIR")
 	if base == "" {
@@ -41,10 +61,11 @@ func Dir(e config.NamedSsh) string {
 
 // Manifest 镜像根目录下 manifest.json 的内容：上一次拉取的规模与时间。
 type Manifest struct {
-	Files   int     `json:"files"`
-	SizeMB  float64 `json:"sizeMB"`
-	Source  string  `json:"source"`
-	Updated string  `json:"at"`
+	Files   int            `json:"files"`
+	SizeMB  float64        `json:"sizeMB"`
+	Kinds   map[string]int `json:"kinds,omitempty"`
+	Source  string         `json:"source"`
+	Updated string         `json:"at"`
 }
 
 // ReadManifest 读 <dir>/manifest.json；没有或坏了都返回 false。
@@ -61,9 +82,9 @@ func ReadManifest(dir string) (Manifest, bool) {
 }
 
 // WriteManifest 写 <dir>/manifest.json（不返回错误：清单只是给人看的）。
-func WriteManifest(dir string, files int, sizeMB float64, source string) {
+func WriteManifest(dir string, files int, sizeMB float64, source string, kinds map[string]int) {
 	_ = os.MkdirAll(dir, 0o755)
-	m := Manifest{Files: files, SizeMB: sizeMB, Source: source, Updated: time.Now().Format("2006-01-02 15:04:05")}
+	m := Manifest{Files: files, SizeMB: sizeMB, Kinds: kinds, Source: source, Updated: time.Now().Format("2006-01-02 15:04:05")}
 	b, _ := json.MarshalIndent(m, "", "  ")
 	_ = os.WriteFile(filepath.Join(dir, "manifest.json"), b, 0o644)
 }
@@ -84,7 +105,7 @@ func Roots(env config.NamedSsh) []struct{ Label, Path string } {
 	return out
 }
 
-// Pull 连服务器，把两棵源码树里的 *.4gl 拉进 Dir(env)。
+// Pull 连服务器，把两棵源码树里的 4gl / 42f / inc 拉进 Dir(env)。
 //
 // mode="full" 会顺手删掉服务器上已不存在的本地文件（与 T100 的镜像行为一致）；
 // 其它值一律按增量处理，只补有差异的文件。
@@ -107,7 +128,6 @@ func Pull(env config.NamedSsh, mode string, progress func(done, total int, msg s
 
 	base := Dir(env)
 	out := map[string]any{}
-	total, bytes := 0, int64(0)
 	doneBase, totalBase := 0, 0
 	for _, src := range Roots(env) {
 		dst := filepath.Join(base, src.Label)
@@ -124,14 +144,46 @@ func Pull(env config.NamedSsh, mode string, progress func(done, total int, msg s
 		out[src.Label] = st
 		doneBase += st["processed"].(int)
 		totalBase += st["total"].(int)
-		total += st["files"].(int)
-		bytes += st["bytes"].(int64)
 	}
-	WriteManifest(base, total, float64(bytes)/1048576.0, "mirror")
+	n, sizeMB, kinds := localStats(base)
+	WriteManifest(base, n, sizeMB, "mirror", kinds)
 	return out, nil
 }
 
-// tree 把 src 下所有 *.4gl 拉进 dst。
+// localStats 数一遍镜像目录里现有的镜像文件：总数、总大小、按类别。
+//
+// manifest 记的是"目录里现在有什么"，不是"这一轮下载了多少" —— 增量跑完常常
+// 一个文件都没下载，记下载数会让 tg file mirror path 显示成 0 个 / 0 MB。
+func localStats(base string) (int, float64, map[string]int) {
+	files, size := 0, int64(0)
+	kinds := map[string]int{}
+	_ = filepath.Walk(base, func(p string, info os.FileInfo, err error) error {
+		if err != nil || info == nil || info.IsDir() {
+			return nil
+		}
+		rel, rerr := filepath.Rel(base, p)
+		if rerr != nil {
+			return nil
+		}
+		k := KindOf(rel)
+		if k == "" {
+			return nil
+		}
+		files++
+		size += info.Size()
+		kinds[k]++
+		return nil
+	})
+	return files, float64(size) / 1048576.0, kinds
+}
+
+// localFiles 只取文件数（WriteManifest 的简化入口，需要完整统计时用 localStats）。
+func localFiles(base string) int {
+	n, _, _ := localStats(base)
+	return n
+}
+
+// tree 把 src 下白名单内的文件（4gl / 42f / inc）拉进 dst。
 //
 // 差异判定：大小 + mtime。mtime 在下载时按服务器写回，所以下一次能直接比 ——
 // 只比大小会漏掉「长度一样但内容改了」的源码。
@@ -141,12 +193,29 @@ type file struct {
 	mt          time.Time
 }
 
+// KindOf 按相对路径判断镜像文件类别：4gl（源码）、42f（编译表单）、inc（include）。
+// 不在白名单里的路径返回 ""。
+func KindOf(rel string) string {
+	p := "/" + strings.ToLower(strings.TrimPrefix(filepath.ToSlash(rel), "./"))
+	switch {
+	case strings.Contains(p, "/4gl/") && strings.HasSuffix(p, ".4gl"):
+		return "4gl"
+	case strings.Contains(p, "/42f/"):
+		return "42f"
+	case strings.HasSuffix(p, ".inc"):
+		return "inc"
+	}
+	return ""
+}
+
 // collectByFind 用服务器侧一条 find 拿完整清单，避免逐目录 SFTP ReadDir。
 // 输出用 NUL 分隔（文件名里可以有空格/换行/制表符，不能按行切）。
 // find 不支持 -printf 或执行失败时返回错误，由调用方回退到 ReadDir。
+//
+// 白名单与 T100 的 mirror 同义：4gl 下的 .4gl、整个 42f 目录、任何 .inc。
 func collectByFind(conn *host.SSHConn, src string) ([]file, error) {
 	q := "'" + strings.ReplaceAll(src, "'", `'\''`) + "'"
-	cmd := "find " + q + ` -type f -iname '*.4gl' -printf '%P\0%s\0%T@\0' 2>/dev/null`
+	cmd := "find " + q + ` -type f \( -path '*/4gl/*' -iname '*.4gl' -o -path '*/42f/*' -o -iname '*.inc' \) -printf '%P\0%s\0%T@\0' 2>/dev/null`
 	out, err := conn.Output(cmd, 2*time.Minute)
 	if err != nil {
 		return nil, err
@@ -204,7 +273,7 @@ func tree(conn *host.SSHConn, sc *sftp.Client, src, dst, mode string, progress f
 					}
 					continue
 				}
-				if !strings.HasSuffix(strings.ToLower(e.Name()), ".4gl") {
+				if KindOf(rrel) == "" {
 					continue
 				}
 				files = append(files, file{rpath: rpath, rrel: rrel, size: e.Size(), mt: e.ModTime()})
@@ -216,6 +285,12 @@ func tree(conn *host.SSHConn, sc *sftp.Client, src, dst, mode string, progress f
 		}
 	}
 
+	kinds := map[string]int{}
+	for _, f := range files {
+		if k := KindOf(f.rrel); k != "" {
+			kinds[k]++
+		}
+	}
 	total := len(files)
 	if progress != nil {
 		progress(0, total, "")
@@ -271,12 +346,12 @@ func tree(conn *host.SSHConn, sc *sftp.Client, src, dst, mode string, progress f
 	return map[string]any{
 		"files": got, "skipped": skipped, "processed": processed, "total": total,
 		"pruned": pruned, "bytes": bytes, "sizeMB": float64(bytes) / 1048576,
-		"elapsed": time.Since(t0).Seconds(),
+		"kinds": kinds, "elapsed": time.Since(t0).Seconds(),
 	}, nil
 }
 
-// pruneStale 全量模式下删除 dst 里服务器已不存在的 *.4gl，并清掉空目录。
-// 只处理 .4gl，和 GP 镜像目录只收 .4gl 的范围一致；增量模式不调用。
+// pruneStale 全量模式下删除 dst 里服务器已不存在的镜像文件（4gl/42f/inc），并清掉空目录。
+// 增量模式不调用。
 func pruneStale(dst string, files []file) (int, error) {
 	if _, err := os.Stat(dst); err != nil {
 		return 0, nil
@@ -297,12 +372,12 @@ func pruneStale(dst string, files []file) (int, error) {
 			}
 			return nil
 		}
-		if !strings.HasSuffix(strings.ToLower(info.Name()), ".4gl") {
-			return nil
-		}
 		rel, err := filepath.Rel(dst, path)
 		if err != nil {
 			return nil
+		}
+		if KindOf(rel) == "" {
+			return nil // 不认识的残留（如 T100 时代的 42s）不动
 		}
 		if !keep[rel] {
 			stale = append(stale, path)
