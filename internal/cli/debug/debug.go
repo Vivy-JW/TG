@@ -48,12 +48,12 @@ var debugProbeCmd = &cobra.Command{
 			if sel := cfg.CloneEnv(envName); sel != nil {
 				cfg = sel
 			} else {
-				return fmt.Errorf("环境 %q 不存在(用 tt env list 看全部)", envName)
+				return fmt.Errorf("环境 %q 不存在(用 tg env list 看全部)", envName)
 			}
 		}
 		cfg.ApplyDefaultEnv() // 环境的连接/参数合并到运行时字段
 		if cfg.SSH.Host == "" {
-			return fmt.Errorf("没有可连的环境:请用 --env <环境名> 点名(tt env list 看全部)")
+			return fmt.Errorf("没有可连的环境:请用 --env <环境名> 点名(tg env list 看全部)")
 		}
 		fmt.Printf("[probe] 服务器 %s:%d 区域 %s\n", cfg.SSH.Host, cfg.SSH.Port, cfg.Zone)
 

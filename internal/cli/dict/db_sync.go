@@ -22,8 +22,8 @@ var dbSyncCmd = &cobra.Command{
 字典据点固定按 ds 取（ds 表档最全，2,962 张），与设置页「营运据点」选哪家无关 ——
 营运据点只决定直查（dict r.t --env <环境>）连哪个 schema。
 环境必须点名：--env <环境> 或 --at <环境>。
-各数据族的本地覆盖情况见 tt dict db status。`,
-	Example: `  tt dict db sync --env 22主机`,
+各数据族的本地覆盖情况见 tg dict db status。`,
+	Example: `  tg dict db sync --env 22主机`,
 	Args:    cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		_, envName, err := resolveDbConn(common.Env)

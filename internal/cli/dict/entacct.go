@@ -30,7 +30,7 @@ const entLookupTimeout = 20 * time.Second
 // hookEntAccount 解析本次该用哪个账号,并写回连接的 Account 槽位(空 = 用列表首项)。
 // 返回的 notes 会被打进输出信封的环境头。
 //
-// entRaw 是**用户显式给的企业编号**(tt dict --ent <n> / 会话值),不再来自环境配置:
+// entRaw 是**用户显式给的企业编号**(tg dict --ent <n> / 会话值),不再来自环境配置:
 // 环境级的 topent 已随"移除环境级企业"删除(见 config.NamedSsh 的注释)。
 // 没给就是没给 —— 退回客户端直连惯例(账号列表首项),并把这件事写进 notes,
 // 而不是替用户猜一个企业(猜错的表现是"查不到数据",与"数据不存在"无法区分)。
@@ -60,7 +60,7 @@ func resolveEntAccount(cc *dbconfig.Connection, ref *config.EnvRef, dataDir, ent
 	}
 
 	// 配置里的 ENT 清单优先：那是人显式同步过的那一份（设置页「ENT」页签 /
-	// tt env ents --refresh），存在就**不联网**。环境属于配置，账号解析也不该
+	// tg env ents --refresh），存在就**不联网**。环境属于配置，账号解析也不该
 	// 因为 VPN 没开而失败；库里的 gzou_t 只在同步那一刻才用。
 	if len(ref.Env.Ents) > 0 {
 		for _, e := range ref.Env.Ents {
@@ -70,7 +70,7 @@ func resolveEntAccount(cc *dbconfig.Connection, ref *config.EnvRef, dataDir, ent
 			acct := strings.TrimSpace(e.Account)
 			if acct == "" || acct == "-" {
 				return "", dbconfig.AcctFromPrimary, ent,
-					[]string{fmt.Sprintf("企业 %d 在配置的 ENT 清单里没有可用账号（该环境已同步 ENT；tt env ents %s 可看清单）", ent, ref.Name)}
+					[]string{fmt.Sprintf("企业 %d 在配置的 ENT 清单里没有可用账号（该环境已同步 ENT；tg env ents %s 可看清单）", ent, ref.Name)}
 			}
 			// 账号清单里没收录时，用同步时抄下来的口令（仍按“账号清单优先”的规矩）。
 			if e.Password != "" && !inAccountList(cc, acct) {
@@ -79,7 +79,7 @@ func resolveEntAccount(cc *dbconfig.Connection, ref *config.EnvRef, dataDir, ent
 			return acct, dbconfig.AcctFromEntConfig, ent, nil
 		}
 		return "", dbconfig.AcctFromPrimary, ent,
-			[]string{fmt.Sprintf("企业 %d 不在配置的 ENT 清单里（该环境已同步 ENT；tt env ents %s 可看清单）", ent, ref.Name)}
+			[]string{fmt.Sprintf("企业 %d 不在配置的 ENT 清单里（该环境已同步 ENT；tg env ents %s 可看清单）", ent, ref.Name)}
 	}
 
 	fp := entdir.Fingerprint(ref.Env.Host, ref.Env.User, ref.Env.Zone,

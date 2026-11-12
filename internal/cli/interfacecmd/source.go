@@ -201,7 +201,7 @@ func find42F(root, form, module string) (path, mod string, err error) {
 	if len(hits) == 0 {
 		if !sawAny42F {
 			return "", "", notFound("FORM_NOT_FOUND", 4, "镜像里没有任何 .42f（镜像: %s）", root).
-				WithHint("这份镜像没拉画面这一类。拉一次默认镜像即可：tt file mirror pull --at <环境>；或直接给 --42f <文件>")
+				WithHint("这份镜像没拉画面这一类。拉一次默认镜像即可：tg file mirror pull --at <环境>；或直接给 --42f <文件>")
 		}
 		return "", "", notFound("FORM_NOT_FOUND", 4, "没有找到 %s.42f（镜像: %s）", form, root).
 			WithHint("镜像里有别的 42f，所以是名字/模块不对：确认表单名；同名多个模块时加 --module（镜像里有 42f 说明 profile 没问题）")

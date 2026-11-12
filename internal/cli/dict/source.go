@@ -108,8 +108,8 @@ func explicitLocalDB() string {
 func localNeedsEnvErr() error {
 	names := localDBEnvNames()
 	hint := `本地库按环境分开，必须点名环境：
-  tt dict <命令> --env local:<环境>
-（首次使用先同步： tt dict db sync --env <环境>）`
+  tg dict <命令> --env local:<环境>
+（首次使用先同步： tg dict db sync --env <环境>）`
 	if len(names) > 0 {
 		hint = hint + `
 
@@ -154,7 +154,7 @@ func resolveDBPathForEnv(env, flagPath string) (string, error) {
 			fmt.Fprintln(&msg, "  "+one)
 		}
 		fmt.Fprintln(&msg)
-		fmt.Fprint(&msg, "先同步该环境: tt dict db sync --env "+env)
+		fmt.Fprint(&msg, "先同步该环境: tg dict db sync --env "+env)
 		return "", fmt.Errorf("%s", msg.String())
 	}
 	return p, nil
@@ -197,11 +197,11 @@ func openLocalSource(env string) error {
 		}
 		resolvedPath, err = resolveDBPath(dbPath)
 	} else if e, ok := gpEnvNamed(env); ok {
-		// TOP GP 的本地字典库由 tt dict db sync 产出，位置在 dict.DictPath。
+		// TOP GP 的本地字典库由 tg dict db sync 产出，位置在 dict.DictPath。
 		resolvedPath = dictlib.DictPath(e)
 		if _, statErr := os.Stat(resolvedPath); statErr != nil {
 			return output.Errorf(output.CodeUsage, 2,
-				"环境 %s 还没有本地字典库（%s）。\n先同步一次： tt dict db sync --env %s",
+				"环境 %s 还没有本地字典库（%s）。\n先同步一次： tg dict db sync --env %s",
 				env, resolvedPath, env)
 		}
 	} else {
@@ -334,7 +334,7 @@ func missingTableErr(subject string) error {
 // 远程源说明库的问题与回退方式。subject 如 "校验定义 (dzcd_t 等表)"。
 func missingHint(subject string) string {
 	if srcLocal {
-		return fmt.Sprintf("本地库尚未包含%s数据。二选一:\n  tt dict db sync --env <环境>   # 从该环境 ERP 全量刷新(原库自动备份为 .bak)\n  tt dict <命令> --env <环境名>       # 免写盘,直接查远程\n看各数据族缺什么: tt dict db status", subject)
+		return fmt.Sprintf("本地库尚未包含%s数据。二选一:\n  tg dict db sync --env <环境>   # 从该环境 ERP 全量刷新(原库自动备份为 .bak)\n  tg dict <命令> --env <环境名>       # 免写盘,直接查远程\n看各数据族缺什么: tg dict db status", subject)
 	}
 	return fmt.Sprintf("远程库缺少%s相关字典表(该环境数据库未同步或账号权限不足);可用 --env local:<环境> 切回该环境的本地库", subject)
 }
@@ -343,7 +343,7 @@ func missingHint(subject string) string {
 // subject 如 "校验定义"。
 func emptyHint(subject string) string {
 	if srcLocal {
-		return fmt.Sprintf("暂无%s数据。请先执行: tt dict db sync --env <环境>", subject)
+		return fmt.Sprintf("暂无%s数据。请先执行: tg dict db sync --env <环境>", subject)
 	}
 	return fmt.Sprintf("未查询到%s数据(库中无记录或 --kw 无匹配;可换 --env <其他环境> 再试)", subject)
 }

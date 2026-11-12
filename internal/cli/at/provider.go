@@ -1,7 +1,7 @@
 package at
 
 // 取值来源：**只读本机**。环境来自 config.json 的 hosts.sshs；企业来自该环境的
-// entdir 快照（与 tt debug ents / tt dict 同一份）。--at-list 与校验都走这里，
+// entdir 快照（与 tt debug ents / tg dict 同一份）。--at-list 与校验都走这里，
 // 因此“下拉里看到的”和“用起来校验的”永远是同一套。
 
 import (
@@ -98,14 +98,14 @@ func checkEnv(cmd *cobra.Command, env string) error {
 		return nil // 交给命令自己报“配置读不到”
 	}
 	if len(envs) == 0 {
-		return fmt.Errorf("配置里还没有任何环境（%s）；先在设置里加一个，或 tt env list 确认", path)
+		return fmt.Errorf("配置里还没有任何环境（%s）；先在设置里加一个，或 tg env list 确认", path)
 	}
 	for _, e := range envs {
 		if e.Name == env {
 			return nil
 		}
 	}
-	return fmt.Errorf("%s 的 --at 指向了不存在的环境 %q。\n可用的是：%s\n（看每个环境的候选：tt env ents）",
+	return fmt.Errorf("%s 的 --at 指向了不存在的环境 %q。\n可用的是：%s\n（看每个环境的候选：tg env ents）",
 		cmd.CommandPath(), env, strings.Join(envNames(envs), "、"))
 }
 
@@ -128,7 +128,7 @@ func checkEnt(cmd *cobra.Command, env string, ent int) error {
 		}
 		known = append(known, fmt.Sprintf("%s@%d", env, m.Ent))
 	}
-	return fmt.Errorf("%s 的 --at 指向了企业 %d，但 %s 的 ENT 清单里没有它。\n可用的是：%s\n（完整清单：tt env ents %s；没同步过就跑 tt env ents --refresh）",
+	return fmt.Errorf("%s 的 --at 指向了企业 %d，但 %s 的 ENT 清单里没有它。\n可用的是：%s\n（完整清单：tg env ents %s；没同步过就跑 tg env ents --refresh）",
 		cmd.CommandPath(), ent, env, strings.Join(known, "、"), env)
 }
 

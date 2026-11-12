@@ -77,10 +77,10 @@ var winCmd = &cobra.Command{
 无参数时列出全部开窗(--kw 按说明过滤);指定开窗码显示完整详情:
 SQL 指令(附标签图例)、参数、显现设定。
 开窗码形如 q_apca001。命令名对齐 T100 原生工具 r.q(旧名 rq/win 仍可用)。`,
-	Example: `  tt dict r.q
-  tt dict r.q --kw 料号
-  tt dict r.q q_apca001
-  tt dict r.q q_apca001 --json`,
+	Example: `  tg dict r.q
+  tg dict r.q --kw 料号
+  tg dict r.q q_apca001
+  tg dict r.q q_apca001 --json`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 1 {
@@ -158,7 +158,7 @@ func runWinDetail(id string) error {
 		return err
 	}
 	if len(headers) == 0 {
-		return notFoundErr("开窗定义 %s 不存在", id).WithHint("列出全部开窗定义：tt dict r.q")
+		return notFoundErr("开窗定义 %s 不存在", id).WithHint("列出全部开窗定义：tg dict r.q")
 	}
 	if srcProduct == "gp" {
 		return runWinDetailGP(id, headers)

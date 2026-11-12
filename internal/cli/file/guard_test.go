@@ -31,7 +31,7 @@ func TestFilePackageHasNoExecOrSftp(t *testing.T) {
 		s := string(b)
 		for _, bad := range []string{`"os/exec"`, `"github.com/pkg/sftp"`} {
 			if strings.Contains(s, bad) {
-				t.Errorf("%s 引入了 %s —— tt file 必须只经 host.FS 只读访问，且不执行服务器命令", name, bad)
+				t.Errorf("%s 引入了 %s —— tg file 必须只经 host.FS 只读访问，且不执行服务器命令", name, bad)
 			}
 		}
 	}

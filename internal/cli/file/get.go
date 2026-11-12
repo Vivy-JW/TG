@@ -24,9 +24,9 @@ func newGetCmd() *cobra.Command {
   --max MB    大小上限（默认 200 MB；0 = 不限）
 
 先写 .part 再 rename：中断不会留下半截文件。`,
-		Example: `  tt file get --at 主机109 erp/apm/4gl/apm_apmt520.4gl
-  tt file get --at 主机109 erp/apm/4gl/apm_apmt520.4gl -o x.4gl
-  tt file get --at 主机109 per/apm/apmt520.rpt -o -`,
+		Example: `  tg file get --at 主机109 erp/apm/4gl/apm_apmt520.4gl
+  tg file get --at 主机109 erp/apm/4gl/apm_apmt520.4gl -o x.4gl
+  tg file get --at 主机109 per/apm/apmt520.rpt -o -`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			p, err := cur.argPath(args[0])
@@ -45,7 +45,7 @@ func newGetCmd() *cobra.Command {
 				return ioErr("%v", host.WrapPathErr(cur.short(p), err))
 			}
 			if self.IsDir() {
-				return usageErr("get 不支持目录：%s（先用 tt file find <目录> 收窄，或 tt file ls <目录> 看文件）", cur.short(p))
+				return usageErr("get 不支持目录：%s（先用 tg file find <目录> 收窄，或 tg file ls <目录> 看文件）", cur.short(p))
 			}
 			limit := maxMB << 20
 			if maxMB > 0 && self.Size > limit {

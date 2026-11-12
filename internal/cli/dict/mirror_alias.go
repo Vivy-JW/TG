@@ -1,9 +1,9 @@
 package dict
 
-// tt dict mirror 已迁移到 tt file mirror。这里只留一棵**隐藏**的转发树：
+// tg dict mirror 已迁移到 tg file mirror。这里只留一棵**隐藏**的转发树：
 // 命令实现还是 file 包那一份（不复制逻辑），只在执行时打一行迁移提示。
 //
-// 为什么还留着：技能与旧脚本里仍有 `tt dict mirror path/pull` 的写法；
+// 为什么还留着：技能与旧脚本里仍有 `tg dict mirror path/pull` 的写法；
 // 留一个版本的缓冲，下一版删除。
 
 import (
@@ -17,7 +17,7 @@ func init() {
 	// 与从前一样覆盖掉它（同时补跑根命令的 --at 钩子）。
 	alias.PersistentPreRunE = skipQuerySource
 	for _, c := range alias.Commands() {
-		c.Deprecated = "已迁移：请用 tt file mirror（例：tt file mirror path --at <环境>）"
+		c.Deprecated = "已迁移：请用 tg file mirror（例：tg file mirror path --at <环境>）"
 	}
 	Group.AddCommand(alias)
 }

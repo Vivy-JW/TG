@@ -1,6 +1,6 @@
 package dict
 
-// db 连接管理:tt dict db list / ping / discover。
+// db 连接管理:tg dict db list / ping / discover。
 // list    :列出各环境挂载的数据库(含 viaSsh 标记与默认项)
 // ping    :验证给定环境库可达(含 viaSsh 隧道;只读 SELECT version)
 // discover:SSH 自动发现某环境(--env)的数据库连接要素 → 预览/--save 写入该环境的 db
@@ -93,9 +93,9 @@ var dbDiscoverCmd = &cobra.Command{
 输出候选连接(不落盘);--save 写入该环境的 db(config.json hosts.sshs[].db)。
 注意:自动发现给出的是"服务器视角"要素;客户端直连地址(host)需自行确认,
 若 DB 仅服务器可达,保存后再补 viaSsh 配置。`,
-	Example: `  tt dict db discover --env 正式区                 # oracle(默认),预览
-  tt dict db discover --env 正式区 --type kingbase
-  tt dict db discover --env 正式区 --type kingbase --save`,
+	Example: `  tg dict db discover --env 正式区                 # oracle(默认),预览
+  tg dict db discover --env 正式区 --type kingbase
+  tg dict db discover --env 正式区 --type kingbase --save`,
 	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		ssh, zone, envName, err := discoverSSHFromEnv(common.Env)

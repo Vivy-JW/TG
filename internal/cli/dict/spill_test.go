@@ -14,7 +14,7 @@ import (
 	"tt/internal/testkit"
 )
 
-// 这一组测的是 tt dict spill：那条"读已经落盘的那份完整结果"的入口。
+// 这一组测的是 tg dict spill：那条"读已经落盘的那份完整结果"的入口。
 //
 // 它值得有自己的测试，因为它**不连数据源**（这是它的全部意义）——所以测试也不必连：
 // 造一个配置目录 + 一份落盘文件就够，判据全是"读回来的那一页对不对"。
@@ -109,7 +109,7 @@ func TestSpillRows(t *testing.T) {
 	}
 }
 
-// TestSpillShowPagesAFile 端到端：造一份落盘文件，跑 `tt dict spill show … --offset --limit`，
+// TestSpillShowPagesAFile 端到端：造一份落盘文件，跑 `tg dict spill show … --offset --limit`，
 // 从信封里读回这一页。
 //
 // 这一条**不连数据源**（那正是 spill 的意义），所以它靠一份临时配置目录 + 一个 JSON 文件
@@ -183,7 +183,7 @@ func TestSpillShowPagesAFile(t *testing.T) {
 	}
 }
 
-// runDict 从**真实的命令树**跑一条 tt dict 子命令，把 stdout 收回来。
+// runDict 从**真实的命令树**跑一条 tg dict 子命令，把 stdout 收回来。
 //
 // stdout 捕获走 testkit.CaptureStdout（边写边读的管道实现）：从前这里另有一份"临时文件当
 // stdout"的写法，是本仓库的**第三份** stdout 捕获实现，签名与另外两份都不一样。
@@ -253,7 +253,7 @@ func TestTruncationPointsAtIndexSpill(t *testing.T) {
 	for _, n := range notes {
 		joined += fmt.Sprint(n) + "\n"
 	}
-	if !strings.Contains(joined, "tt dict spill show") || !strings.Contains(joined, "--offset 2") {
+	if !strings.Contains(joined, "tg dict spill show") || !strings.Contains(joined, "--offset 2") {
 		t.Errorf("note 该给出 spill 的翻页入口（offset 从已回的条数起）：\n%s", joined)
 	}
 

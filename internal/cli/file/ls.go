@@ -51,8 +51,8 @@ func newLsCmd() *cobra.Command {
   -l  长格式（权限/大小/时间/名字）
   -a  含隐藏文件（名字以 . 开头）
   --human  大小人性化（配合 -l；-h 被 help 占用）`,
-		Example: `  tt file ls --at 主机109
-  tt file ls -la --at 主机109 erp/apm/4gl`,
+		Example: `  tg file ls --at 主机109
+  tg file ls -la --at 主机109 erp/apm/4gl`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			arg := ""

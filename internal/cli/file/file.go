@@ -3,7 +3,7 @@
 // 三件事的边界：
 //
 //	ls/cat/head/tail/grep/find/stat/wc/du/get   在线看文件（纯 SFTP，服务器上不起进程）
-//	mirror dir|path|pull                       离线镜像（子集 + 增量，原 tt dict mirror）
+//	mirror dir|path|pull                       离线镜像（子集 + 增量，原 tg dict mirror）
 //
 // 只读不是靠“少给几个命令”，而是靠结构：
 //   - 本包只调用 host.FS 的读原语，没有 Create/Remove/Rename/Mkdir/Chmod；
@@ -65,7 +65,7 @@ func Register(root *cobra.Command) {
   tg file wc    [-l] <文件...>                   行/词/字节
   tg file du    [-s] [--human] [<路径>]                   占用大小（按文件大小累计，1K 块）
   tg file get   <路径> [-o <本地|->]             下载一个文件（默认同名落当前目录）
-  tg file mirror dir|path|pull                   离线镜像（子集 + 增量）
+  tg file mirror dir|path|pull                   离线镜像（4gl / 42f / inc + 增量）
 
 路径怎么写（GP 的源码是两棵并列的树）：
   $TOP  = workspace  （/u1/<实例>/tiptop）
@@ -78,7 +78,8 @@ func Register(root *cobra.Command) {
 
 范围与保证：
   只读实例目录之内（含两棵树）；不跟随符号链接（--follow 可开，仍限实例目录内）；
-  服务器上不执行任何命令（纯 SFTP）；没有 put/rm/mv/chmod。
+  文件动词走纯 SFTP，服务器上不执行命令；只有 mirror 用一条只读 find 拿清单
+  （不写服务器、不留文件）；没有 put/rm/mv/chmod。
   --at <环境> 点名目标（不猜环境）；tg file --at-list 可看取值。
 
 数据默认 JSON；人读用 --human（等价 --format table）。

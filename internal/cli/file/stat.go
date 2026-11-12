@@ -23,8 +23,8 @@ func newStatCmd() *cobra.Command {
 		Use:   "stat <路径...>",
 		Short: "看类型/大小/时间/权限",
 		Long:  `看一个或多个路径的属性（不跟随符号链接；--follow 时才解析目标）。`,
-		Example: `  tt file stat --at 主机109 erp/apm/4gl/apm_apmt520.4gl
-  tt file stat --at 主机109 erp/apm/4gl/link.4gl --follow`,
+		Example: `  tg file stat --at 主机109 erp/apm/4gl/apm_apmt520.4gl
+  tg file stat --at 主机109 erp/apm/4gl/link.4gl --follow`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var out []statJSON

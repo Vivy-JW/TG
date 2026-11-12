@@ -23,7 +23,7 @@ var cacheOlderThan time.Duration
 func newCacheCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cache",
-		Short: "查看/清理缓存(企业快照、源码镜像、查询落盘、断点存档)",
+		Short: "查看/清理缓存(查询落盘、调试缓存)",
 		Long: `查看与清理配置目录下的缓存。
 
 缓存 = 跑出来的、可再生的中间数据(它们与 config.json 同居一个目录,但删了会自愈):
@@ -38,12 +38,12 @@ func newCacheCmd() *cobra.Command {
 
 tt serve 启动时会自动清掉超过 7 天的缓存 —— 刻意不"启动即全清":spill 里那些文件
 的用途正是"刚才那条查询的完整结果,想看全量去读它",启动就删会把上一条命令刚
-告诉你的东西删掉。要立刻清空用 tt cache clear。`,
-		Example: `  tt cache                      # 看各缓存目录占多少
-  tt cache clear                # 全清
-  tt cache clear --older-than 24h
-  tt cache clear --dry-run      # 只算不删
-  tt cache --json`,
+告诉你的东西删掉。要立刻清空用 tg cache clear。`,
+		Example: `  tg cache                      # 看各缓存目录占多少
+  tg cache clear                # 全清
+  tg cache clear --older-than 24h
+  tg cache clear --dry-run      # 只算不删
+  tg cache --json`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			dir, err := cacheDir()
@@ -84,9 +84,9 @@ func newCacheClearCmd() *cobra.Command {
 
 --older-than 给一个时长(如 24h、7d 不接受,用 168h)只清比它旧的;
 --dry-run 只统计会释放多少,不删。`,
-		Example: `  tt cache clear
-  tt cache clear --older-than 24h
-  tt cache clear --dry-run`,
+		Example: `  tg cache clear
+  tg cache clear --older-than 24h
+  tg cache clear --dry-run`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			dir, err := cacheDir()

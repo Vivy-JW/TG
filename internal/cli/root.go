@@ -40,26 +40,26 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "tg",
 	Short: "TG — TOP GP 开发 CLI",
-	Long: `TT 是面向 T100 ERP 的命令行工具：把实施/开发日常要用的「查数据字典、连库看数、
-读服务器源码、调试作业、改设计器包、看前端画面、画原型图」收进同一个二进制、同一份
-config.json、同一个本地 Web 服务（tg serve）。
+	Long: `TG 是面向 TOP GP 的命令行工具：查数据字典、看营运据点、连库看数、读服务器源码、
+看前端画面、拉离线镜像，收进同一个二进制、同一份 config.json、同一个本地 Web 服务
+（tg serve）。
 
 给人和 AI agent 共用：输出简体中文，数据类命令默认 JSON 信封；目标一律点名
-（--at <环境>[@<企业>] 或 --env，没有默认环境；不知道填什么就加 --at-list）。
+（--at <环境>[@<据点编号>] 或 --env，没有默认环境；不知道填什么就加 --at-list）。
 
 能力分组：
   tg dict …      数据字典：表/程序/消息/开窗（r.q）+ 本地字典库同步与状态
-  tg site …      营运据点（azp_file）：列全部据点 / 看一个
+  tg site …      营运据点（azp_file）：列全部据点 / 看一个（据点编号 → 资料库编号 → schema）
   tg db …        数据库：连通性测试（ping / probe）与只读 SQL（sql）
-  tg file …      服务器文件：ls/find/grep/head/cat 只读浏览 + 离线镜像（source/interface）
-  tg debug …     作业调试：起会话、停站现场、断点、步进、接口日志重放
-  tg session …   会话：建 / 列 / 看 / 改 ENT / 结束 / 收掉
+  tg file …      服务器文件：ls/find/grep/head/cat 只读浏览（$TOP 与 $CUST 两棵树）
+                 + 离线镜像（4gl / 42f / inc）
   tg interface … 前端画面：.42f + gae_file（页面 / 字段 / 中文标签）
   tg outline …   4GL 源码大纲：函数 / UI 块与行范围
+  tg debug …     作业调试（T100 的 gendbg 那一套；GP 的调试目前只在网页里）
+  tg session …   会话：建 / 列 / 看 / 改 / 收
   tg env / config / serve / install / update   环境、配置、本地服务、安装、自更新
 
-远程操作默认只读：服务器上的写只有 tzc 的三道闸门与 tzs 引擎动词；
-file 没有 put/rm；调试重放与镜像打包在服务器上留下的临时文件除外。
+远程操作只读：file 没有 put/rm；镜像用 SFTP 逐个文件下载，不在服务器上留东西。
 
 退出码按命令线各自定义（同一个数字在不同组含义不同，包装脚本按子命令辨认）。
 部分命令的码表：
@@ -95,7 +95,7 @@ func init() {
 	// 各命令不需要改读法，也不会出现“--at 与 --env 各读一份”。
 	// --at-list 在 Execute 的预扫描里处理（cobra 的 ValidateArgs 早于 pre-run）。
 	pf.StringVar(&at.Raw, "at", "",
-		"这次操作落在哪个目标：<环境> 或 <环境>@<企业>（不知道填什么：加 --at-list）")
+		"这次操作落在哪个目标：<环境> 或 <环境>@<据点编号>（不知道填什么：加 --at-list）")
 	pf.BoolVar(&at.List, "at-list", false,
 		"列出本命令可用的 --at 取值、来源与示例（纯本地，不联网）")
 

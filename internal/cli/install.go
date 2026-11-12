@@ -1,8 +1,8 @@
 // `tt install` —— 把 tt 装进使用者的环境。
 //
-//	tt install skills [--to <dir>|auto] [--agent <名字>] [--force] [--dry-run] [--strict]
+//	tg install skills [--to <dir>|auto] [--agent <名字>] [--force] [--dry-run] [--strict]
 //	                                           把官方技能 + 登记的第三方技能复制到目标目录
-//	tt install path   [--dry-run]              把 exe 所在目录追加到**用户** PATH(HKCU，不需要管理员)
+//	tg install path   [--dry-run]              把 exe 所在目录追加到**用户** PATH(HKCU，不需要管理员)
 //
 // 合并前 TDebug / TDev / TDictCli 各有一份同形实现，注释里写着"命令形态与另外两个一致
 // （改动请三边同步）"。合并后只有这一份。
@@ -48,12 +48,12 @@ func defaultSkillsSource() (string, error) {
 func newInstallCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "install",
-		Short: "把 tt 装进你的环境（skills / path）",
+		Short: "把 tg 装进你的环境（skills / path）",
 		Long: `把 tt 装进你的环境：
 
-  tt install skills [--to <dir>|auto] [--agent <名字>] [--force] [--dry-run] [--strict]
+  tg install skills [--to <dir>|auto] [--agent <名字>] [--force] [--dry-run] [--strict]
                                              把官方技能 + 登记的第三方技能复制到目标目录
-  tt install path   [--dry-run]              把 exe 所在目录追加到用户 PATH(HKCU)`,
+  tg install path   [--dry-run]              把 exe 所在目录追加到用户 PATH(HKCU)`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("请指定子命令: skills 或 path\n\n%s", cmd.UsageString())
@@ -64,7 +64,7 @@ func newInstallCmd() *cobra.Command {
 }
 
 //---------------------------------------------------------------------------
-// tt install skills
+// tg install skills
 //---------------------------------------------------------------------------
 
 func newInstallSkillsCmd() *cobra.Command {
@@ -97,9 +97,9 @@ func newInstallSkillsCmd() *cobra.Command {
 
 要装到 agent 会去读的位置，用 --to auto 或点名一个 agent：
 
-  tt install skills --to auto             # 已有 agent 目录就用它，否则建 .agents/skills
-  tt install skills --agent claude-code   # 装到 Claude Code 读的位置
-  tt install skills --agent agents        # 跨客户端公约数 .agents/skills
+  tg install skills --to auto             # 已有 agent 目录就用它，否则建 .agents/skills
+  tg install skills --agent claude-code   # 装到 Claude Code 读的位置
+  tg install skills --agent agents        # 跨客户端公约数 .agents/skills
 
 --agent 接受的名字：` + agentSkillNames() + `
 
@@ -112,12 +112,12 @@ func newInstallSkillsCmd() *cobra.Command {
 不碰其它内容）。
 
 --dry-run 只打印计划与告警，一个字节都不写。--strict 时有告警就返回非零退出码（给 CI 用）。`,
-		Example: `  tt install skills --to auto
-  tt install skills --agent claude-code
-  tt install skills --to .agents/skills
-  tt install skills --force
-  tt install skills --dry-run
-  tt install skills --to auto --strict`,
+		Example: `  tg install skills --to auto
+  tg install skills --agent claude-code
+  tg install skills --to .agents/skills
+  tg install skills --force
+  tg install skills --dry-run
+  tg install skills --to auto --strict`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			src, err := skillsSource()
@@ -362,7 +362,7 @@ func isDir(p string) bool {
 }
 
 //---------------------------------------------------------------------------
-// tt install path
+// tg install path
 //---------------------------------------------------------------------------
 
 func newInstallPathCmd() *cobra.Command {
@@ -375,8 +375,8 @@ func newInstallPathCmd() *cobra.Command {
 只动当前用户的注册表项，不需要管理员，绝不碰系统 PATH。已有该项时幂等
 （不重复追加、不重排顺序，原有的 %USERPROFILE% 之类可展开变量原样保留）。
 与 Web 设置页「设置 → 加入 PATH」是同一份实现。`,
-		Example: `  tt install path
-  tt install path --dry-run`,
+		Example: `  tg install path
+  tg install path --dry-run`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			st, next, changed, err := pathinstall.Preview()

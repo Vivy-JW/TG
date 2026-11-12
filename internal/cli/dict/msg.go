@@ -1,6 +1,6 @@
 package dict
 
-// tt dict msg:查询系统消息档(gzze_t,由作业 azzi920 维护;运行时 cl_err/cl_getmsg
+// tg dict msg:查询系统消息档(gzze_t,由作业 azzi920 维护;运行时 cl_err/cl_getmsg
 // 按编号+语言取用)。AI 在代码里遇到消息编号(如 std-00006 / azz-00041 / -263)
 // 时用它查文本、建议处理方式与技术细节。
 //
@@ -53,29 +53,29 @@ std-00006)时,查它的完整文本、建议处理方式与技术细节。
            不是筛选条件 —— 只给 --lang 等于没筛
 类型/状态/建议作业都可以逗号分隔给多个(列内是 OR),不同 flag 之间是 AND。
 编号形如 std-00001 / azz-00041 / lib-xxxxx(类型-流水);负整数为 SQLCODE
-(如 -263,查询时需用 -- 分隔: tt dict msg -- -263)。
+(如 -263,查询时需用 -- 分隔: tg dict msg -- -263)。
 
 命中一条打详情;命中多条打列表(编号/类型/状态/语句),要看某条的完整内容
 再拿它的编号查一次,或加 --full 全部打详情。
 返回: 文本、建议处理、建议作业(附名称)、技术细节、类型(0=警告 1=错误
 2=资讯)、状态。`,
-	Example: `  tt dict msg std-00006                  # 精确查一个编号(zh_CN)
-  tt dict msg "std-00006,azz-00041"      # 一次查多个编号
-  tt dict msg "azz-*" --limit 0          # 列 azz 模块的全部消息
-  tt dict msg --text 密码                  # 按信息语句的子串搜
-  tt dict msg "baa-*" --text 密码          # 编号与语句两个条件同时成立
-  tt dict msg --type 1 --status Y        # 只看启用中的错误消息
-  tt dict msg --type 1,2 --text 审核       # 类型多选 + 语句子串
-  tt dict msg --prog axmt500             # 哪些消息建议跑 axmt500
-  tt dict msg azz-00041 --lang zh_TW     # 换语言(语言也是查询条件)
-  tt dict msg -- -100                    # 负整数编号(SQLCODE)需用 -- 分隔
-  tt dict msg baa-00010 --env 正式区       # 远程直查该环境`,
+	Example: `  tg dict msg std-00006                  # 精确查一个编号(zh_CN)
+  tg dict msg "std-00006,azz-00041"      # 一次查多个编号
+  tg dict msg "azz-*" --limit 0          # 列 azz 模块的全部消息
+  tg dict msg --text 密码                  # 按信息语句的子串搜
+  tg dict msg "baa-*" --text 密码          # 编号与语句两个条件同时成立
+  tg dict msg --type 1 --status Y        # 只看启用中的错误消息
+  tg dict msg --type 1,2 --text 审核       # 类型多选 + 语句子串
+  tg dict msg --prog axmt500             # 哪些消息建议跑 axmt500
+  tg dict msg azz-00041 --lang zh_TW     # 换语言(语言也是查询条件)
+  tg dict msg -- -100                    # 负整数编号(SQLCODE)需用 -- 分隔
+  tg dict msg baa-00010 --env 正式区       # 远程直查该环境`,
 	Args: msgArgs,
 	RunE: runMsg,
 }
 
 // 两个封闭值域。类型码来自 SCC 106(gzze007),状态码是 gzzestus 的 Y/N。
-// 都用码、不用中文标签:家族里其它命令一律用码(tt dict r.t ima_file --lang zh_TW),
+// 都用码、不用中文标签:家族里其它命令一律用码(tg dict r.t ima_file --lang zh_TW),
 // 两种写法并存只会让 --help 和将来的 --conditions 说不清该写哪个 —— 报错里
 // 自带中文对照表,填错了当场能看到该填什么。
 var (
@@ -135,7 +135,7 @@ func runMsg(cmd *cobra.Command, args []string) error {
 	}
 	if !q.HasFilter() {
 		return fmt.Errorf("至少给一个查询条件:编号(位置参数)或 --text / --type / --status / --prog\n" +
-			"例: tt dict msg std-00006 / tt dict msg --text 密码 / tt dict msg --type 1 --status Y\n" +
+			"例: tg dict msg std-00006 / tg dict msg --text 密码 / tg dict msg --type 1 --status Y\n" +
 			"(--lang 只决定看哪个语言的份,不算筛选条件)")
 	}
 
@@ -215,7 +215,7 @@ func printMsgList(rows []db.MsgRow) {
 	if len(shown) < len(rows) {
 		fmt.Printf(",仅显示前 %d 条(--limit 0 显示全部)", len(shown))
 	}
-	fmt.Println(";某条的完整内容(建议处理/建议作业/技术细节)用 tt dict msg <编号> 查")
+	fmt.Println(";某条的完整内容(建议处理/建议作业/技术细节)用 tg dict msg <编号> 查")
 }
 
 // msgColumns 消息行的列定义。JSON 的键与 CSV 的表头**同源于 MsgRow 这一份 DTO** ——
@@ -343,7 +343,7 @@ func init() {
 	// 看不出该怎么办。这里翻成可操作的提示(唯一需要 -- 分隔的参数位置)。
 	msgCmd.SetFlagErrorFunc(func(c *cobra.Command, err error) error {
 		if strings.Contains(err.Error(), "unknown shorthand flag") {
-			return fmt.Errorf("%w\n提示: 负整数编号(SQLCODE)要写成 `tt dict msg -- -263`(`--` 之后才当参数解析)", err)
+			return fmt.Errorf("%w\n提示: 负整数编号(SQLCODE)要写成 `tg dict msg -- -263`(`--` 之后才当参数解析)", err)
 		}
 		return err
 	})

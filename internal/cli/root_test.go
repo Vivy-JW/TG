@@ -124,18 +124,20 @@ func TestRootHelpAndReadmeHaveNoStaleAdvice(t *testing.T) {
 	}
 }
 
-// TestRootHelpPointsAtNamedVerbs 断言根帮助把 .tzs 的入口说成"具名动词"。
+// TestRootHelpPointsAtNamedVerbs 断言根帮助把能力入口说成具名子命令。
 //
 // 只禁掉旧写法（上一条）不够：把那一行整句删掉也能让它通过，而调用方从此不知道
-// 表单包该怎么改 —— 那比教错更坏。所以要有一条**正向**断言。
+// 该从哪个子命令进 —— 那比教错更坏。所以要有一条**正向**断言。
 func TestRootHelpPointsAtNamedVerbs(t *testing.T) {
 	long := rootCmd.Long
-	for _, want := range []string{"tg dict", "tg debug", "tg site"} {
+	for _, want := range []string{"tg dict", "tg site", "tg file", "tg interface", "tg outline"} {
 		if !strings.Contains(long, want) {
-			t.Errorf("根帮助里该出现 %s（四块能力的入口要一眼看全）", want)
+			t.Errorf("根帮助里该出现 %s（能力入口要一眼看全）", want)
 		}
 	}
-	if !strings.Contains(long, "动词") {
-		t.Errorf("根帮助里该说清 .tzs 的入口是具名动词，而不是删掉的 call 网关")
+	for _, bad := range []string{"tzc", "tzs", "原型图", "设计器包", "source/interface"} {
+		if strings.Contains(long, bad) {
+			t.Errorf("根帮助里还有已删功能的说法 %q", bad)
+		}
 	}
 }

@@ -28,9 +28,9 @@ func newCatCmd() *cobra.Command {
 
 默认 JSON（files[].content）；--human 才是原样文本。
 含 NUL 字节的文件默认拒绝；确要输出加 --binary（JSON 里用 base64）。`,
-		Example: `  tt file cat --at 主机109 erp/apm/4gl/apmi004.4gl
-  tt file cat --human --at 主机109 erp/apm/4gl/apmi004.4gl
-  tt file cat --at 主机109 'erp/apm/4gl/apmi004*.4gl'`,
+		Example: `  tg file cat --at 主机109 erp/apm/4gl/apmi004.4gl
+  tg file cat --human --at 主机109 erp/apm/4gl/apmi004.4gl
+  tg file cat --at 主机109 'erp/apm/4gl/apmi004*.4gl'`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var files []catFile
@@ -48,7 +48,7 @@ func newCatCmd() *cobra.Command {
 					if isBinary(data) || !utf8.Valid(data) {
 						if !allowBinary {
 							return usageErr("二进制文件（含 NUL 或非 UTF-8），不往终端喷：%s", f.Path).
-								WithHint("要落盘用 tt file get <路径> -o <本地文件>；确要输出原始字节加 --human --binary（或 tt file get <路径> -o -）")
+								WithHint("要落盘用 tg file get <路径> -o <本地文件>；确要输出原始字节加 --human --binary（或 tg file get <路径> -o -）")
 						}
 						f.Content = base64.StdEncoding.EncodeToString(data)
 						f.Encoding = "base64"
@@ -97,7 +97,7 @@ func readWhole(arg string) ([]byte, string, error) {
 	}
 	if self.IsDir() {
 		return nil, "", usageErr("cat 不支持目录：%s", cur.short(p)).
-			WithHint("用 tt file ls <目录> 看有哪些文件；逐一下载用 tt file get <路径> -o <本地文件>")
+			WithHint("用 tg file ls <目录> 看有哪些文件；逐一下载用 tg file get <路径> -o <本地文件>")
 	}
 	f, _, err := openChecked(p)
 	if err != nil {
@@ -117,7 +117,7 @@ func newHeadCmd() *cobra.Command {
 		Use:     "head [-n N] <文件...>",
 		Short:   "前 N 行（默认 10）",
 		Long:    `输出每个文件的前 N 行；默认 JSON（files[].lines），--human 才是带 ==> 头的文本。`,
-		Example: `  tt file head -n 40 --at 主机109 erp/apm/4gl/apmi004.4gl`,
+		Example: `  tg file head -n 40 --at 主机109 erp/apm/4gl/apmi004.4gl`,
 		Args:    cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runText(cmd, args, false, n)
@@ -133,7 +133,7 @@ func newTailCmd() *cobra.Command {
 		Use:     "tail [-n N] <文件...>",
 		Short:   "后 N 行（默认 10）",
 		Long:    `输出每个文件的后 N 行；只读文件尾部若干块，不整份下载。`,
-		Example: `  tt file tail -n 40 --at 主机109 erp/apm/4gl/apmi004.4gl`,
+		Example: `  tg file tail -n 40 --at 主机109 erp/apm/4gl/apmi004.4gl`,
 		Args:    cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runText(cmd, args, true, n)

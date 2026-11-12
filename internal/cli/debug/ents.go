@@ -64,7 +64,7 @@ agent 用法:先 --json 取 ents[].account,再用 tt db sql --at <环境>@<N> ".
 		if common.Env != "" {
 			c2 := cfg.CloneEnv(common.Env)
 			if c2 == nil {
-				return fmt.Errorf("环境 %q 不存在(用 tt env list 查看)", common.Env)
+				return fmt.Errorf("环境 %q 不存在(用 tg env list 查看)", common.Env)
 			}
 			cfg = c2
 		}

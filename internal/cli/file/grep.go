@@ -61,8 +61,8 @@ func newGrepCmd() *cobra.Command {
 
 路径必须显式给（不会默认扫整个 $TOP）。二进制文件按 NUL 判断后跳过。
 实现是纯 SFTP：文件逐个读过来在本地匹配，服务器上不起 grep 进程。`,
-		Example: `  tt file grep -rn --at 主机109 'apmt520' erp/apm/4gl
-  tt file grep -rln --at 主机109 --include '*.4gl' 'SELECT .*bmaa_t' erp/apm`,
+		Example: `  tg file grep -rn --at 主机109 'apmt520' erp/apm/4gl
+  tg file grep -rln --at 主机109 --include '*.4gl' 'SELECT .*bmaa_t' erp/apm`,
 		Args: cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			pattern := args[0]
@@ -113,14 +113,14 @@ func newGrepCmd() *cobra.Command {
 			any := false
 			for _, r := range results {
 				if r.err != nil {
-					fmt.Fprintf(os.Stderr, "tt file grep: %s: %v\n", cur.short(files[r.idx]), r.err)
+					fmt.Fprintf(os.Stderr, "tg file grep: %s: %v\n", cur.short(files[r.idx]), r.err)
 					continue
 				}
 				if r.binary {
 					continue
 				}
 				if r.skipped {
-					fmt.Fprintf(os.Stderr, "tt file grep: %s: 文件超过 %s，跳过\n",
+					fmt.Fprintf(os.Stderr, "tg file grep: %s: 文件超过 %s，跳过\n",
 						cur.short(files[r.idx]), humanBytes(grepFileMax))
 					continue
 				}

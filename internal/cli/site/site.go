@@ -53,7 +53,7 @@ func siteEnv() (config.NamedSsh, error) {
 	name := strings.TrimSpace(common.Env)
 	if name == "" {
 		return config.NamedSsh{}, output.Errorf("USAGE", 2, "要指定环境：--env <环境> 或 --at <环境>").
-			WithHint("环境清单在 config.json 的 hosts.sshs，用 tt site list --env <环境> 开始")
+			WithHint("环境清单在 config.json 的 hosts.sshs，用 tg site list --env <环境> 开始")
 	}
 	path, err := common.ResolveConfig(false)
 	if err != nil {
@@ -66,7 +66,7 @@ func siteEnv() (config.NamedSsh, error) {
 	e := hosts.ByName(name)
 	if e == nil {
 		return config.NamedSsh{}, output.Errorf("NOT_FOUND", 4, "环境 %q 不存在", name).
-			WithHint("可用的环境：tt env list")
+			WithHint("可用的环境：tg env list")
 	}
 	if e.DB == nil {
 		return config.NamedSsh{}, output.Errorf("DB", 2, "环境 %q 没有配置数据库连接", e.Name).

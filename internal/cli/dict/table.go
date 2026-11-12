@@ -46,22 +46,22 @@ JSON 形状（单表响应会在 notes 里提示批量写法）：
   --kw/无参数   data = [同上表级项]
   --col         data = [表级项 + 只含指定字段的 字段[]]
   --kw(有表名)  data = [表级项 + 按字段名/说明/备注筛选后的 字段[]]
-  多表用逗号：tt dict r.t "imaa_t,imaj_t" --brief
+  多表用逗号：tg dict r.t "imaa_t,imaj_t" --brief
   计数：--brief 的 totalRows 是表数；完整详情的 totalRows 是展平后的字段行数。
   精确表名不存在时返回 NOT_FOUND（退出码 4）。
 命令名对齐 T100 原生工具 r.t(旧名 rt/table 仍可用)。`,
-	Example: `  tt dict r.t dzea_t
-  tt dict r.t "dzea_t,dzeb_t,dzed_t"
-  tt dict r.t --kw 应收        # 按中文说明找表(列表模式)
-  tt dict r.t --brief "apca_t,apcb_t,glab_t"   # 多表只解语义,不打字段明细
-  tt dict r.t glab_t --who                     # 反查:哪些程序在用 glab_t(含操作类别)
-  tt dict r.t apca_t --fields                  # 字段骨架
-  tt dict r.t apca_t --full                    # 完整字典
-  tt dict r.t apca_t --col apca035,apca036     # 只看两个字段
-  tt dict r.t apca_t --kw 暂估                 # 按字段名/说明筛字段
-  tt dict r.t dzea_t --json
-  tt dict r.t dzea_t --env 正式区          # 直查该环境的远程库
-  tt dict r.t dzea_t --env local:正式区    # 查该环境的本地库`,
+	Example: `  tg dict r.t dzea_t
+  tg dict r.t "dzea_t,dzeb_t,dzed_t"
+  tg dict r.t --kw 应收        # 按中文说明找表(列表模式)
+  tg dict r.t --brief "apca_t,apcb_t,glab_t"   # 多表只解语义,不打字段明细
+  tg dict r.t glab_t --who                     # 反查:哪些程序在用 glab_t(含操作类别)
+  tg dict r.t apca_t --fields                  # 字段骨架
+  tg dict r.t apca_t --full                    # 完整字典
+  tg dict r.t apca_t --col apca035,apca036     # 只看两个字段
+  tg dict r.t apca_t --kw 暂估                 # 按字段名/说明筛字段
+  tg dict r.t dzea_t --json
+  tg dict r.t dzea_t --env 正式区          # 直查该环境的远程库
+  tg dict r.t dzea_t --env local:正式区    # 查该环境的本地库`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) > 0 {
@@ -115,7 +115,7 @@ JSON 形状（单表响应会在 notes 里提示批量写法）：
 		if len(missing) > 0 {
 			e := notFoundErr("表不存在: %s", strings.Join(missing, ", "))
 			if len(tables) == 1 {
-				e = e.WithHint("批量查多张表：tt dict r.t \"a,b,c\" --brief")
+				e = e.WithHint("批量查多张表：tg dict r.t \"a,b,c\" --brief")
 			}
 			return e
 		}
@@ -145,7 +145,7 @@ JSON 形状（单表响应会在 notes 里提示批量写法）：
 			}
 			var notes []string
 			if len(tables) == 1 {
-				notes = append(notes, "批量查多张表：tt dict r.t \"a,b,c\" --brief（多表只看表级信息）")
+				notes = append(notes, "批量查多张表：tg dict r.t \"a,b,c\" --brief（多表只看表级信息）")
 			}
 			if Format() != output.FormatTable {
 				return emitDetailNotes(items, headers, rows, notes...)
@@ -179,7 +179,7 @@ JSON 形状（单表响应会在 notes 里提示批量写法）：
 		if Format() != output.FormatTable {
 			var notes []string
 			if len(tables) == 1 {
-				notes = append(notes, "批量查多张表：tt dict r.t \"a,b,c\" --brief（多表只看表级信息）")
+				notes = append(notes, "批量查多张表：tg dict r.t \"a,b,c\" --brief（多表只看表级信息）")
 			}
 			return emitDetailNotes(dicts, tableDetailColumns, tableDetailRows(dicts), notes...)
 		}
@@ -188,7 +188,7 @@ JSON 形状（单表响应会在 notes 里提示批量写法）：
 			printTableDict(d)
 		}
 		if len(tables) == 1 {
-			fmt.Println("提示:批量查多张表：tt dict r.t \"a,b,c\" --brief（多表只看表级信息）")
+			fmt.Println("提示:批量查多张表：tg dict r.t \"a,b,c\" --brief（多表只看表级信息）")
 		}
 		return nil
 	},
@@ -226,7 +226,7 @@ func projectTableFields(dicts []*db.TableDict, colSpec, kw string) error {
 			}
 			if len(missing) > 0 {
 				return notFoundErr("字段不存在: %s", strings.Join(missing, ", ")).
-					WithHint("看可用字段：tt dict r.t " + d.TableName + " --brief")
+					WithHint("看可用字段：tg dict r.t " + d.TableName + " --brief")
 			}
 			d.Fields = picked
 			continue
@@ -276,7 +276,7 @@ func runTableList() error {
 	output.PrintTable(headers, rows)
 	fmt.Printf("\n共 %d 张表", len(list))
 	if tableKW == "" {
-		fmt.Print(";用 --kw <业务词> 按表名/中文说明过滤,如 tt dict r.t --kw 应收")
+		fmt.Print(";用 --kw <业务词> 按表名/中文说明过滤,如 tg dict r.t --kw 应收")
 	}
 	fmt.Println()
 	return nil
@@ -646,9 +646,9 @@ func runTableWho(tables []string) error {
 	}
 	if len(tables) == 1 {
 		if summary {
-			fmt.Println("提示:完整程序清单用 --full；批量反查多张表：tt dict r.t \"a,b\" --who")
+			fmt.Println("提示:完整程序清单用 --full；批量反查多张表：tg dict r.t \"a,b\" --who")
 		} else {
-			fmt.Println("提示:批量反查多张表：tt dict r.t \"a,b\" --who")
+			fmt.Println("提示:批量反查多张表：tg dict r.t \"a,b\" --who")
 		}
 	}
 	return nil

@@ -1,6 +1,6 @@
 package cli
 
-// tt env ents —— 一个环境“支持哪些企业（ENT）、各用哪个数据库账号”。
+// tg env ents —— 一个环境“支持哪些企业（ENT）、各用哪个数据库账号”。
 //
 // 数据来自 **config.json**（`hosts.sshs[].ents`，由设置页「ENT」页签或本命令的
 // `--refresh` 从 gzou_t 同步而来）。默认**不联网**：环境属于配置，看清单不该依赖
@@ -54,11 +54,11 @@ func newEnvEntsCmd() *cobra.Command {
 （gzou003）。这份清单存在 config.json 的 hosts.sshs[].ents 里，**默认直接读配置、
 不联网**；要更新就显式同步（设置页「ENT」页签的「从服务器刷新」是同一个动作）。
 
-  tt env ents                   # 逐个环境列（读配置，秒回、离线可用）
-  tt env ents 主机109           # 只看这个环境
-  tt env ents --ent 99          # 只留含企业 99 的环境
-  tt env ents --refresh         # 连库读 gzou_t，并**写回配置**（同步）
-  tt env ents --json            # 结构化
+  tg env ents                   # 逐个环境列（读配置，秒回、离线可用）
+  tg env ents 主机109           # 只看这个环境
+  tg env ents --ent 99          # 只留含企业 99 的环境
+  tg env ents --refresh         # 连库读 gzou_t，并**写回配置**（同步）
+  tg env ents --json            # 结构化
 
 同步固定用系统账号 ds 读 gzou_t；清单里的账号会顺带补进该环境的账号清单（缺的才补，
 密码优先用已有条目，否则按 T100 惯例 账号=密码，输出会点名提示）。
@@ -96,7 +96,7 @@ func runEnvEnts(name string, refresh bool, onlyEnt int) error {
 	names := make([]string, 0, len(root.Hosts.SSHs))
 	if name != "" {
 		if root.Hosts.ByName(name) == nil {
-			return output.Errorf("ENV_UNKNOWN", 2, "没有名为 %q 的环境（用 tt env list 看全部）", name)
+			return output.Errorf("ENV_UNKNOWN", 2, "没有名为 %q 的环境（用 tg env list 看全部）", name)
 		}
 		names = append(names, name)
 	} else {
@@ -244,7 +244,7 @@ func writeEnvEnts(w *os.File, views []envEntsView, refreshed bool) {
 		case refreshed:
 			fmt.Fprintf(w, "环境 %s   %s   刚同步\n", v.Env, strings.Join(meta, " · "))
 		case !v.Synced:
-			fmt.Fprintf(w, "环境 %s   %s   **未同步**（跑 tt env ents --refresh，或设置页「ENT」页签）\n", v.Env, strings.Join(meta, " · "))
+			fmt.Fprintf(w, "环境 %s   %s   **未同步**（跑 tg env ents --refresh，或设置页「ENT」页签）\n", v.Env, strings.Join(meta, " · "))
 		default:
 			fmt.Fprintf(w, "环境 %s   %s   同步于 %s（%s前）\n",
 				v.Env, strings.Join(meta, " · "), humanTime(v.SyncedAt), humanAge(v.AgeSeconds))

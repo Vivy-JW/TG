@@ -30,8 +30,8 @@ func newFindCmd() *cobra.Command {
   -maxdepth N   最多向下 N 层（0 = 只看起点本身）
 
 不接受 -exec/-delete/-fprint 这类会写或执行的动作 —— 本条命令只读。`,
-		Example: `  tt file find --at 主机109 erp/apm -name '*apmi004*'
-  tt file find --at 主机109 erp/apm -type f -maxdepth 2 -name '*.4gl'`,
+		Example: `  tg file find --at 主机109 erp/apm -name '*apmi004*'
+  tg file find --at 主机109 erp/apm -type f -maxdepth 2 -name '*.4gl'`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opt.maxDepth = maxDepth
@@ -216,7 +216,7 @@ func findMatch(self, real host.Entry, opt findOptions) bool {
 	}
 }
 
-// NormalizeFindArgs 把 "tt file find -name X" 里的 Unix 单横线长选项改成 pflag 认的
+// NormalizeFindArgs 把 "tg file find -name X" 里的 Unix 单横线长选项改成 pflag 认的
 // 双横线（pflag 把 -name 当成 -n -a -m -e 一串缩写）。
 //
 // 只在 file find 这一段生效：其他动词的长选项本来就是双横线（--include），

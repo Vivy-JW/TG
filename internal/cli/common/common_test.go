@@ -178,7 +178,7 @@ func TestPrintJSONEmitsCompactJSON(t *testing.T) {
 func TestUnknownSubcommandListsWhatIsAvailable(t *testing.T) {
 	// 夹具要**可运行**（带 Run）—— cobra 的 IsAvailableCommand() 对"既没 Run 也没子命令"
 	// 的空壳返回 false，拿空壳当夹具会得到一份空清单（第一版就是这么写的，红的却不是被测代码）。
-	// 真实的 tt dict / tt debug 子命令都有 Run。
+	// 真实的 tg dict / tt debug 子命令都有 Run。
 	noop := func(*cobra.Command, []string) {}
 	root := &cobra.Command{Use: "tt"}
 	root.AddCommand(&cobra.Command{Use: "alpha", Run: noop})

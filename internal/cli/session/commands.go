@@ -52,7 +52,7 @@ ENT 必填：企业编号决定用哪个账号连库与据点校验，不再沿�
 			}
 			ent := strings.TrimSpace(nsEnt)
 			if env == "" {
-				return failUsage("需要 --at <环境>@<企业> 或 --env <环境名>（tt env list 看全部）")
+				return failUsage("需要 --at <环境>@<企业> 或 --env <环境名>（tg env list 看全部）")
 			}
 			if ent == "" {
 				return failUsage("需要 --at <环境>@<企业> 或 --ent <企业编号>（决定用哪个账号连库；tt debug ents 可查）")

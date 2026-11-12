@@ -16,7 +16,7 @@ import (
 	"tt/internal/output"
 )
 
-// tt dict spill —— 读「结果被截断时落盘的那一份完整结果」。
+// tg dict spill —— 读「结果被截断时落盘的那一份完整结果」。
 //
 // 为什么有这条命令（2026-09-25，§11.9 的 Go 侧清单）：`emitCapped` 在截断**之前**会把完整结果
 // 落一份到 <配置目录>/spill/，并在信封的 notes 里给出路径 —— 那份数据**已经在盘上了**。
@@ -45,10 +45,10 @@ func spillCmd() *cobra.Command {
                                              返回条数跟随 --limit / config.json query.limit
 
 要看全量用 --limit 0（与查询那边同一套上限语义）。`,
-		Example: `  tt dict spill list
-  tt dict spill show latest
-  tt dict spill show latest --offset 20 --limit 20
-  tt dict spill show latest --limit 0        # 全量`,
+		Example: `  tg dict spill list
+  tg dict spill show latest
+  tg dict spill show latest --offset 20 --limit 20
+  tg dict spill show latest --limit 0        # 全量`,
 		// 只读文件，不碰数据源：与 mirror/db 一样覆盖组的查询钩子。
 		PersistentPreRunE: skipQuerySource,
 	}
@@ -120,7 +120,7 @@ func spillListCmd() *cobra.Command {
 			}
 			m.TotalRows, m.Returned = len(files), len(files)
 			m.Notes = append(m.Notes,
-				fmt.Sprintf("%d 份；看某一份：tt dict spill show <名字|latest>（目录 %s）", len(files), dir))
+				fmt.Sprintf("%d 份；看某一份：tg dict spill show <名字|latest>（目录 %s）", len(files), dir))
 			cols := []string{"文件", "字节", "时间"}
 			rows := make([][]string, 0, len(files))
 			for _, f := range files {
@@ -221,7 +221,7 @@ query.limit；0 = 不限）。列序按字母序：落盘的是**数据**，原�
 				// 不写"第 N–M 条"那种区间：to 是开区间，写成区间就得解释含不含尾，
 				// 而这种说明读的人一定会跳过去（实测：自己都差点把它读成 3 条）。
 				m.Notes = append(m.Notes, fmt.Sprintf(
-					"这一页：offset=%d，%d 条（共 %d 条）；下一页：tt dict spill show %s --offset %d",
+					"这一页：offset=%d，%d 条（共 %d 条）；下一页：tg dict spill show %s --offset %d",
 					from, spillLen(page), total, filepath.Base(path), to))
 			}
 			if total == 1 && reflect.ValueOf(data).Kind() != reflect.Slice {
@@ -262,7 +262,7 @@ func resolveSpillPath(arg string) (string, error) {
 	}
 	p := filepath.Join(dir, arg)
 	if _, err := os.Stat(p); err != nil {
-		return "", fmt.Errorf("读不到 %s：%w（先 tt dict spill list 看有哪些）", p, err)
+		return "", fmt.Errorf("读不到 %s：%w（先 tg dict spill list 看有哪些）", p, err)
 	}
 	return p, nil
 }

@@ -94,7 +94,7 @@ func PrintContract(w io.Writer, cmd *cobra.Command) (int, error) {
 		}
 		if len(values) == 0 {
 			c.Complete = false
-			c.Failed = append(c.Failed, contractFailure{Reason: "config", Error: "配置里还没有任何环境", Action: "tt serve 到设置页添加环境，或 tt env list 确认"})
+			c.Failed = append(c.Failed, contractFailure{Reason: "config", Error: "配置里还没有任何环境", Action: "tt serve 到设置页添加环境，或 tg env list 确认"})
 			exit = 3
 			break
 		}
@@ -103,7 +103,7 @@ func PrintContract(w io.Writer, cmd *cobra.Command) (int, error) {
 		c.Grammar = "<环境>@<企业>（也可以只写 <环境>，企业可选）；TOP GP 环境是 <环境>@<据点编号>"
 		c.Sources = []string{
 			"<环境> ← config.json 的 hosts.sshs[].name（本机配置，无网络）",
-			"<企业> ← config.json 的 hosts.sshs[].ents（设置页「ENT」页签 / tt env ents --refresh 从 gzou_t 同步）",
+			"<企业> ← config.json 的 hosts.sshs[].ents（设置页「ENT」页签 / tg env ents --refresh 从 gzou_t 同步）",
 			"组合   = 环境名 + \"@\" + 企业编号（企业编号是纯数字）",
 		}
 		c.Example = exampleOf(cmd, "<环境>@<企业>")
@@ -116,14 +116,14 @@ func PrintContract(w io.Writer, cmd *cobra.Command) (int, error) {
 		c.Grammar = "<环境>@<企业>；TOP GP 环境是 <环境>@<据点编号>"
 		c.Sources = []string{
 			"<环境> ← config.json 的 hosts.sshs[].name（本机配置，无网络）",
-			"<企业> ← config.json 的 hosts.sshs[].ents（设置页「ENT」页签 / tt env ents --refresh 从 gzou_t 同步）",
+			"<企业> ← config.json 的 hosts.sshs[].ents（设置页「ENT」页签 / tg env ents --refresh 从 gzou_t 同步）",
 			"组合   = 环境名 + \"@\" + 企业编号（企业编号是纯数字）",
 			"GP 据点= 环境名 + \"@\" + 据点编号（azp_file.azp01）；清单：tg site list --env <环境>",
 		}
 		c.Example = exampleOf(cmd, "<环境>@<企业>")
 		c.Notes = append(c.Notes,
 			"企业部分只读快照，不拨 SSH；没有快照的环境会明确报出来（见下）",
-			"要现况：tt env ents --refresh",
+			"要现况：tg env ents --refresh",
 			"本命令必须带 @企业：企业编号决定用哪个账号连库",
 			"TOP GP 环境例外：@ 右边写据点编号（如 22主机@COF），它决定查哪个资料库")
 		exit = fillEntValues(&c)
@@ -268,7 +268,7 @@ func fillEntValues(c *contract) int {
 		if err != nil {
 			c.Failed = append(c.Failed, contractFailure{
 				Env: e.Name, Reason: "snapshot-unreadable", Error: err.Error(),
-				Action: "检查该环境的库配置；联网后跑 tt env ents --refresh",
+				Action: "检查该环境的库配置；联网后跑 tg env ents --refresh",
 			})
 			continue
 		}
@@ -276,14 +276,14 @@ func fillEntValues(c *contract) int {
 			c.Failed = append(c.Failed, contractFailure{
 				Env: e.Name, Reason: "no-snapshot",
 				Error:  "没有企业清单快照（从未拉过，或换了机器/库）",
-				Action: "连上网络/VPN 后跑：tt env ents --refresh",
+				Action: "连上网络/VPN 后跑：tg env ents --refresh",
 			})
 			continue
 		}
 		if l.Stale && !staleSeen {
 			staleSeen = true
 			c.Notes = append(c.Notes,
-				fmt.Sprintf("有快照已过期（最旧 %s前）：现在能用，但可能不是库里最新的；要现况跑 tt env ents --refresh", humanAge(l.AgeSeconds)))
+				fmt.Sprintf("有快照已过期（最旧 %s前）：现在能用，但可能不是库里最新的；要现况跑 tg env ents --refresh", humanAge(l.AgeSeconds)))
 		}
 		for _, m := range l.Ents {
 			// 只保留 handle 与账号/来源；区域/库地址不参与 --at，不在这里显示，

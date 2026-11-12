@@ -23,8 +23,8 @@ func newDuCmd() *cobra.Command {
   --human   人性化大小（-h 被 help 占用）
 
 SFTP 拿不到磁盘块占用，所以这里按文件大小累计（与 du 的默认口径略有差异）。`,
-		Example: `  tt file du -s --at 主机109 erp/apm/4gl
-  tt file du --at 主机109 erp/apm`,
+		Example: `  tg file du -s --at 主机109 erp/apm/4gl
+  tg file du --at 主机109 erp/apm`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			arg := ""

@@ -69,7 +69,7 @@ func envNamed() (*config.NamedSsh, error) {
 	}
 	e := root.Hosts.ByName(name)
 	if e == nil {
-		return nil, output.Errorf(output.CodeEnvUnknown, 2, "未找到环境 %q（tt env list 看全部）", name)
+		return nil, output.Errorf(output.CodeEnvUnknown, 2, "未找到环境 %q（tg env list 看全部）", name)
 	}
 	return e, nil
 }
@@ -137,7 +137,7 @@ func labelsFromLocal(env config.NamedSsh, prog, lang string) (screen.MapLabels, 
 
 func labelsFromLive(env config.NamedSsh, prog, lang string) (screen.MapLabels, string, error) {
 	if env.DB == nil {
-		return nil, "", usage("环境 %s 没配数据库连接，取不到 gae_file；先 tt dict db sync 或只给 --42f", env.Name)
+		return nil, "", usage("环境 %s 没配数据库连接，取不到 gae_file；先 tg dict db sync 或只给 --42f", env.Name)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()

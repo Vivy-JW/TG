@@ -142,7 +142,7 @@ func runningInstance(dir string) *ServeInfo {
 
 // RunningServe 报告这个数据目录下的后台服务是否**真的在跑**：不在跑返回 nil。
 //
-// 供 tt update 在升级前后判断"要不要先把它停掉、升完要不要拉回来"。
+// 供 tg update 在升级前后判断"要不要先把它停掉、升完要不要拉回来"。
 // 注意判据是"连得上"而不是"状态文件里有 pid"（见 runningInstance），
 // 否则一个残留的 pid 会让升级去杀一个不相干的进程。
 func RunningServe(dir string) *ServeInfo { return runningInstance(dir) }

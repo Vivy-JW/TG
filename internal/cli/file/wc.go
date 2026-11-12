@@ -25,8 +25,8 @@ func newWcCmd() *cobra.Command {
 		Use:   "wc [-l] <文件...>",
 		Short: "统计行/词/字节",
 		Long:  `统计行数、词数、字节数（-l 只输出行数）。默认 JSON；--human 使用 Unix wc 文本格式。`,
-		Example: `  tt file wc --at 主机109 erp/apm/4gl/apm_apmt520.4gl
-  tt file wc -l --at 主机109 erp/apm/4gl/*.4gl`,
+		Example: `  tg file wc --at 主机109 erp/apm/4gl/apm_apmt520.4gl
+  tg file wc -l --at 主机109 erp/apm/4gl/*.4gl`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var files []string

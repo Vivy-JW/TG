@@ -19,13 +19,13 @@ var dbStatusCmd = &cobra.Command{
 	Long: `本地字典库按环境分文件：<数据目录>/dict/<环境>.db。这里按环境列出各自的库，
 不传环境看总览；点名环境看该环境各数据族是否已同步、各多少行、缺哪些表。
 
-查询命令报「本地库尚未包含 XXX 数据」时用它定位；补齐用 tt dict db sync --env <环境>。
+查询命令报「本地库尚未包含 XXX 数据」时用它定位；补齐用 tg dict db sync --env <环境>。
 -d/--db 显式给路径时，只检查那一份（不按环境）。
 只读，不改任何文件。`,
-	Example: `  tt dict db status
-  tt dict db status --env 主机109
-  tt dict db status --env local:主机109
-  tt dict db status -d D:\data\old_share.db`,
+	Example: `  tg dict db status
+  tg dict db status --env 主机109
+  tg dict db status --env local:主机109
+  tg dict db status -d D:\data\old_share.db`,
 	Args:              cobra.MaximumNArgs(1),
 	PersistentPreRunE: skipQuerySource,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -61,7 +61,7 @@ var dbStatusCmd = &cobra.Command{
 		}
 		fmt.Printf("本地字典库目录: %s\n\n", dir)
 		if len(rows) == 0 {
-			fmt.Println("(还没有配置环境；先 tt env list 或设置页添加环境)")
+			fmt.Println("(还没有配置环境；先 tg env list 或设置页添加环境)")
 			return nil
 		}
 		headers := []string{"环境", "本地库", "状态", "大小", "同步时间"}
@@ -74,7 +74,7 @@ var dbStatusCmd = &cobra.Command{
 			out = append(out, []string{r.Env, r.Path, state, size, when})
 		}
 		output.PrintTable(headers, out)
-		fmt.Println("\n同步某个环境: tt dict db sync --env <环境>")
+		fmt.Println("\n同步某个环境: tg dict db sync --env <环境>")
 		return nil
 	},
 }
@@ -124,10 +124,10 @@ func inspectOne(path, env string) error {
 	if !st.Exists {
 		if env != "" {
 			fmt.Printf("环境 %s 的本地库不存在: %s\n", env, st.Path)
-			fmt.Printf("建立: tt dict db sync --env %s\n", env)
+			fmt.Printf("建立: tg dict db sync --env %s\n", env)
 		} else {
 			fmt.Printf("本地库不存在: %s\n", st.Path)
-			fmt.Println("建立: tt dict db sync --env <环境> -d <路径>")
+			fmt.Println("建立: tg dict db sync --env <环境> -d <路径>")
 		}
 		return nil
 	}
@@ -161,7 +161,7 @@ func printLocalStatus(st *dbsync.LocalStatus) {
 
 	if missingAny {
 		fmt.Println("\n✗ = 该族的字典表不全，依赖它的命令会**整体**报错（不是部分可用）；行数显示 — 表示该族不全、行数无意义。")
-		fmt.Println("补齐: tt dict db sync --env <环境>；临时也可 `tt dict <命令> --env <环境>` 远程直查。")
+		fmt.Println("补齐: tg dict db sync --env <环境>；临时也可 `tg dict <命令> --env <环境>` 远程直查。")
 	}
 }
 

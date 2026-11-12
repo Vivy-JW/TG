@@ -1,6 +1,6 @@
 // Package db 是“数据库”命令组：**连通性测试** + **只读 SQL**。
 //
-// 它不碰字典内容（`tt dict r.t / desc / prog …` 是组合查询，留在 dict），
+// 它不碰字典内容（`tg dict r.t / desc / prog …` 是组合查询，留在 dict），
 // 也不碰调试会话（那是 `tt debug`）。三条命令的边界：
 //
 //	sql    对库执行一条只读 SQL（业务数据）
@@ -61,7 +61,7 @@ func Register(root *cobra.Command) {
 func loadCfg() (*debug.Config, string, error) {
 	env := strings.TrimSpace(common.Env)
 	if env == "" {
-		return nil, "", fmt.Errorf("需要 --at <环境> 或 --env <环境>（可用：tt env ents）")
+		return nil, "", fmt.Errorf("需要 --at <环境> 或 --env <环境>（可用：tg env ents）")
 	}
 	path, err := common.ResolveConfig(false)
 	if err != nil {
@@ -73,7 +73,7 @@ func loadCfg() (*debug.Config, string, error) {
 	}
 	sub := cfg.CloneEnv(env)
 	if sub == nil {
-		return nil, "", fmt.Errorf("环境 %q 不存在（tt env list 看全部）", env)
+		return nil, "", fmt.Errorf("环境 %q 不存在（tg env list 看全部）", env)
 	}
 	sub.DataDir = filepath.Dir(path)
 	return sub, path, nil

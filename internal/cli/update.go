@@ -1,6 +1,6 @@
 package cli
 
-// tt update —— tt 自身的更新：查有没有新版、下载并校验制品、把"替换二进制"交给一个
+// tg update —— tt 自身的更新：查有没有新版、下载并校验制品、把"替换二进制"交给一个
 // 脱离的更新器进程。
 //
 // 四条边界（读代码前先读它们）：
@@ -11,7 +11,7 @@ package cli
 //   - **只在显式命令里联网**。`tt serve` 与日常命令都不查；`tt version` 只读缓存。
 //   - 引擎与设计器 dll 随包走，不单独升 —— 更新单位是整包/MSI。
 //
-// 退出码（这条线自己的一张表，与 tt dev / tt dict 各不相干，见根帮助的退出码表）：
+// 退出码（这条线自己的一张表，与 tt dev / tg dict 各不相干，见根帮助的退出码表）：
 //
 //	0  已是最新 / 更新已交棒 / 用户取消了安装
 //	10 有可用更新（新号：3 在这条线上是"校验失败"，不能混用）
@@ -20,7 +20,7 @@ package cli
 //	4  拒绝写入（这份 tt 不让自装）
 //	5  出网失败（代理、限流、超时）或落盘失败
 //
-// 10 不是错误：`tt update check` 已经把自己的结论打到 stdout 了，所以它带着这个码返回
+// 10 不是错误：`tg update check` 已经把自己的结论打到 stdout 了，所以它带着这个码返回
 // 时**不许**再打一份错误信封 —— 记号见 exitStatus（与 internal/cli/dev 的
 // AlreadyReported 同一个机制，理由写在 root.go 的 reportError 上）。
 
@@ -55,7 +55,7 @@ func (e exitStatus) Error() string         { return fmt.Sprintf("退出码 %d", 
 func (e exitStatus) ExitCode() int         { return int(e) }
 func (e exitStatus) AlreadyReported() bool { return true }
 
-// updateFlags tt update 家族的命令行开关。
+// updateFlags tg update 家族的命令行开关。
 type updateFlags struct {
 	yes       bool
 	dryRun    bool
@@ -69,7 +69,7 @@ func newUpdateCmd() *cobra.Command {
 	var f updateFlags
 	cmd := &cobra.Command{
 		Use:   "update",
-		Short: "更新 tt 自身（查新版、下载校验、交棒给更新器）",
+		Short: "更新 tg 自身（查新版、下载校验、交棒给更新器）",
 		Long: `更新 tt 自身。
 
 默认只做"查 + 下载 + 校验"，然后**问你一句**再装；--check-only 只查不装，
@@ -87,16 +87,16 @@ func newUpdateCmd() *cobra.Command {
 
   装的动作由**另一个进程**完成：Windows 上运行中的 exe 不能替换自己，所以
   ` + "`tt update`" + ` 把自己复制到 %TEMP% 再交棒，前台随即退出。升级日志落在数据目录的
-  .tt-update.log，` + "`tt update log`" + ` 可以回读它走到哪一步。
+  .tt-update.log，` + "`tg update log`" + ` 可以回读它走到哪一步。
 
 退出码: 0 已是最新或已交棒 | 10 有可用更新 | 2 用法错 | 3 校验失败 |
         4 拒绝自装 | 5 出网或落盘失败`,
-		Example: `  tt update check              # 只查（有新版时退出码 10）
-  tt update --dry-run          # 走到交棒前停，看它打算做什么
-  tt update                    # 查 + 下载 + 校验，问一句再装
-  tt update --yes              # 不问，直接装（脚本用）
-  tt update --pre --proxy http://127.0.0.1:10808
-  tt update log                # 上一次升级走到哪一步了`,
+		Example: `  tg update check              # 只查（有新版时退出码 10）
+  tg update --dry-run          # 走到交棒前停，看它打算做什么
+  tg update                    # 查 + 下载 + 校验，问一句再装
+  tg update --yes              # 不问，直接装（脚本用）
+  tg update --pre --proxy http://127.0.0.1:10808
+  tg update log                # 上一次升级走到哪一步了`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runUpdate(cmd, f, false)
@@ -214,16 +214,16 @@ func newUpdateApplyCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "apply",
 		Short: "（内部）执行升级计划",
-		Long: `（内部）执行升级计划。不手工运行：参数由 tt update 算好写进计划文件。
+		Long: `（内部）执行升级计划。不手工运行：参数由 tg update 算好写进计划文件。
 
 进展**只写日志**（数据目录的 .tt-update.log）：这个进程由 SpawnDetached 拉起，
 它的 stdout/stderr 已经被重定向到同一个日志文件，再往 stderr 写一遍会让每一行
-出现两次。看进展用 ` + "`tt update log`" + `。`,
+出现两次。看进展用 ` + "`tg update log`" + `。`,
 		Hidden: true,
 		Args:   cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if f.plan == "" {
-				return usageErr("缺少 --plan", "这个子命令由 tt update 交棒时调用，不手工运行")
+				return usageErr("缺少 --plan", "这个子命令由 tg update 交棒时调用，不手工运行")
 			}
 			plan, err := update.LoadPlan(f.plan)
 			if err != nil {
@@ -238,7 +238,7 @@ func newUpdateApplyCmd() *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().StringVar(&f.plan, "plan", "", "升级计划文件（由 tt update 生成）")
+	cmd.Flags().StringVar(&f.plan, "plan", "", "升级计划文件（由 tg update 生成）")
 	return cmd
 }
 
@@ -258,8 +258,8 @@ type checkOnlyReport struct {
 	Assets      []string  `json:"assets,omitempty"`
 }
 
-// runUpdate 是 tt update / tt update check 的公共主体。
-// checkOnlyMode 由子命令写死（tt update check 只查），而 --check-only 是同一个语义的开关。
+// runUpdate 是 tg update / tg update check 的公共主体。
+// checkOnlyMode 由子命令写死（tg update check 只查），而 --check-only 是同一个语义的开关。
 func runUpdate(cmd *cobra.Command, f updateFlags, checkOnlyMode bool) error {
 	ctx := cmd.Context()
 	errOut := cmd.ErrOrStderr()
@@ -287,7 +287,7 @@ func runUpdate(cmd *cobra.Command, f updateFlags, checkOnlyMode bool) error {
 	if err != nil {
 		return netErr(err)
 	}
-	// 缓存只服务离线提示（tt version / 设置页），落不下去不影响这次检查的结论。
+	// 缓存只服务离线提示（tg version / 设置页），落不下去不影响这次检查的结论。
 	_ = update.SaveCheck(env.dataDir, res)
 
 	rep.Latest, rep.Newer, rep.Prerelease = res.Latest, res.Newer, res.Prerelease
@@ -417,7 +417,7 @@ func runUpdate(cmd *cobra.Command, f updateFlags, checkOnlyMode bool) error {
 	res2.CheckedAt = time.Now()
 	fmt.Fprintf(errOut, "\n更新器已接手（pid %d）。它会等本进程退出后替换文件，装完自报版本必须等于 %s。\n",
 		pid, res.Latest)
-	fmt.Fprintf(errOut, "看进度: tt update log    （日志 %s）\n", update.LogPath(env.dataDir))
+	fmt.Fprintf(errOut, "看进度: tg update log    （日志 %s）\n", update.LogPath(env.dataDir))
 	return emit(cmd, map[string]any{
 		"kind": rep.Kind, "current": env.current, "target": res.Latest,
 		"artifact": dest, "digest": hex, "helperPid": pid, "handedOff": true,
@@ -594,7 +594,7 @@ func applyErr(err error) error {
 }
 func netErr(err error) error {
 	return &output.Error{Code: output.CodeUpdateNetwork, Exit: 5, Message: err.Error(),
-		Hint: "若这台机器要经代理出网：tt update --proxy http://127.0.0.1:8080，或写进配置的 net.proxy"}
+		Hint: "若这台机器要经代理出网：tg update --proxy http://127.0.0.1:8080，或写进配置的 net.proxy"}
 }
 
 func tailLines(s string, n int) string {

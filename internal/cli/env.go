@@ -21,11 +21,11 @@ import (
 func newEnvCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "env",
-		Short: "管理 SSH 环境（三个工具共用同一份环境清单）",
+		Short: "管理 TOP GP 环境（SSH + 数据库连接）",
 		Long: `列出/查看/切换 config.json 里 hosts.sshs 定义的 SSH 环境。
 
-环境清单是三个工具共用的：调试、字典查询、源码镜像都从同一份 hosts 里取连接，
-所以在这里加一台机器，tt debug 和 tt dict 都能立刻用。`,
+环境清单是共用的：调试、字典查询、源码镜像、文件浏览都从同一份 hosts 里取连接，
+所以在这里加一台机器，tg 的各个命令都能立刻用。`,
 		Args: cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
@@ -64,15 +64,15 @@ func newEnvCmd() *cobra.Command {
   ents/<旧名>.json     企业目录快照
   srccache/<旧名>/     调试源码镜像
   execlog/<旧名>/      调试跑过命令的大输出副本
-  mirror.dir/<旧名>/   tt file mirror 的源码镜像（环境自配 mirrorDir 时不动）
+  mirror.dir/<旧名>/   tg file mirror 的源码镜像（环境自配 mirrorDir 时不动）
   query.source         配置里指向旧名的数据源（local:<旧名> 或裸名字）
 
 不做迁移的改名会留下悬空引用：查询报「本地库不存在」或「查不到数据」，
 与「数据真的不存在」在输出上分不出来 —— 这类问题只能靠事后排查。
 
 目标名已存在、或目标落点已有文件时整体拒绝，一个都不搬。`,
-		Example: `  tt env rename 正式区 正式
-  tt env rename 测试区 测试`,
+		Example: `  tg env rename 正式区 正式
+  tg env rename 测试区 测试`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error { return runEnvRename(cmd, args[0], args[1]) },
 	})
@@ -89,14 +89,14 @@ func newEnvCmd() *cobra.Command {
 而用错环境的典型症状是"查不到数据",与"数据不存在"一模一样。所以环境
 改为**一律点名**:
 
-  tt debug start <作业> --env <环境名>      # 调试:点名环境
-  tt dict <命令> --env <环境名>             # 字典:点名环境(或 --env local:<环境> 查该环境本地副本)
-  tt dev tzs <动词> --env <环境名>          # 表单:环境决定用哪个工作区
+  tg debug start <作业> --env <环境名>      # 调试:点名环境(T100 gendbg)
+  tg dict <命令> --env <环境名>             # 字典:点名环境(或 --env local:<环境> 查该环境本地副本)
+  tg file ls --at <环境>                    # 文件:点名环境(路径可以是 $TOP 或 $CUST 下的相对路径)
 
 Web 端在会话面板里选环境(那个选择是运行时的,同样不写配置文件)。`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return fmt.Errorf("`tt env use` 已移除:默认环境不再存在,请用 --env %s 点名(tt env list 看全部)", args[0])
+			return fmt.Errorf("`tg env use` 已移除:默认环境不再存在,请用 --env %s 点名(tg env list 看全部)", args[0])
 		},
 	})
 
@@ -110,15 +110,15 @@ Web 端在会话面板里选环境(那个选择是运行时的,同样不写配�
 会被静默沿用的默认值,而用错账号的症状是"查不到数据",与"数据不存在"一样。
 所以 ENT 改为**每次显式给**:
 
-  tt debug start <作业> --env <环境名> --ent <企业编号>
-  tt db sql --at <环境>@<企业> "<SQL>"
-  tt dict <命令> --env <环境名> --ent <企业编号>
+  tg debug start <作业> --env <环境名> --ent <企业编号>   # T100 gendbg
+  tg db sql --at <环境>@<企业> "<SQL>"                  # T100 的企业编号
+  tg dict <命令> --env <环境名>                         # GP:据点走 --at <环境>@<据点编号>
 
-不给 ENT 时:调试沿用登录 shell 里已有的 TOPENT(不覆盖),字典查询用账号列表首项
+不给 ENT 时:调试沿用登录 shell 里已有的 TOPENT(不覆盖);GP 的字典查询用账号列表首项、
 (并在输出信封的 notes 里说明)。`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return fmt.Errorf("`tt env topent` 已移除:企业编号不再存配置,请用 --ent %s 在命令上给", args[1])
+			return fmt.Errorf("`tg env topent` 已移除:企业编号不再存配置,请用 --ent %s 在命令上给", args[1])
 		},
 	})
 	return cmd
@@ -213,7 +213,7 @@ func runEnvShow(cmd *cobra.Command, name string) error {
 	h := root.Hosts
 	e := h.ByName(name)
 	if e == nil {
-		return fmt.Errorf("没有名为 %q 的环境（用 tt env list 看全部）", name)
+		return fmt.Errorf("没有名为 %q 的环境（用 tg env list 看全部）", name)
 	}
 
 	if common.IsJSON() {
@@ -298,7 +298,7 @@ func runEnvRename(cmd *cobra.Command, from, to string) error {
 	}
 	e := root.Hosts.ByName(from)
 	if e == nil {
-		return fmt.Errorf("没有名为 %q 的环境（用 tt env list 看全部）", from)
+		return fmt.Errorf("没有名为 %q 的环境（用 tg env list 看全部）", from)
 	}
 	if root.Hosts.ByName(to) != nil {
 		return fmt.Errorf("环境 %q 已存在，不能改名成它", to)

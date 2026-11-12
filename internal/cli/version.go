@@ -94,7 +94,7 @@ func newVersionCmd() *cobra.Command {
 		Long: `显示版本信息：注入的版本号 + 这次构建对应的提交。
 
 完全离线：它只读本地的构建信息与 <数据目录>/update/check.json 里上一次检查的
-结果（` + "`tt update check`" + ` 写的），不联网。`,
+结果（` + "`tg update check`" + ` 写的），不联网。`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			hints := []string{}
 			for _, msg := range []string{updateHint(), skillsHint()} {
@@ -128,7 +128,7 @@ func skillsHint() string {
 
 // updateHint 读检查缓存给一句话提示。
 //
-// “读不到就不提示”是刻意的：tt version 是排查时最先敲的命令，它不能因为缓存坏了、
+// “读不到就不提示”是刻意的：tg version 是排查时最先敲的命令，它不能因为缓存坏了、
 // 配置没了、或者检查结果过期（见 update.LoadCachedCheck 的两个作废条件）而失败。
 func updateHint() string {
 	cfgPath, err := common.ResolveConfig(true)

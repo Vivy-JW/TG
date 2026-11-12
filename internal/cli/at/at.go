@@ -8,7 +8,7 @@
 //     不允许自定义语法。
 //  2. **解析 / 校验 / 报错 / 渲染只有这一份实现**。散出去就会变成“同一条命令两种说法”。
 //  3. **--at-list 纯本地、永不拨 SSH**：值来自 config.json（环境）与 entdir 快照（企业），
-//     快照过期如实标 stale。要现况请显式跑 `tt env ents --refresh`。
+//     快照过期如实标 stale。要现况请显式跑 `tg env ents --refresh`。
 package at
 
 import (

@@ -33,8 +33,8 @@ var scopes = map[string]Scope{
 	// 但 dict 下的“连接/镜像/本地文件”这几支不要企业
 	"dict db":         Env,
 	"dict db status":  None, // 只看本地 SQLite，不碰环境
-	"dict mirror":     Env,  // 隐藏转发到 tt file mirror（下版删）
-	"dict mirror dir": Env,  // 转发到 tt file mirror dir；带 --at 时只改该环境
+	"dict mirror":     Env,  // 隐藏转发到 tg file mirror（下版删）
+	"dict mirror dir": Env,  // 转发到 tg file mirror dir；带 --at 时只改该环境
 
 	// ---- 服务器文件：只读，只认环境 ----
 	"file":            Env,

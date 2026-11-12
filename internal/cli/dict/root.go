@@ -1,6 +1,6 @@
 package dict
 
-// tt dict 命令组的根:数据源钩子(打开/关闭查询数据源)与本地 SQLite 路径解析。
+// tg dict 命令组的根:数据源钩子(打开/关闭查询数据源)与本地 SQLite 路径解析。
 //
 // 全局开关(--config/--json/--csv/-v/--env)由 tt 根命令的 persistent flags 提供
 // (见 internal/cli/common),这里只保留字典独有的部分:--db 与数据源钩子。
@@ -45,7 +45,7 @@ var dictEnt string
 var dictCompany string
 
 func init() {
-	// 字典独有的 persistent flag:--db 只对 tt dict 有意义
+	// 字典独有的 persistent flag:--db 只对 tg dict 有意义
 	Group.PersistentFlags().StringVarP(&dbPath, "db", "d", "",
 		"本地 SQLite 路径(显式覆盖;缺省 = 数据目录/dict/<环境>.db;旧 TDICT_DB 仅对裸 local 生效)")
 	// --limit 挂在命令组上而不是各命令上:返回条数上限是**全局策略**,不是某个命令的
@@ -71,7 +71,7 @@ func init() {
 		// 落在**命令组自己**身上（没给子命令，或给了一个不认识的）时不碰数据源：
 		// 这两种情况没人要查库，而 openQuerySource 在没配库的机器上会当场失败 ——
 		// 于是 `tt dict` 想看一份命令列表，却拿到一句"本地数据库文件未找到"，
-		// 而 `tt dict nope` 连"你打错了命令"都说不出来，被那句挡在前面（实测 2026-09-25）。
+		// 而 `tg dict nope` 连"你打错了命令"都说不出来，被那句挡在前面（实测 2026-09-25）。
 		// 判据用 `cmd == Group`：cobra 解析不到子命令时返回的就是组命令本身。
 		if cmd == Group {
 			return nil
@@ -97,7 +97,7 @@ func init() {
 //
 // **必须把叶命令透传下去**: cobra 的契约是钩子收到"真正要执行的那条命令",
 // 钩子也据此判自己该做什么（例如 tt 根钩子按命令路径解析 --at 的作用域）。
-// 传祖先(p 自己)的话，根钩子会把一切当成 "tt" —— `tt dict db list --at X` 会被
+// 传祖先(p 自己)的话，根钩子会把一切当成 "tt" —— `tg dict db list --at X` 会被
 // 判成"这条命令不接受 --at"。这不是理论，实测就是这么错的。
 func runRootPreRun(cmd *cobra.Command, args []string) error {
 	for p := Group.Parent(); p != nil; p = p.Parent() {
@@ -123,7 +123,7 @@ func resolveDBPath(flagPath string) (string, error) {
 	p, tried, err := config.LocationsAt(srcConfigPath).ResolveDictDB(flagPath)
 	if err != nil {
 		return "", fmt.Errorf(
-			"本地数据库文件未找到。\n\n尝试了以下路径:\n%s\n\n设置 TDICT_DB 环境变量或用 -d 指定正确路径:\n  setx TDICT_DB \"D:\\path\\to\\erp_data.db\"\n  tt dict -d \"D:\\path\\to\\erp_data.db\" r.t dzea_t",
+			"本地数据库文件未找到。\n\n尝试了以下路径:\n%s\n\n设置 TDICT_DB 环境变量或用 -d 指定正确路径:\n  setx TDICT_DB \"D:\\path\\to\\erp_data.db\"\n  tg dict -d \"D:\\path\\to\\erp_data.db\" r.t dzea_t",
 			config.FormatTriedPaths(tried),
 		)
 	}
@@ -154,7 +154,7 @@ func notFoundErr(format string, a ...any) *output.Error {
 //
 // 返回条数受**全局上限**约束(命令行 --limit > config.json query.limit > 内置缺省),
 // 三种形态一视同仁 —— 换个输出格式就换契约的话,一次宽查询足以打爆 agent 的上下文
-// (实测 `tt dict msg --type 1 --status Y` 是 9.3 MB / 28005 条)。
+// (实测 `tg dict msg --type 1 --status Y` 是 9.3 MB / 28005 条)。
 // 截断时完整的那份落盘,信封里给 totalRows 与 localPath:截断是为了保护上下文,
 // 不是为了丢数据。
 func emit(data any, columns []string, rows [][]string) error {
@@ -224,7 +224,7 @@ func emitCapped(capping bool, data any, columns []string, rows [][]string) error
 		// 三处说同一件事(notes / truncated+计数 / localPath),因为它最容易被读漏:
 		// 只看 notes 的、只看计数的、只看 data 的,都得撞上"这不是全部"。
 		m.Notes = append(m.Notes, fmt.Sprintf(
-			"结果已截断:只回了 %d / %d 条。完整结果在 %s —— 翻页读它:tt dict spill show %s --offset %d"+
+			"结果已截断:只回了 %d / %d 条。完整结果在 %s —— 翻页读它:tg dict spill show %s --offset %d"+
 				"(要重查一次拿全量也可以:加 --limit 0)", limit, total, path, filepath.Base(path), limit))
 	}
 	return emitWith(m, data, columns, rows)

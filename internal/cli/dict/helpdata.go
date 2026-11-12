@@ -68,7 +68,7 @@ func attachDataHint() {
 	Group.SetHelpFunc(func(c *cobra.Command, args []string) {
 		baseHelpFunc(c, args)
 		out := c.OutOrStdout()
-		fmt.Fprintln(out, "\n版本: tt dict "+versionLine())
+		fmt.Fprintln(out, "\n版本: tg dict "+versionLine())
 		if c == Group {
 			fmt.Fprintln(out, localDataHint())
 			return

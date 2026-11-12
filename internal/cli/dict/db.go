@@ -20,7 +20,7 @@ var (
 //
 // It defines its own PersistentPreRunE, which overrides the group's query-source
 // hook (cobra runs the first persistent pre-run found walking leaf→root),
-// so `tt dict db *` does not depend on the local erp_data.db.
+// so `tg dict db *` does not depend on the local erp_data.db.
 var dbCmd = &cobra.Command{
 	Use:   "db",
 	Short: "管理 ERP 数据库连接与数据同步",

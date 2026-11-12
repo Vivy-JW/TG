@@ -19,7 +19,7 @@ var (
 	progTablesMode string
 )
 
-const progBatchTip = `批量查多个程序：tt dict prog "a,b,c"`
+const progBatchTip = `批量查多个程序：tg dict prog "a,b,c"`
 
 var progCmd = &cobra.Command{
 	Use:     "prog [程序编号...]",
@@ -49,16 +49,16 @@ JSON 形状（单编号响应会在 notes 里提示批量写法）：
   多编号 data = {items: [{编号, found, 程序?, 子程序?, 作业[], 表格[]}], missing[]}
   搜索     data = [{程序编号, 程序名称, 程序类别, 归属模块, 客制, 作业数}]
 数据族为"程序与作业/程序与表格/子程序与元件"(--help 末尾会显示本地是否已同步)。`,
-	Example: `  tt dict prog aapi011          # 程序做什么 + 被哪些作业使用 + 用了哪些表
-  tt dict prog aapq110_01       # 子程序:自己的说明 + 它的主程序
-  tt dict prog cl_abi           # 库/元件:说明 + 用表清单
-  tt dict prog --kw 对帐        # 按中文作业名找程序
-  tt dict prog --sub --kw ABI   # 在子程序/元件里按业务词搜
-  tt dict prog aapi011 --tables names  # 只要用表编号（默认）
-  tt dict prog aapi011 --tables none   # 不看用表矩阵
-  tt dict prog aapi011 --full          # 完整程序/作业/用表矩阵
-  tt dict prog aapi011 --json
-  tt dict prog "aapi011,aapq110_01,cl_abi"   # 批量；每个编号一条结果`,
+	Example: `  tg dict prog aapi011          # 程序做什么 + 被哪些作业使用 + 用了哪些表
+  tg dict prog aapq110_01       # 子程序:自己的说明 + 它的主程序
+  tg dict prog cl_abi           # 库/元件:说明 + 用表清单
+  tg dict prog --kw 对帐        # 按中文作业名找程序
+  tg dict prog --sub --kw ABI   # 在子程序/元件里按业务词搜
+  tg dict prog aapi011 --tables names  # 只要用表编号（默认）
+  tg dict prog aapi011 --tables none   # 不看用表矩阵
+  tg dict prog aapi011 --full          # 完整程序/作业/用表矩阵
+  tg dict prog aapi011 --json
+  tg dict prog "aapi011,aapq110_01,cl_abi"   # 批量；每个编号一条结果`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if _, err := normalizeProgTables(progTablesMode); err != nil {
@@ -66,7 +66,7 @@ JSON 形状（单编号响应会在 notes 里提示批量写法）：
 		}
 		if progLinks {
 			if len(args) != 1 {
-				return output.Errorf("USAGE", 2, "--links 要且只要一个作业/程序代号,例:tt dict prog abmi600 --links")
+				return output.Errorf("USAGE", 2, "--links 要且只要一个作业/程序代号,例:tg dict prog abmi600 --links")
 			}
 			return runProgLinks(args[0])
 		}
@@ -116,13 +116,13 @@ func runProgLinks(code string) error {
 	if err != nil {
 		if errors.Is(err, db.ErrProgLinksRemoteOnly) {
 			return output.Errorf("USAGE", 2, "%v：去掉 --env local: 前缀（或改用 --at <环境>）再查", err).
-				WithHint("例：tt dict prog " + code + " --links --at <环境>")
+				WithHint("例：tg dict prog " + code + " --links --at <环境>")
 		}
 		return err
 	}
 	if len(rows) == 0 {
 		return notFoundErr("gal_file 没有作业 %q 的链接记录", code).
-			WithHint("确认作业代号(不要带模块前缀);表结构用 tt dict r.t <表>,程序用途用 tt dict prog <程序>")
+			WithHint("确认作业代号(不要带模块前缀);表结构用 tg dict r.t <表>,程序用途用 tg dict prog <程序>")
 	}
 
 	res := progLinkResult{Program: code, Links: rows}
@@ -688,7 +688,7 @@ func runProgList() error {
 	output.PrintTable(headers, rows)
 	fmt.Printf("\n共 %d 个程序", len(list))
 	if progKW == "" {
-		fmt.Print(";用 --kw <业务词> 按程序编号/中文名称过滤,如 tt dict prog --kw 对帐")
+		fmt.Print(";用 --kw <业务词> 按程序编号/中文名称过滤,如 tg dict prog --kw 对帐")
 	}
 	fmt.Println()
 	return nil
