@@ -13,16 +13,15 @@ import (
 	"tt/internal/output"
 )
 
-// sourceInputs 一次 interface 查询实际要读的两个文件。
+// sourceInputs 一次 interface 查询实际要读的东西。
 type sourceInputs struct {
-	Form       string
-	Module     string
-	Env        string
-	Mode       string // mirror | files
-	Root       string // --dir 指向的最终环境镜像目录（mirror 模式）
-	Form42F    string
-	Form42S    string
-	LabelsSeen bool // 没给 42s 也允许，只是标签全 unresolved
+	Form        string
+	Module      string
+	Env         string
+	Mode        string // mirror | files
+	Root        string // --dir 指向的最终环境镜像目录（mirror 模式）
+	Form42F     string
+	LabelSource string // gae_file(local|live:…) / off / none
 }
 
 type sourceOpts struct {
@@ -30,23 +29,18 @@ type sourceOpts struct {
 	Module string
 	Dir    string
 	FileF  string
-	FileS  string
 }
 
-// resolveSources 决定这次从哪读 .42f/.42s。
+// resolveSources 决定这次从哪读 .42f。
 //
-// 优先级：显式 --42f/--42s > --dir > --at 对应的环境镜像目录。
+// 优先级：显式 --42f > --dir > --at 对应的环境镜像目录。
 // --dir 是“最终环境目录”（内含 erp/、com/），不是全局根；这样设置页里每个
 // 环境单独指定目录的语义与 mirror 完全一致。
 func resolveSources(opts sourceOpts) (*sourceInputs, error) {
 	opts.FileF = strings.TrimSpace(opts.FileF)
-	opts.FileS = strings.TrimSpace(opts.FileS)
 	opts.Dir = strings.TrimSpace(opts.Dir)
 	form := strings.TrimSpace(opts.Form)
 
-	if opts.FileS != "" && opts.FileF == "" {
-		return nil, usage("--42s 需要同时给 --42f（本命令不自动猜另一份文件）")
-	}
 	if opts.FileF != "" {
 		if form == "" {
 			form = strings.TrimSuffix(filepath.Base(opts.FileF), filepath.Ext(opts.FileF))
@@ -64,18 +58,7 @@ func resolveSources(opts sourceOpts) (*sourceInputs, error) {
 		}
 		src := &sourceInputs{
 			Form: form, Mode: "files", Module: strings.TrimSpace(opts.Module),
-			Form42F: f, LabelsSeen: opts.FileS != "",
-		}
-		if opts.FileS != "" {
-			s, err := filepath.Abs(opts.FileS)
-			if err != nil {
-				return nil, usage("解析 --42s 路径失败: %v", err)
-			}
-			if _, err := os.Stat(s); err != nil {
-				return nil, notFound("LABELS_INVALID", 1, "42s 文件不存在: %s", s).
-					WithHint("标签文件缺失可以只给 --42f；此时页面/字段标签会标为 unresolved")
-			}
-			src.Form42S = s
+			Form42F: f,
 		}
 		if src.Module == "" {
 			src.Module = moduleFromPath(f)
@@ -128,13 +111,9 @@ func resolveSources(opts sourceOpts) (*sourceInputs, error) {
 	if mod != "" {
 		form = strings.TrimSuffix(filepath.Base(f), ".42f")
 	}
-	s, err := find42S(abs, form, mod)
-	if err != nil && !isNotFound(err) {
-		return nil, err
-	}
 	src := &sourceInputs{
 		Form: form, Module: mod, Env: env, Mode: "mirror", Root: abs,
-		Form42F: f, Form42S: s, LabelsSeen: s != "",
+		Form42F: f,
 	}
 	return src, nil
 }
@@ -179,7 +158,7 @@ func find42F(root, form, module string) (path, mod string, err error) {
 	if len(hits) == 0 {
 		if !sawAny42F {
 			return "", "", notFound("FORM_NOT_FOUND", 4, "镜像里没有任何 .42f（镜像: %s）", root).
-				WithHint("这份镜像没拉画面这一类。拉一次默认镜像即可（source 已含 42f/42s）：tt file mirror pull --at <环境>；或直接给 --42f <文件>")
+				WithHint("这份镜像没拉画面这一类。拉一次默认镜像即可：tt file mirror pull --at <环境>；或直接给 --42f <文件>")
 		}
 		return "", "", notFound("FORM_NOT_FOUND", 4, "没有找到 %s.42f（镜像: %s）", form, root).
 			WithHint("镜像里有别的 42f，所以是名字/模块不对：确认表单名；同名多个模块时加 --module（镜像里有 42f 说明 profile 没问题）")
@@ -191,48 +170,9 @@ func find42F(root, form, module string) (path, mod string, err error) {
 	return hits[0], moduleFromPath(hits[0]), nil
 }
 
-// find42S 在同一个模块下找 .42s；42s 可以位于 42s/zh_CN 或更深层
-// （服务器白名单同时覆盖这两种布局）。找不到不算错误，返回空。
-func find42S(root, form, module string) (string, error) {
-	var hits []string
-	_ = filepath.WalkDir(root, func(p string, d fs.DirEntry, walkErr error) error {
-		if walkErr != nil {
-			return nil
-		}
-		if d.IsDir() {
-			name := d.Name()
-			if p != root && (strings.HasPrefix(name, ".staging-") || strings.HasPrefix(name, ".old-")) {
-				return filepath.SkipDir
-			}
-			return nil
-		}
-		if !strings.EqualFold(d.Name(), form+".42s") {
-			return nil
-		}
-		slash := filepath.ToSlash(p)
-		if !strings.Contains(slash, "/42s/") || !strings.Contains(slash, "/zh_CN/") {
-			return nil
-		}
-		if module != "" && !strings.EqualFold(moduleFromPath(p), module) {
-			return nil
-		}
-		hits = append(hits, p)
-		return nil
-	})
-	sort.Strings(hits)
-	if len(hits) == 0 {
-		return "", notFound("LABELS_MISSING", 4, "没有找到 %s.42s（镜像: %s）", form, root)
-	}
-	if len(hits) > 1 {
-		return "", output.Errorf("LABELS_AMBIGUOUS", 2,
-			"表单 %s 命中 %d 个 42s：%s；请用 --module 或 --dir 缩小范围", form, len(hits), strings.Join(shortPaths(root, hits), "、"))
-	}
-	return hits[0], nil
-}
-
 func moduleFromPath(p string) string {
 	slash := filepath.ToSlash(p)
-	for _, marker := range []string{"/42f/", "/42s/"} {
+	for _, marker := range []string{"/42f/"} {
 		if i := strings.Index(slash, marker); i >= 0 {
 			parent := slash[:i]
 			return filepath.Base(parent)
@@ -251,13 +191,6 @@ func shortPaths(root string, paths []string) []string {
 		}
 	}
 	return out
-}
-
-func isNotFound(err error) bool {
-	if oe, ok := err.(*output.Error); ok {
-		return oe.Code == "LABELS_MISSING" || oe.Code == "NOT_FOUND"
-	}
-	return false
 }
 
 func usage(format string, a ...any) *output.Error {

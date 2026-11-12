@@ -74,12 +74,12 @@ m.Handle("/api/gp/", s.opt.GP)                                    // GP
 | `form42f` | 630 | `.42f` → 字段表 + 布局 | 纯函数，零 IO |
 | `debugclient` | 581 | 调试面 REST 的唯一客户端 | 跟着 §5.1 的结论走 |
 | `screen` | 292 | `.42f` + `.42s` → 前端画面模型 | 纯函数 |
-| `str42s` | 141 | `.42s` → 中文标签 | 纯函数 |
+| ~~`str42s`~~ | ~~141~~ | ~~`.42s` → 中文标签~~ | **已于 2026-11-12 删除**：TG 不用 `.42s`，画面文字改查 `gae_file`（`t_ui_text`） |
 | `dev/fgl` | 2242 | 4GL 源码分块与语义 | 已留下（2026-11-11 删 `dev/` 其余包时保留），`tt outline` 与 GP 的 4gl 共用 |
 
 两条判断依据：
 
-- **`.42f` / `.42s` 是 Genero 编译产物，不是 T100 私有格式。** GP 每个模块下有 `42f/`，T100 有 `42f/`，解析器是同一套。这条决定了 `form42f`/`str42s`/`screen`/`cli/interfacecmd` 全部属于语言层。
+- **`.42f` / `.42s` 是 Genero 编译产物，不是 T100 私有格式。** GP 每个模块下有 `42f/`，T100 有 `42f/`，解析器是同一套。这条决定了 `form42f`/`screen`/`cli/interfacecmd` 属于语言层；`str42s` 已于 2026-11-12 删除（TG 不用 `.42s`）。
 - **fgldb 是 Genero 调试器**，提示符 `(fgldb) ` 是 Genero 的，不是鼎捷的（`internal/gp/session.go:27` 的 `const fgldbPrompt`）。所以"调试"这件事本身属于 Genero 层。
 
 ## 4. T100 领域层（最终删）

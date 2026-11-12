@@ -55,6 +55,14 @@ CREATE INDEX IF NOT EXISTS ix_prog_link_prog ON t_prog_link(prog);
 CREATE TABLE IF NOT EXISTS t_msg(
   code TEXT, lang TEXT, text TEXT, mdate TEXT, PRIMARY KEY(code, lang));
 CREATE INDEX IF NOT EXISTS ix_msg_code ON t_msg(code);
+-- 画面元件译文（源 gae_file：gae01 程序 / gae02 元件 / gae03 语系 / gae04 译文 /
+-- gae11 客制 / gae12 行业别）。T100 把它编成 .42s，GP 是运行期读这张表
+-- （lib/4gl/cl_ui_locale.4gl，注释 #p_perlang），所以单独一表。
+CREATE TABLE IF NOT EXISTS t_ui_text(
+  prog TEXT NOT NULL, elem TEXT NOT NULL, lang TEXT NOT NULL,
+  text TEXT, cust TEXT, profile TEXT,
+  PRIMARY KEY(prog, elem, lang, cust, profile));
+CREATE INDEX IF NOT EXISTS ix_ui_text_prog ON t_ui_text(prog, lang);
 `
 
 const (
@@ -139,6 +147,14 @@ SELECT g.gaz01, g.gaz03
 	// 程序 → 表 走 t_prog_table（源 zr_file），与这条是两个不同的关系，别混。
 
 	sqlGPModule = `SELECT gao01, gao02, gao04 FROM gao_file`
+
+	// 画面文字：全量 gae_file（427k 行级别）。语系原样带走（0 繁 / 2 简 …），
+	// 客制/行业别也保留，由命令层按「客制优先、非空优先」挑一条。
+	sqlGPUIText = `
+SELECT TRIM(gae01), TRIM(gae02), TRIM(gae03), TRIM(gae04),
+       COALESCE(TRIM(gae11), ''), COALESCE(TRIM(gae12), '')
+  FROM gae_file
+ WHERE gae01 IS NOT NULL AND gae02 IS NOT NULL AND gae03 IS NOT NULL`
 )
 
 func clean(s sql.NullString) string { return strings.TrimSpace(s.String) }
@@ -478,11 +494,40 @@ func SyncGP(ctx context.Context, src, dst *sql.DB, lib, account string, rep func
 		}
 		r5.Close()
 	}
+	// 画面文字：gae_file 里的元件译文。T100 是编译成 .42s 再读，GP 没有 .42s，
+	// 运行期由 lib/4gl/cl_ui_locale.4gl 直接从这张表取（该 lib 三处 SELECT 都注释了
+	// #p_perlang），所以这里把 (程序,元件,语系) → 译文 原样搬进本地库。
+	uiN := 0
+	if r6, err := src.QueryContext(ctx, sqlGPUIText); err == nil {
+		if tx4, err := dst.Begin(); err == nil {
+			if stu, err := tx4.Prepare(`INSERT OR REPLACE INTO t_ui_text(prog,elem,lang,text,cust,profile) VALUES(?,?,?,?,?,?)`); err == nil {
+				for r6.Next() {
+					var prog, elem, lang, text, cust, profile sql.NullString
+					if r6.Scan(&prog, &elem, &lang, &text, &cust, &profile) != nil {
+						continue
+					}
+					p, e, lg := strings.ToLower(clean(prog)), clean(elem), clean(lang)
+					if p == "" || e == "" || lg == "" {
+						continue
+					}
+					_, _ = stu.Exec(p, e, lg, clean(text), clean(cust), strings.ToLower(clean(profile)))
+					uiN++
+				}
+				stu.Close()
+			}
+			_ = tx4.Commit()
+		}
+		r6.Close()
+	}
+	if uiN > 0 {
+		rep(fmt.Sprintf("画面文字 gae_file：%d 条", uiN))
+	}
 	onCount(len(tabs), len(tabs))
 	meta["tables"] = fmt.Sprint(len(tabs))
 	meta["columns"] = fmt.Sprint(len(cols))
 	meta["indexes"] = fmt.Sprint(len(indexes))
 	meta["constraints"] = fmt.Sprint(len(constraints))
 	meta["messages"] = fmt.Sprint(len(msgs))
+	meta["uitexts"] = fmt.Sprint(uiN)
 	return nil
 }

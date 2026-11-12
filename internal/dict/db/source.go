@@ -29,6 +29,9 @@ type Source interface {
 	// 本地字典库不同步这张表,只有远程实现(本地实现返回明确的错误)。
 	QueryProgLinks(prog string) ([]ProgLinkRow, error)
 
+	// 画面元件译文(gae_file,p_perlang 维护):GP 没有 .42s,画面文字运行期从这张表取。
+	QueryUITexts(prog, lang string) ([]UIElementText, error)
+
 	// rq 可复用开窗:dzca_t/dzcb_t/dzcc_t
 	QueryWinList(lang, keyword string) ([]WinListRow, error)
 	QueryWinHeaders(id, lang string) ([]WinHeaderRow, error)

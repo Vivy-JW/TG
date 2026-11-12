@@ -1,14 +1,14 @@
-// Package cli 装配 tt 的根命令。
+// Package cli 装配 tg 的根命令。
 //
 // 各能力组并存，各自实现在独立子包里，互不 import：
 //
-//	tt debug …   原 tdebug（AI 人机协同调试）
-//	tt dev …     原 tdev（设计器包安全编辑）
-//	tt dict …    原 tdict（ERP 数据字典查询）
-//	tt db …      数据库连通性测试与只读 SQL
-//	tt file …    服务器文件只读浏览与离线源码镜像
-//	tt interface … 用 .42f + .42s 合成前端页面/字段/中文标签
-//	tt outline …  4GL 源码大纲（块树 / 行范围）
+//	tg debug …   原 tdebug（AI 人机协同调试）
+//	tg dev …     原 tdev（设计器包安全编辑）
+//	tg dict …    原 tdict（ERP 数据字典查询）
+//	tg db …      数据库连通性测试与只读 SQL
+//	tg file …    服务器文件只读浏览与离线源码镜像
+//	tg interface … 用 .42f + gae_file 合成前端页面/字段/中文标签
+//	tg outline …  4GL 源码大纲（块树 / 行范围）
 //
 // 共享的 CLI 上下文在 internal/cli/common（叶子包，避免循环依赖）。
 package cli
@@ -38,33 +38,33 @@ import (
 
 // rootCmd is the base command.
 var rootCmd = &cobra.Command{
-	Use:   "tt",
-	Short: "TT 鼎捷T100开发CLI",
+	Use:   "tg",
+	Short: "TG — TOP GP 开发 CLI",
 	Long: `TT 是面向 T100 ERP 的命令行工具：把实施/开发日常要用的「查数据字典、连库看数、
 读服务器源码、调试作业、改设计器包、看前端画面、画原型图」收进同一个二进制、同一份
-config.json、同一个本地 Web 服务（tt serve）。
+config.json、同一个本地 Web 服务（tg serve）。
 
 给人和 AI agent 共用：输出简体中文，数据类命令默认 JSON 信封；目标一律点名
 （--at <环境>[@<企业>] 或 --env，没有默认环境；不知道填什么就加 --at-list）。
 
 能力分组：
-  tt dict …      数据字典：表/程序/消息/开窗（r.q）+ 本地字典库同步与状态
-  tt site …      营运据点（azp_file）：列全部据点 / 看一个
-  tt db …        数据库：连通性测试（ping / probe）与只读 SQL（sql）
-  tt file …      服务器文件：ls/find/grep/head/cat 只读浏览 + 离线镜像（source/interface）
-  tt debug …     作业调试：起会话、停站现场、断点、步进、接口日志重放
-  tt session …   会话：建 / 列 / 看 / 改 ENT / 结束 / 收掉
-  tt interface … 前端画面：合成 .42f + .42s（页面 / 字段 / 中文标签）
-  tt outline …   4GL 源码大纲：函数 / UI 块与行范围
-  tt env / config / serve / install / update   环境、配置、本地服务、安装、自更新
+  tg dict …      数据字典：表/程序/消息/开窗（r.q）+ 本地字典库同步与状态
+  tg site …      营运据点（azp_file）：列全部据点 / 看一个
+  tg db …        数据库：连通性测试（ping / probe）与只读 SQL（sql）
+  tg file …      服务器文件：ls/find/grep/head/cat 只读浏览 + 离线镜像（source/interface）
+  tg debug …     作业调试：起会话、停站现场、断点、步进、接口日志重放
+  tg session …   会话：建 / 列 / 看 / 改 ENT / 结束 / 收掉
+  tg interface … 前端画面：.42f + gae_file（页面 / 字段 / 中文标签）
+  tg outline …   4GL 源码大纲：函数 / UI 块与行范围
+  tg env / config / serve / install / update   环境、配置、本地服务、安装、自更新
 
 远程操作默认只读：服务器上的写只有 tzc 的三道闸门与 tzs 引擎动词；
 file 没有 put/rm；调试重放与镜像打包在服务器上留下的临时文件除外。
 
 退出码按命令线各自定义（同一个数字在不同组含义不同，包装脚本按子命令辨认）。
 部分命令的码表：
-  tt interface  0 成功 / 1 表单或 42s 不合法 / 2 用法或同名歧义 / 4 精确页面/字段不存在
-  tt outline    0 成功 / 2 用法或文件名歧义 / 4 文件不存在`,
+  tg interface  0 成功 / 1 表单不合法 / 2 用法或同名歧义 / 4 精确页面/字段不存在
+  tg outline    0 成功 / 2 用法或文件名歧义 / 4 文件不存在`,
 	SilenceUsage:  true,
 	SilenceErrors: true,
 }

@@ -19,7 +19,6 @@ func write(t *testing.T, p, s string) {
 func TestResolveSourcesFromDir(t *testing.T) {
 	root := t.TempDir()
 	write(t, filepath.Join(root, "erp", "asf", "42f", "demo.42f"), "<Form/>")
-	write(t, filepath.Join(root, "erp", "asf", "42s", "zh_CN", "demo.42s"), "x")
 	src, err := resolveSources(sourceOpts{Form: "demo", Dir: root})
 	if err != nil {
 		t.Fatal(err)
@@ -27,8 +26,8 @@ func TestResolveSourcesFromDir(t *testing.T) {
 	if src.Module != "asf" || src.Form != "demo" {
 		t.Fatalf("src = %+v", src)
 	}
-	if filepath.Base(src.Form42F) != "demo.42f" || filepath.Base(src.Form42S) != "demo.42s" {
-		t.Fatalf("paths = %q / %q", src.Form42F, src.Form42S)
+	if filepath.Base(src.Form42F) != "demo.42f" {
+		t.Fatalf("path = %q", src.Form42F)
 	}
 }
 
@@ -48,27 +47,33 @@ func TestResolveSourcesAmbiguousModule(t *testing.T) {
 	}
 }
 
-func TestResolveSourcesExplicitFiles(t *testing.T) {
+func TestResolveSourcesExplicitFile(t *testing.T) {
 	dir := t.TempDir()
 	f := filepath.Join(dir, "demo.42f")
-	s := filepath.Join(dir, "demo.42s")
 	write(t, f, "<Form/>")
-	write(t, s, "x")
-	src, err := resolveSources(sourceOpts{FileF: f, FileS: s})
+	src, err := resolveSources(sourceOpts{FileF: f})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if src.Form != "demo" || src.Mode != "files" || src.Form42S != s {
+	if src.Form != "demo" || src.Mode != "files" || src.Form42F != f {
 		t.Fatalf("src = %+v", src)
 	}
 }
 
+// 标签来源只认 gae_file：--labels off 时完全不查库，也不要求点名环境。
+func TestLoadLabelsOff(t *testing.T) {
+	f.labels = labelsOff
+	m, note, err := loadLabels("p_zta")
+	if err != nil || m != nil || note != "off" {
+		t.Fatalf("off: m=%v note=%q err=%v", m, note, err)
+	}
+	f.labels = labelsAuto
+}
+
 func TestModuleFromPath(t *testing.T) {
 	for in, want := range map[string]string{
-		"root/erp/asf/42f/demo.42f":           "asf",
-		"root/com/ima/42s/zh_CN/demo.42s":     "ima",
-		"root/erp/asf/42s/nested/zh_CN/a.42s": "asf",
-		"root/other/demo.42f":                 "",
+		"root/erp/asf/42f/demo.42f": "asf",
+		"root/other/demo.42f":       "",
 	} {
 		if got := moduleFromPath(in); got != want {
 			t.Errorf("moduleFromPath(%q) = %q, want %q", in, got, want)

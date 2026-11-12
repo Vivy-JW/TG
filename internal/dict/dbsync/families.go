@@ -1,6 +1,6 @@
 package dbsync
 
-// GP 字典库的数据族：本地 8 张 t_* 表按"哪条命令要用"分成四组。
+// GP 字典库的数据族：本地 t_* 表按"哪条命令要用"分成五组。
 //
 // 这张表三处共用：tt dict db status 的覆盖检查、各命令 --help 末尾的
 // 「本地数据」提示、以及同步完后的自检。TG 只支持 TOP GP，所以这里只有
@@ -15,7 +15,7 @@ type Family struct {
 	Commands []string `json:"commands,omitempty"`
 }
 
-// GPFamilies 本地 GP 字典库的四个数据族，顺序即 tt dict db status 的显示顺序。
+// GPFamilies 本地 GP 字典库的五个数据族，顺序即 tt dict db status 的显示顺序。
 //
 // 四族之外还有 t_prog_link：它由设计器/pkg 链路的 p_link 填，同步不写，
 // 所以不算"同步是否完整"的一部分（查询侧缺它只会退回 t_prog.module）。
@@ -45,6 +45,12 @@ var GPFamilies = []Family{
 		Name:     "错误消息",
 		Tables:   []string{"t_msg"},
 		Commands: []string{"tt dict msg"},
+	},
+	{
+		Key:      "per",
+		Name:     "画面文字",
+		Tables:   []string{"t_ui_text"},
+		Commands: []string{"tt interface show", "tt interface labels"},
 	},
 }
 

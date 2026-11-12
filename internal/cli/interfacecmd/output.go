@@ -34,8 +34,8 @@ func sourceMap(src *sourceInputs) map[string]any {
 	if src.Form42F != "" {
 		m["form42f"] = shortPath(src.Root, src.Form42F)
 	}
-	if src.Form42S != "" {
-		m["form42s"] = shortPath(src.Root, src.Form42S)
+	if src.LabelSource != "" {
+		m["labels"] = src.LabelSource
 	}
 	return m
 }
@@ -50,8 +50,8 @@ func shortPath(root, p string) string {
 }
 
 func labelSource(src *sourceInputs) string {
-	if src != nil && src.Form42S != "" {
-		return "42s"
+	if src != nil && src.LabelSource != "" {
+		return src.LabelSource
 	}
 	return "none"
 }

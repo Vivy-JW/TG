@@ -1,14 +1,15 @@
-// Package interfacecmd 实现 tt interface：把 .42f 的页面/字段结构与 .42s 的
-// 中文标签合成可读的前端画面模型。
+// Package interfacecmd 实现 tg interface：把 .42f 的页面/字段结构与 gae_file 的
+// 画面文字合成可读的前端画面模型。
 //
-// 本组只读本地镜像/文件，不拨 SSH，也不写服务器。数据默认 JSON；--human
-// 才输出树/表格。页面选择器只接受 42f 的 XML name（id），不接受 page_1
+// 本组只读本地镜像/文件（标签可以直查远程库），不写服务器。数据默认 JSON；
+// --human 才输出树/表格。页面选择器只接受 42f 的 XML name（id），不接受 page_1
 // 这类 textKey —— 样例里归一化后的 page_1 可能命中两个页面。
 package interfacecmd
 
 import (
 	"fmt"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -18,14 +19,15 @@ import (
 	"tt/internal/form42f"
 	"tt/internal/output"
 	"tt/internal/screen"
-	"tt/internal/str42s"
 )
 
 type flags struct {
 	module string
 	dir    string
 	fileF  string
-	fileS  string
+
+	lang   string
+	labels string
 
 	brief      bool
 	depth      string
@@ -40,25 +42,30 @@ type flags struct {
 
 var f flags
 
-// Register 把 tt interface 挂到根命令。
+// Register 把 tg interface 挂到根命令。
 func Register(root *cobra.Command) {
 	g := &cobra.Command{
 		Use:   "interface",
-		Short: "合成 .42f + .42s：看前端页面、字段与中文标签",
-		Long: `把编译后的表单（.42f）和编译字符串（.42s）合成一张可读的前端画面模型：
-页面树、页面里的字段、字段中文标签、控件/类型/必填。只读本地文件，不拨 SSH。
+		Short: "合成 .42f + gae_file：看前端页面、字段与中文标签",
+		Long: `把编译后的表单（.42f）与画面文字（gae_file）合成一张可读的前端画面模型：
+页面树、页面里的字段、字段中文标签、控件/类型/必填。只读本地文件，不写服务器。
 
-  tt interface show  <form>     页面结构（默认不展开字段）
-  tt interface pages <form>     所有页面的扁平索引
-  tt interface fields <form>    字段扁平表，可按页/列名/关键词过滤（默认每页最多 30 个字段）
+  tg interface show  <form>     页面结构（默认不展开字段）
+  tg interface pages <form>     所有页面的扁平索引
+  tg interface fields <form>    字段扁平表，可按页/列名/关键词过滤（默认每页最多 30 个字段）
 
 数据源（优先级从上到下）：
-  --42f <文件> [--42s <文件>]   直接读一对文件
+  --42f <文件>                  直接指定 .42f
   --dir <环境镜像目录>          读该环境镜像（内含 erp/、com/）
   --at <环境>                   从 config 取该环境的镜像目录
 
+标签来源（GP 没有 .42s，画面文字在 gae_file 里）：
+  --labels auto                 先查本地字典库 t_ui_text，没有就直查远程 gae_file（默认）
+  --labels local|live|off       指定本地/远程，或完全不取标签（只出结构）
+  --lang zh_CN|zh_TW            对应 gae03 的 2（简）/ 0（繁）
+
 页面选择用 --page <id>（42f XML name），不是 textKey；样例里 page_1 可能
-是另一个页面的 id。--42s 缺失仍能出结构，但标签会标为 unresolved。
+是另一个页面的 id。取不到译文时结构照样出，标签标 unresolved。
 
 数据默认 JSON；--human 出页面树/表格（CSV 暂不支持）。`,
 		SilenceUsage: true,
@@ -70,10 +77,11 @@ func Register(root *cobra.Command) {
 		},
 	}
 	pf := g.PersistentFlags()
-	pf.StringVar(&f.module, "module", "", "模块名（同名表单/42s 多个时用于消歧）")
+	pf.StringVar(&f.module, "module", "", "模块名（同名表单多个时用于消歧）")
 	pf.StringVar(&f.dir, "dir", "", "环境镜像目录（最终目录，内含 erp/、com/）")
 	pf.StringVar(&f.fileF, "42f", "", "直接指定 .42f 文件")
-	pf.StringVar(&f.fileS, "42s", "", "直接指定 .42s 文件（可缺省）")
+	pf.StringVar(&f.lang, "lang", "zh_CN", "标签语系：zh_CN（gae03=2）/ zh_TW（gae03=0）")
+	pf.StringVar(&f.labels, "labels", labelsAuto, "标签来源：auto（本地优先，缺了直查远程）/ local / live / off")
 	pf.BoolVar(&f.brief, "brief", false, "精简字段：省略路径、注释、几何等非核心信息")
 
 	g.AddCommand(
@@ -167,7 +175,7 @@ func newFieldsCmd() *cobra.Command {
 				} else {
 					page = v.FindPage(f.page)
 					if page == nil {
-						return fail("PAGE_NOT_FOUND", 4, fmt.Sprintf("页面 %q 不存在（--page 只接受 id，不接受 textKey）", f.page), fmt.Sprintf("看可用页面：tt interface pages %s", v.Form))
+						return fail("PAGE_NOT_FOUND", 4, fmt.Sprintf("页面 %q 不存在（--page 只接受 id，不接受 textKey）", f.page), fmt.Sprintf("看可用页面：tg interface pages %s", v.Form))
 					}
 					selected = filterPage(selected, page.ID)
 				}
@@ -175,7 +183,7 @@ func newFieldsCmd() *cobra.Command {
 			if f.col != "" {
 				selected = filterCol(selected, f.col)
 				if len(selected) == 0 {
-					return fail("FIELD_NOT_FOUND", 4, fmt.Sprintf("列 %q 不在当前范围", f.col), fmt.Sprintf("模糊搜索：tt interface fields %s --kw %s", v.Form, f.col))
+					return fail("FIELD_NOT_FOUND", 4, fmt.Sprintf("列 %q 不在当前范围", f.col), fmt.Sprintf("模糊搜索：tg interface fields %s --kw %s", v.Form, f.col))
 				}
 			}
 			if f.kw != "" {
@@ -217,7 +225,7 @@ func newFieldsCmd() *cobra.Command {
 func newLabelsCmd() *cobra.Command {
 	c := &cobra.Command{
 		Use:    "labels <form>",
-		Short:  "诊断：列出 42s 的 token → 中文（隐藏命令）",
+		Short:  "诊断：列出 gae_file 的 token → 中文（隐藏命令）",
 		Hidden: true,
 		Args:   cobra.RangeArgs(0, 1),
 		RunE: func(_ *cobra.Command, args []string) error {
@@ -228,23 +236,23 @@ func newLabelsCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			var entries []map[string]any
-			if src.Form42S != "" {
-				b, err := os.ReadFile(src.Form42S)
-				if err != nil {
-					return fail("LABELS_INVALID", 1, fmt.Sprintf("读 42s 失败: %v", err))
-				}
-				tbl, err := str42s.Parse(b)
-				if err != nil {
-					return fail("LABELS_INVALID", 1, err.Error())
-				}
-				for _, e := range tbl.Entries {
-					entries = append(entries, map[string]any{"token": e.Token, "text": e.Text})
-				}
+			m, _, err := loadLabels(src.Form)
+			if err != nil {
+				return err
+			}
+			tokens := make([]string, 0, len(m))
+			for k := range m {
+				tokens = append(tokens, k)
+			}
+			sort.Strings(tokens)
+			entries := make([]map[string]any, 0, len(tokens))
+			for _, k := range tokens {
+				entries = append(entries, map[string]any{"token": k, "text": m[k]})
 			}
 			out := map[string]any{
 				"kind": "interface.labels", "form": v.Form, "module": v.Module,
-				"source": sourceMap(src), "total": len(entries), "entries": entries,
+				"source": sourceMap(src), "labelSource": src.LabelSource,
+				"lang": f.lang, "total": len(entries), "entries": entries,
 			}
 			if !common.IsJSON() {
 				return printLabelsHuman(entries)
@@ -261,7 +269,7 @@ func load(args []string) (*screen.View, *sourceInputs, error) {
 		form = strings.TrimSpace(args[0])
 	}
 	src, err := resolveSources(sourceOpts{
-		Form: form, Module: f.module, Dir: f.dir, FileF: f.fileF, FileS: f.fileS,
+		Form: form, Module: f.module, Dir: f.dir, FileF: f.fileF,
 	})
 	if err != nil {
 		return nil, nil, err
@@ -274,17 +282,11 @@ func load(args []string) (*screen.View, *sourceInputs, error) {
 	if err != nil {
 		return nil, nil, fail("FORM_UNKNOWN", 1, err.Error())
 	}
-	var labels *str42s.Table
-	if src.Form42S != "" {
-		b, err := os.ReadFile(src.Form42S)
-		if err != nil {
-			return nil, nil, fail("LABELS_INVALID", 1, fmt.Sprintf("读 42s 失败: %v", err))
-		}
-		labels, err = str42s.Parse(b)
-		if err != nil {
-			return nil, nil, fail("LABELS_INVALID", 1, err.Error())
-		}
+	labels, note, err := loadLabels(src.Form)
+	if err != nil {
+		return nil, nil, err
 	}
+	src.LabelSource = note
 	v := screen.Build(src.Form, src.Module, layout, labels)
 	return v, src, nil
 }

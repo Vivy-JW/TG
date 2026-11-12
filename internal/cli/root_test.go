@@ -130,7 +130,7 @@ func TestRootHelpAndReadmeHaveNoStaleAdvice(t *testing.T) {
 // 表单包该怎么改 —— 那比教错更坏。所以要有一条**正向**断言。
 func TestRootHelpPointsAtNamedVerbs(t *testing.T) {
 	long := rootCmd.Long
-	for _, want := range []string{"tt dict", "tt debug", "tt site"} {
+	for _, want := range []string{"tg dict", "tg debug", "tg site"} {
 		if !strings.Contains(long, want) {
 			t.Errorf("根帮助里该出现 %s（四块能力的入口要一眼看全）", want)
 		}

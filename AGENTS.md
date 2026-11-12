@@ -40,7 +40,7 @@ TT/
 
 │  │  ├─ dict/          字典命令组：表/字段/校验/开窗/消息/参数/ACC 查询
 │  │  ├─ file/          tt file 命令组：只读 SFTP 与离线镜像
-│  │  ├─ interfacecmd/  tt interface 命令组：.42f + .42s → 页面/字段/中文标签
+│  │  ├─ interfacecmd/  tg interface 命令组：.42f + gae_file → 页面/字段/中文标签
 │  │  ├─ outline/       tt outline 命令：.4gl → 函数/UI 块树
 │  │  └─ session/       tt session 命令组：建/列/看/改 ENT/结束/收掉/透传/起作业
 │  ├─ config/           统一配置层：位置解析、唯一写入口 Edit、原子写、打码、缓存清单
@@ -65,11 +65,10 @@ TT/
 │  ├─ output/           唯一输出出口（紧凑 JSON / CSV / 表格）
 │  ├─ pathinstall/      用户 PATH（HKCU）增删，永不碰系统 PATH
 │  ├─ safesql/          只读 SQL 文本层防线（远端查询入口用）
-│  ├─ screen/           .42f 布局 + .42s 标签 → 前端画面模型
+│  ├─ screen/           .42f 布局 + Labels 接口 → 前端画面模型
 │  ├─ session/          会话身份规则（序号分配、世代号），不 import 调试线
 │  ├─ skill/            技能（官方 + 第三方登记）：frontmatter 校验、冲突、assets 指针、安装
 │  ├─ sshtun/           SSH 端口转发隧道（本地监听 → 远端 host:port）
-│  ├─ str42s/           .42s 编译字符串表解析（纯函数，零 IO）
 │  ├─ target/           调试目标解析与候选信封
 │  ├─ testenv/          本机测试环境解析（config.local.json + 环境变量，不带 testing）
 │  ├─ testkit/          测试助手（stdout 捕获、吞输出、跳过台账、单源检查）
