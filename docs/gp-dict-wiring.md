@@ -6,12 +6,14 @@
 > **数据来源：2026-11-09 对一套 TOPTEST 环境（主机 / 端口 / 账号见本地 `config.json`，本仓库不记录连接信息）的只读实测**，
 > 不是从 T100 推断的。全部是 `SELECT`，没有建表、没有写库。
 >
-> **2026-11-13 复核**：接口随命令面收口从 30 个方法瘦到 **16 个** —— `r.v`(check)、`desc`(spec)、
+> **2026-11-13 复核**：接口随命令面收口从 30 个方法瘦到 **15 个** —— `r.v`(check)、`desc`(spec)、
 > `scc`、`acc`、`sysp`/`docp`(param) 六条命令已删（GP 侧那几张表实测全 `ORA-00942`），
 > 它们的方法也一并从接口移除；§3 表里对应的行标成「已删」。同日第二刀又删掉三个空壳
 > （`QuerySubProgInfo`/`QuerySubProgList`/`QueryWinParams`）。同期新增了 `QueryUITexts`（画面文字，`gae_file` →
 > `t_ui_text`）与 `QueryProgLinks`（程序链接，`gal_file` → `t_prog_link`，本地也能查），
 > `QueryProgTables`/`QueryTablePrograms` 也从「⬜ 只能扫源码」变成 ✅（同步 `zr_file` 后本地与远程都出数，实测 164 张）。
+> 随后又合了两处：`QueryMsgLangs` 并入 `QueryMsgs`（空命中时 `MsgResult.Langs` 带回可用语言）、
+> `QueryProgJobs` 并入 `QueryProgInfo`（GP 里作业 = 程序，`ProgInfo.Jobs` 恒 1 条）。
 
 ## 0. 怎么验的
 
@@ -25,7 +27,7 @@
 
 | 类别 | 方法数 | 含义 |
 |---|---|---|
-| ✅ 有真实数据 | 16 | GP 侧数据完整（含同步进本地库的 `t_*` 与直查 `GA*/ZT*/ZE_FILE`） |
+| ✅ 有真实数据 | 15 | GP 侧数据完整（含同步进本地库的 `t_*` 与直查 `GA*/ZT*/ZE_FILE`） |
 | ⬜ 空壳 | 0 | 2026-11-13 全部清掉：没有对端的族连命令带方法一起删 |
 
 **GP 的字典是"物理表结构 + 表/字段中文名 + 程序目录与程序用表 + 错误消息 + 画面文字 + 开窗定义"**，
@@ -120,7 +122,7 @@
 | # | 方法 | 用途 | GP 来源 | 结论 |
 |---|---|---|---|---|
 | 6 | `QueryProgInfo` | 程序详情 | `t_prog`（`prog,name,memo,name2,module,category,run_cmd,name_tw`，来自 `gaz_file`/`zz_file`/`gal_file`） | ✅ |
-| 7 | `QueryProgJobs` | 作业登记 | GP 没有"作业登记"这一层（`gzou_t` 之类不存在） | ⬜ |
+| ~~7~~ | ~~`QueryProgJobs`~~ | 已并入 `QueryProgInfo`：GP 里作业 = 程序，`ProgInfo.Jobs` 恒 1 条 | — |
 | 8 | `QueryProgList` | 程序列表 | 同 #6，另带 `p_link` 解析出的模块 | ✅ |
 | 9 | `QueryProgTables` | 程序用了哪些表 | `t_prog_table` ← `zr_file`（118,420 行，含 S/I/U/D 操作码）；远程直查同源 | ✅ |
 | 10 | `QueryTablePrograms` | 反查程序 | 同上（按表反查） | ✅ |
@@ -187,7 +189,7 @@
 
 **2026-11-13 再收一刀：连"空集"也不留了。** `QuerySubProgInfo`/`QuerySubProgList`（子程序是 4GL `FUNCTION`，
 不在字典里）与 `QueryWinParams`（GP 的开窗没有参数层）已从接口删除，`tg dict prog --sub` 与 `r.q` 明细里的
-参数段一并消失。接口现在是 **16 个方法、全部有真实数据**；`QueryProgJobs` 保留 —— GP 里"作业 = 程序"，
+参数段一并消失。接口现在是 **15 个方法、全部有真实数据**；"作业"这一层不再单独占一个方法 —— GP 里作业 = 程序，随 `QueryProgInfo.Jobs` 一起返回，
 它返回的是真数据（恒 1 条），不是空壳。
 
 ## 7. 两个取舍

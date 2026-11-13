@@ -101,24 +101,29 @@ func TestQueryProgInfo(t *testing.T) {
 	}
 }
 
-// TestQueryProgJobs GP 没有独立作业实体：作业 = 程序，恒 1 条。
-func TestQueryProgJobs(t *testing.T) {
+// TestQueryProgInfoJobs GP 没有独立作业实体：作业 = 程序，QueryProgInfo 的
+// Jobs 恒 1 条（从前是独立的 QueryProgJobs，已并入）。
+func TestQueryProgInfoJobs(t *testing.T) {
 	d := buildProgDB(t)
 
-	jobs, err := d.QueryProgJobs("apmt420", "zh_CN")
+	info, err := d.QueryProgInfo("apmt420", "zh_CN")
 	if err != nil {
-		t.Fatalf("QueryProgJobs: %v", err)
+		t.Fatalf("QueryProgInfo: %v", err)
 	}
-	if len(jobs) != 1 {
-		t.Fatalf("GP 的作业恒 1 条, got %d: %+v", len(jobs), jobs)
+	if info == nil {
+		t.Fatal("apmt420 应已收录")
 	}
-	if jobs[0].JobCode != "apmt420" || jobs[0].JobName != "请购单维护作业" || jobs[0].Module != "APM" {
-		t.Errorf("作业应等于程序本身: %+v", jobs[0])
+	if len(info.Jobs) != 1 {
+		t.Fatalf("GP 的作业恒 1 条, got %d: %+v", len(info.Jobs), info.Jobs)
+	}
+	if info.Jobs[0].JobCode != "apmt420" || info.Jobs[0].JobName != info.Name || info.Jobs[0].Module != info.Module {
+		t.Errorf("作业应等于程序本身: %+v vs %+v", info.Jobs[0], info)
 	}
 
-	// 未收录：空数组（不是 nil）
-	if none, err := d.QueryProgJobs("nosuch01", "zh_CN"); err != nil || none == nil || len(none) != 0 {
-		t.Errorf("未收录应返回空切片: %#v, %v", none, err)
+	// 未收录：程序为 nil，自然没有作业
+	none, err := d.QueryProgInfo("nosuch01", "zh_CN")
+	if err != nil || none != nil {
+		t.Errorf("未收录应返回 (nil,nil): %#v, %v", none, err)
 	}
 }
 

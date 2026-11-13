@@ -47,6 +47,9 @@ type ProgInfo struct {
 	// TableCount 这个程序用到的表格数。只在数据源顺手能算出来时给(如 GP 的
 	// zr_file)，T100 侧留空 —— 要看明细还得走 --tables。
 	TableCount int `json:"表格总数,omitempty"`
+	// Jobs 这个编号对应哪些作业。GP 里作业 = 程序，恒为它自己一条；命令层把它
+	// 单列成 JSON 的「作业」块，所以这里标 json:"-"，不重复出现在「程序」里。
+	Jobs []ProgJob `json:"-"`
 }
 
 // ProgJob 一个使用某程序的作业(gzzz_t 按 gzzz002 关联到程序)。
@@ -308,7 +311,8 @@ func (d *DB) QueryTablePrograms(table, lang string) ([]TableProgRow, error) {
 //   - name/name_tw ← gaz_file 的简体/繁体名称
 //
 // GP 没有"作业"这张独立的表：gaz_file 里一条程序就是一条作业，
-// 所以 IsJob 恒为 true、JobProg 就是它自己（见 QueryProgJobs）。
+// 所以作业清单恒为它自己一条（挂在 ProgInfo.Jobs 上，从前是独立方法
+// QueryProgJobs）。
 func (d *DB) QueryProgInfo(code, lang string) (*ProgInfo, error) {
 	info := &ProgInfo{Code: strings.ToLower(strings.TrimSpace(code))}
 	row := d.conn.QueryRow(`
@@ -331,22 +335,9 @@ func (d *DB) QueryProgInfo(code, lang string) (*ProgInfo, error) {
 	default:
 		return nil, fmt.Errorf("query prog info %s: %w", code, err)
 	}
+	// GP 里作业 = 程序：清单只有它自己一条。
+	info.Jobs = []ProgJob{{JobCode: info.Code, JobName: info.Name, Module: info.Module}}
 	return info, nil
-}
-
-// QueryProgJobs 查"哪些作业用了这个程序"。
-//
-// GP 里 gzze_t 不存在，作业就是程序本身（gaz_file 的 gaz03 写着"……作業"），
-// 所以这里恒返回 1 条：编号、名称、模块都取该程序自己。
-func (d *DB) QueryProgJobs(code, lang string) ([]ProgJob, error) {
-	info, err := d.QueryProgInfo(code, lang)
-	if err != nil {
-		return nil, err
-	}
-	if info == nil {
-		return []ProgJob{}, nil
-	}
-	return []ProgJob{{JobCode: info.Code, JobName: info.Name, Module: info.Module}}, nil
 }
 
 // QueryProgList 列出/搜索程序（--kw 按编号或名称过滤）。

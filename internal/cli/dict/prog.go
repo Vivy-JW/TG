@@ -190,10 +190,8 @@ func runProgDetail(code string) error {
 		}
 	}
 	if Format() != output.FormatTable {
-		jobs, jerr := GetDB().QueryProgJobs(code, progLang)
-		if jerr != nil && !db.IsMissingTable(jerr) {
-			return jerr
-		}
+		// 作业清单随 QueryProgInfo 一起回来(GP 里作业 = 程序),不用再问一次。
+		jobs := info.Jobs
 		tables, terr := GetDB().QueryProgTables(code, progLang)
 		if terr != nil && !db.IsMissingTable(terr) {
 			return terr
@@ -239,14 +237,8 @@ func runProgDetail(code string) error {
 		return nil
 	}
 
-	jobs, err := GetDB().QueryProgJobs(code, progLang)
-	if err != nil {
-		if db.IsMissingTable(err) {
-			fmt.Println(missingHint("程序与作业 (gzzz_t 等表)"))
-			return printProgTables(code, false) // 程序与表格可能是另一族,继续试
-		}
-		return err
-	}
+	// 作业清单随 QueryProgInfo 一起回来(GP 里作业 = 程序)。
+	jobs := info.Jobs
 	fmt.Printf("\n使用它的作业 (%d):\n", len(jobs))
 	if len(jobs) == 0 {
 		fmt.Println("  (无;该程序未被作业登记,或是被作其他用途引用)")
@@ -384,10 +376,7 @@ func progDetailItem(code string) (map[string]any, bool, error) {
 		return nil, false, err
 	}
 	if info != nil {
-		jobs, jerr := GetDB().QueryProgJobs(code, progLang)
-		if jerr != nil && !db.IsMissingTable(jerr) {
-			return nil, false, jerr
-		}
+		jobs := info.Jobs
 		tables, terr := queryProgTablesForDetail(code)
 		if terr != nil && !db.IsMissingTable(terr) {
 			return nil, false, terr

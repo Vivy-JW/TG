@@ -290,6 +290,9 @@ func (l *Live) QueryProgInfo(code, lang string) (*db.ProgInfo, error) {
 		info.CategoryName = db.CategoryName(info.Category)
 	}
 	info.Module = l.progModule(code)
+	// GP 没有"作业"这张独立的表：gaz_file 里一条程序就是一条作业，所以作业清单
+	// 恒为它自己一条。从前这是独立方法 QueryProgJobs，现在挂在 ProgInfo 上一并给。
+	info.Jobs = []db.ProgJob{{JobCode: info.Code, JobName: info.Name, Module: info.Module}}
 	// zr_file 是"程序 × 表 × 操作码"的行集合，同一张表可能有多行 → 按表去重。
 	// 两侧都 TRIM：zr_file 是 p_get_zr 扫源码生成的，同一条程序名/表名可能带尾空格
 	// （本地同步用 clean() 去空白后归并，这里不 TRIM 就会比本地少几张表 —— 实测
@@ -300,18 +303,6 @@ func (l *Live) QueryProgInfo(code, lang string) (*db.ProgInfo, error) {
 		}
 	}
 	return info, nil
-}
-
-// QueryProgJobs GP 里作业就是程序本身，恒返回 1 条。
-func (l *Live) QueryProgJobs(code, lang string) ([]db.ProgJob, error) {
-	info, err := l.QueryProgInfo(code, lang)
-	if err != nil {
-		return nil, err
-	}
-	if info == nil {
-		return []db.ProgJob{}, nil
-	}
-	return []db.ProgJob{{JobCode: info.Code, JobName: info.Name, Module: info.Module}}, nil
 }
 
 // QueryProgList 程序清单(名称、类别、模块)，--kw 按编号或名称过滤。

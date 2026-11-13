@@ -17,7 +17,7 @@ type Source interface {
 	// prog 程序字典:程序目录 gaz_file(+zz_file 类别、gal_file 模块)同步成 t_prog；作业与程序在 GP 是同一个东西
 	// / 应用参数组 gzzk_t。见 db/prog.go 注释里的表结构说明。
 	QueryProgInfo(code, lang string) (*ProgInfo, error) // 未收录返回 (nil, nil)
-	QueryProgJobs(code, lang string) ([]ProgJob, error)
+
 	QueryProgList(lang, keyword string) ([]ProgListItem, error)
 	// 程序 ↔ 表格:zr_file 同步成 t_prog_table,两侧都按操作类别合并
 	QueryProgTables(code, lang string) ([]ProgTableRow, error)
