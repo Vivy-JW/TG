@@ -317,7 +317,7 @@ func TestHostsGet(t *testing.T) {
 		t.Fatalf("HTTP %d", rec.Code)
 	}
 	// activeEnv 已不在响应里:没有默认环境了(环境一律点名)。
-	for _, k := range []string{"config", "sshs", "listen", "debug", "query", "mirror", "sync", "tdev"} {
+	for _, k := range []string{"config", "sshs", "listen", "debug", "query", "mirror", "sync"} {
 		if _, has := out[k]; !has {
 			t.Errorf("响应缺少 %q", k)
 		}

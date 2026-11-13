@@ -166,7 +166,6 @@ export interface HostsView {
   // dict 本地字典库根目录；空 = 缺省 <数据目录>/dict
   dict: { dir?: string }
   sync: { target?: string }
-  tdev: { workspaceSuffix?: string; defaultOut?: string }
   version: string
 }
 // 从 T100 设计器站点清单里发现的一条候选环境(字段见 internal/designer/sites.go)。
@@ -199,7 +198,6 @@ export interface HostsPatch {
   mirror?: { dir?: string }
   dict?: { dir?: string }
   sync?: { target?: string }
-  tdev?: { workspaceSuffix?: string; defaultOut?: string }
 }
 
 // 目录选择器（前端自绘）用的目录项 / 列表

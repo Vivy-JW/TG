@@ -93,44 +93,6 @@ func TestCorpusRootFileWhenNoEnv(t *testing.T) {
 	}
 }
 
-// TestOtherThreeFollowTheSameOrder 另外三项与语料根同一条规矩：环境变量 > 文件。
-func TestOtherThreeFollowTheSameOrder(t *testing.T) {
-	dir := repoWithLocalConfig(t, Config{
-		EngineExe:   "exe-from-file",
-		Workspace:   "ws-from-file",
-		DesignerDir: "designer-from-file",
-	})
-	t.Chdir(dir)
-
-	// 先只看文件
-	t.Setenv("TTZS_EXE", "")
-	t.Setenv("TTZS_WS", "")
-	t.Setenv("TTZS_INSTALL", "")
-	if got := EngineExe(); got != "exe-from-file" {
-		t.Errorf("EngineExe 该取文件：得 %q", got)
-	}
-	if got := Workspace(); got != "ws-from-file" {
-		t.Errorf("Workspace 该取文件：得 %q", got)
-	}
-	if got := DesignerDir(); got != "designer-from-file" {
-		t.Errorf("DesignerDir 该取文件：得 %q", got)
-	}
-
-	// 再看环境变量压过文件
-	t.Setenv("TTZS_EXE", "exe-from-env")
-	t.Setenv("TTZS_WS", "ws-from-env")
-	t.Setenv("TTZS_INSTALL", "designer-from-env")
-	if got := EngineExe(); got != "exe-from-env" {
-		t.Errorf("EngineExe 环境变量该压过文件：得 %q", got)
-	}
-	if got := Workspace(); got != "ws-from-env" {
-		t.Errorf("Workspace 环境变量该压过文件：得 %q", got)
-	}
-	if got := DesignerDir(); got != "designer-from-env" {
-		t.Errorf("DesignerDir 环境变量该压过文件：得 %q", got)
-	}
-}
-
 // TestMissingOrBrokenConfigIsNotAnError 没有这份文件、或文件不是 JSON —— 都当空配置，不报错。
 //
 // 没有 config.local.json 是**正常状态**（它在 .gitignore 里，绝大多数机器上就没有）。

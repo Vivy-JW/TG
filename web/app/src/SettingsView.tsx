@@ -1577,13 +1577,13 @@ export function SettingsView() {
               <Card id="card-app-service" title="服务"
                 description="统一 Web 服务的监听地址。">
                 <SettingRow id="listen" label="监听地址"
-                  description="改完需重启 tt serve;端口占用时自动向后顺延。"
-                  control={<Input className={input} value={listen} placeholder="127.0.0.1:28670"
+                  description="改完需重启 tg serve;端口占用时自动向后顺延。"
+                  control={<Input className={input} value={listen} placeholder="127.0.0.1:28680"
                     onChange={(e) => { setListen(e.target.value); markDirty('listen') }} />} />
               </Card>
 
               <Card id="card-app-install" title="命令行集成"
-                description="把 tt.exe 目录加入用户 PATH,之后任意终端可直接敲 tt。只改当前用户,不需管理员。">
+                description="把 tg.exe 目录加入用户 PATH,之后任意终端可直接敲 tg。只改当前用户,不需管理员。">
                 <SettingRow
                   id="app.install"
                   label="用户 PATH"

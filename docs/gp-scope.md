@@ -112,29 +112,30 @@ m.Handle("/api/gp/", s.opt.GP)                                    // GP
 
 `target`（寻址文法）、`cli/at`（`@企业`）、`debug`（被 GP 需要）——这三个是 §5 的主角。`dict` 不走"拆"，它整体进 4.D 的改造。
 
-### 4.D 字典层：留机制，换表（2026-11-09 拍板：`internal/dict` 不删）
+### 4.D 字典层：留机制，换表（2026-11-09 拍板：`internal/dict` 不删；2026-11-13 已落地）
 
-**为什么留**：`internal/dict/db.Source`（`internal/dict/db/source.go:10`）是 30 个方法的**通用字典语义**——表/字段/键/索引/程序/作业/校验/规格/分类码/开窗/消息/参数，三个后端（本地 SQLite、金仓、Oracle）实现同一组方法。换一套表，它就是另一套 ERP 的字典。
+**为什么留**：`internal/dict/db.Source`（`internal/dict/db/source.go`）是**通用字典语义**——表/字段/键/索引/程序/程序用表/程序链接/开窗/消息/画面文字，本地 SQLite 与远程直查实现同一组方法。换一套表，它就是另一套 ERP 的字典。接口随命令面收口从 30 个方法瘦到 **20 个**（`r.v`/`desc`/`scc`/`acc`/`sysp`/`docp` 六条命令已删，对应方法一并移除）。
 
-**GP 已经有一半**：`internal/dict/dbsync/gp.go` 把 Oracle 的 `zta_file`/`all_tab_columns`/`all_indexes`/`all_constraints`/`gao_file`/`gaz_file`/`gal_file` 同步进本地 SQLite，表是 `t_table`/`t_column`/`t_index`/`t_constraint`/`t_module`/`t_prog`/`t_prog_link`。
+**GP 的投影已经在本地库里**（`tg dict db sync`，实测 1 分 48 秒 / 68.7 MB）：`t_table`（2,962）、`t_column`（60,870）、`t_index`（3,318）、`t_constraint`（18,301）、`t_module`（121）、`t_prog`（6,465）、`t_prog_table`（118,420）、`t_prog_link`（17,810）、`t_msg`（42,031）、`t_ui_text`（427,553），另有 `meta`。
 
-**换表清单（2026-11-09 在 TOPTEST 上实测确认，逐方法的接线表见 [gp-dict-wiring.md](gp-dict-wiring.md)）**：
+**换表清单（逐方法的接线表见 [gp-dict-wiring.md](gp-dict-wiring.md)）**：
 
 | 项 | T100 现在 | GP 改成 | 实测 |
 |---|---|---|---|
-| 表档 / 字段档 | `dzea_t` / `dzeb_t` | `zta_file`+`gat_file` / `all_tab_columns`+`gaq_file`（已在本地库） | 2,962 张表 / 61,823 字段 |
-| 键 / 索引 | `dzed_t` / `dzec_t` | `all_constraints` / `all_indexes`（已在本地库）；**GP 没有任何外键**，`RefTable/RefField` 只能从 `gau_file`（字段→引用表，1,957 行）补 | P 2,790 / U 1 / R 0 |
-| 程序 / 作业 | `gzza_t` / `zzz_t` / `gzdg_t` | `gaz_file`（程序说明）+ `gal_file`（p_link）；"作业"概念 GP 没有 | 6,465 支程序 / 17,810 条链接 |
-| 开窗 | `dzca_t`/`dzcb_t`/`dzcc_t` | **GP 没有开窗字典**（开窗写在 4GL 里）；最接近的是 `gac_file` 的 `q_*` 查询定义，只能算半个 | 15,327 行 |
-| 消息 | `gzze_t` | **`ze_file`**（不是 `gaz_file`——那是程序说明），语言 0/2 各约 2.1 万行；本地库还没建 `t_msg` | 42,031 行 |
-| 校验 / 规格 | `dzcd_t`…/`dzep_t` | 校验 GP 无（返回空）；规格用 `t_column.fmt/dflt` + `gaq_file.gaq07` 顶到 6～8 列 | — |
-| 分类码 / ACC / 参数 / 单据性质 | `gzca_t`/`gzaa_t`/`gzsz_t`/`gzsy_t` | GP 全无（`dz*` 与 `gzca*` 实测 0 张；`oocq/oocql/gzzz` 也不存在），返回空 | 0 张表 |
+| 表档 / 字段档 | `dzea_t` / `dzeb_t` | `zta_file`+`gat_file` / `all_tab_columns`+`gaq_file` → `t_table` / `t_column`（含 `zta07` 种类：61 张只登记不建列的同义词） | 2,962 张表 / 60,870 字段 |
+| 键 / 索引 | `dzed_t` / `dzec_t` | `all_constraints` / `all_indexes` → `t_constraint` / `t_index`；**GP 没有外键**，`RefTable/RefField` 从 `gau_file` 补 | P 2,790 / U 1 / R 0 |
+| 程序 / 用表 / 链接 | `gzza_t` / `gzdg_t` / `gzou_t` | `gaz_file`+`zz_file`+`gal_file` → `t_prog`；`zr_file` → `t_prog_table`（带 S/I/U/D）；`gal_file` → `t_prog_link`（p_link 权威）；"作业登记"GP 没有 | 6,465 支 / 118,420 行 / 17,810 行 |
+| 开窗 | `dzca_t`/`dzcb_t`/`dzcc_t` | **有**：`gab_file`（单头 + WHERE/DISTINCT/JOIN）+ `gac_file`（栏位）+ `gae_file`/`gaq_file`（标题与显示名）→ `tg dict r.q`，明细里按 `cl_create_qry` 的规则现拼 SQL（5,056 个开窗） | 5,056 / 15,327 |
+| 消息 | `gzze_t` | `ze_file` → `t_msg` | 42,031 行 |
+| 画面文字 | （T100 用 `.42s`） | `gae_file` → `t_ui_text`（`tg interface` 的标签源，替代 42s） | 427,553 行 |
+| 校验 / 规格 | `dzcd_t`…/`dzep_t` | GP 无对应表 —— 命令已删，不留空壳 | — |
+| 分类码 / ACC / 参数 / 单据性质 | `gzca_t`/`gzaa_t`/`gzsz_t`/`gzsy_t` | GP 无（实测全 `ORA-00942`）—— 命令已删 | 0 张表 |
 
-**公司别**：GP 没有 T100 那种"企业→账号"映射（`gzou_t`），但 `zta_file.zta02` 是**公司别**（`ds`/`hk`/`bj`…共 50 个），本实例的数据库账号恰好就是 `ds`。所以"GP 的 ENT"= 公司别，默认取账号名、允许在环境上覆盖；`internal/dict/dbsync/gp.go:186` 现在把它写死成 `"ds"`/`"DS"`，且 `if env.DB.Service != "" { owner = "DS" }` 是死分支。
+**"GP 的 ENT"= 营运据点**：`azp_file.azp01` 是据点编号、`azp03` 是资料库编号（= `zta_file.zta02` = Oracle schema）、`azp053='Y'` 表示该据点有实际资料库。解析链 `--at <环境>@<据点编号>`（schema 也认）→ `gp.ResolveSchema`。**字典同步固定按 `ds` 取**（ds 表档最全）；**实际查库**按环境里选中的营运据点（`hosts.sshs[].company`）取 schema。
 
-**命令面**：`cli/dict` 的 6108 行按 `Source` 的方法一一对应（rt/rv/desc/scc/rq/prog/param/msg/acc），改造时按"GP 有 → 保留、GP 无 → 报空/隐藏"逐条过，不整组删。
+**命令面**：`tg dict` 现在只有 `r.t` / `r.q` / `prog` / `msg` / `db` / `spill`，外加 `tg site list|show` 查据点。
 
-**连带影响**：Q6 的"查询数据源（本地镜像 / 远程直查）"在字典改造后**才有语义**，所以那个控件先别删（原建议 A 作废，见 §10）。
+**连带影响**：Q6 的"查询数据源（本地镜像 / 远程直查）"已随字典改造接通（设置页里每个 GP 环境都能选本地/远程）。
 
 
 ## 5. 四处手术（§5.1 已定，其余待拍板）
@@ -240,7 +241,7 @@ TT 的 GP 面现在只有"环境 / 镜像 / 字典 / 调试会话"四件事，**
    **pickdir 已修**（改调 `/api/pickdir`，前端 `tsc --noEmit` 与 `check:app` 全绿，dist 已重建）。`/api/gp/settings` 与 `querySource` 两处按 **Q6 = a** 处理：控件先**不渲染**（`GpSettings.tsx` 顶部的 `SHOW_QUERY_SOURCE = false`，代码保留），等 §4.D 字典改造落地后连同后端一起接通——现在渲染它只会给用户一个点了报错的死控件。
 5. **`skills/` 没有 GP 技能。** 分发的 4 个技能全是 T100 的；GP 那套（`gp-erp-architecture`/`-debug`/`-read`）现在只在本机 `.agents/skills` 之外。用户装完 TG，Agent 拿到的是 T100 文档——这是**对外发版前必须换的**。
 6. **`internal/README.md` 的包地图里没有 `internal/gp`。** 55 个包的清单从 `cli/at` 到 `cli` 都有，唯独这个 2067 行、带 9 个端点的子系统没登记（整份文档里 `gp` 出现 0 次）。
-7. **GP 字典只有三条命令，本地库与 Oracle 的口径还不一致。** ~~`tt gp` 只有 `table|link|msg`~~（2026-11-11 已改为 `tt dict`）；本地库已同步 `t_table`/`t_column`/`t_index`/`t_constraint`/`t_module`/`t_prog`/`t_prog_link` 七张表（实测：2,962 张表 / 60,870 个字段 / 6,465 支程序，同步耗时 1 分 7 秒、11.7 MB）。改造字典层（§4.D）就是把这七张表接到 `db.Source` 的 30 个查询方法上（逐方法接线见 [gp-dict-wiring.md](gp-dict-wiring.md)）。实测还暴露三处**已经存在**的不一致：①`internal/dict/dbsync/gp.go:186` 把公司别与 schema 写死成 `"ds"`/`"DS"`（后随的 `if env.DB.Service != ""` 是死分支）；②表档跟着公司别走（2,962 张，61 张无物理表）、字段跟着 schema 走（2,901 张物理表 / 60,870 字段），24 个视图与备份表在表档里没有；③`t_prog_link` 恒为 0 行，导致 `LookupModule` 的 p_link 覆盖等于没生效（实测 `gal_file` 只有 17,810 行、入口行 5,561 行，填这张表没有任何性能问题）。
+7. **GP 字典只有三条命令，本地库与 Oracle 的口径还不一致。** ~~`tt gp` 只有 `table|link|msg`~~（2026-11-11 已改为 `tt dict`）；~~本地库已同步七张表~~ → **2026-11-13 现状**：本地库 10 张数据表（`t_table`/`t_column`/`t_index`/`t_constraint`/`t_module`/`t_prog`/`t_prog_table`/`t_prog_link`/`t_msg`/`t_ui_text`）+ `meta`，实测 2,962 张表 / 60,870 字段 / 6,465 支程序 / 118,420 条程序用表 / 17,810 条链接 / 42,031 条消息 / 427,553 条画面文字，同步 1 分 48 秒、68.7 MB；`db.Source` 的 20 个方法已全部接上（逐方法接线见 [gp-dict-wiring.md](gp-dict-wiring.md)）。~~实测还暴露三处不一致~~ → **三处已修**（`068b19f`/`14413d9`/`92d6a95`/`2110c95`）：①同步固定按 `ds`、直查按营运据点；②`t_table` 记 `zta07` 种类，61 张同义词只登记不建列；③`t_prog_link` 照常填（17,810 行）。
 8. **`GET /api/gp/meta` 明文回吐口令。** 实测响应体里带环境的**明文 SSH 口令**与库账号的**明文口令**（形如 `"password":"<明文>"`，本文档不记录其值）——前端只用到 `hasPassword: true`，根本不需要明文。虽然服务只听 127.0.0.1，但本机任何进程/浏览器页面都能读到；`hMeta` 应改成只回 `hasPassword`。这是**对外发版前必须扫掉**的一条。
 
 ## 8. 沙箱跑不出来的测试（别误判成代码坏了）
@@ -278,4 +279,4 @@ Get-ChildItem internal -Directory | ForEach-Object {
 - ~~**Q3**：GP 镜像要不要扩到 `42f/42s/inc`~~ —— **已改（2026-11-12）：不做 profile，统一收 `4gl + 42f + inc`**。原计划（`debug` 只 4gl / `source` 收全四类）作废：一个镜像目录必须装齐所有读者的并集，否则某条命令会找不到文件；42s 在 GP 上不存在（标签在 `gae_file`，走字典线）。见 §7.3 第 3 条。
 - ~~**Q4**：`designer-src/` + `engine/`（16 MB、1264 文件）什么时候删~~ —— **已做（2026-11-12）**：连同 `tools/tzsmini`、`testdata/tzs-mini` 一起删，打包成 `D:\Digiwin\tt_work\archive\TG-t100-designer-assets-2026-11-12.zip`（7.13 MB / 1355 条目）；`build_portable.bat` 里打 engine + designer 的两段（`[3b/5]`/`[3c/5]`）同时删掉，发行包不再带任何厂商 DLL。
 - ~~**Q5**：阶段 3 的改名要不要一次性做~~ —— **已定（2026-11-09）：分三批**。①对外标识（二进制名、MSI 产品名、PATH 写入名、文档自称）②数据与配置（`~/.tt`→`~/.tg` 带一次性迁移、`TT_WEB_DIR`、`.tt-serve.json`、`TT_*` 变量读旧名兼容）③代码内部（`module tt`→`module tg` 全仓 import 重写 + 重生成 `commands.html`）。每批一个 commit、可单独回滚。
-- ~~**Q6**：GP 页的"查询数据源"怎么处理（§7.4）~~ —— **已定（2026-11-09）：先隐藏，字典改造后接通**。`GpSettings.tsx` 里 `SHOW_QUERY_SOURCE = false`，卡片代码保留不删；理由是原建议"A 删控件"随 §4.D 作废——字典改造成 GP 的之后，"本地镜像 / 远程直查"才有语义。接通时要做三件：`GET /api/gp/meta` 回读 `querySource`、`POST /api/gp/settings`（或改走共享 `PUT /api/hosts`）、本地 `.db` 查询路径（已完成：`tt dict … --env local:<环境>`，`tt gp` 组已于 2026-11-11 删除）。
+- ~~**Q6**：GP 页的"查询数据源"怎么处理（§7.4）~~ —— **已完成（2026-11-13）**：设置页「数据字典 → 查询数据源」现在是真控件，下拉里列的是 GP 环境（数据来自 `/api/gp/meta` 的 `env.dict`），选「本地镜像」即 `tg dict … --env local:<环境>`（读 `dict\<环境>.db`），选「远程直查」即 `--env <环境>`；`query.source` 落 `config.json`，命令行 `--at`/`--env local:` 单次覆盖仍在。原计划的 `SHOW_QUERY_SOURCE = false` 与 `POST /api/gp/settings` 都随 §4.D 落地作废。

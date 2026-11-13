@@ -229,8 +229,6 @@ func rejectNone(cmd *cobra.Command) error {
 	case strings.HasPrefix(path, "session"):
 		return fmt.Errorf("%s 不接受 --at：会话身份来自 --session（tt session ls --json 可看全部）；\n"+
 			"环境/企业跟着会话走，不用单独给", cmd.CommandPath())
-	case strings.HasPrefix(path, "dev tzs"):
-		return fmt.Errorf("%s 不接受 --at：它的参数由 tzs 自己的解析器接管 —— 环境用 --env，工作区用 --workspace", cmd.CommandPath())
 	default:
 		return fmt.Errorf("%s 不接受 --at：它不连接环境/企业（要操作会话或查库，换一条命令）", cmd.CommandPath())
 	}

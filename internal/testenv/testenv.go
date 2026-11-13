@@ -13,15 +13,15 @@ const DefaultCorpusRoot = `D:\t100_wrok_dir`
 // LocalFileName 是那份机器本地配置的文件名，放在仓库根（.gitignore 已经忽略它）。
 const LocalFileName = "config.local.json"
 
-// Config 是 config.local.json 的形状。四个都是**机器路径**，都可以留空。
+// Config 是 config.local.json 的形状。目前只剩语料根一项（机器路径，可留空）。
 //
-// 每一项都有一个同义的环境变量（见各 accessor），环境变量优先 ——
+// 它有一个同义的环境变量（见 CorpusRootDetail），环境变量优先 ——
 // 所以这份文件是"省得每次开终端都设变量"，不是必须。
+//
+// 2026-11-13：engineExe / workspace / designerDir 三项随 T100 设计器包管线一起删掉，
+// 读它们的 accessor（EngineExe / Workspace / DesignerDir）同批删；TG 没有 .tzs 引擎这个外部 exe。
 type Config struct {
-	CorpusRoot  string `json:"corpusRoot"`  // 语料根；对应 TDEV_CORPUS / TTZS_CORPUS
-	EngineExe   string `json:"engineExe"`   // 引擎 exe；对应 TTZS_EXE
-	Workspace   string `json:"workspace"`   // .tzs 工作区；对应 TTZS_WS
-	DesignerDir string `json:"designerDir"` // 设计器目录；对应 TTZS_INSTALL（可省，有随包缺省）
+	CorpusRoot string `json:"corpusRoot"` // 语料根；对应 TDEV_CORPUS / TTZS_CORPUS
 }
 
 // Local 读本机测试配置。**每次调用都重新读**（不做缓存）：文件很小，而缓存 +
@@ -129,28 +129,6 @@ func CorpusRootDetail() string {
 	}
 	return "四处都没有：" + strings.Join(corpusEnvVars, " / ") + "、" + LocalFileName + "、" +
 		DefaultCorpusRoot
-}
-
-// EngineExe 引擎 exe 路径：TTZS_EXE > config.local.json > ""。
-func EngineExe() string { return envOrLocal("TTZS_EXE", func(c Config) string { return c.EngineExe }) }
-
-// Workspace .tzs 工作区：TTZS_WS > config.local.json > ""。
-func Workspace() string { return envOrLocal("TTZS_WS", func(c Config) string { return c.Workspace }) }
-
-// DesignerDir 设计器目录：TTZS_INSTALL > config.local.json > ""（空 = 用随包分发的那份）。
-func DesignerDir() string {
-	return envOrLocal("TTZS_INSTALL", func(c Config) string { return c.DesignerDir })
-}
-
-// envOrLocal 是"环境变量优先、其次配置文件"的统一实现。两者都 TrimSpace。
-//
-// 这几项**不检查存在性**（语料根检查，因为它们指的一定是目录）：调用方对它们的用法不同 ——
-// 引擎 exe 要先判断"没给"还是"给了但不在"，那是调用方的话术，不是本包的。
-func envOrLocal(env string, from func(Config) string) string {
-	if v := strings.TrimSpace(os.Getenv(env)); v != "" {
-		return v
-	}
-	return strings.TrimSpace(from(Local()))
 }
 
 // dirOrEmpty 是路径存在且是目录时返回它，否则返回 ""。

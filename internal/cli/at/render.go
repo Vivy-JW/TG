@@ -342,8 +342,6 @@ func noneMessage(cmd *cobra.Command) string {
 	case strings.HasPrefix(path, "session"):
 		return "本命令不接受 --at：会话身份来自 --session（tt session ls --json 可看全部）；\n" +
 			"环境与企业跟着会话走，不用单独给。"
-	case strings.HasPrefix(path, "dev tzs"):
-		return "本命令不接受 --at：它的参数由 tzs 自己的解析器接管 —— 环境用 --env，工作区用 --workspace。"
 	default:
 		return "本命令没有目标参数（不需要环境/企业）。"
 	}

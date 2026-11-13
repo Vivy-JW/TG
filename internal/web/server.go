@@ -322,7 +322,6 @@ func (s *Server) hHostsGet(w http.ResponseWriter, r *http.Request) {
 		"mirror":  root.Mirror,
 		"dict":    root.Dict,
 		"sync":    root.Sync,
-		"tdev":    root.Tdev,
 		"version": s.opt.Version,
 	})
 }
@@ -339,7 +338,6 @@ type hostsPutReq struct {
 	Mirror *config.MirrorSettings
 	Dict   *config.DictSettings
 	Sync   *config.SyncSettings
-	Tdev   *config.TdevSettings
 }
 
 func (s *Server) hHostsPut(w http.ResponseWriter, r *http.Request) {
@@ -533,12 +531,6 @@ func (s *Server) hHostsPut(w http.ResponseWriter, r *http.Request) {
 					return nil
 				}
 				return putSection(root, "sync", req.Sync)
-			}},
-			{"tdev", func() error {
-				if req.Tdev == nil {
-					return nil
-				}
-				return putSection(root, "tdev", req.Tdev)
 			}},
 		}
 		for _, p := range patches {

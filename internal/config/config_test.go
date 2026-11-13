@@ -302,18 +302,6 @@ func TestHostsByName(t *testing.T) {
 	}
 }
 
-// TDev 原来完全没有配置系统；这个节是新增的，缺省值必须能兜住。
-func TestTdevSettingsDefault(t *testing.T) {
-	var s TdevSettings
-	if got := s.WorkspaceSuffixOrDefault(); got != DefaultWorkspaceSuffix {
-		t.Errorf("缺省后缀 = %q, 期望 %q", got, DefaultWorkspaceSuffix)
-	}
-	s.WorkspaceSuffix = "-work"
-	if got := s.WorkspaceSuffixOrDefault(); got != "-work" {
-		t.Errorf("显式后缀 = %q", got)
-	}
-}
-
 // net 节是可选节：写了的读出代理，没写的（或整节缺失的）取零值 —— 缺省就是"没配代理"。
 // 这条同时钉住 schema 3 的读侧：老配置（schemaVersion 2、没有 net 节）必须照读不报错。
 func TestNetSettingsProxy(t *testing.T) {

@@ -350,21 +350,6 @@ type SyncSettings struct {
 	Target string `json:"target,omitempty"`
 }
 
-// TdevSettings 设计器包工具设置。原 TDev 完全没有配置文件，这是新增节；
-// 只放跨调用稳定的默认值，命令行 flag 仍然优先。
-type TdevSettings struct {
-	WorkspaceSuffix string `json:"workspaceSuffix,omitempty"` // 导出工作区默认后缀（缺省 -ws）
-	DefaultOut      string `json:"defaultOut,omitempty"`      // tzs 解压等命令的默认输出目录
-}
-
-// WorkspaceSuffixOrDefault 返回生效的工作区后缀。
-func (t *TdevSettings) WorkspaceSuffixOrDefault() string {
-	if t.WorkspaceSuffix != "" {
-		return t.WorkspaceSuffix
-	}
-	return DefaultWorkspaceSuffix
-}
-
 // SkillsSettings 第三方技能登记（官方技能不走这里）。
 //
 // 官方技能是发版包的一部分（<exe 目录>\skills），走专用路径，不在这张表里 —— 它们
@@ -425,19 +410,6 @@ type NetSettings struct {
 	Proxy string `json:"proxy,omitempty"` // 如 http://127.0.0.1:10808；空 = 看环境变量，再不行直连
 }
 
-// TzsSettings 是 .tzs 表单引擎（engine/，一个 C# 外部 exe）的运行时依赖。
-//
-// 注意这里**没有设计器目录**：设计器的程序集由发行包自带（`tzs\designer\`），引擎默认
-// 就从那儿加载，所以它不再是配置项。也**没有工作区** —— 工作区是**按环境**的（见
-// NamedSsh.Workspace）：一台机器上对着几个客户就有几个工作区，放在机器级只会让“切了
-// 环境、引擎还开在别的客户的目录上”这种事有机会发生。
-//
-// 与 tdev 节的口径差异：tdev 放的是“跨调用稳定的默认值”，flag 永远优先；这一节放的是
-// 机器级依赖，命令行 flag 管不着。
-type TzsSettings struct {
-	ServerExe string `json:"serverExe,omitempty"` // 覆盖 tzs-server.exe；缺省 <exe 目录>\tzs\tzs-server.exe
-}
-
 // ---------- 配置根 ----------
 // Root 是 config.json 的类型化视图。
 //
@@ -452,8 +424,6 @@ type Root struct {
 	Mirror        MirrorSettings
 	Dict          DictSettings
 	Sync          SyncSettings
-	Tdev          TdevSettings
-	Tzs           TzsSettings
 	Net           NetSettings
 	Skills        SkillsSettings
 }
@@ -488,12 +458,6 @@ func Load(path string) (*Root, error) {
 		return nil, err
 	}
 	if err := decodeSection(root, "sync", &r.Sync); err != nil {
-		return nil, err
-	}
-	if err := decodeSection(root, "tdev", &r.Tdev); err != nil {
-		return nil, err
-	}
-	if err := decodeSection(root, "tzs", &r.Tzs); err != nil {
 		return nil, err
 	}
 	if err := decodeSection(root, "net", &r.Net); err != nil {

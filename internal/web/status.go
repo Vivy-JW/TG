@@ -28,8 +28,6 @@ type configStatus struct {
 	Sync config.FileStatus `json:"sync"`
 	// Install 命令行安装状态(用户 PATH),不是 config.json 里的东西。
 	Install pathinstall.Status `json:"install"`
-	// Tzs .tzs 表单引擎的运行时依赖:引擎 exe(随包分发)、设计器目录与工作区(用户配的)。
-	Tzs config.TzsStatus `json:"tzs"`
 	// Cache 配置目录下那些**可再生**中间数据的占用(企业快照/源码镜像/查询落盘/断点存档)。
 	// 与 config.json 同目录但性质相反,所以单独一个块,并明确"它不是你的数据"。
 	Cache config.CacheStatus `json:"cache"`
@@ -41,21 +39,12 @@ func (s *Server) hConfigStatus(w http.ResponseWriter, r *http.Request) {
 	path, _ := s.configPath(true)
 	st := configStatus{OK: true, Config: path, Sync: config.FileStatusOf("", s.syncDefaultTarget())}
 
-	var tzsCfg config.TzsSettings
 	root, err := config.Load(path)
 	if err == nil {
 		st.Mirror = config.DirStatusOf(root.Mirror.Dir)
 		st.Dict = config.DirStatusOf(root.Dict.Dir)
 		st.Sync = config.FileStatusOf(root.Sync.Target, s.syncDefaultTarget())
-		tzsCfg = root.Tzs
-		// 工作区**按环境配**,而"默认环境"已移除(环境一律点名)——
-		// 所以这里没有一个"当前工作区"可报。工作区状态改为按环境逐个呈现,
-		// 这个汇总端点不再替用户挑一个环境(挑错等于报别人的目录状态)。
 	}
-	// 引擎 exe 的状态与配置读没读到无关(它随包分发),所以放在分支外。
-	// 第三个参数是"要检查哪个工作区":没有默认环境 ⇒ 传空 ⇒ 该项状态为"未指定"
-	// (见 TzsStatusOf 对空值的处理)。
-	st.Tzs = config.TzsStatusOf(tzsCfg, "", config.EngineExe(""))
 	st.Install = pathinstall.Get()
 	// 缓存就在数据目录下,配置读不到也算得出来(缓存与配置文件无关)。
 	st.Cache = config.CacheStatusOf(config.LocationsAt(path).DataDir())
