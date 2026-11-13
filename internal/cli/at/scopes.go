@@ -28,9 +28,8 @@ var scopes = map[string]Scope{
 	"debug wsdebug": Env,
 	// debug sql / debug db 是已弃用的转发壳，身份跟 tg db sql / tg db probe 一致：
 	// 只要环境，账号取 db.accounts[0]（GP 没有企业编号那层）。
-	"debug sql":  Env,
-	"debug db":   Env,
-	"debug ents": EnvEnt,
+	"debug sql": Env,
+	"debug db":  Env,
 	// dict 的查询子命令（r.t/r.q/prog/msg）要有企业才能解析账号
 	"dict": EnvEnt,
 	// 但 dict 下的“连接/镜像/本地文件”这几支不要企业
@@ -60,7 +59,6 @@ var scopes = map[string]Scope{
 	"debug interrupt": EnvFilter,
 	"debug locate":    EnvFilter,
 	"debug mode":      EnvFilter,
-	"debug topent":    EnvFilter,
 	"debug stop":      EnvFilter,
 	"debug wait":      EnvFilter,
 	"debug why":       EnvFilter,

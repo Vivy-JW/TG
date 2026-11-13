@@ -20,10 +20,9 @@ import (
 
 var (
 	dbgEnvTimeout int
-	dbgTopClear   bool
 	// dbgEnvName 是 `debug env --name`：**创建会话时一并命名**。
 	//
-	// 需要它的理由是多会话：那几步（env / topent / exec）都要能点名"我这条"会话，
+	// 需要它的理由是多会话：那几步（env / exec）都要能点名"我这条"会话，
 	// 而点名要有名字。从前名字只能在 `debug start` 那一步给，于是前面几步只能裸奔。
 	dbgEnvName string
 )
@@ -89,37 +88,6 @@ var debugEnvCmd = &cobra.Command{
 			return dbgEnvSwitch(args[0])
 		}
 		return dbgEnvList()
-	},
-}
-
-// debugTopentCmd 查看/设置会话级 TOPENT override。
-var debugTopentCmd = &cobra.Command{
-	Use:   "topent [值]",
-	Short: "查看/设置会话 TOPENT override(需 serve 在运行,会话空闲可设)",
-	Long: `查看或设置当前会话的 TOPENT(企业编号)override。
-
-无参数:显示当前会话所在环境/状态、会话内 TOPENT override 与配置级默认(该环境 db.ent)。
-带值:仅在会话空闲(idle)时可设置,服务端立即下发到会话 shell(不必等下一轮调试);
-值不限数字/文本,服务端会剔除两侧空白。--clear 等价于传空值:清除会话级 override,
-并重新下发配置默认(而非简单 unset,避免掉回选区的机器默认)。
-
-需要 tt debug serve 在运行且已有空闲会话(无会话时先 tt debug env <环境名> 连接)。`,
-	Example: `  tt debug topent          # 查看当前会话 TOPENT
-  tt debug topent 99       # 设置会话 TOPENT=99(仅 idle)
-  tt debug topent --clear  # 清除会话级 override`,
-	Args: cobra.MaximumNArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		value := ""
-		if len(args) == 1 {
-			value = strings.TrimSpace(args[0])
-		}
-		if dbgTopClear {
-			value = ""
-		}
-		if len(args) == 0 && !dbgTopClear {
-			return dbgTopentShow()
-		}
-		return dbgTopentSet(value)
 	},
 }
 
@@ -332,48 +300,6 @@ func dbgSnap(id string) (*dbgSnapshot, error) {
 	return &s, nil
 }
 
-// dbgTopentShow 显示指定会话(默认唯一那条)的 TOPENT override 与配置默认。
-func dbgTopentShow() error {
-	cur, err := dbgTargetSession(nil, dbgRequest())
-	if err != nil {
-		return err
-	}
-	snap, err := dbgSnap(cur.ID)
-	if err != nil {
-		return err
-	}
-	fmt.Printf("会话: %s (%s)\n", cur.Env, dbgStateLabel(cur.State))
-	if snap.Topent != "" {
-		fmt.Printf("会话内 TOPENT override: %s\n", snap.Topent)
-	} else {
-		fmt.Println("会话内 TOPENT override: (未设置)")
-	}
-	fmt.Printf("配置级默认(该环境 db.ent): %s\n", orDefault(snap.TopentCfg, "(未配置:不覆写,沿用选区登录默认)"))
-	fmt.Printf("当前会话实际值(shell): %s\n", orDefault(snap.TopentShell, "(未取到)"))
-	return nil
-}
-
-// dbgTopentSet 设置/清除会话 TOPENT override(仅 idle)。
-func dbgTopentSet(value string) error {
-	cur, err := dbgTargetSession(nil, dbgRequest())
-	if err != nil {
-		return err
-	}
-	if cur.State != "idle" {
-		return fmt.Errorf("仅会话空闲(idle)时可设置 TOPENT(当前 %s);请先结束调试:tt debug quit", dbgStateLabel(cur.State))
-	}
-	_, err = dbgAPI("POST", dbgSessionURL(cur.ID, "/topent"), map[string]any{"value": value})
-	if err != nil {
-		return err
-	}
-	if value == "" {
-		fmt.Println("已清除会话 TOPENT override(已重新下发配置默认;配置为空才 unset)")
-	} else {
-		fmt.Printf("已设置会话 TOPENT = %q(已立即下发到会话)\n", value)
-	}
-	return nil
-}
-
 // dbgStateLabel 状态中文名。
 func dbgStateLabel(s string) string {
 	switch s {
@@ -402,10 +328,9 @@ func orDefault(v, d string) string {
 func init() {
 	debugEnvCmd.Flags().IntVar(&dbgEnvTimeout, "timeout", 120, "切换等待会话空闲超时(秒)")
 	debugEnvCmd.Flags().StringVar(&dbgEnvName, "name", "", "创建会话时一并命名（多条会话下后续命令用 --session <别名> 点名；取值同 debug start --name）")
-	debugTopentCmd.Flags().BoolVar(&dbgTopClear, "clear", false, "清除会话级 TOPENT override(等价传空值)")
-	// env / topent 都作用在"某一条会话"上（契约 1. 的命令角色表），所以认 --session：
+	// env 作用在"某一条会话"上（契约 1. 的命令角色表），所以认 --session：
 	// 从前它们取列表第一个，多会话下"改的是哪条"由列表顺序决定。
-	dbgRegisterSessionFlag(debugEnvCmd, debugTopentCmd)
-	addClientURLFlag(debugEnvCmd, debugTopentCmd)
-	Group.AddCommand(debugEnvCmd, debugTopentCmd)
+	dbgRegisterSessionFlag(debugEnvCmd)
+	addClientURLFlag(debugEnvCmd)
+	Group.AddCommand(debugEnvCmd)
 }

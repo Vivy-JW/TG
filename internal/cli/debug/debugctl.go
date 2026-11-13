@@ -1266,31 +1266,6 @@ func buildReplayRequest(rowid string) (string, error) {
 	return applySets(req, wsDebugSet)
 }
 
-// printTopentContext 把重放环境的 TOPENT 说明白。
-//
-// 它是"重放能不能跑进业务逻辑"的关键,可快照里只有 topent/topentCfg/topentShell 三个
-// 裸字段 —— 真有人把据点码填进企业编号的位置(配置里就叫 topent),然后一路查不出
-// 程序为什么跑不到业务逻辑。
-func printTopentContext(snap map[string]any) {
-	eff, _ := snap["topentShell"].(string)
-	if eff == "" {
-		eff, _ = snap["topentCfg"].(string)
-	}
-	if eff == "" {
-		return
-	}
-	src := "配置默认"
-	if o, _ := snap["topent"].(string); o != "" {
-		src = "会话覆盖"
-	}
-	fmt.Printf("重放环境:TOPENT=%s(%s)\n", eff, src)
-	if _, err := strconv.Atoi(eff); err != nil {
-		fmt.Println("  ⚠ 它不是纯数字。T100 的企业编号是数字,这里更像是把据点码填错了位置 ——")
-		fmt.Println("    那样框架的前置校验会失败,程序跑不到业务逻辑(表现:一路退出、断点不命中)。")
-		fmt.Println("    改:tt debug topent <企业编号>(例 99)")
-	}
-}
-
 // debugWslogsCmd 获取接口日志列表
 var debugWslogsCmd = &cobra.Command{
 	SilenceUsage: true, // 报错多为运行期(状态/SSH/库),不是用法问题:别打一大段 usage 误导
@@ -1521,7 +1496,6 @@ tt debug topent <企业编号> 改。`,
 			return screenErr
 		}
 		if !IsJSON() {
-			printTopentContext(raw)
 			fmt.Println(dbgIdentity(snap))
 			if line := dbgScreenLine(snap); line != "" {
 				fmt.Println(line)

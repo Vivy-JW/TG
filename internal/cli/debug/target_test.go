@@ -32,18 +32,18 @@ import (
 // TestCharTargetFlagPlacement 见文件头。
 func TestCharTargetFlagPlacement(t *testing.T) {
 	acceptSession := []string{
-		"start", "exec", "quit", "why", "wait", "mode", "stop", "locate", "interrupt", "env", "topent",
+		"start", "exec", "quit", "why", "wait", "mode", "stop", "locate", "interrupt", "env",
 	}
 	rejectSession := []string{
-		"status", "sql", "wslogs", "wsdebug", "source", "resolve", "logs", "ents", "db", "probe", "serve",
+		"status", "sql", "wslogs", "wsdebug", "source", "resolve", "logs", "db", "probe", "serve",
 	}
 	// `env` 也是**建会话**的命令（池空时它就是「创建会话」那条路），所以它认 --name：
-	// 多会话要靠它把"我这条"建出来（`debug env --name <别名>` → 后续 topent/exec 才有点
+	// 多会话要靠它把"我这条"建出来（`debug env --name <别名>` → 后续 exec 才有点
 	// 可点）。契约 C3.5 的"只在起会话的命令上"这条不变，变的是"起会话"的名单。
 	acceptName := []string{"start", "wsdebug", "env"}
 	rejectName := []string{
-		"exec", "quit", "why", "wait", "mode", "stop", "locate", "interrupt", "topent",
-		"status", "sql", "wslogs", "source", "resolve", "logs", "ents", "db", "probe", "serve",
+		"exec", "quit", "why", "wait", "mode", "stop", "locate", "interrupt",
+		"status", "sql", "wslogs", "source", "resolve", "logs", "db", "probe", "serve",
 	}
 
 	// byName 把命令树摊成 名字 → 命令；顺带确认断言表里的名字都还在（改了命令名要一起改这里）。
