@@ -48,11 +48,9 @@ var (
 	dbgExecMax int    // exec --max:单条命令**显示**的行数上限(0=不限;不影响本地完整副本)
 	dbgSQLFile string // sql --file:从本地文件读语句(不是远端 @)
 	dbgEnvFlag string // start/wsdebug --env:这次启动要连哪个环境(权威;空=回落全局 --env/当前环境)
-	// dbgEntRun 是 start/wsdebug --ent：**这一轮跑在哪个企业**。
-	//
-	// 必填（服务端会拒掉空的）：从前这里没有这个标志，企业编号只能靠"起会话后 tt debug topent"
-	// 或者干脆沿用登录 shell 的 $TOPENT —— 后者是静默的，而 ENT 决定用哪个账号连库、以及
-	// 据点校验过不过，"没说"与"说错了"在老实现里长得一模一样。
+	// dbgEntRun 是 start/wsdebug --ent：T100 遗留，可选 ——
+	// **这一轮跑在哪个企业**只对 T100 有意义；GP 的账号固定取 db.accounts[0]，
+	// 给了才把它 export 进会话 shell（TOPENT 语义保留，不要求）。
 	dbgEntRun string
 	// dbgFGLServer 是 start/wsdebug --fglserver:这一轮作业画面画到哪儿(FGLSERVER)。
 	// 空串有语义("本轮交回 T100 自动设置"),所以判定一律用 cmd.Flags().Changed,
@@ -1578,8 +1576,9 @@ func init() {
 	debugExecCmd.Flags().StringVar(&dbgExecFile, "file", "", "命令文件:一行一条,空行与 # 开头跳过(与位置参数并用时位置参数在前)")
 	debugExecCmd.Flags().IntVar(&dbgExecMax, "max", 2000, "单条命令**显示**的行数上限(0=不限)。超出的部分不打印,但完整输出会落本地并给出路径")
 	debugStartCmd.Flags().IntVar(&dbgTimeout, "timeout", 120, "等待入口停站超时(秒)")
-	// 企业编号:**必填**（企业编号决定用哪个账号连库与据点校验，不许静默沿用登录 shell 的 $TOPENT）
-	const entHelp = "企业编号(ENT,**必填**):这一轮跑在哪个企业。不给会被服务端拒绝 —— 不再沿用登录 shell 的 $TOPENT"
+	// 企业编号：T100 遗留，**可选**。GP 没有企业编号那层（账号取 db.accounts[0]），
+	// 给了才按 TOPENT 语义 export 进会话 shell。
+	const entHelp = "企业编号(ENT,可选，T100 遗留)：给了才 export 进会话 shell；GP 不需要 —— 账号取 db.accounts[0]"
 	debugStartCmd.Flags().StringVar(&dbgEntRun, "ent", "", entHelp)
 	debugWsdebugCmd.Flags().StringVar(&dbgEntRun, "ent", "", entHelp)
 	debugSQLCmd.Flags().StringVar(&dbgSQLFile, "file", "", "从本地文件读查询语句(长语句用)")

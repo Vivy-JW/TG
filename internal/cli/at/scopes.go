@@ -21,9 +21,11 @@ var scopes = map[string]Scope{
 	"db probe": Env,
 	"db ping":  Env,
 	// ---- 建立连接 / 解析账号（<环境>@<企业>）----
-	"session new":   EnvEntReq,
-	"debug start":   EnvEntReq,
-	"debug wsdebug": EnvEntReq,
+	"session new": EnvEntReq,
+	// debug start / debug wsdebug：GP 没有企业编号那层（账号取 db.accounts[0]），
+	// 起会话只认环境；`--ent` 还在但没有要求，给了才按 T100 的 TOPENT 语义落进会话。
+	"debug start":   Env,
+	"debug wsdebug": Env,
 	// debug sql / debug db 是已弃用的转发壳，身份跟 tg db sql / tg db probe 一致：
 	// 只要环境，账号取 db.accounts[0]（GP 没有企业编号那层）。
 	"debug sql":  Env,

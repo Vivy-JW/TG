@@ -96,7 +96,7 @@ func fakeRoot() (*cobra.Command, map[string]*cobra.Command) {
 func TestScopeOf(t *testing.T) {
 	_, cmds := fakeRoot()
 	cases := map[string]Scope{
-		"debug start":     EnvEntReq,
+		"debug start":     Env,
 		"debug exec":      EnvFilter,
 		"debug wslogs":    Env,
 		"debug source":    None,   // 读本机 serve，不认 --at
@@ -127,7 +127,7 @@ func TestApplyRejects(t *testing.T) {
 		{"version", "主机109", "不接受 --at"},
 		{"debug wslogs", "主机109@99", "只接受 <环境>"},
 		{"debug exec", "主机109@99", "--session 主机109/99"},
-		{"debug start", "主机109", "需要 <环境>@<企业>"},
+		{"debug start", "主机109@99", "只接受 <环境>"},
 	}
 	for _, c := range cases {
 		Raw = c.raw
