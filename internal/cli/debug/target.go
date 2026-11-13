@@ -360,7 +360,7 @@ func dbgServerErrorOf(code, msg string, cands []target.Candidate) error {
 	}
 	return &dbgServerError{
 		code: code, msg: msg, candidates: cands,
-		exit: target.ExitFor(code, target.CodeRequiresCandidates(code), dbgNewSyntax()),
+		exit: target.ExitForServerCode(code),
 	}
 }
 

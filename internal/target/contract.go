@@ -136,8 +136,13 @@ const (
 // `USAGE` 会出现在两个退出码档下（4.1.1 的两条口径）：新写法下退 2，
 // 老路径（F16/F17，标志写在**不接受**它的命令上）下退 1 —— 后者由 ExitFor 负责。
 var CodeExits = map[string]int{
-	CodeAmbiguous:       3,
-	CodeNotFound:        3,
+	CodeAmbiguous: 3,
+	CodeNotFound:  3,
+	// GenericNotFound 是服务端"查到了，但没有这条数据"（`internal/output` 的
+	// `CodeNotFound = "NOT_FOUND"`），例如 `debug locate` 的符号不在这条会话里。
+	// 与 `SESSION_NOT_FOUND` 同一档：都是"指名的东西不存在"，脚本看 `$?` 要分得出
+	// "没找到"（3）与"跑挂了"（1）。
+	GenericNotFound:     3,
 	CodeStale:           3,
 	CodeTargetBusy:      3,
 	CodeNoSession:       3,
@@ -148,6 +153,13 @@ var CodeExits = map[string]int{
 	CodeState:           4,
 	CodeReadOnly:        4,
 }
+
+// GenericNotFound 是**不专属于目标层**的那个"没有这条数据"的码，取值与
+// `internal/output.CodeNotFound` 一致（两边都不该各写一份字面量）。
+//
+// 为什么也进码表：debug 面的 404（如 `locate` 的符号不在当前进程里）由服务端给
+// 这个码，若不认识它，`code` 与 `exitCode` 会一个说"没找到"、一个退 1。
+const GenericNotFound = "NOT_FOUND"
 
 // 契约 4.1 的其余档位：0 成功、1 运行失败、5 目标不存在、6 体检不过。
 // 5 与 6 是既有那条线**现成**的码（B3），本契约不改它一条。

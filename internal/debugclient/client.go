@@ -117,13 +117,15 @@ func (f *Failure) Error() string {
 
 // ExitCode 让调用方把 `*Failure` 当作带码的错误返回（根命令按它取退出码）。
 //
-// 分档：这里一律按"新场景"取表 —— 走 HTTP 的都是新写法（`--session`/`--name` 这一族），
-// 老脚本不会出现在这条路径上。
+// 按 4.1.1 的码表取，**不看"这次调用用没用新写法"**：走 HTTP 的失败信封里，
+// 服务端已经把失败的性质判定了（`code` 就是它的结论）。再按标志降档只会让
+// 同一份信封里的 `code` 与 `exitCode` 互相矛盾 —— 例如 `NOT_FOUND` 配上退 1，
+// 脚本看 `$?` 就分不出"没找到"和"跑挂了"。
 func (f *Failure) ExitCode() int {
 	if f == nil || f.Code == "" {
 		return 1
 	}
-	return target.ExitFor(f.Code, true, false)
+	return target.ExitForServerCode(f.Code)
 }
 
 // Client 是调试面的客户端。零值不可用，请用 New。

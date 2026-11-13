@@ -98,6 +98,9 @@ func TestCodeLiteralsAndExits(t *testing.T) {
 		// W1（工作站）：用途撞名 / 只读。两条都是 4.1.1 表里的新行，取值是**对外契约**。
 		"SESSION_PURPOSE_MISMATCH": 2,
 		"SESSION_READONLY":         4,
+		// 不算 4.1.1 的目标层码，但 debug 面的 404 会带它（例如 locate 的符号不在
+		// 当前进程里）：与 SESSION_NOT_FOUND 同档，脚本看 $? 要能分出"没找到"。
+		"NOT_FOUND": 3,
 	}
 	if len(CodeExits) != len(want) {
 		t.Errorf("4.1.1 那张表有 %d 行，CodeExits 有 %d 行", len(want), len(CodeExits))

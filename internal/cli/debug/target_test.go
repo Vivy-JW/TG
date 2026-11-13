@@ -108,11 +108,11 @@ func TestCharTargetFlagPlacement(t *testing.T) {
 // TestCharServerCodeMapsToExitAndEnvelope 钉住**服务端失败信封**在 CLI 侧的两件事
 // （契约 C5.15 / 4.1.1 / Q15 的分档 / C5.11 的候选）：
 //
-//  1. `code` → **退出码**：服务端只给码与 HTTP 状态，退出码由这里按 4.1.1 分档 ——
-//     F18（`SESSION_NAME_TAKEN`）**退 2 不退 3**、F20（`SESSION_TARGET_BUSY`）退 3、
-//     多会话歧义（`SESSION_AMBIGUOUS`）退 3 **与有没有打标志无关**（F1 是 Agent
-//     最需要机器可读码的那一刻：它恰恰是**没打** `--session` 时才撞上歧义）；
-//     而今天的既有失败（0 条会话 / 参数错 / 运行失败）维持 1，只有真用了新写法才升档。
+//  1. `code` → **退出码**：服务端只给码与 HTTP 状态，退出码由这里按 4.1.1 的码表取 ——
+//     **不看命令行上有没有新写法**（`target.ExitForServerCode`）：服务端已经把失败性质
+//     判定了，CLI 再按标志降档只会让同一份信封里的 `code` 与 `exitCode` 互相矛盾。
+//     所以 F18 退 2、F20/F1/F15/没有会话退 3、环境不存在与参数错退 2、表外码退 1；
+//     `--session` / `--name` 只影响**目标层**（客户端寻址）那套分档，见 `ExitFor`。
 //  2. `candidates` 透传：服务端给的那一条候选要原样落到 CLI 的失败信封里
 //     （C5.11 要求那五种码下这个键**必须出现**，而候选只有服务端知道该列谁）。
 //
@@ -126,20 +126,20 @@ func TestCharServerCodeMapsToExitAndEnvelope(t *testing.T) {
 	cases := []struct {
 		name       string
 		code       string
-		newSyntax  bool // 命令行上有没有出现 `--session` / `--name`
+		newSyntax  bool // 命令行上有没有出现 `--session` / `--name`（对服务端码不再影响退出码）
 		wantExit   int
 		wantCands  int // -1 = 信封里不该有 candidates（C5.11）
 		wantInText string
 	}{
-		{"F20 忙碌（新场景，不带标志也退 3）", target.CodeTargetBusy, false, 3, 1, "不能复用"},
-		{"F20 忙碌（带 --name）", target.CodeTargetBusy, true, 3, 1, ""},
+		{"F20 忙碌（退 3）", target.CodeTargetBusy, false, 3, 1, "不能复用"},
+		{"F20 忙碌（带 --name 也一样）", target.CodeTargetBusy, true, 3, 1, ""},
 		{"F18 撞车（退 2 不退 3）", target.CodeNameTaken, false, 2, 1, ""},
-		{"F1 歧义（不带标志也退 3）", target.CodeAmbiguous, false, 3, 1, ""},
+		{"F1 歧义（退 3）", target.CodeAmbiguous, false, 3, 1, ""},
 		{"F15 过期（退 3）", target.CodeStale, true, 3, 1, ""},
-		{"F2 没有会话（既有场景，不带标志维持 1）", target.CodeNoSession, false, 1, -1, ""},
-		{"F2 没有会话（带 --session 才升到 3）", target.CodeNoSession, true, 3, -1, ""},
-		{"F6 环境不存在（既有场景，不带标志维持 1）", target.CodeEnvUnknown, false, 1, -1, ""},
-		{"参数错（既有场景，不带标志维持 1）", target.CodeUsage, false, 1, -1, ""},
+		{"没有会话（服务端码直接按表退 3）", target.CodeNoSession, false, 3, -1, ""},
+		{"没有会话（带 --session 也退 3）", target.CodeNoSession, true, 3, -1, ""},
+		{"环境不存在（退 2）", target.CodeEnvUnknown, false, 2, -1, ""},
+		{"参数错（退 2）", target.CodeUsage, false, 2, -1, ""},
 		{"运行失败（表外的现行码一律 1）", "QUERY_FAILED", true, 1, -1, ""},
 	}
 	for _, c := range cases {
