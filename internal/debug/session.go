@@ -601,21 +601,10 @@ func (s *Session) FGLServer() string {
 
 // ScreenTarget 用一句人话说明"这一轮作业界面会画到哪儿"。
 //
-// 为什么单独立一句:FGLSERVER 是"界面去哪"的**唯一**开关,而它是**静默**的 ——
-// 被填错、或被别的前端实验顶掉时,程序照常启动、照常停站,
-// 只是放行之后什么界面都不出现:看起来像卡死、像调试坏了,唯独不像"接线错了"。
-// 实测代价:配置里留着无头前端实验的值 10.1.25.33:1300,放行后 GDC 一片空白,而启动输出
-// 一个字都没提画面去哪了。所以这句话由服务端统一生成,事件日志与 CLI 都用它,
-// 免得两处措辞不一致。
-//
-// 端口约定(FGLSERVER 的数值 = 前端监听端口 - 6400,实测):GDC 默认听 7400 → 填 1000;
-// 反过来,若填的是 1300,那是无头前端而不是 GDC。
+// TG 只跑 TOP GP，画面由 fgldb 接管：没有 T100 的 FGLSERVER / 本机 GDC 那条线，
+// 也就没有"接线没接好、-6300 退出"这类告警可言。
 func ScreenTarget(fglserver string) string {
-	if v := strings.TrimSpace(fglserver); v != "" {
-		return "画面去向: FGLSERVER=" + v + "(本轮覆盖) —— 端口应等于前端监听端口 - 6400:" +
-			"GDC 默认听 7400 所以填 1000;填 1300 是无头前端,画面不会出现在 GDC 上"
-	}
-	return "画面去向: 未覆盖 FGLSERVER —— 由 T100 按 SSH 来源 IP 自动设置(默认回本机 GDC)"
+	return "画面去向: 由 fgldb 接管（GP 没有 FGLSERVER 这条线）"
 }
 
 // LocalGDCPresent 本机有没有 GDC 在听(TCP 连得上就算)。只连不发数据，两个端口各 200ms。
@@ -672,42 +661,14 @@ var (
 // A35（第四次真机）把话说得更死：**没有接线的会话在 `main` 之后**立刻** `Fatal error -6300`
 // 退出，守卫行（`main` 之后那些行）来不及停**；接线就绪的会话则不会。所以这句既是"画面看不到"
 // 的解释，也是"断点怎么设都命不中"的解释 —— 必须给到能照做的动作（起 GDC / 用 --fglserver）。
-func ScreenWarn(fglserver string) string {
-	return ScreenWarnWith(fglserver, LocalGDCPresent())
-}
+// ScreenWarn / ScreenWarnWith 在 TG 里恒为空串：GP 的画面由 fgldb 接管，
+// 没有 T100 的 FGLSERVER / 本机 GDC 那条线，也就没有"没接线会 -6300"这回事。
+func ScreenWarn(fglserver string) string { return "" }
 
-// ScreenWarnWith 与 ScreenWarn 同义，但"本机有没有 GDC 在听"由调用方给。
-//
-// 为什么要这个入口（A35）：CLI 要在 `debug start` **启动那一刻**就把这句话打出来
-// （而不是只让服务端写进事件日志，人根本看不到），而探针 `gdcProbe` 是包内私有 ——
-// CLI 侧的测试没法替换它。**文案的唯一来源仍是这里**：不另抄一份，免得两处措辞各走一路。
-func ScreenWarnWith(fglserver string, gdcPresent bool) string {
-	if strings.TrimSpace(fglserver) != "" {
-		return ""
-	}
-	if gdcPresent {
-		return ""
-	}
-	return "画面没接线：本轮 FGLSERVER 交回 T100 自动设置（默认发回本机 GDC），而本机 7400/6400 上" +
-		"没有 GDC 在听 —— 这种会话在 main 之后**立刻** Fatal error -6300 退出（守卫行/断点都来不及停；" +
-		"界面上只会显示「程序已退出(作业窗口被关闭或正常结束)」）。" +
-		"先把 GDC 起起来，或用 --fglserver <ip:port> 指定去向（端口 = 前端端口 - 6400）；" +
-		"走那一条路则不必自己起 GDC —— 它会带隔离实例并接管画面接线。"
-}
+func ScreenWarnWith(fglserver string, gdcPresent bool) string { return "" }
 
-// screenExitTail 给"程序已退出"那句话补一句线索（空串 = 不用补）。
-//
-// 只在本轮**没有** FGLSERVER 覆盖时补：有覆盖时去向是明确的，退出就是用户/程序自己的事。
-// 不在这里做探测（读循环里只读缓存，见 LocalGDCPresent）。
-func (s *Session) screenExitTail() string {
-	if strings.TrimSpace(s.cfg.FGLServer) != "" {
-		return ""
-	}
-	if LocalGDCPresent() {
-		return ""
-	}
-	return "；本轮画面交回 T100 自动指，而本机 7400/6400 上没有 GDC 在听 —— 若它是在第一次画界面时退的，先起 GDC（或用 --fglserver 指定去向）"
-}
+// screenExitTail 给"程序已退出"那句话补线索：GP 不需要。
+func (s *Session) screenExitTail() string { return "" }
 
 // sameConn 判断另一配置是否指向**同一台机器同一区域**(host/port/user/zone 全同)。
 // 它只回答"连接能不能复用",不回答"是不是同一个环境" —— 同机多环境(同库不同

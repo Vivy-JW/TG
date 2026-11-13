@@ -314,22 +314,15 @@ func TestLaunchCfgFGLServerOverride(t *testing.T) {
 	}
 }
 
-// ScreenTarget 是给人和 AI 看的那一句话:必须同时说清"去哪"与"是不是 GDC"。
+// ScreenTarget 在 TG 里恒为 GP 那一句：画面由 fgldb 接管，没有 FGLSERVER 这条线。
 func TestScreenTargetSaysWhereTheScreenGoes(t *testing.T) {
 	auto := ScreenTarget("")
-	for _, want := range []string{"未覆盖", "自动设置", "GDC"} {
+	for _, want := range []string{"fgldb", "GP"} {
 		if !strings.Contains(auto, want) {
-			t.Errorf("自动设置的说明里应出现 %q: %s", want, auto)
+			t.Errorf("画面去向里应出现 %q: %s", want, auto)
 		}
 	}
-	// 前后空白不该改变判定(配置里带空格是常见手误)
-	if white := ScreenTarget("  "); white != auto {
-		t.Errorf("只有空白应等同于未覆盖: %q vs %q", white, auto)
-	}
-	over := ScreenTarget("10.1.25.33:1300")
-	for _, want := range []string{"10.1.25.33:1300", "1000", "GDC"} {
-		if !strings.Contains(over, want) {
-			t.Errorf("覆盖的说明里应出现 %q: %s", want, over)
-		}
+	if over := ScreenTarget("10.1.25.33:1300"); over != auto {
+		t.Errorf("GP 不认 FGLSERVER 覆盖，应仍是同一句: %q vs %q", over, auto)
 	}
 }

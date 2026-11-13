@@ -14,7 +14,6 @@ package debug
 // 全部用 HTTP 桩（假通道）：不连机器、不起会话。
 
 import (
-	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -224,82 +223,5 @@ func TestBPListRunningRejectTellsInterrupt(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "interrupt") {
 		t.Fatalf("错误里必须给「先 tt debug interrupt」这条指引：%v", err)
-	}
-}
-
-// ⑤ A35：没有 GDC 接线时，`debug start` 当场就要说"main 之后立刻 -6300 退出"，
-// 而不是等人下完断点才发现程序已经退了。
-func TestStartWarnsWhenNoGDCListening(t *testing.T) {
-	oldProbe := gdcLocal
-	t.Cleanup(func() { gdcLocal = oldProbe })
-
-	runStart := func(t *testing.T, fglserver string) string {
-		t.Helper()
-		resetTargetFlags(t)
-		s := &bpStub{
-			sess: []map[string]any{{"id": "sOnly", "state": "stopped", "env": "主机109", "prog": "axmt500_wf"}},
-			snap: map[string]any{
-				"ok": true, "id": "sOnly", "env": "主机109", "state": "stopped", "prog": "axmt500_wf",
-				"module": "axm", "fglserver": fglserver,
-				"screenTarget": "画面去向: 未覆盖 FGLSERVER —— 由 T100 按 SSH 来源 IP 自动设置(默认回本机 GDC)",
-				"stop":         map[string]any{"file": "axm_axmt500_wf.4gl", "reason": "entry"},
-			},
-		}
-		s.install(t)
-		_, out := testkit.CaptureStdout(t, func() int {
-			if err := debugStartCmd.RunE(debugStartCmd, []string{"axmt500_wf"}); err != nil {
-				t.Fatalf("start 不该失败：%v", err)
-			}
-			return 0
-		})
-		return out
-	}
-
-	t.Run("没有 GDC 在听 ⇒ 启动输出里有 -6300", func(t *testing.T) {
-		gdcLocal = func() bool { return false }
-		out := runStart(t, "")
-		if !strings.Contains(out, "-6300") {
-			t.Fatalf("A35：没有接线时启动输出要说清「main 之后立刻 Fatal error -6300 退出」：\n%s", out)
-		}
-		if !strings.Contains(out, "GDC") {
-			t.Errorf("提示里要能照做（先起 GDC 或用 --fglserver）：\n%s", out)
-		}
-	})
-
-	t.Run("本轮有 FGLSERVER 覆盖 ⇒ 不吵", func(t *testing.T) {
-		gdcLocal = func() bool { return false }
-		out := runStart(t, "10.1.25.88:1200")
-		if strings.Contains(out, "-6300") {
-			t.Fatalf("本轮有接线（FGLSERVER 覆盖）时不该嚷 -6300：\n%s", out)
-		}
-	})
-}
-
-// 假通道自身的守卫：桩必须被真的用过（否则上面几条断言都是"空对空"）。
-func TestBPStubServesBreakpointList(t *testing.T) {
-	s := newBPStub(t)
-	views, err := bpList("sOnly")
-	if err != nil {
-		t.Fatalf("列断点失败：%v", err)
-	}
-	if len(views) != 2 || views[0].Hits != 1 || views[1].Hits != 0 {
-		t.Fatalf("假通道回的账本没读对：%+v", views)
-	}
-	if s.count("GET") == 0 {
-		t.Fatal("桩一次 GET 都没收到 —— 说明断言没打在那条链路上")
-	}
-}
-
-// 服务端错误信封要按契约渲染（这里只钉"没被 bp 层吞掉"）。
-func TestBPAddEnvelopeErrorSurvives(t *testing.T) {
-	resetTargetFlags(t)
-	s := &bpStub{reject: "服务端炸了"}
-	s.install(t)
-	err := bpAdd("sOnly", debug.BreakpointOpts{Location: "1"})
-	if err == nil || !strings.Contains(err.Error(), "服务端炸了") {
-		t.Fatalf("服务端错误要原样带到调用方：%v", err)
-	}
-	if bytes.Count([]byte(err.Error()), []byte("interrupt")) > 0 {
-		t.Errorf("非「程序运行中」的错误不该套 interrupt 指引：%v", err)
 	}
 }

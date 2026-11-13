@@ -185,12 +185,6 @@ var debugProbeCmd = &cobra.Command{
 			return fmt.Errorf("probe 未通过：%s 没真的走通（链路故障，与「程序自己跑完」不同）",
 				strings.Join(missing, "、"))
 		}
-		// 只在「程序自己跑完」时给病因：这不是链路问题，但会让人误以为断点没装上。
-		if exitAt != "" {
-			if hint := debug.ScreenWarnWith(sess.FGLServer(), gdcLocal()); hint != "" {
-				fmt.Println("\n  ⚠ " + hint)
-			}
-		}
 		return nil
 	},
 }

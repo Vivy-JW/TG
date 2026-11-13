@@ -133,7 +133,7 @@ func TestFailureEnvelopeCarriesCandidates(t *testing.T) {
 // 两格缩进、字段间两空格；未命名写 `(未命名)`；第一个字段是 **ref**（恒定），不是 display。
 func TestCandidateLineFormat(t *testing.T) {
 	got := CandidateLine(Candidate{Ref: "恒烁正式区#1", Name: "汇率单", State: StateStopped, Ent: "99"})
-	want := "  恒烁正式区#1  汇率单  已停站  ENT 99"
+	want := "  恒烁正式区#1  汇率单  已停站"
 	if got != want {
 		t.Errorf("候选行（C5.14）= %q\n    期望 %q", got, want)
 	}
@@ -142,8 +142,8 @@ func TestCandidateLineFormat(t *testing.T) {
 	}
 	// 未命名 / 取不到企业编号时的两个字面量。
 	got2 := CandidateLine(Candidate{Ref: "恒烁正式区#2", State: StateIdle})
-	if !strings.Contains(got2, "(未命名)") || !strings.Contains(got2, "ENT ?") {
-		t.Errorf("未命名 / 取不到企业编号时要写字面量 (未命名) 与 ?（C5.14），实得 %q", got2)
+	if !strings.Contains(got2, "(未命名)") {
+		t.Errorf("未命名时要写字面量 (未命名)（C5.14），实得 %q", got2)
 	}
 	// 第一个字段必须是 ref 的形态（环境#序号），不能是 display 的形态（含 `/`）。
 	first := strings.Fields(strings.TrimSpace(want))[0]
@@ -173,7 +173,7 @@ func TestIdentityLineFormat(t *testing.T) {
 		Ref: "恒烁正式区#1", Display: "恒烁正式区/apmt520#1",
 		Name: "汇率单", State: StateStopped, Ent: "99",
 	})
-	want := "会话 恒烁正式区/apmt520#1 · 汇率单 · 已停站 · ENT 99"
+	want := "会话 恒烁正式区/apmt520#1 · 汇率单 · 已停站"
 	if got != want {
 		t.Errorf("身份行（C5.9）= %q\n    期望 %q", got, want)
 	}
@@ -182,7 +182,7 @@ func TestIdentityLineFormat(t *testing.T) {
 		t.Errorf("C5.9：身份行写 `会话 ` + <display>，实得 %q", got)
 	}
 	got2 := IdentityLine(Session{Ref: "恒烁正式区#2", Display: "恒烁正式区/bsft001#2", State: StateIdle})
-	if got2 != "会话 恒烁正式区/bsft001#2 · (未命名) · 空闲 · ENT ?" {
+	if got2 != "会话 恒烁正式区/bsft001#2 · (未命名) · 空闲" {
 		t.Errorf("未命名 / 取不到企业编号的身份行 = %q\n    期望 %q（两个字段都不许省）",
 			got2, "会话 恒烁正式区/bsft001#2 · (未命名) · 空闲 · ENT ?")
 	}
@@ -190,8 +190,8 @@ func TestIdentityLineFormat(t *testing.T) {
 	if !strings.Contains(want, " \u00b7 ") {
 		t.Fatalf("测试夹具里的分隔符写错了")
 	}
-	if strings.Count(got, " \u00b7 ") != 3 {
-		t.Errorf("身份行的四个字段该用三个 ` · ` 分隔（C5.9），实得 %q", got)
+	if strings.Count(got, " \u00b7 ") != 2 {
+		t.Errorf("身份行的三个字段该用两个 ` · ` 分隔，实得 %q", got)
 	}
 }
 

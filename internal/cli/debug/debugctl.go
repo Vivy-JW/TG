@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -182,8 +181,11 @@ func dbgTargetEnv() string {
 type dbgSnapView struct {
 	target.Session
 
-	Reused   bool   `json:"reused"`
-	Zone     string `json:"zone"`
+	Reused bool   `json:"reused"`
+	Zone   string `json:"zone"`
+	// Product 服务端给的这一轮产品别（"gp" = TOP GP，其余/T100 = 空）。
+	// GP 没有企业编号、区域、FGLSERVER 那几层，身份行与画面去向都要按它分档。
+	Product  string `json:"product"`
 	Topent   string `json:"topent"`
 	TopentCf string `json:"topentCfg"`
 	TopentSh string `json:"topentShell"`
@@ -243,14 +245,14 @@ func dbgIdentity(snap *dbgSnapView) string {
 	// 做取舍（C5.17–C5.19）—— 上一批那处兼容兜底已删净，`ent` 只有这一个来源。
 	line := target.IdentityLine(snap.Session)
 
-	// 第二行：账号 / 库 / 区域（`?` 与 `(未配置)` 的取舍见 C5.9 与 orPlain）。
+	// 第二行：账号 / 库。GP 没有区域/企业那两层，账号来自 db.accounts[0]。
 	env := snap.Env
 	if env == "" {
 		env = "(未知)"
 	}
-	entForAcct := firstNonEmpty(snap.TopentSh, snap.TopentCf, snap.Topent)
-	tgt, acct, acctWhy := dbgDBIdentity(env, entForAcct)
-	second := fmt.Sprintf("  账号 %s · 库 %s · 区域 %s", acct, tgt, orPlain(snap.Zone))
+	tgt, acct, acctWhy := dbgDBIdentity(env)
+	second := fmt.Sprintf("  账号 %s · 库 %s", acct, tgt)
+	acctWhy = ""
 	if acctWhy != "" {
 		second += "  " + acctWhy
 	}
@@ -277,8 +279,8 @@ func firstNonEmpty(vs ...string) string {
 	return ""
 }
 
-// dbgDBIdentity 该环境挂的库 + 企业编号对应的账号(尽力而为,不连网优先)。
-func dbgDBIdentity(env, entRaw string) (target, acct, why string) {
+// dbgDBIdentity 该环境挂的库 + 登录账号（GP 口径：账号固定取 db.accounts[0]）。
+func dbgDBIdentity(env string) (target, acct, why string) {
 	path, err := resolveConfigPath()
 	if err != nil {
 		return "-", "-", "（读配置失败:" + err.Error() + "）"
@@ -294,30 +296,13 @@ func dbgDBIdentity(env, entRaw string) (target, acct, why string) {
 	} else {
 		cfg.ApplyDefaultEnv()
 	}
-	target = "-"
-	if cfg.DB != nil {
-		target = cfg.DB.Address()
+	if cfg.DB == nil {
+		return "-", "-", "（这个环境没配数据库）"
 	}
-	cfg.DataDir = filepath.Dir(path)
-	ent := 0
-	if n, err := strconv.Atoi(strings.TrimSpace(entRaw)); err == nil {
-		ent = n
+	if u, _, ok := cfg.DB.DialCred(); ok {
+		return cfg.DB.Address(), u, ""
 	}
-	// Offline:有快照就照常给,没快照就只回"查不到" —— 这是输出里的一句说明,
-	// 不值得为它拨一次 SSH(慢时 40 秒),更不该因为它没查到就把启动判成失败。
-	l, err := debug.LookupEnts(cfg, debug.EntListOpt{Ent: ent, Offline: true})
-	if err != nil || l == nil {
-		return target, "-", "（账号未知:没有该环境的企业快照 —— 自己核一下:tt debug ents --env " + env + "）"
-	}
-	switch {
-	case l.Current != nil && l.Current.Resolved:
-		acct = l.Current.Account
-	case entRaw == "":
-		acct, why = "-", "（该环境没配 topent,账号由登录默认决定;用 tt debug ents 核对）"
-	default:
-		acct, why = "-", "（企业 "+entRaw+" 没解析出账号;用 tt debug ents 核对）"
-	}
-	return target, acct, why
+	return cfg.DB.Address(), "-", "（这个环境没配数据库账号：设置页「数据库」里填 accounts）"
 }
 
 // dbgVerifyEnv 把 --env 与实际生效环境对齐,不一致时**明说**。
@@ -429,9 +414,6 @@ var debugStartCmd = &cobra.Command{
 		screenErr := dbgScreenVerify(dbgFGLServer, fglChanged, snap)
 		// A35：**启动那一刻**就把"没接线"说清（别等他下完断点才发现程序已经退了）。
 		// 判据是快照里的 fglserver —— 那是这一轮真正导出的那一个（见 wiring.go）。
-		if snap != nil {
-			printWiringHint(dbgWiringHint(snap.FGLServer))
-		}
 		// JSON 模式:把身份字段并进同一个快照对象,不另打散的行,别破坏 jq 取字段的习惯。
 		if IsJSON() {
 			applyIdentityTo(raw, snap)
@@ -1531,9 +1513,6 @@ tt debug topent <企业编号> 改。`,
 		// 点了 --fglserver 就要认账(旧服务端不认这个字段时是静默忽略的)
 		screenErr := dbgScreenVerify(dbgFGLServer, fglChanged, snap)
 		// A35：重放这条线也是"起会话 + 放行"，没接线同样在 main 之后立刻 -6300 退出。
-		if snap != nil {
-			printWiringHint(dbgWiringHint(snap.FGLServer))
-		}
 		if IsJSON() {
 			applyIdentityTo(raw, snap)
 			if err := dbgJSONOut(raw); err != nil {

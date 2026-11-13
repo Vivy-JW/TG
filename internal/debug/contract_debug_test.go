@@ -1172,7 +1172,7 @@ func TestContractCandidateLineFormat(t *testing.T) {
 		ID: "s1", Ref: "恒烁正式区#1", Display: "恒烁正式区/apmt520#1",
 		Name: "汇率单", Env: "恒烁正式区", Ent: "99", N: 1, Prog: "apmt520", State: "stopped",
 	})
-	want := "  恒烁正式区#1  汇率单  已停站  ENT 99"
+	want := "  恒烁正式区#1  汇率单  已停站"
 	if got != want {
 		t.Errorf("候选行（C5.14）= %q\n    期望 %q\n"+
 			"    格式：两格缩进 + <ref> + 两空格 + <name> + 两空格 + <state> + 两空格 + ENT <ent>",
@@ -1181,7 +1181,7 @@ func TestContractCandidateLineFormat(t *testing.T) {
 	if strings.Contains(got, "会话 ") {
 		t.Errorf("候选行不该带 `会话 ` 前缀（C5.14 末段：那是 5.9 身份行的前缀，两行不是同一行）")
 	}
-	if got := target.CandidateLine(target.Candidate{Ref: "恒烁正式区#2", State: "idle"}); !strings.Contains(got, "(未命名)") || !strings.Contains(got, "ENT ?") {
+	if got := target.CandidateLine(target.Candidate{Ref: "恒烁正式区#2", State: "idle"}); !strings.Contains(got, "(未命名)") {
 		t.Errorf("未命名/取不到企业编号时要写字面量 (未命名) 与 ?（C5.14），实得 %q", got)
 	}
 	// 反向：第一个字段必须是 ref 的形态（环境#序号），不能是 display 的形态（含 /）。
@@ -1230,7 +1230,7 @@ func TestContractIdentityLineIsLanded(t *testing.T) {
 	// C5.9 的逐字格式：`会话 <display> · <name> · <state> · ENT <ent>`
 	// （分隔符是 空格 + U+00B7 + 空格；`<state>` 用现行中文标签）。
 	line := target.IdentityLine(sessionView(b))
-	want := "会话 " + b.Display + " · " + b.Name + " · " + target.StateLabel(b.State) + " · ENT " + b.Ent
+	want := "会话 " + b.Display + " · " + b.Name + " · " + target.StateLabel(b.State)
 	if line != want {
 		t.Errorf("C5.9 的身份行 = %q\n    期望 %q", line, want)
 	}
@@ -1242,8 +1242,8 @@ func TestContractIdentityLineIsLanded(t *testing.T) {
 	}
 	// 取不到的两个字段写字面量，**不省整段**（省了字段位置就随会话漂）。
 	bare := target.IdentityLine(sessionView(SessionBrief{Env: "恒烁正式区", N: 2, Prog: "capp115", State: "idle"}))
-	if bare != "会话 恒烁正式区/capp115#2 · "+target.UnnamedPlaceholder+" · 空闲 · ENT "+target.UnknownPlaceholder {
-		t.Errorf("未命名/取不到企业编号时要写字面量 (未命名) 与 ?（C5.9），实得 %q", bare)
+	if bare != "会话 恒烁正式区/capp115#2 · "+target.UnnamedPlaceholder+" · 空闲" {
+		t.Errorf("未命名时要写字面量 (未命名)，实得 %q", bare)
 	}
 }
 

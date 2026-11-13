@@ -111,9 +111,8 @@ func (f *Failure) CandidateLines() []string {
 // 第一个字段是 **ref**（恒定不变的规范 id），不是 `display` —— 候选行的用途是
 // "照着它重发一枪"，照抄一个会漂的字段会让人抄到过期写法（C5.4 / C5.14）。
 func CandidateLine(c Candidate) string {
-	return fmt.Sprintf("  %s  %s  %s  ENT %s",
-		c.Ref, orPlaceholder(c.Name, UnnamedPlaceholder), StateLabel(c.State),
-		orPlaceholder(c.Ent, UnknownPlaceholder))
+	return fmt.Sprintf("  %s  %s  %s",
+		c.Ref, orPlaceholder(c.Name, UnnamedPlaceholder), StateLabel(c.State))
 }
 
 // IdentityLine 按 C5.9 渲染人话**身份行**（会话级命令唯一的"我在哪儿"那一行）：
@@ -126,9 +125,8 @@ func CandidateLine(c Candidate) string {
 // 契约 C5.9 的第二行（`  账号 <acct> · 库 <target> · 区域 <zone>`）不在本包：
 // 那三样来自 `output.Meta`，不是会话的身份键。
 func IdentityLine(s Session) string {
-	return fmt.Sprintf("会话 %s · %s · %s · ENT %s",
-		s.DisplayForm(), orPlaceholder(s.Name, UnnamedPlaceholder), StateLabel(s.State),
-		orPlaceholder(s.Ent, UnknownPlaceholder))
+	return fmt.Sprintf("会话 %s · %s · %s",
+		s.DisplayForm(), orPlaceholder(s.Name, UnnamedPlaceholder), StateLabel(s.State))
 }
 
 // StateLabel 把 B30 的五个会话状态取值翻成人话标签（C5.9 明写 `<state>` 用它）。

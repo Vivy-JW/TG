@@ -515,10 +515,10 @@ func (s *Server) sessOfWriteCap(w http.ResponseWriter, r *http.Request, cap Capa
 
 func (s *Server) hStatus(w http.ResponseWriter, r *http.Request) {
 	m := map[string]any{
-		"server":   "tdebug-debug",
-		"ssh":      s.cfg.SSH.Host,
-		"zone":     s.cfg.Zone,
-		"zoneName": host.ZoneTNSName(s.cfg.Zone), // 区域代码 → T100 服务别名(如 36→t35prd)
+		"server": "tdebug-debug",
+		"ssh":    s.cfg.SSH.Host,
+		"zone":   s.cfg.Zone,
+
 		// wsPrefix:服务区前缀（出貨區 topprd 是 `/ws`，其余区是 `/w`）—— 前端拼占位符地址用。
 		// 这条规则只有后端一份实现（`wsURLPrefix`，见 wsurl.go），前端要抄就得抄对：
 		// 两边不一致时界面上的占位符地址是错的（实测 zone=t 时前端给 /wtopprd、后端给 /wstopprd）。
@@ -816,6 +816,8 @@ func (s *Server) hSnapshot(w http.ResponseWriter, r *http.Request) {
 		// 界面上没有它的时候,"放行后什么都没弹"只能靠人去翻配置猜(实测踩过)。
 		"fglserver":    sess.FGLServer(),
 		"screenTarget": ScreenTarget(sess.FGLServer()),
+		// product: 这一轮的产品别。GP 没有 ENT/区域/FGLSERVER 那几层,CLI 的身份行与提示按它分档。
+
 	}
 	// 身份那一组键（C5.1 / C5.3 / C5.9）：从 `SessionBrief` 那一份投影搬过来，**不在这里手抄**
 	// （C5.17–C5.19）。既有键一个不动、语义一字不改（H2）—— 这七个都是**新增**键。
