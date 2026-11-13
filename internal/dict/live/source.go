@@ -265,7 +265,10 @@ func (l *Live) progModule(prog string) string {
 	if err != nil || len(rows) == 0 {
 		return ""
 	}
-	return get(rows[0], 0)
+	// gal_file 的模块名一律大写（实测 17,810 行全是 AWS/AXM/APM…），而本地 t_prog.module
+	// 与 GP 磁盘目录（$TOP/cbm/4gl）一律小写。模块会进路径，出口统一转小写，
+	// 免得拼出 $TOP/CBM/4gl 这种在区分大小写的文件系统上找不到的路径。
+	return strings.ToLower(strings.TrimSpace(get(rows[0], 0)))
 }
 
 // QueryProgInfo 程序登记:gaz_file(名称/说明) + zz_file(类别/运行指令) + gal_file(模块)。
@@ -329,7 +332,8 @@ func (l *Live) QueryProgList(lang, keyword string) ([]db.ProgListItem, error) {
 	var result []db.ProgListItem
 	for _, r := range rows {
 		item := db.ProgListItem{
-			Code: get(r, 0), Name: get(r, 1), Category: get(r, 2), Module: get(r, 3),
+			Code: get(r, 0), Name: get(r, 1), Category: get(r, 2),
+			Module: strings.ToLower(strings.TrimSpace(get(r, 3))), // 同上：出口统一小写
 		}
 		item.CategoryName = db.CategoryName(item.Category)
 		item.JobCount = 1
@@ -475,8 +479,6 @@ func (l *Live) QuerySubProgInfo(code, lang string) (*db.SubProgInfo, error) { re
 func (l *Live) QuerySubProgList(lang, keyword string) ([]db.SubProgListItem, error) {
 	return []db.SubProgListItem{}, nil
 }
-
-
 
 // ---- 开窗定义 r.q：GP 用 gab_file + gac_file ----
 //
@@ -628,5 +630,3 @@ func (l *Live) QueryWinCols(id, lang string) ([]db.WinColRow, error) {
 	}
 	return out, nil
 }
-
-
