@@ -78,6 +78,9 @@ var (
 	reFuncList = regexp.MustCompile(`^([A-Za-z_][\w.]*)\s*\(\s*\)\s*$`)
 	// info line 位置行:`Line 801 of "asf_bsft001_wf.4gl" starts at address 0x0 <main+0>`
 	reInfoLine = regexp.MustCompile(`^Line (\d+) of "([^"]+)"`)
+	// info line 查不到符号:`Function "zta_menu" not defined.`
+	// 这是 fgldb 对"符号表里没有这个名字"的标准回答(实测:大小写不敏感,名字要写全,带程序前缀)
+	reFuncNotDefined = regexp.MustCompile(`^Function "([^"]+)" not defined\.$`)
 	// until 目标行不存在:`No line 999999 in file asf_bsft001_wf.`
 	reNoLine = regexp.MustCompile(`^No line \d+ in file`)
 	// until 目标文件不存在:`No source file named bsft001_wf.4gl.`

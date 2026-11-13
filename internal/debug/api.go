@@ -1843,6 +1843,11 @@ func (s *Server) hLocate(w http.ResponseWriter, r *http.Request) {
 	}
 	file, line, err := sess.InfoLine(word)
 	if err != nil {
+		var miss *SymbolNotDefinedError
+		if errors.As(err, &miss) {
+			fail(w, http.StatusNotFound, fmt.Errorf("%s。查当前进程已加载的符号: tg debug exec \"info functions\"；跨程序用 tg outline <作业> 或 tg file grep -r \"FUNCTION <名>\" <模块>/4gl", err.Error()))
+			return
+		}
 		fail(w, 400, err)
 		return
 	}

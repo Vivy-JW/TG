@@ -2554,13 +2554,36 @@ func (s *Session) InfoLine(loc string) (string, int, error) {
 	if r.Err != "" {
 		return "", 0, fmt.Errorf("%s", r.Err)
 	}
-	for _, ln := range r.Lines {
+	return parseInfoLine(r.Lines)
+}
+
+// SymbolNotDefinedError 表示"调试器认识这条命令,但符号表里没有这个名字" ——
+// 它是**结论**(没找到),不是解析失败。调用方据此给 NOT_FOUND,而不是当成输出看不懂。
+type SymbolNotDefinedError struct {
+	Word string
+}
+
+func (e *SymbolNotDefinedError) Error() string {
+	return fmt.Sprintf("符号 %q 不在当前调试进程里（名字不分大小写，但要写全：带程序前缀，如 p_zta_menu）", e.Word)
+}
+
+// parseInfoLine 解析 `info line` 的响应行:
+//   - `Line 860 of "azz_p_zta.4gl" starts at ...` → (文件, 行号)
+//   - `Function "zta_menu" not defined.`         → SymbolNotDefinedError
+//   - 其它                                       → 解析失败(带原始行,便于排查)
+func parseInfoLine(lines []string) (string, int, error) {
+	for _, ln := range lines {
 		if m := reInfoLine.FindStringSubmatch(ln); m != nil {
 			n, _ := strconv.Atoi(m[1])
 			return m[2], n, nil
 		}
 	}
-	return "", 0, fmt.Errorf("无法解析 info line 输出: %s", strings.Join(r.Lines, " | "))
+	for _, ln := range lines {
+		if m := reFuncNotDefined.FindStringSubmatch(strings.TrimSpace(ln)); m != nil {
+			return "", 0, &SymbolNotDefinedError{Word: m[1]}
+		}
+	}
+	return "", 0, fmt.Errorf("无法解析 info line 输出: %s", strings.Join(lines, " | "))
 }
 
 // Frame 选择栈帧(影响 print/locals 求值上下文);新停站自动回到栈顶
