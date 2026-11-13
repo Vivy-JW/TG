@@ -1,6 +1,7 @@
 package debug
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log"
@@ -1429,7 +1430,7 @@ func (m *Manager) SourcePreview(module, prog string) (*SourceFile, error) {
 	if cfgErr != nil {
 		return nil, cfgErr
 	}
-	mods := sourceModuleCandidates(cfg.sourceModuleOf, module, prog)
+	mods, _ := m.modulesForSource(context.Background(), cfg, module, prog)
 	dvmFile := prog + ".4gl"
 	if strings.TrimSpace(module) != "" {
 		dvmFile = strings.TrimSpace(module) + "_" + prog + ".4gl"
@@ -1641,7 +1642,7 @@ func (m *Manager) ReadSourceStandalone(env, module, file, path string, from, to 
 		}
 		var lastErr error
 		prog := strings.TrimSuffix(sourceBaseName(file), ".4gl")
-		mods := sourceModuleCandidates(cfg.sourceModuleOf, module, prog)
+		mods, _ := m.modulesForSource(context.Background(), cfg, module, prog)
 		for _, p := range sourceCandidatePaths(roots, mods, file) {
 			if !inRoots(p) {
 				continue
@@ -1697,12 +1698,13 @@ func (m *Manager) ReadSourceStandalone(env, module, file, path string, from, to 
 
 // JobInfo 作业编号 → 实体程序/模块解析结果(信息通道,不启动会话)。
 type JobInfo struct {
-	Prog      string `json:"prog"`                // 用户作业编号
-	Module    string `json:"module"`              // 解析出的模块目录(空=未解析)
-	RunProg   string `json:"runProg"`             // 实体程序(gzzz_t 解析;空=未解析)
-	LaunchRef string `json:"launchRef,omitempty"` //
-	Extra     string `json:"extra,omitempty"`     //
-	Note      string `json:"note,omitempty"`      // 未解析/降级时的说明
+	Prog         string `json:"prog"`                   // 用户作业编号
+	Module       string `json:"module"`                 // 解析出的模块目录(空=未解析)
+	RunProg      string `json:"runProg"`                // 实体程序(gzzz_t 解析;空=未解析)
+	LaunchRef    string `json:"launchRef,omitempty"`    //
+	Extra        string `json:"extra,omitempty"`        //
+	Note         string `json:"note,omitempty"`         // 未解析/降级时的说明
+	ModuleSource string `json:"moduleSource,omitempty"` // local / live / none：模块是怎么解析出来的
 }
 
 // ResolveJob 尽力解析作业:未配置 db 或连库失败/未命中时返回 note,不报错(启动时会再次解析/兜底)。
@@ -1740,8 +1742,41 @@ func (m *Manager) ResolveJob(module, prog string) *JobInfo {
 	return out
 }
 
-// resolveJobGP 解析 GP 的"作业 → 模块"：只读本地字典（t_prog / t_prog_link），
-// 不连数据库、不发 SSH。GP 的作业就是程序本身，所以 RunProg 恒等于作业名。
+// modulesForSource "这个程序该去哪些模块目录下找"：用户显式模块 > 本地 p_link >
+// 线上 gal_file 兜底（只在本地没有时才连库，8s 超时）> 作业名前缀兜底。
+// 返回的第二个值是模块来源（local/live/none），写进信封让人知道"这次能跑"是不是碰上线上库。
+func (m *Manager) modulesForSource(ctx context.Context, cfg *Config, module, prog string) ([]string, string) {
+	var out []string
+	add := func(s string) {
+		s = strings.ToLower(strings.TrimSpace(s))
+		if s == "" || !reProgName.MatchString(s) {
+			return
+		}
+		for _, x := range out {
+			if x == s {
+				return
+			}
+		}
+		out = append(out, s)
+	}
+	if strings.TrimSpace(module) != "" {
+		add(module)
+	}
+	source := dictlib.ModuleSourceNone
+	if local, ok := cfg.sourceModuleOf(prog); ok && strings.TrimSpace(local) != "" {
+		add(local)
+		source = dictlib.ModuleSourceLocal
+	} else if e := cfg.ActiveEnvOf(); e != nil && cfg.IsGPEnv() {
+		if mod, src, err := dictlib.ResolveModule(ctx, *e, prog, dictlib.DefaultModuleLiveTimeout); err == nil && mod != "" {
+			add(mod)
+			source = src
+		}
+	}
+	add(gpModuleOf(prog)) // 作业名前缀：最后的兜底
+	return out, source
+}
+
+// resolveJobGP 解析 GP 的"作业 → 模块"：本地字典优先，本地没有才按环境连库查 gal_file。
 func (m *Manager) resolveJobGP(module, prog string) *JobInfo {
 	mod := strings.ToLower(strings.TrimSpace(module))
 	out := &JobInfo{Prog: prog, Module: mod, RunProg: prog}
@@ -1749,16 +1784,23 @@ func (m *Manager) resolveJobGP(module, prog string) *JobInfo {
 		out.Note = "作业名不是标准标识符(字母开头、字母数字下划线)，跳过字典解析"
 		return out
 	}
-	if got, ok := m.cfg.sourceModuleOf(prog); ok && strings.TrimSpace(got) != "" {
-		out.Module = strings.ToLower(strings.TrimSpace(got))
+	mods, source := m.modulesForSource(context.Background(), m.cfg, "", prog)
+	out.ModuleSource = source
+	switch source {
+	case dictlib.ModuleSourceLocal:
+		out.Module = mods[0]
 		out.Note = "模块来自本地字典(t_prog / t_prog_link)"
+		return out
+	case dictlib.ModuleSourceLive:
+		out.Module = mods[0]
+		out.Note = "本地字典里没有 " + prog + " 的模块记录，已按环境连库查 gal_file（结果已回写本地）"
 		return out
 	}
 	if mod != "" {
-		out.Note = "本地字典里没有这条作业的模块记录，用你给的模块 " + mod
+		out.Note = "本地字典与线上 gal_file 都没有这条作业的模块记录，用你给的模块 " + mod
 		return out
 	}
-	out.Note = "本地字典里没有 " + prog + " 的模块记录：先跑 tg dict db sync --env <环境>，或用 --module 指定"
+	out.Note = "本地字典与线上 gal_file 都没有 " + prog + " 的模块记录：先跑 tg dict db sync --env <环境> 补字典，或确认作业编号、用 --module 指定"
 	return out
 }
 
