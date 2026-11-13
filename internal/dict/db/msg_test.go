@@ -65,7 +65,7 @@ func TestMsgLike(t *testing.T) {
 func TestQueryMsgsCodeExact(t *testing.T) {
 	d := buildMsgDB(t)
 
-	rows, err := d.QueryMsgs(MsgQuery{Codes: []string{"-263"}, Lang: "2"})
+	rows, err := msgRows(d, MsgQuery{Codes: []string{"-263"}, Lang: "2"})
 	if err != nil {
 		t.Fatalf("QueryMsgs: %v", err)
 	}
@@ -77,7 +77,7 @@ func TestQueryMsgsCodeExact(t *testing.T) {
 	}
 
 	// 写了 * 才是通配
-	rows, err = d.QueryMsgs(MsgQuery{Codes: []string{"-263*"}, Lang: "2"})
+	rows, err = msgRows(d, MsgQuery{Codes: []string{"-263*"}, Lang: "2"})
 	if err != nil {
 		t.Fatalf("QueryMsgs(-263*): %v", err)
 	}
@@ -86,7 +86,7 @@ func TestQueryMsgsCodeExact(t *testing.T) {
 	}
 
 	// 大小写不敏感
-	rows, err = d.QueryMsgs(MsgQuery{Codes: []string{"STD-00006"}})
+	rows, err = msgRows(d, MsgQuery{Codes: []string{"STD-00006"}})
 	if err != nil || len(rows) != 1 {
 		t.Fatalf("大写编号应命中: %+v, %v", rows, err)
 	}
@@ -96,7 +96,7 @@ func TestQueryMsgsCodeExact(t *testing.T) {
 func TestQueryMsgsTextAndLang(t *testing.T) {
 	d := buildMsgDB(t)
 
-	rows, err := d.QueryMsgs(MsgQuery{Text: "密码"})
+	rows, err := msgRows(d, MsgQuery{Text: "密码"})
 	if err != nil {
 		t.Fatalf("QueryMsgs(密码): %v", err)
 	}
@@ -105,7 +105,7 @@ func TestQueryMsgsTextAndLang(t *testing.T) {
 	}
 
 	// 编号 + 语句两个条件同时成立
-	rows, err = d.QueryMsgs(MsgQuery{Codes: []string{"azz-*"}, Text: "密码"})
+	rows, err = msgRows(d, MsgQuery{Codes: []string{"azz-*"}, Text: "密码"})
 	if err != nil {
 		t.Fatalf("QueryMsgs(azz-* + 密码): %v", err)
 	}
@@ -114,34 +114,55 @@ func TestQueryMsgsTextAndLang(t *testing.T) {
 	}
 
 	// 语言过滤
-	rows, err = d.QueryMsgs(MsgQuery{Codes: []string{"-263"}, Lang: "0"})
+	rows, err = msgRows(d, MsgQuery{Codes: []string{"-263"}, Lang: "0"})
 	if err != nil || len(rows) != 1 || rows[0].Text != "資料已經被鎖住,無法更改!" {
 		t.Fatalf("繁体的 -263 应命中: %+v, %v", rows, err)
 	}
 }
 
-// TestQueryMsgLangs 同一编号有哪些语言行。
-func TestQueryMsgLangs(t *testing.T) {
+// msgRows 测试用的薄包装：只取命中行；语言清单在专门用例里看 MsgResult.Langs。
+func msgRows(d *DB, q MsgQuery) ([]MsgRow, error) {
+	res, err := d.QueryMsgs(q)
+	return res.Rows, err
+}
+
+// TestQueryMsgsLangsOnMiss 没有命中时，同条件(去掉语言)下的语言清单一并带回。
+// 从前这是独立的 QueryMsgLangs；合并后由 QueryMsgs 的 MsgResult.Langs 承担。
+func TestQueryMsgsLangsOnMiss(t *testing.T) {
 	d := buildMsgDB(t)
 
-	langs, err := d.QueryMsgLangs(MsgQuery{Codes: []string{"-263"}})
+	// -263 有简繁两种：按简体查能命中，命中时不该带 Langs
+	res, err := d.QueryMsgs(MsgQuery{Codes: []string{"-263"}, Lang: "zh_CN"})
 	if err != nil {
-		t.Fatalf("QueryMsgLangs: %v", err)
+		t.Fatalf("QueryMsgs: %v", err)
 	}
-	if len(langs) != 2 || langs[0] != "0" || langs[1] != "2" {
-		t.Errorf("-263 应有 0/2 两种语言: %+v", langs)
+	if len(res.Rows) != 1 || len(res.Langs) != 0 {
+		t.Errorf("命中时不该带 Langs: rows=%+v langs=%+v", res.Rows, res.Langs)
 	}
 
-	only, err := d.QueryMsgLangs(MsgQuery{Codes: []string{"azz-00041"}})
-	if err != nil || len(only) != 1 || only[0] != "0" {
-		t.Errorf("azz-00041 只有繁体: %+v, %v", only, err)
+	// azz-00041 只有繁体：按简体查是空，Langs 要指出"有 0"
+	res, err = d.QueryMsgs(MsgQuery{Codes: []string{"azz-00041"}, Lang: "zh_CN"})
+	if err != nil {
+		t.Fatalf("QueryMsgs(miss): %v", err)
+	}
+	if len(res.Rows) != 0 {
+		t.Fatalf("azz-00041 没有简体行: %+v", res.Rows)
+	}
+	if len(res.Langs) != 1 || res.Langs[0] != "0" {
+		t.Errorf("azz-00041 只有繁体(0): %+v", res.Langs)
+	}
+
+	// 不限语言时两种语言都出
+	res, err = d.QueryMsgs(MsgQuery{Codes: []string{"-263"}})
+	if err != nil || len(res.Rows) != 2 {
+		t.Fatalf("-263 不限语言应 2 条: %+v, %v", res.Rows, err)
 	}
 }
 
 // TestQueryMsgsNoCond 一个条件都不给是用法错误（否则会扫全表）。
 func TestQueryMsgsNoCond(t *testing.T) {
 	d := buildMsgDB(t)
-	if _, err := d.QueryMsgs(MsgQuery{}); err == nil {
+	if _, err := msgRows(d, MsgQuery{}); err == nil {
 		t.Fatal("无条件应报错")
 	}
 }
@@ -151,7 +172,7 @@ func TestQueryMsgsNoCond(t *testing.T) {
 func TestQueryMsgsGPFilters(t *testing.T) {
 	d := buildMsgDB(t)
 
-	rows, err := d.QueryMsgs(MsgQuery{Codes: []string{"azz-*"}, Types: []string{"1"}})
+	rows, err := msgRows(d, MsgQuery{Codes: []string{"azz-*"}, Types: []string{"1"}})
 	if err != nil {
 		t.Fatalf("QueryMsgs(type): %v", err)
 	}
@@ -159,7 +180,7 @@ func TestQueryMsgsGPFilters(t *testing.T) {
 		t.Errorf("GP 没有消息类型列,应返回空集: %+v", rows)
 	}
 
-	rows, err = d.QueryMsgs(MsgQuery{Codes: []string{"azz-*"}, Status: []string{"N"}})
+	rows, err = msgRows(d, MsgQuery{Codes: []string{"azz-*"}, Status: []string{"N"}})
 	if err != nil || len(rows) != 0 {
 		t.Errorf("GP 没有状态列,应返回空集: %+v, %v", rows, err)
 	}

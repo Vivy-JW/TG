@@ -434,27 +434,40 @@ func (l *Live) msgWhereGP(q db.MsgQuery) string {
 }
 
 // QueryMsgs 查错误消息(ze_file)。GP 只有编号/语言/文本/日期，其余条件返回空集。
-func (l *Live) QueryMsgs(q db.MsgQuery) ([]db.MsgRow, error) {
+//
+// 没有命中时顺带把"同条件去掉语言"的可用语言放进 MsgResult.Langs，
+// 命令层据此提示"这条消息只有别的语系"。
+func (l *Live) QueryMsgs(q db.MsgQuery) (db.MsgResult, error) {
 	if !q.HasFilter() {
-		return nil, fmt.Errorf("消息查询至少需要一个条件(编号/语句)")
+		return db.MsgResult{}, fmt.Errorf("消息查询至少需要一个条件(编号/语句)")
 	}
 	if len(q.Types) > 0 || len(q.Status) > 0 || len(q.Progs) > 0 {
-		return []db.MsgRow{}, nil
+		res := db.MsgResult{Rows: []db.MsgRow{}}
+		if langs, err := l.msgLangsGP(q); err == nil {
+			res.Langs = langs
+		}
+		return res, nil
 	}
 	rows, err := l.q(`SELECT lower(ze01), COALESCE(ze02, ''), COALESCE(ze03, '') FROM ze_file` +
 		l.msgWhereGP(q) + ` ORDER BY ze01, ze02`)
 	if err != nil {
-		return nil, err
+		return db.MsgResult{}, err
 	}
 	var result []db.MsgRow
 	for _, r := range rows {
 		result = append(result, db.MsgRow{Code: get(r, 0), Lang: get(r, 1), Text: get(r, 2)})
 	}
-	return result, nil
+	res := db.MsgResult{Rows: result}
+	if len(result) == 0 {
+		if langs, err := l.msgLangsGP(q); err == nil {
+			res.Langs = langs
+		}
+	}
+	return res, nil
 }
 
-// QueryMsgLangs 同条件(去掉语言)下该编号有哪些语言行。
-func (l *Live) QueryMsgLangs(q db.MsgQuery) ([]string, error) {
+// msgLangsGP 同条件(去掉语言)下有哪些语言行。
+func (l *Live) msgLangsGP(q db.MsgQuery) ([]string, error) {
 	if !q.HasFilter() {
 		return nil, fmt.Errorf("消息查询至少需要一个条件(编号/语句)")
 	}

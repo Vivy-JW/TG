@@ -139,16 +139,17 @@ func runMsg(cmd *cobra.Command, args []string) error {
 			"(--lang 只决定看哪个语言的份,不算筛选条件)")
 	}
 
-	rows, err := GetDB().QueryMsgs(q)
+	res, err := GetDB().QueryMsgs(q)
 	if err != nil {
 		if db.IsMissingTable(err) {
 			return missingTableErr("消息档 (gzze_t/gzzal_t)")
 		}
 		return err
 	}
+	rows := res.Rows
 	if len(rows) == 0 {
 		if Format() == output.FormatTable {
-			printMsgMiss(q)
+			printMsgMiss(q, res.Langs)
 			return nil
 		}
 		// 空结果也是**结构化的**空结果:data 为空数组、行数 0,退出 0。
@@ -234,11 +235,12 @@ func msgTable(rows []db.MsgRow) [][]string {
 	return t
 }
 
-// printMsgMiss 零结果时的提示。补查一次"同一组条件在别的语言下有没有行":
-// 源系统按 (编号,语言) 精确匹配、没有自动回退,"换个语言就有了"是零结果最常见
-// 的原因,说清可用语言比干说"没找到"有用。
-func printMsgMiss(q db.MsgQuery) {
-	if avail, err := GetDB().QueryMsgLangs(q); err == nil && len(avail) > 0 {
+// printMsgMiss 零结果时的提示。avail 是同条件(去掉语言)下实际存在的语言 ——
+// 由 QueryMsgs 一次带回来,只有命中为空时才有值。源系统按 (编号,语言) 精确匹配、
+// 没有自动回退,"换个语言就有了"是零结果最常见的原因,说清可用语言比干说
+// "没找到"有用。
+func printMsgMiss(q db.MsgQuery, avail []string) {
+	if len(avail) > 0 {
 		if msgOneCode(q) {
 			fmt.Println(langMissMsg(q.Codes[0], q.Lang, avail))
 		} else {

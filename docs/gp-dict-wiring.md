@@ -6,7 +6,7 @@
 > **数据来源：2026-11-09 对一套 TOPTEST 环境（主机 / 端口 / 账号见本地 `config.json`，本仓库不记录连接信息）的只读实测**，
 > 不是从 T100 推断的。全部是 `SELECT`，没有建表、没有写库。
 >
-> **2026-11-13 复核**：接口随命令面收口从 30 个方法瘦到 **17 个** —— `r.v`(check)、`desc`(spec)、
+> **2026-11-13 复核**：接口随命令面收口从 30 个方法瘦到 **16 个** —— `r.v`(check)、`desc`(spec)、
 > `scc`、`acc`、`sysp`/`docp`(param) 六条命令已删（GP 侧那几张表实测全 `ORA-00942`），
 > 它们的方法也一并从接口移除；§3 表里对应的行标成「已删」。同日第二刀又删掉三个空壳
 > （`QuerySubProgInfo`/`QuerySubProgList`/`QueryWinParams`）。同期新增了 `QueryUITexts`（画面文字，`gae_file` →
@@ -25,7 +25,7 @@
 
 | 类别 | 方法数 | 含义 |
 |---|---|---|
-| ✅ 有真实数据 | 17 | GP 侧数据完整（含同步进本地库的 `t_*` 与直查 `GA*/ZT*/ZE_FILE`） |
+| ✅ 有真实数据 | 16 | GP 侧数据完整（含同步进本地库的 `t_*` 与直查 `GA*/ZT*/ZE_FILE`） |
 | ⬜ 空壳 | 0 | 2026-11-13 全部清掉：没有对端的族连命令带方法一起删 |
 
 **GP 的字典是"物理表结构 + 表/字段中文名 + 程序目录与程序用表 + 错误消息 + 画面文字 + 开窗定义"**，
@@ -64,7 +64,7 @@
 | `gap_file` | **112,360** | 程序的按键动作（`accept/cancel/control*` …） | 无（可做"程序有哪些动作"的新功能） |
 | `gav_file` | **176,082** | 程序用到的变量/字段（`gav01` 程序、`gav02` 变量、`gav12` 长度） | `QuerySpecRows` 的 DisplayLen 可参考 |
 | `gax_file` | 3,514 | 程序执行权限 | 无 |
-| `gay_file` | **2** | 语言档：**0 = 繁體中文，2 = 简体中文** | `QueryMsgLangs`、`QueryMsgs.Lang` |
+| `gay_file` | **2** | 语言档：**0 = 繁體中文，2 = 简体中文** | `QueryMsgs.Lang`（空命中时带回 `MsgResult.Langs`） |
 | `ze_file` | **42,031** | 错误消息：`ze01` 编号、`ze02` 语言(0/2)、`ze03` 文本、`ze04` 日期、`ze05` 标志 | `QueryMsgs`、`QueryMsgLangs` |
 | `ooc_file` | 4 | 会计科目对照（不是 ACC） | 无 |
 | `gzl_file` / `gzln_file` | 3 / 1 | 用户→程序链接（不是分类码） | 无 |
@@ -152,7 +152,7 @@
 | # | 方法 | GP 来源 | 结论 |
 |---|---|---|---|
 | 15 | `QueryMsgs` | `t_msg` ← `ze_file`（42,031 行；`ze01→Code`、`ze02→Lang`、`ze03→Text`） | ✅ |
-| 16 | `QueryMsgLangs` | `SELECT DISTINCT ze02` + `gay_file` 给语言名（0 繁體中文 / 2 简体中文） | ✅ |
+| ~~16~~ | ~~`QueryMsgLangs`~~ | 已并入 `QueryMsgs`：没有命中时 `MsgResult.Langs` 带回同条件的语言清单 | — |
 
 ## 4. 三处前置问题 —— 已全部改完（2026-11）
 
@@ -187,7 +187,7 @@
 
 **2026-11-13 再收一刀：连"空集"也不留了。** `QuerySubProgInfo`/`QuerySubProgList`（子程序是 4GL `FUNCTION`，
 不在字典里）与 `QueryWinParams`（GP 的开窗没有参数层）已从接口删除，`tg dict prog --sub` 与 `r.q` 明细里的
-参数段一并消失。接口现在是 **17 个方法、全部有真实数据**；`QueryProgJobs` 保留 —— GP 里"作业 = 程序"，
+参数段一并消失。接口现在是 **16 个方法、全部有真实数据**；`QueryProgJobs` 保留 —— GP 里"作业 = 程序"，
 它返回的是真数据（恒 1 条），不是空壳。
 
 ## 7. 两个取舍

@@ -110,16 +110,30 @@ func msgWhere(q MsgQuery) (string, []any) {
 // 命令层会先给出更具体的用法提示,这里只兜住将来别的调用方。
 var errMsgNoCond = errors.New("消息查询至少需要一个条件(编号/语句/类型/状态/建议作业)")
 
+// MsgResult 一次消息查询的结果。
+//
+// Rows 是命中的 (编号, 语言) 行；Langs 只在**没有命中**时填 —— 是同一组条件
+// （只是不看语言）下实际存在的语言，用来回答"这条消息是不是只有别的语系"。
+// 命中时 Langs 留空：那时命令层直接列详情，不需要再花一次 DISTINCT 去数语言。
+type MsgResult struct {
+	Rows  []MsgRow
+	Langs []string
+}
+
 // QueryMsgs 按条件查消息:命中几行就是几条 (编号, 语言) 记录,按编号排序。
 //
 // 源是 t_msg(同步自 ze_file)。GP 的 ze_file 没有"讯息类型/启用状态/建议作业"
 // 这三列,所以带这三类条件时直接返回空集 —— 空是准确答案,不是查询失败。
-func (d *DB) QueryMsgs(q MsgQuery) ([]MsgRow, error) {
+func (d *DB) QueryMsgs(q MsgQuery) (MsgResult, error) {
 	if !q.HasFilter() {
-		return nil, errMsgNoCond
+		return MsgResult{}, errMsgNoCond
 	}
 	if len(q.Types) > 0 || len(q.Status) > 0 || len(q.Progs) > 0 {
-		return []MsgRow{}, nil
+		res := MsgResult{Rows: []MsgRow{}}
+		if langs, err := d.msgLangs(q); err == nil {
+			res.Langs = langs
+		}
+		return res, nil
 	}
 	where, args := msgWhere(q)
 	rows, err := d.conn.Query(`
@@ -127,7 +141,7 @@ func (d *DB) QueryMsgs(q MsgQuery) ([]MsgRow, error) {
 		FROM t_msg`+where+`
 		ORDER BY code, lang`, args...)
 	if err != nil {
-		return nil, fmt.Errorf("query msg: %w", err)
+		return MsgResult{}, fmt.Errorf("query msg: %w", err)
 	}
 	defer rows.Close()
 
@@ -135,16 +149,25 @@ func (d *DB) QueryMsgs(q MsgQuery) ([]MsgRow, error) {
 	for rows.Next() {
 		var r MsgRow
 		if err := rows.Scan(&r.Code, &r.Lang, &r.Text); err != nil {
-			return nil, fmt.Errorf("scan msg row: %w", err)
+			return MsgResult{}, fmt.Errorf("scan msg row: %w", err)
 		}
 		result = append(result, r)
 	}
-	return result, rows.Err()
+	if err := rows.Err(); err != nil {
+		return MsgResult{}, err
+	}
+	res := MsgResult{Rows: result}
+	if len(result) == 0 {
+		if langs, err := d.msgLangs(q); err == nil {
+			res.Langs = langs
+		}
+	}
+	return res, nil
 }
 
-// QueryMsgLangs 按同样的条件(只去掉语言)返回有记录的语言清单。
+// msgLangs 按同样的条件(只去掉语言)返回有记录的语言清单。
 // 用途:命令层在"该编号没有 --lang 那一行"时列出可用语言。
-func (d *DB) QueryMsgLangs(q MsgQuery) ([]string, error) {
+func (d *DB) msgLangs(q MsgQuery) ([]string, error) {
 	if !q.HasFilter() {
 		return nil, errMsgNoCond
 	}

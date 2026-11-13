@@ -33,8 +33,10 @@ type Source interface {
 	QueryWinHeaders(id, lang string) ([]WinHeaderRow, error)
 	QueryWinCols(id, lang string) ([]WinColRow, error)
 	// msg 系统消息档:ze_file 同步成 t_msg(按编号/语句/语言多条件查)
-	QueryMsgs(q MsgQuery) ([]MsgRow, error)
-	QueryMsgLangs(q MsgQuery) ([]string, error) // 同条件去掉语言:该编号有哪些语言行
+	//
+	// 一次调用就够:没有命中时 MsgResult.Langs 带上"同条件去掉语言"的可用语言,
+	// 命令层不必再问一次(从前是 QueryMsgs + QueryMsgLangs 两个方法)。
+	QueryMsgs(q MsgQuery) (MsgResult, error)
 
 	// Close 释放底层连接(SQLite 文件句柄 / 远程连接与隧道)
 	Close()
