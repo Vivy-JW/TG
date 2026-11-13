@@ -1,7 +1,6 @@
 package dict
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -105,8 +104,9 @@ type progLinkResult struct {
 	Links        []db.ProgLinkRow `json:"links"`
 }
 
-// runProgLinks 查 gal_file:一个作业/程序会链到多个模块,入口行是 gal03 == gal01。
-// 本地字典库不同步这张表,所以 dataSrc 为本地时 QueryProgLinks 会给明确的指路错误。
+// runProgLinks 查程序链接：一个作业/程序会链到多个模块，入口行是 linked_prog 等于自己
+// （源 gal_file 的 gal01 = gal03）。本地库走同步表 t_prog_link，远程库直查 gal_file，
+// 两条给出同一套顺序（入口在前）。
 func runProgLinks(code string) error {
 	code = strings.TrimSpace(code)
 	if code == "" {
@@ -114,14 +114,10 @@ func runProgLinks(code string) error {
 	}
 	rows, err := GetDB().QueryProgLinks(code)
 	if err != nil {
-		if errors.Is(err, db.ErrProgLinksRemoteOnly) {
-			return output.Errorf("USAGE", 2, "%v：去掉 --env local: 前缀（或改用 --at <环境>）再查", err).
-				WithHint("例：tg dict prog " + code + " --links --at <环境>")
-		}
 		return err
 	}
 	if len(rows) == 0 {
-		return notFoundErr("gal_file 没有作业 %q 的链接记录", code).
+		return notFoundErr("没有作业 %q 的程序链接记录（本地 t_prog_link / 远程 gal_file 都没有）", code).
 			WithHint("确认作业代号(不要带模块前缀);表结构用 tg dict r.t <表>,程序用途用 tg dict prog <程序>")
 	}
 
@@ -761,7 +757,7 @@ func init() {
 	progCmd.Flags().StringVar(&progKW, "kw", "", "按程序编号/中文名称搜索 (无编号时的列表模式)")
 	progCmd.Flags().StringVar(&progLang, "lang", "zh_CN", "程序名称语言别 (gzzal002, 默认 zh_CN)")
 	progCmd.Flags().BoolVar(&progSub, "sub", false, "无编号时:列出/搜索子程序与元件(gzde_t)而不是主程序")
-	progCmd.Flags().BoolVar(&progLinks, "links", false, "查程序链接(gal_file):链到哪些模块、入口模块是哪个(要远程库)")
+	progCmd.Flags().BoolVar(&progLinks, "links", false, "查程序链接:链到哪些模块、入口模块是哪个（本地库走 t_prog_link，重跑 tg dict db sync 可补齐）")
 	progCmd.Flags().StringVar(&progTablesMode, "tables", "names", "用表矩阵: none | names | full（默认 names）")
 	progCmd.Flags().BoolVar(&dictFull, "full", false, "完整视图：用表展开为 full（等同于显式 --tables full）")
 	Group.AddCommand(progCmd)

@@ -2,7 +2,6 @@ package db
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -104,15 +103,39 @@ type ProgLinkRow struct {
 	Entry      bool   `json:"entry"`
 }
 
-// QueryProgLinks 本地字典库回答不了:gal_file 没有进同步清单
-// (整表 30 万行级,只有查链接时才用得上),所以只给一句明确的指路,
-// 而不是返回空列表让人以为"这个程序没有链接"。
-func (d *DB) QueryProgLinks(string) ([]ProgLinkRow, error) {
-	return nil, ErrProgLinksRemoteOnly
-}
+// QueryProgLinks 程序链接（源 gal_file，同步表 t_prog_link）。
+//
+// 入口那行（`linked_prog` 等于自己的程序名，对应 gal01 = gal03）排在最前 ——
+// 调用方按"第一行是入口"读，与远程实现同一套顺序。
+func (d *DB) QueryProgLinks(code string) ([]ProgLinkRow, error) {
+	prog := strings.ToLower(strings.TrimSpace(code))
+	if prog == "" {
+		return nil, nil
+	}
+	rows, err := d.conn.Query(`
+		SELECT COALESCE(module,''), COALESCE(linked_prog,''), COALESCE(link_flag,'')
+		FROM t_prog_link
+		WHERE prog = ?
+		ORDER BY CASE WHEN linked_prog = prog THEN 0 ELSE 1 END, module, linked_prog`, prog)
+	if err != nil {
+		if IsMissingTable(err) {
+			return nil, fmt.Errorf("本地字典库里没有 t_prog_link（这份库还没同步程序链接；重跑 tg dict db sync --env <环境>）")
+		}
+		return nil, fmt.Errorf("query prog links %s: %w", code, err)
+	}
+	defer rows.Close()
 
-// ErrProgLinksRemoteOnly 程序链接只有远程库能回答(见 QueryProgLinks)。
-var ErrProgLinksRemoteOnly = errors.New("程序链接(gal_file)只在远程库里,本地字典库不同步这张表")
+	var result []ProgLinkRow
+	for rows.Next() {
+		var r ProgLinkRow
+		if err := rows.Scan(&r.Module, &r.LinkedProg, &r.LinkFlag); err != nil {
+			return nil, fmt.Errorf("scan prog link %s: %w", code, err)
+		}
+		r.Entry = strings.EqualFold(r.LinkedProg, prog)
+		result = append(result, r)
+	}
+	return result, rows.Err()
+}
 
 // mergeOps 把同一目标的多个操作类别合并成固定顺序的字符串(S/I/U/D,再按字母补未知码)。
 func mergeOps(ops []string) string {

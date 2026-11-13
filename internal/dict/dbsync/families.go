@@ -15,42 +15,42 @@ type Family struct {
 	Commands []string `json:"commands,omitempty"`
 }
 
-// GPFamilies 本地 GP 字典库的五个数据族，顺序即 tt dict db status 的显示顺序。
+// GPFamilies 本地 GP 字典库的五个数据族，顺序即 tg dict db status 的显示顺序。
 //
-// 四族之外还有 t_prog_link：它由设计器/pkg 链路的 p_link 填，同步不写，
-// 所以不算"同步是否完整"的一部分（查询侧缺它只会退回 t_prog.module）。
+// t_prog_link 由同步写（源 gal_file），归在"程序与模块"一族：入口模块那条链既可以从
+// t_prog.module 读单值，也可以从 t_prog_link 读"一个作业链了哪些程序"。
 var GPFamilies = []Family{
 	{
 		Key:    "table",
 		Name:   "表字典",
 		Tables: []string{"t_table", "t_column", "t_index", "t_constraint"},
 		Commands: []string{
-			"tt dict r.t", "tt dict r.t <表> --fields", "tt dict prog <程序>",
+			"tg dict r.t", "tg dict r.t <表> --fields", "tg dict prog <程序>",
 		},
 	},
 	{
 		Key:      "prog",
 		Name:     "程序与模块",
-		Tables:   []string{"t_prog", "t_module"},
-		Commands: []string{"tt dict prog", "tt dict prog <程序>"},
+		Tables:   []string{"t_prog", "t_module", "t_prog_link"},
+		Commands: []string{"tg dict prog", "tg dict prog <程序> --links"},
 	},
 	{
 		Key:      "progtable",
 		Name:     "程序用表",
 		Tables:   []string{"t_prog_table"},
-		Commands: []string{"tt dict prog <程序> 的表格总数", "tt dict r.t <表> 的程序清单"},
+		Commands: []string{"tg dict prog <程序> 的表格总数", "tg dict r.t <表> 的程序清单"},
 	},
 	{
 		Key:      "msg",
 		Name:     "错误消息",
 		Tables:   []string{"t_msg"},
-		Commands: []string{"tt dict msg"},
+		Commands: []string{"tg dict msg"},
 	},
 	{
 		Key:      "per",
 		Name:     "画面文字",
 		Tables:   []string{"t_ui_text"},
-		Commands: []string{"tt interface show", "tt interface labels"},
+		Commands: []string{"tg interface show", "tg interface labels"},
 	},
 }
 

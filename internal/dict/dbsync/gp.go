@@ -140,11 +140,18 @@ SELECT g.gaz01, g.gaz03
 	// 不是 T100 的 gzze_t，也不是 gaz_file（那是"作业目录"）。
 	sqlGPZe = `SELECT ze01, ze02, ze03, ze04 FROM ze_file`
 
-	// 说明：不在同步时把 gal_file 的所有链接行拉进 t_prog_link。入口模块已经由
-	// sqlGPProg 里「gal03 == gaz01」的精确子查询写进 t_prog，足够启动使用。
-	// t_prog_link 保留给"一个作业多程序"的完整视图；真填的话 gal_file 只有 17,810 行，
-	// 不构成性能问题（原注释说"很大会把同步拖到数分钟"是没实测过的）。
-	// 程序 → 表 走 t_prog_table（源 zr_file），与这条是两个不同的关系，别混。
+	// 程序链接（源 gal_file：gal01 程序 / gal02 模块 / gal03 链接的程序 / gal04 标记）。
+	// `gal01 = gal03` 的那一行是"入口"（linked_prog 等于自己）。`t_prog.module` 也来自
+	// 同一批行里「gal03 == gaz01」的精确子查询 —— 两处同源，别各算一套。
+	sqlGPProgLink = `
+SELECT lower(TRIM(gal01)), lower(TRIM(gal02)), lower(TRIM(gal03)),
+       COALESCE(UPPER(TRIM(gal04)), '')
+  FROM gal_file`
+
+	// 说明：`t_prog_link` 现在由同步填（17,810 行级别，单表一事务）。
+	// 入口模块另有一份单值视图在 `t_prog.module`（sqlGPProg 里的精确子查询），
+	// 「一个作业链了哪些程序」看 `t_prog_link`；两条是同一份 gal_file 的两种切法。
+	// 程序 → 表 走 `t_prog_table`（源 zr_file），与这条是两个不同的关系，别混。
 
 	sqlGPModule = `SELECT gao01, gao02, gao04 FROM gao_file`
 
@@ -522,6 +529,34 @@ func SyncGP(ctx context.Context, src, dst *sql.DB, lib, account string, rep func
 	if uiN > 0 {
 		rep(fmt.Sprintf("画面文字 gae_file：%d 条", uiN))
 	}
+	// 程序链接（gal_file）：一个作业链到的每个程序 + 模块，入口那行（linked = 自己）
+	// 由 `Entry` 在查询层判。单表一事务写，1.7 万行级别。
+	linkN := 0
+	if r7, err := src.QueryContext(ctx, sqlGPProgLink); err == nil {
+		if tx7, err := dst.Begin(); err == nil {
+			if stl, err := tx7.Prepare(`INSERT OR REPLACE INTO t_prog_link(prog,module,linked_prog,link_flag) VALUES(?,?,?,?)`); err == nil {
+				for r7.Next() {
+					var prog, module, linked, flag sql.NullString
+					if r7.Scan(&prog, &module, &linked, &flag) != nil {
+						continue
+					}
+					p, m, l := strings.ToLower(clean(prog)), strings.ToLower(clean(module)), strings.ToLower(clean(linked))
+					if p == "" || l == "" {
+						continue
+					}
+					_, _ = stl.Exec(p, m, l, strings.ToUpper(clean(flag)))
+					linkN++
+				}
+				stl.Close()
+			}
+			_ = tx7.Commit()
+		}
+		r7.Close()
+	}
+	if linkN > 0 {
+		rep(fmt.Sprintf("程序链接 gal_file：%d 条", linkN))
+	}
+
 	onCount(len(tabs), len(tabs))
 	meta["tables"] = fmt.Sprint(len(tabs))
 	meta["columns"] = fmt.Sprint(len(cols))
@@ -529,5 +564,6 @@ func SyncGP(ctx context.Context, src, dst *sql.DB, lib, account string, rep func
 	meta["constraints"] = fmt.Sprint(len(constraints))
 	meta["messages"] = fmt.Sprint(len(msgs))
 	meta["uitexts"] = fmt.Sprint(uiN)
+	meta["proglinks"] = fmt.Sprint(linkN)
 	return nil
 }
