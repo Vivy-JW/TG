@@ -1,6 +1,6 @@
 # installer — 用户级安装包
 
-`tt.wxs` 是安装包定义，`icon.ico` 是它用的图标。
+`tg.wxs` 是安装包定义，`icon.ico` 是它用的图标。
 
 ## 为什么是"用户级"
 

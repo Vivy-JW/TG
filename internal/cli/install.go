@@ -1,4 +1,4 @@
-// `tt install` —— 把 tt 装进使用者的环境。
+// `tg install` —— 把 tt 装进使用者的环境。
 //
 //	tg install skills [--to <dir>|auto] [--agent <名字>] [--force] [--dry-run] [--strict]
 //	                                           把官方技能 + 登记的第三方技能复制到目标目录
@@ -125,8 +125,8 @@ func newInstallSkillsCmd() *cobra.Command {
 				return err
 			}
 			if !isDir(src) {
-				return fmt.Errorf("找不到 skills 目录: %s\n\nskills/ 与 tt.exe 同目录（免安装包里自带）；"+
-					"从源码运行时先执行 make build（产物 tt.exe 与 skills/ 同目录）", src)
+				return fmt.Errorf("找不到 skills 目录: %s\n\nskills/ 与 tg.exe 同目录（免安装包里自带）；"+
+					"从源码运行时先执行 make build（产物 tg.exe 与 skills/ 同目录）", src)
 			}
 			dst, why, terr := resolveSkillsTarget(to, agent)
 			if terr != nil {
@@ -370,7 +370,7 @@ func newInstallPathCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "path",
 		Short: "把 exe 所在目录加入用户 PATH（HKCU，不需要管理员）",
-		Long: `把 tt.exe 所在目录追加到**用户** PATH（HKCU\Environment\Path）。
+		Long: `把 tg.exe 所在目录追加到**用户** PATH（HKCU\Environment\Path）。
 
 只动当前用户的注册表项，不需要管理员，绝不碰系统 PATH。已有该项时幂等
 （不重复追加、不重排顺序，原有的 %USERPROFILE% 之类可展开变量原样保留）。

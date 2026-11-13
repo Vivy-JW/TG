@@ -5,7 +5,7 @@ package winproc
 // 非 Windows 的后台子进程：以 Setsid 脱离会话，输出重定向到日志文件，父进程退出后继续运行。
 //
 // C# 引擎本身只有 Windows 版（它 LoadFrom 的是 .NET Framework/WPF 的程序集），所以这条路径
-// 实际只服务 `tt serve` 的后台常驻。留着是为了让 internal/cli/debug 不必再分平台维护一份。
+// 实际只服务 `tg serve` 的后台常驻。留着是为了让 internal/cli/debug 不必再分平台维护一份。
 
 import (
 	"os"

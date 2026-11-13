@@ -11,7 +11,7 @@ import (
 )
 
 // 升级状态机的取值。前台进程与脱离的更新器进程都读写同一份状态，所以阶段名是契约：
-// `tt update log` 与设置页按它回答"上一次升级走到哪一步、卡在哪"。
+// `tg update log` 与设置页按它回答"上一次升级走到哪一步、卡在哪"。
 const (
 	PhaseIdle        Phase = "idle"
 	PhaseChecking    Phase = "checking"
@@ -26,7 +26,7 @@ const (
 // Phase 升级阶段。
 type Phase string
 
-// State 升级状态。落 `<数据目录>/.tt-update.json` —— **不是缓存**（见 config/cache.go 的
+// State 升级状态。落 `<数据目录>/.tg-update.json` —— **不是缓存**（见 config/cache.go 的
 // 边界）：它记录"上一次升级发生了什么"，删了就没法回答"为什么没升成"，与 .tg-serve.json
 // 同类。
 type State struct {
@@ -43,10 +43,10 @@ type State struct {
 }
 
 // StatePath 状态文件落点。
-func StatePath(dataDir string) string { return filepath.Join(dataDir, ".tt-update.json") }
+func StatePath(dataDir string) string { return filepath.Join(dataDir, ".tg-update.json") }
 
 // LogPath 升级日志落点（与 .tg-serve.log 同理：排障要看，且不影响正确性）。
-func LogPath(dataDir string) string { return filepath.Join(dataDir, ".tt-update.log") }
+func LogPath(dataDir string) string { return filepath.Join(dataDir, ".tg-update.log") }
 
 // LoadState 读状态；缺失或坏掉时返回 nil（调用方按"没升过"处理）。
 func LoadState(dataDir string) *State {

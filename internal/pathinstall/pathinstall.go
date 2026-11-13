@@ -1,7 +1,7 @@
 // 包 pathinstall:把可执行文件所在目录加入/移出**用户** PATH。
 //
 // 只动 HKCU\Environment,绝不碰 HKLM/系统 PATH,也不需要管理员。
-// Web 设置页(/api/install)与 CLI(`tt install path`)共用这一份实现。
+// Web 设置页(/api/install)与 CLI(`tg install path`)共用这一份实现。
 package pathinstall
 
 import (
@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 )
 
-// Status 安装状态(Web 的 GET /api/install 与 CLI 的 `tt install path` 共用)。
+// Status 安装状态(Web 的 GET /api/install 与 CLI 的 `tg install path` 共用)。
 type Status struct {
 	Supported  bool   `json:"supported"`  // 本平台是否支持自动写入 PATH
 	ExePath    string `json:"exePath"`    // 当前可执行文件

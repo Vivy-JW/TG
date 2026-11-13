@@ -17,7 +17,7 @@ import (
 )
 
 // Plan 一次升级的全部输入。它由前台命令写好、交给脱离的更新器进程读 —— 所以是**跨进程
-// 契约**：字段名改动要同时想清楚 `tt update log` 与排障。
+// 契约**：字段名改动要同时想清楚 `tg update log` 与排障。
 //
 // 为什么非要把活儿交给另一个进程：Windows 上运行中的 exe 不能替换自己。前台进程能做的
 // 最有用的一件事，就是把自己复制到临时目录、把这份 plan 交出去、然后退出。
@@ -35,18 +35,18 @@ type Plan struct {
 
 	// StopPIDs 是升级前要停掉的进程（后台服务 + 各工作区的引擎守护进程）。
 	// **由命令层算好**：状态文件的形状与"哪些进程会锁着安装目录"是命令层的知识
-	// （`.tg-serve.json` 在 internal/cli/debug、`.tt-tzs.json` 在 internal/dev/tzs），
+	// （`.tg-serve.json` 在 internal/cli/debug、`.tg-tzs.json` 在 internal/dev/tzs），
 	// 这里只负责把它们杀掉 —— 不然这个包就得持有两份状态文件的第二份形状。
 	StopPIDs []int `json:"stopPids,omitempty"`
 	// RestartServe 为真时，更新器做完要把后台服务拉回来（升级前它在跑）。
 	// RestartArgs 由命令层算好：更新器不认识 serve 的参数面，也不该认识。
 	RestartServe bool     `json:"restartServe,omitempty"`
 	RestartArgs  []string `json:"restartArgs,omitempty"`
-	// BackupExe 便携包：旧 tt.exe 的备份位置（失败时改回来）。
+	// BackupExe 便携包：旧 tg.exe 的备份位置（失败时改回来）。
 	BackupExe string `json:"backupExe,omitempty"`
 
 	// SkillsTargets 是要刷新的技能目录（agent 会去读的那些）。
-	// 由命令层从`.tt-skills.json`算好：装了哪些处只有那份戳知道。
+	// 由命令层从`.tg-skills.json`算好：装了哪些处只有那份戳知道。
 	SkillsTargets []string `json:"skillsTargets,omitempty"`
 }
 
@@ -93,16 +93,16 @@ func LoadPlan(path string) (*Plan, error) {
 
 // Handoff 把活儿交给一个脱离的更新器进程，返回它的 pid。
 //
-// 关键一步是把**自己复制到临时目录再起**：更新器要替换的正是当前这个 tt.exe，原地起
+// 关键一步是把**自己复制到临时目录再起**：更新器要替换的正是当前这个 tg.exe，原地起
 // 子进程会由父进程自己锁住目标文件，替换必然失败。复制到 %TEMP% 之后，更新器与安装
 // 目录再无关系，那个目录可以随便被动。
 func Handoff(p *Plan) (int, error) {
 	self := p.ExePath
-	dir := filepath.Join(os.TempDir(), fmt.Sprintf("tt-update-%d", os.Getpid()))
+	dir := filepath.Join(os.TempDir(), fmt.Sprintf("tg-update-%d", os.Getpid()))
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return 0, fmt.Errorf("建更新器目录 %s 失败: %w", dir, err)
 	}
-	helper := filepath.Join(dir, "tt.exe")
+	helper := filepath.Join(dir, "tg.exe")
 	if err := copyFile(self, helper); err != nil {
 		return 0, fmt.Errorf("复制更新器到 %s 失败: %w", helper, err)
 	}
@@ -182,7 +182,7 @@ func Apply(ctx context.Context, p *Plan, log func(string, ...any)) error {
 	}
 
 	// 技能刷新放在最后：它动的是 agent 会读的目录，失败也不该把"二进制已升级"这件事
-	// 变成失败 —— 记成警告，`tt update log` 里看得见。
+	// 变成失败 —— 记成警告，`tg update log` 里看得见。
 	st.Warnings = append(st.Warnings, refreshSkills(p, log)...)
 
 	if p.Stage != "" {
@@ -198,7 +198,7 @@ func Apply(ctx context.Context, p *Plan, log func(string, ...any)) error {
 
 // applyPortable 就地覆盖便携包目录。
 //
-// 顺序：先备份旧 tt.exe（失败时能改回来）→ 覆盖 → 覆盖失败则把旧 exe 放回。
+// 顺序：先备份旧 tg.exe（失败时能改回来）→ 覆盖 → 覆盖失败则把旧 exe 放回。
 // 备份只留这一个文件：它是"坏了就完全不能用"的那个；skills/ 与引擎 dll 可以从下载好的
 // 载荷里再覆盖一次。
 func applyPortable(p *Plan, log func(string, ...any)) error {
@@ -208,17 +208,17 @@ func applyPortable(p *Plan, log func(string, ...any)) error {
 	if err := os.MkdirAll(p.BackupDir(), 0o755); err != nil {
 		return fmt.Errorf("建备份目录失败: %w", err)
 	}
-	old := filepath.Join(p.Dir, "tt.exe")
-	backup := filepath.Join(p.BackupDir(), "tt.exe")
+	old := filepath.Join(p.Dir, "tg.exe")
+	backup := filepath.Join(p.BackupDir(), "tg.exe")
 	if _, err := os.Stat(old); err == nil {
 		if err := copyFile(old, backup); err != nil {
-			return fmt.Errorf("备份旧 tt.exe 失败（没有它就没法回退）: %w", err)
+			return fmt.Errorf("备份旧 tg.exe 失败（没有它就没法回退）: %w", err)
 		}
-		log("已备份旧 tt.exe → %s", backup)
+		log("已备份旧 tg.exe → %s", backup)
 	}
 	n, err := copyTree(p.Stage, p.Dir)
 	if err != nil {
-		log("覆盖目录失败，回退旧 tt.exe")
+		log("覆盖目录失败，回退旧 tg.exe")
 		if _, serr := os.Stat(backup); serr == nil {
 			_ = copyFile(backup, old)
 		}
@@ -228,12 +228,12 @@ func applyPortable(p *Plan, log func(string, ...any)) error {
 	return nil
 }
 
-// BackupDir 旧 tt.exe 的备份目录（便携包目录下的隐藏子目录，跟着包走）。
-func (p *Plan) BackupDir() string { return filepath.Join(p.Dir, ".tt-update-prev") }
+// BackupDir 旧 tg.exe 的备份目录（便携包目录下的隐藏子目录，跟着包走）。
+func (p *Plan) BackupDir() string { return filepath.Join(p.Dir, ".tg-update-prev") }
 
 // applyMSI 把新的 MSI 交给 msiexec。
 //
-// per-user 安装（见 installer/tt.wxs）所以不需要管理员权限，也不该弹 UAC；
+// per-user 安装（见 installer/tg.wxs）所以不需要管理员权限，也不该弹 UAC；
 // `/qb` 给最简进度界面而不是 `/qn` —— 升级是几分钟的事，全静默时用户看不到任何东西，
 // 只能等。退出码 0 成功 / 3010 成功但需重启 / 1641 成功且已安排重启。
 func applyMSI(ctx context.Context, p *Plan, log func(string, ...any)) error {
@@ -280,7 +280,7 @@ func VersionOf(ctx context.Context, exe string) (string, error) {
 	return strings.TrimSpace(string(out)), nil
 }
 
-// OutputHasVersion 判断 `tt version` 的输出里有没有目标版本号。
+// OutputHasVersion 判断 `tg version` 的输出里有没有目标版本号。
 // 输出形如 `tt 0.2.1 (commit abc1234, 2026-10-07)`，所以按**词**比而不是子串比：
 // 子串会让 0.2.2 匹配上 0.2.20。两边的 v 前缀都抹掉 —— tag 带它、注入的版本号不带。
 func OutputHasVersion(out, want string) bool {
@@ -345,7 +345,7 @@ func refreshSkills(p *Plan, log func(string, ...any)) []string {
 		out, err := cmd.CombinedOutput()
 		cancel()
 		if err != nil {
-			w := fmt.Sprintf("刷新技能目录 %s 失败: %v（输出：%s）—— 手动跑 tt install skills --force --to %s",
+			w := fmt.Sprintf("刷新技能目录 %s 失败: %v（输出：%s）—— 手动跑 tg install skills --force --to %s",
 				dir, err, strings.TrimSpace(string(out)), dir)
 			log("警告: %s", w)
 			warnings = append(warnings, w)
@@ -358,7 +358,7 @@ func refreshSkills(p *Plan, log func(string, ...any)) []string {
 
 // restartServe 用升级前记下的参数把后台服务拉回来。
 //
-// 日志落到**服务自己的那个日志**（`.tg-serve.log`）而不是更新日志：`tt serve` 自己
+// 日志落到**服务自己的那个日志**（`.tg-serve.log`）而不是更新日志：`tg serve` 自己
 // 起的那些进程都把输出写在那里，混到更新日志里会让“服务为什么没起来”要在两个文件里找。
 func restartServe(p *Plan, log func(string, ...any)) {
 	args := p.RestartArgs
@@ -368,7 +368,7 @@ func restartServe(p *Plan, log func(string, ...any)) {
 	serveLog := filepath.Join(p.DataDir, config.ServeLogFileName)
 	pid, err := winproc.SpawnDetached(p.ExePath, args, serveLog)
 	if err != nil {
-		log("拉回后台服务失败: %v（用 tt serve 手动起）", err)
+		log("拉回后台服务失败: %v（用 tg serve 手动起）", err)
 		return
 	}
 	log("已拉回后台服务 pid %d（输出在 %s）", pid, serveLog)
@@ -382,7 +382,7 @@ func CleanStaleStages(exePath string, now time.Time) {
 	if exePath == "" {
 		return
 	}
-	pattern := filepath.Join(filepath.Dir(filepath.Dir(exePath)), ".tt-update-stage-*")
+	pattern := filepath.Join(filepath.Dir(filepath.Dir(exePath)), ".tg-update-stage-*")
 	matches, err := filepath.Glob(pattern)
 	if err != nil {
 		return
@@ -410,7 +410,7 @@ func RemoveStage(stage string) {
 // 为什么要专门做：更新器就是那个目录里的 exe，它不能删自己（Windows 上运行中的文件删
 // 不掉），所以留给**下一次**启动来清。只清一天前的，免得把正在跑的更新器删了。
 func CleanStaleHelpers(now time.Time) {
-	matches, err := filepath.Glob(filepath.Join(os.TempDir(), "tt-update-*"))
+	matches, err := filepath.Glob(filepath.Join(os.TempDir(), "tg-update-*"))
 	if err != nil {
 		return
 	}

@@ -1,7 +1,7 @@
 // 给 heat.exe 生成的 .wxs 补上卸载时要删的目录登记。
 //
 // 为什么需要：这个 MSI 是**用户级**安装，目录都落在用户配置文件下（
-// %LOCALAPPDATA%\Programs\TT）。MSI 的 ICE64 校验要求这类目录必须登记进
+// %LOCALAPPDATA%\Programs\TG）。MSI 的 ICE64 校验要求这类目录必须登记进
 // RemoveFile 表，否则卸载后目录会原样留在磁盘上。heat 只生成组件与文件，
 // 不生成 RemoveFolder，所以在构建流水线里补这一道。
 //

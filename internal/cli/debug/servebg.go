@@ -11,7 +11,7 @@ package debug
 // 两个服务是同一套机制的两个实例,只差三样东西(见 ServeSpec):
 //
 //	tt debug serve   独立调试服务,调试 API 直接在根(/api/…)
-//	tt serve         统一服务(工作台+设置页),调试面挂在 /debug/api/…
+//	tg serve         统一服务(工作台+设置页),调试面挂在 /debug/api/…
 //
 // 所以状态文件里要记 APIBase:控制端命令照着它拼地址,不必知道对面是哪个服务。
 // 漏了它,`tt debug status` 就会拿 /api/status 去问一个挂在 /debug/api/ 的服务,

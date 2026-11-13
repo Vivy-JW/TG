@@ -83,7 +83,7 @@ TT/
 │  ├─ shared/           共享主题与设计系统（被 @source 扫描，改动要谨慎）
 │  └─ dist/             构建产物，被 Go 嵌入（.gitkeep 是承重墙）
 │
-├─ installer/           MSI 安装包定义（WiX v3；perUser 装到 %LOCALAPPDATA%\Programs\TT）
+├─ installer/           MSI 安装包定义（WiX v3；perUser 装到 %LOCALAPPDATA%\Programs\TG）
 ├─ tools/               构建辅助 Go 工具
 │  ├─ zip/              跨平台确定性打包
 │  └─ wixremovefolders/ MSI 卸载时补空目录清理

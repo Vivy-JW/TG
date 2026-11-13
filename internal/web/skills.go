@@ -2,7 +2,7 @@ package web
 
 // 设置页「技能」页签的后端：第三方技能登记的增删查 + 「装到 agent 目录」。
 //
-// 与 `tt install skills` 共用 internal/skill 这一份实现 —— 校验、冲突判定、assets 指针、
+// 与 `tg install skills` 共用 internal/skill 这一份实现 —— 校验、冲突判定、assets 指针、
 // 复制全都不是这里写的。这一层只负责三件事：读写配置、把路径绝对化、把结果原样带出去。
 //
 // 纪律与「检查更新」相同：**安装这个动作只由人点按钮触发**，服务启动不装、也没有
@@ -244,7 +244,7 @@ func officialSkillNames() []string {
 // missingNote 是「允许但要说一声」的那种情况：路径暂时不在。
 func missingNote(info skill.Info) string {
 	if info.State == skill.StateMissing {
-		return "路径现在访问不到，已保存登记。路径回来后 tt install skills 会自动装上它。"
+		return "路径现在访问不到，已保存登记。路径回来后 tg install skills 会自动装上它。"
 	}
 	return ""
 }

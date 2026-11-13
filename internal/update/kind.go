@@ -18,11 +18,11 @@ type Kind int
 const (
 	// KindOther 认不出来的布局：没有便携标记、也不在 MSI 的安装目录里。
 	// 只允许 check。**不许**给它"随便解压一个便携包"的待遇：那会在用户的目录里
-	// 凭空多出一棵 tt-portable/ 树。
+	// 凭空多出一棵 tg-portable/ 树。
 	KindOther Kind = iota
 	// KindPortable 便携包：exe 同目录有 config.PortableMark，整包解压即升级。
 	KindPortable
-	// KindMSI 安装器装的：exe 在 %LOCALAPPDATA%\Programs\TT（见 installer/tt.wxs
+	// KindMSI 安装器装的：exe 在 %LOCALAPPDATA%\Programs\TG（见 installer/tg.wxs
 	// 的 INSTALLFOLDER），升级交给 msiexec（per-user，不需要管理员）。
 	KindMSI
 )
@@ -87,14 +87,14 @@ func InstallRefusal(k Kind, exePath, version string) string {
 	}
 }
 
-// msiInstallDir MSI 的安装目录：%LOCALAPPDATA%\Programs\TT。取不到环境变量时返回空串
+// msiInstallDir MSI 的安装目录：%LOCALAPPDATA%\Programs\TG。取不到环境变量时返回空串
 // （判不出 MSI，退回 KindOther，不会误判成别的东西）。
 func msiInstallDir() string {
 	base := os.Getenv("LOCALAPPDATA")
 	if base == "" {
 		return ""
 	}
-	return filepath.Join(base, "Programs", "TT")
+	return filepath.Join(base, "Programs", "TG")
 }
 
 // samePath 比较两个路径是否指向同一处：忽略大小写与结尾分隔符

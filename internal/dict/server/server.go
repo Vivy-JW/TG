@@ -9,7 +9,7 @@
 // SSH 连接与服务器侧数据库探测复用 internal/host(与 CLI 的 db discover 同源);
 // 客户端直连测试走 internal/erpdb(与 db ping / 远程直查同链路)。
 //
-// 对外只暴露两个东西:构造函数 New 与 Handler()。挂载方(tt serve / internal/web)
+// 对外只暴露两个东西:构造函数 New 与 Handler()。挂载方(tg serve / internal/web)
 // 把它直接挂在共享层 /api/ 下 —— Handler 的路径是绝对 /api/…,不加 StripPrefix。
 //
 // 合并前它靠一个挂载前缀与调试工作台分开:同一个进程里两边各有自己的 /api/*,
@@ -34,7 +34,7 @@ type Server struct {
 
 // New 创建服务实例。cfgPath 是配置文件的读写位置。
 //
-// 监听地址不在这里:HTTP 服务由挂载方(tt serve / internal/web)统一建立,
+// 监听地址不在这里:HTTP 服务由挂载方(tg serve / internal/web)统一建立,
 // 本包只提供 Handler()。
 func New(cfgPath string) *Server {
 	return &Server{cfgPath: cfgPath}

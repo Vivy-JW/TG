@@ -25,7 +25,7 @@ var helpCmdFamilies = map[string][]string{
 var baseHelpFunc = (&cobra.Command{}).HelpFunc()
 
 // versionLine 一行版本描述。版本号由打包脚本经 -ldflags 注入到 common.Version;
-// 本地 go build 未注入时显示 devel(带 commit 的完整描述见 `tt version`)。
+// 本地 go build 未注入时显示 devel(带 commit 的完整描述见 `tg version`)。
 func versionLine() string {
 	if common.Version != "" {
 		return common.Version

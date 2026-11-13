@@ -17,7 +17,7 @@ const fixture = `<?xml version="1.0" encoding="utf-8"?>
   <Fragment>
     <ComponentGroup Id="StagedFiles">
       <Component Id="cmp1" Directory="INSTALLFOLDER" Guid="*">
-        <File Id="file1" Source="$(var.SourceDir)\tt.exe" KeyPath="yes" />
+        <File Id="file1" Source="$(var.SourceDir)\tg.exe" KeyPath="yes" />
       </Component>
     </ComponentGroup>
     <DirectoryRef Id="INSTALLFOLDER">
@@ -133,7 +133,7 @@ func TestRoundTripPreservesUnpatchedParts(t *testing.T) {
 
 	for _, want := range []string{
 		`<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">`, // 根的默认命名空间必须原样带回
-		`Id="cmp1"`, `Id="cmpSkill"`, `$(var.SourceDir)\tt.exe`, // 未触碰的属性/文本原样保留
+		`Id="cmp1"`, `Id="cmpSkill"`, `$(var.SourceDir)\tg.exe`, // 未触碰的属性/文本原样保留
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("序列化输出里找不到 %q：\n%s", want, out)

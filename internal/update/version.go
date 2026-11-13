@@ -3,15 +3,15 @@
 //
 // 边界（不做什么，比职责更值得写清）：
 //
-//   - **不自动更新**。只有人敲 `tt update` 才走到"装"这一步（`--yes` 才免确认）。
+//   - **不自动更新**。只有人敲 `tg update` 才走到"装"这一步（`--yes` 才免确认）。
 //     一个能替换自身二进制、还能拉起安装器的路径，默认必须由人点头。
-//   - **不对开发构建动手**。`make build` 出的仓库根 tt.exe 是源码态（与 skills/、
+//   - **不对开发构建动手**。`make build` 出的仓库根 tg.exe 是源码态（与 skills/、
 //     tzs/ 同级），只允许 check，装会被拒绝 —— 见 Kind。
-//   - **不做后台轮询**。`tt serve` 与日常命令都不查，只有显式命令查（`tt update check`）。
+//   - **不做后台轮询**。`tg serve` 与日常命令都不查，只有显式命令查（`tg update check`）。
 //   - 不做 tt 之外的软件管理：引擎 exe 与设计器 dll 随包走，由整包交换保证一致。
 //
 // 落点：下载物与检查结果在 `<数据目录>/update/`（在 config.CacheSubdirs 清单内，
-// 删了只是下次重下）；升级状态与日志在数据目录根（`.tt-update.json` / `.tt-update.log`，
+// 删了只是下次重下）；升级状态与日志在数据目录根（`.tg-update.json` / `.tg-update.log`，
 // 与 `.tg-serve.json` 同类 —— 排障要看，不是缓存）。
 package update
 

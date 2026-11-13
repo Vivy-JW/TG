@@ -83,7 +83,7 @@ var fakeReleaseJSON = `{
   "assets": [
     {"name":"t100-v0.1.0.xml","size":10,"digest":"sha256:` + strings.Repeat("a", 64) + `","browser_download_url":"https://example.invalid/a.xml"},
     {"name":"TT-0.2.2-x64.msi","size":41297555,"digest":"sha256:` + strings.Repeat("b", 64) + `","browser_download_url":"https://example.invalid/a.msi"},
-    {"name":"tt-portable.zip","size":123,"digest":"sha256:` + strings.Repeat("c", 64) + `","browser_download_url":"https://example.invalid/a.zip"}
+    {"name":"tg-portable.zip","size":123,"digest":"sha256:` + strings.Repeat("c", 64) + `","browser_download_url":"https://example.invalid/a.zip"}
   ]
 }`
 
@@ -105,7 +105,7 @@ func TestParseReleaseAndPickAsset(t *testing.T) {
 		t.Errorf("AssetFor(MSI) = %v, %v", msi.Name, err)
 	}
 	zip, err := rel.AssetFor(KindPortable)
-	if err != nil || zip.Name != "tt-portable.zip" {
+	if err != nil || zip.Name != "tg-portable.zip" {
 		t.Errorf("AssetFor(便携包) = %v, %v", zip.Name, err)
 	}
 	// 认不出的形态不许从发布里取资产（否则会给 KindOther 配一个"随便解压"的动作）。
@@ -114,8 +114,8 @@ func TestParseReleaseAndPickAsset(t *testing.T) {
 	}
 
 	// 多个同类资产：宁可报错也不猜。
-	multi := strings.Replace(fakeReleaseJSON, `"name":"tt-portable.zip"`,
-		`"name":"tt-portable.zip"},{"name":"tt-portable-0.2.2.zip","size":9,"digest":"sha256:`+strings.Repeat("d", 64)+`","browser_download_url":"https://example.invalid/b.zip"`, 1)
+	multi := strings.Replace(fakeReleaseJSON, `"name":"tg-portable.zip"`,
+		`"name":"tg-portable.zip"},{"name":"tg-portable-0.2.2.zip","size":9,"digest":"sha256:`+strings.Repeat("d", 64)+`","browser_download_url":"https://example.invalid/b.zip"`, 1)
 	rel2, err := ParseRelease([]byte(multi))
 	if err != nil {
 		t.Fatalf("造第二个 zip 资产时 JSON 坏了: %v", err)
@@ -167,35 +167,35 @@ func TestDetectKindAndInstallRefusal(t *testing.T) {
 	base := t.TempDir()
 
 	// 便携包：exe 同目录有 .portable。
-	portable := filepath.Join(base, "tt-portable")
+	portable := filepath.Join(base, "tg-portable")
 	if err := os.MkdirAll(portable, 0o755); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(portable, ".portable"), nil, 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if got := DetectKind(filepath.Join(portable, "tt.exe")); got != KindPortable {
+	if got := DetectKind(filepath.Join(portable, "tg.exe")); got != KindPortable {
 		t.Errorf("便携标记在时 DetectKind = %v，想要 KindPortable", got)
 	}
-	if why := InstallRefusal(KindPortable, filepath.Join(portable, "tt.exe"), "0.2.1"); why != "" {
+	if why := InstallRefusal(KindPortable, filepath.Join(portable, "tg.exe"), "0.2.1"); why != "" {
 		t.Errorf("便携包该允许自装，却被拒: %s", why)
 	}
 
-	// MSI：exe 在 %LOCALAPPDATA%\Programs\TT。
+	// MSI：exe 在 %LOCALAPPDATA%\Programs\TG。
 	local := filepath.Join(base, "Local")
-	msiDir := filepath.Join(local, "Programs", "TT")
+	msiDir := filepath.Join(local, "Programs", "TG")
 	if err := os.MkdirAll(msiDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 	t.Setenv("LOCALAPPDATA", local)
-	if got := DetectKind(filepath.Join(msiDir, "tt.exe")); got != KindMSI {
+	if got := DetectKind(filepath.Join(msiDir, "tg.exe")); got != KindMSI {
 		t.Errorf("MSI 安装目录里 DetectKind = %v，想要 KindMSI", got)
 	}
 	// 大小写与结尾分隔符不该影响判定（Windows 路径大小写不敏感）。
-	if got := DetectKind(strings.ToUpper(filepath.Join(msiDir, "tt.exe"))); got != KindMSI {
+	if got := DetectKind(strings.ToUpper(filepath.Join(msiDir, "tg.exe"))); got != KindMSI {
 		t.Errorf("大写路径 DetectKind = %v，想要 KindMSI", got)
 	}
-	if why := InstallRefusal(KindMSI, filepath.Join(msiDir, "tt.exe"), "0.2.1"); why != "" {
+	if why := InstallRefusal(KindMSI, filepath.Join(msiDir, "tg.exe"), "0.2.1"); why != "" {
 		t.Errorf("MSI 该允许自装，却被拒: %s", why)
 	}
 
@@ -204,16 +204,16 @@ func TestDetectKindAndInstallRefusal(t *testing.T) {
 	if err := os.MkdirAll(other, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if got := DetectKind(filepath.Join(other, "tt.exe")); got != KindOther {
+	if got := DetectKind(filepath.Join(other, "tg.exe")); got != KindOther {
 		t.Errorf("认不出的布局 DetectKind = %v，想要 KindOther", got)
 	}
-	why := InstallRefusal(KindOther, filepath.Join(other, "tt.exe"), "0.2.1")
+	why := InstallRefusal(KindOther, filepath.Join(other, "tg.exe"), "0.2.1")
 	if why == "" || !strings.Contains(why, "认不出") {
 		t.Errorf("认不出的布局该给出解释，得到 %q", why)
 	}
 
 	// 源码态（没有注入版本号）：先于布局判定，提示 make build。
-	why = InstallRefusal(KindOther, filepath.Join(other, "tt.exe"), "")
+	why = InstallRefusal(KindOther, filepath.Join(other, "tg.exe"), "")
 	if why == "" || !strings.Contains(why, "make build") {
 		t.Errorf("没有版本号时该指向 make build，得到 %q", why)
 	}
@@ -346,7 +346,7 @@ func TestDownloadVerifiesDigest(t *testing.T) {
 	}
 	dir := t.TempDir()
 	dest := filepath.Join(dir, "a.zip")
-	a := Asset{Name: "tt-portable.zip", URL: srv.URL, Size: int64(len(payload)), Digest: "sha256:" + goodHex}
+	a := Asset{Name: "tg-portable.zip", URL: srv.URL, Size: int64(len(payload)), Digest: "sha256:" + goodHex}
 
 	var lastGot int64
 	if err := c.Download(context.Background(), a, dest, goodHex, func(got, total int64) { lastGot = got }); err != nil {
@@ -436,8 +436,8 @@ func TestStateRoundTripAndInProgress(t *testing.T) {
 		}
 	}
 	// 状态文件是"不是缓存"的那类：落数据目录根，不进 update/ 子目录。
-	if _, err := os.Stat(filepath.Join(dir, ".tt-update.json")); err != nil {
-		t.Errorf("状态文件该落数据目录根的 .tt-update.json: %v", err)
+	if _, err := os.Stat(filepath.Join(dir, ".tg-update.json")); err != nil {
+		t.Errorf("状态文件该落数据目录根的 .tg-update.json: %v", err)
 	}
 	// 日志可追写，且坏路径不 panic（日志写不进不该让升级失败）。
 	AppendLog(LogPath(dir), "阶段 %s → %s", PhaseIdle, PhaseChecking)
@@ -474,7 +474,7 @@ func TestParseReleaseTolerantToMissingFields(t *testing.T) {
 	if _, err := ParseRelease([]byte(`不是 JSON`)); err == nil {
 		t.Error("坏 JSON 该报错")
 	}
-	// 检查结果的 JSON 形态是契约（tt version 与设置页都读它），所以钉住字段名。
+	// 检查结果的 JSON 形态是契约（tg version 与设置页都读它），所以钉住字段名。
 	b, _ := json.Marshal(&CheckResult{Current: "1.0.0", Latest: "1.1.0", Newer: true})
 	for _, key := range []string{`"current"`, `"latest"`, `"newer"`, `"checkedAt"`} {
 		if !strings.Contains(string(b), key) {

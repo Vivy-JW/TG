@@ -21,7 +21,7 @@ web/
 
 ```bash
 cd web && npm run dev:app      # 热更新；默认代理到后端 127.0.0.1:28670
-tt serve                       # 后端
+tg serve                       # 后端
 ```
 
 代理分两类：**调试专属接口**剥掉 `/debug` 前缀再转给后端（后端内部按 `/api/…` 注册），

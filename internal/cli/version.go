@@ -14,7 +14,7 @@ import (
 )
 
 // Version 由打包脚本注入：build_portable.bat / build_msi.bat 读仓库根的 VERSION
-// 文件，经 -ldflags "-X tt/internal/cli.Version=…" 传进来（VERSION 是版本号唯一的
+// 文件，经 -ldflags "-X tg/internal/cli.Version=…" 传进来（VERSION 是版本号唯一的
 // 一处，web 的 package.json 由 `make version-check` 与它对齐）。
 // 本地 go build 时为空，此时用 Go 构建信息里的 VCS 修订回答"这份二进制对应哪次提交"。
 var Version string
@@ -117,7 +117,7 @@ func newVersionCmd() *cobra.Command {
 // skillsHint 技能树与二进制不同版时提一句。
 //
 // 升级成功后更新器自己会把技能刷到同版，所以这条通常只在"手动换了二进制"（拷了一份
-// 新的 tt.exe、或从别的版本解压）时出现 —— 而那正是 agent 会默默读到旧手册的场景。
+// 新的 tg.exe、或从别的版本解压）时出现 —— 而那正是 agent 会默默读到旧手册的场景。
 func skillsHint() string {
 	cfgPath, err := common.ResolveConfig(true)
 	if err != nil {

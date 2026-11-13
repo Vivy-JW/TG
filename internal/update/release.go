@@ -89,7 +89,7 @@ func (r *Release) AssetFor(k Kind) (Asset, error) { return PickAsset(r.Assets, k
 
 // PickAsset 按安装形态挑出该下载哪个资产。
 //
-// 名字里带版本号不是判据（今天的 zip 叫 `tt-portable.zip`、MSI 叫 `TT-0.2.1-x64.msi`，
+// 名字里带版本号不是判据（今天的 zip 叫 `tg-portable.zip`、MSI 叫 `TT-0.2.1-x64.msi`，
 // 两种惯例并存），所以这里只按**扩展名**挑：MSI 一次只能装一个，便携包一次只能解一个
 // 。"下到的制品是不是这一次发布的"由摘要与制品自报版本回答，不看文件名。
 func PickAsset(assets []Asset, k Kind) (Asset, error) {

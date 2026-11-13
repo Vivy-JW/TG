@@ -88,7 +88,7 @@ func AtomicWrite(path string, data []byte) error {
 	if err != nil {
 		if isAccessDenied(err) {
 			return fmt.Errorf("创建临时文件失败(%s): %w\n"+
-				"  这个目录当前不允许写入。配置由运行中的 tt serve 保存 —— "+
+				"  这个目录当前不允许写入。配置由运行中的 tg serve 保存 —— "+
 				"若它是从某个受限环境(沙箱/只读挂载)启动的,请换成普通终端重新启动再试。", dir, err)
 		}
 		return fmt.Errorf("创建临时文件失败: %w", err)

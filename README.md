@@ -3,8 +3,8 @@
 面向鼎捷数智 TOP GP（Genero 4GL）ERP 的命令行工具集。
 
 > 本项目在架构上参考了 [TT](https://github.com/luyaogod/TT)，面向 TOP GP 重新实现。
-> 当前代码基线来自 TT 0.5.2，可执行文件名与命令前缀暂时仍是 `tt`；
-> 等 GP 相关能力稳定后统一改名为 `tg`，那时才算 TG 自己的第一个基线版本。
+> 当前代码基线来自 TT 0.5.2；2026-11-13 已完成改名：可执行文件 `tg.exe`、
+> 安装目录 `%LOCALAPPDATA%\Programs\TG`、命令前缀 `tg`、数据目录 `%APPDATA%\tg`。
 
 ---
 
@@ -29,11 +29,11 @@ build_portable.bat
 命令与 TT 保持一致，当前可用的主要命令：
 
 ```cmd
-tt serve              # 启动本地配置页（http://127.0.0.1:28670）
-tt install path       # 把 tt 加入用户 PATH
-tt install skills     # 把内置技能安装到指定目录
-tt update check       # 检查是否有新版本（不下载）
-tt version            # 查看当前版本
+tg serve              # 启动本地配置页（http://127.0.0.1:28670）
+tg install path       # 把 tt 加入用户 PATH
+tg install skills     # 把内置技能安装到指定目录
+tg update check       # 检查是否有新版本（不下载）
+tg version            # 查看当前版本
 ```
 
 ## 目录结构

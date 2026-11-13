@@ -174,7 +174,7 @@ func (c *Client) Do(method, path string, body any) ([]byte, error) {
 	req.Header.Set("X-Actor", c.Actor)
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("无法连接调试服务(%s): %w —— 请先运行 tt serve(或 tt debug serve)", c.Base, err)
+		return nil, fmt.Errorf("无法连接调试服务(%s): %w —— 请先运行 tg serve(或 tt debug serve)", c.Base, err)
 	}
 	defer resp.Body.Close()
 	data, err := io.ReadAll(resp.Body)

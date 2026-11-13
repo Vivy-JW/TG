@@ -40,7 +40,7 @@
 它是夹具提供方，判据由使用者承担：
 
 ```bash
-./tt.exe dev tzc selftest                 # 合成包的端到端对抗用例
+./tg.exe dev tzc selftest                 # 合成包的端到端对抗用例
 go test ./internal/dev/...                # 各包单测
 ```
 

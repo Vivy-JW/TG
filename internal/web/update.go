@@ -8,8 +8,8 @@ package web
 // 三条纪律（与命令行那一侧同一份，见 internal/cli/update.go）：
 //
 //   - **检查只由人点触发**。服务启动不查、也没有定时器；页面上的按钮就是那个"显式命令"。
-//   - **装要人点头**。按钮点下去就是那个头，所以它等价于 `tt update --yes`。
-//   - 检查结果落在缓存里（<数据目录>/update/check.json），页面与 `tt version` 离线读它。
+//   - **装要人点头**。按钮点下去就是那个头，所以它等价于 `tg update --yes`。
+//   - 检查结果落在缓存里（<数据目录>/update/check.json），页面与 `tg version` 离线读它。
 
 import (
 	"context"
@@ -87,7 +87,7 @@ func (s *Server) hUpdateCheck(w http.ResponseWriter, r *http.Request) {
 // hUpdateApply POST /api/update/apply：交棒给更新器。
 //
 // 为什么走子进程而不是直接调函数：这条流程的实现住在命令层（internal/cli），而命令层
-// import 本包 —— 反过来 import 就成环。拉一个 `tt update --yes` 还顺带保证"页面点的"
+// import 本包 —— 反过来 import 就成环。拉一个 `tg update --yes` 还顺带保证"页面点的"
 // 与"人敲的"是同一条路径（包括确认、下载、校验、交棒）。
 //
 // 这个进程（服务自己）会在几分钟后被更新器停掉：它在安装目录里跑，锁着要被替换的文件。
@@ -108,7 +108,7 @@ func (s *Server) hUpdateApply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// --yes：按钮点下去就是那个"头"。--config：交给同一个数据目录。
-	// 日志落数据目录的 .tt-update.log（与命令行那条路一致，`tt update log` 读得到）。
+	// 日志落数据目录的 .tg-update.log（与命令行那条路一致，`tg update log` 读得到）。
 	pid, err := winproc.SpawnDetached(exe,
 		[]string{"update", "--yes", "--config", cfgPath},
 		update.LogPath(filepath.Dir(cfgPath)))
@@ -118,7 +118,7 @@ func (s *Server) hUpdateApply(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"ok": true, "pid": pid, "handedOff": true,
-		"note": "更新器已接手：它会在下载校验完成后停掉本服务并替换文件。进度看 tt update log。",
+		"note": "更新器已接手：它会在下载校验完成后停掉本服务并替换文件。进度看 tg update log。",
 	})
 }
 
@@ -128,7 +128,7 @@ func (s *Server) updateClient(cfgPath string) (*update.Client, error) {
 	if root, err := config.Load(cfgPath); err == nil && root != nil {
 		proxy = root.Net.Proxy
 	}
-	agent := "tt-update/" + s.opt.BareVersion
+	agent := "tg-update/" + s.opt.BareVersion
 	return update.NewClient(update.ExplicitProxy("", proxy), agent)
 }
 

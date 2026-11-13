@@ -10,12 +10,12 @@ import (
 	"tg/internal/config"
 )
 
-// 技能一致性：`tt install skills` 把 mkdir 之外的技能树复制到 agent 会读的目录里，
+// 技能一致性：`tg install skills` 把 mkdir 之外的技能树复制到 agent 会读的目录里，
 // 那一份**不随二进制升级自动变**。于是升级完就会出现"tt 是 0.2.2，agent 读的还是
 // 0.2.1 的手册"——而 skills/ 是评测里执行者唯一能读的东西，这种错位比二进制旧更坏。
 //
 // 这份戳就是为了把两件事对上：装过哪些目录、装它们的是哪个 tt 版本。它住在数据目录
-// （`.tt-skills.json`，与 `.tg-serve.json` 同类：不是缓存），因为它是**两个命令之间的
+// （`.tg-skills.json`，与 `.tg-serve.json` 同类：不是缓存），因为它是**两个命令之间的
 // 状态**：install 写、update 与 version 读。
 //
 // 为什么不给 SKILL.md 加 `version:` 字段：frontmatter 是跨客户端契约（我们的校验器正是
@@ -32,7 +32,7 @@ func SkillsStampPath(dataDir string) string {
 	if dataDir == "" {
 		return ""
 	}
-	return filepath.Join(dataDir, ".tt-skills.json")
+	return filepath.Join(dataDir, ".tg-skills.json")
 }
 
 // LoadSkillsStamp 读戳；没有或坏掉时返回 nil（调用方按"没装过"处理）。
@@ -108,13 +108,13 @@ func StaleSkillsTargets(dataDir, version string) []string {
 	return out
 }
 
-// SkillsDriftHint 一句话说明技能与二进制不同版（`tt version` 与设置页共用）。
+// SkillsDriftHint 一句话说明技能与二进制不同版（`tg version` 与设置页共用）。
 // 对得上、或根本没装过，都返回空串。
 func SkillsDriftHint(dataDir, version string) string {
 	st := LoadSkillsStamp(dataDir)
 	if st == nil || st.Version == "" || st.Version == version || len(st.Targets) == 0 {
 		return ""
 	}
-	return fmt.Sprintf("agent 目录里的技能是 %s 版装的（装到 %d 处）——跑 tt install skills --force 刷新",
+	return fmt.Sprintf("agent 目录里的技能是 %s 版装的（装到 %d 处）——跑 tg install skills --force 刷新",
 		st.Version, len(st.Targets))
 }

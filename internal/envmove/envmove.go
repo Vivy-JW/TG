@@ -201,7 +201,7 @@ func renameHint(err error) error {
 		strings.Contains(msg, "another process"),
 		strings.Contains(msg, "正由另一进程使用"),
 		strings.Contains(msg, "另一个程序"):
-		return fmt.Errorf("%w（文件可能正被 tt serve / 查询进程占用：先 tt serve --stop 或关闭占用它的程序再试）", err)
+		return fmt.Errorf("%w（文件可能正被 tg serve / 查询进程占用：先 tg serve --stop 或关闭占用它的程序再试）", err)
 	case strings.Contains(msg, "cross-device"), strings.Contains(msg, "invalid cross-device"),
 		strings.Contains(msg, "different disk drive"):
 		return fmt.Errorf("%w（落点在不同磁盘上，无法 rename；先手工搬到同一卷再改名，或把 dictDir/mirrorDir 指到同一卷）", err)

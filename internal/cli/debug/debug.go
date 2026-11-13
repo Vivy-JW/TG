@@ -197,9 +197,9 @@ var debugServeCmd = &cobra.Command{
 	Short: "后台常驻调试服务(tt debug start/exec/status 等控制命令自动发现的守护进程)",
 	Long: `后台常驻调试服务 —— tt debug 各条控制命令(start/exec/status/quit/wait/…)自动发现的守护进程。
 
-它与 tt serve 是同一个服务的两种装法,服务端能力完全相同:
+它与 tg serve 是同一个服务的两种装法,服务端能力完全相同:
   · tt debug serve  只服务调试面:工作台 API 直接在根的 /api/… 下;
-  · tt serve        统一服务:调试工作台 /debug/ + 统一设置页,调试面在 /debug/api/… 下。
+  · tg serve        统一服务:调试工作台 /debug/ + 统一设置页,调试面在 /debug/api/… 下。
 两者默认都后台常驻、都写同一份状态文件(.tg-serve.json),控制端命令据此自动寻址
 (各自的前缀也记在里面),所以 tt debug start/exec/status 对着哪个跑着的实例都能用。
 同一个配置目录下只能起一个 —— 两条件会争同一份状态文件。

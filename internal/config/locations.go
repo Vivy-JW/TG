@@ -126,8 +126,8 @@ func (l *Locations) SyncTarget(configured, flagPath string) string {
 }
 
 // EngineExe .tzs 引擎 exe 的落点：显式覆盖（tzs.serverExe）优先，
-// 否则 <tt.exe 目录>\tzs\tzs-server.exe（与 skills/ 同一种分发形态：exe 同目录的
-// 子目录，不进二进制）。定位不到 tt.exe 自身且无覆盖时返回空串。
+// 否则 <tg.exe 目录>\tzs\tzs-server.exe（与 skills/ 同一种分发形态：exe 同目录的
+// 子目录，不进二进制）。定位不到 tg.exe 自身且无覆盖时返回空串。
 func EngineExe(override string) string {
 	if p := AbsPath(override); p != "" {
 		return p

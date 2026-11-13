@@ -45,7 +45,7 @@ const (
 	// CodeSessionTargetBusy 别名指向的会话不能复用（F20 / Q23 / C1.6）：正在跑或已停站。
 	CodeSessionTargetBusy = "SESSION_TARGET_BUSY"
 
-	// tt update 那条线。它管的是"tt 自己"，与字典无关，所以码也自成一族。
+	// tg update 那条线。它管的是"tt 自己"，与字典无关，所以码也自成一族。
 	CodeUpdateUsage    = "UPDATE_USAGE"    // 参数组合不成立（如非交互环境没给 --yes）
 	CodeUpdateRefused  = "UPDATE_REFUSED"  // 这份 tt 不让自装（源码态、认不出的布局）
 	CodeUpdateChecksum = "UPDATE_CHECKSUM" // 摘要/制品自报版本校验不过

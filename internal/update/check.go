@@ -32,7 +32,7 @@ func CheckCachePath(dataDir string) string {
 	return filepath.Join(d, "check.json")
 }
 
-// CheckResult 一次检查的结果。它是"离线提示"的唯一依据：`tt version` 与设置页
+// CheckResult 一次检查的结果。它是"离线提示"的唯一依据：`tg version` 与设置页
 // 都只读它，不再联网。
 type CheckResult struct {
 	Current     string    `json:"current"` // 检查时手上这份的版本
@@ -119,11 +119,11 @@ func LoadCachedCheck(dataDir, current string, now time.Time) *CheckResult {
 	return &r
 }
 
-// Message 一句话说清这次检查的结论（`tt version` 的那一行与设置页共用同一句）。
+// Message 一句话说清这次检查的结论（`tg version` 的那一行与设置页共用同一句）。
 func (r *CheckResult) Message() string {
 	if r == nil || !r.Newer {
 		return ""
 	}
-	return fmt.Sprintf("有新版本 %s（当前 %s，%s 发布）——跑 tt update 升级",
+	return fmt.Sprintf("有新版本 %s（当前 %s，%s 发布）——跑 tg update 升级",
 		r.Latest, r.Current, r.PublishedAt.Local().Format("2006-01-02"))
 }

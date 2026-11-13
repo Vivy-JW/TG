@@ -68,7 +68,7 @@ func TestBuildScriptsAreASCIIAndNotMixed(t *testing.T) {
 
 // TestVersionHasOneHome 钉住“版本号只有 VERSION 一个出处”。
 //
-// 版本号是更新机制、`tt version` 输出与资产文件名的共同输入：一旦 `VERSION` 与脚本里
+// 版本号是更新机制、`tg version` 输出与资产文件名的共同输入：一旦 `VERSION` 与脚本里
 // 的第二份字面量分叉，发出去的包会报一个从来没有过的版本，而当场看不出任何异常。
 // 跨文件的一致性（VERSION ↔ web 的 package.json）由 `make version-check` 把关；
 // 这条只钉“脚本里不许再出现字面量”，两者管的是不同的事。

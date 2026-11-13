@@ -61,11 +61,11 @@ type Server struct {
 //
 // web 是**本应用 SPA 的根**（即 web/dist 的内容），不是模块根的嵌入 FS ——
 // 合并前两套前端各占 dist 下的一个子目录，剥离那一层得由调用方做；合并后只剩一套 SPA、
-// 直接产出在 dist 根，调用方（tt serve / tt debug serve）传 common.WebFrontend() 即可。
+// 直接产出在 dist 根，调用方（tg serve / tt debug serve）传 common.WebFrontend() 即可。
 // 这里只确认 index.html 在；不在就当没前端，回落成纯 API + 引导页。
 func NewServer(cfg *Config, web fs.FS, cfgPath string) *Server {
 	// 先把默认环境(hosts.activeEnv,可被 debug.activeEnv 覆盖)的连接与启动参数
-	// 合并到运行时字段,再交给 Manager。统一服务 tt serve 只调 LoadConfigAllowEmpty
+	// 合并到运行时字段,再交给 Manager。统一服务 tg serve 只调 LoadConfigAllowEmpty
 	// 就直接 NewServer,不会自己补这一步 —— 少了它 s.cfg.SSH/Zone/Topent/DB 全是空的,
 	// /api/status 报不出主机,从 /api/sessions 起的会话也会拿空地址去连。
 	// 重复调用无副作用(CLI 的 serve 路径本来就会先调一次)。
@@ -186,7 +186,7 @@ func (s *Server) ListenAddr() string {
 //	/api/hosts(只读,见 hHostsGet)
 //	/(SPA 兜底,hStatic)
 //
-// 统一服务(tt serve)用 http.StripPrefix("/debug", srv.Handler()) 把它挂在 /debug/ 下,
+// 统一服务(tg serve)用 http.StripPrefix("/debug", srv.Handler()) 把它挂在 /debug/ 下,
 // 于是面内的 /api/sessions/… 对外是 /debug/api/sessions/…,内嵌 SPA 的 / 对外是 /debug/。
 // 这样一个进程里,调试面内的 /api/status、/api/ws 等路径都落在 /debug/api/ 下,
 // 与共享层 /api/* 的同名路径不会互相覆盖 —— 合并前两个工具各起各的服务,压根不存在
@@ -541,7 +541,7 @@ func (s *Server) hEvents(w http.ResponseWriter, r *http.Request) {
 
 // hShutdown 优雅停止服务:POST /api/shutdown {}。
 // 效果等同 Ctrl+C —— ctx 取消 → http 收口 + mgr.CloseAll 收掉会话与 SSH 连接。
-// 停服务的主要路径是 `tt serve --stop` / `tt debug serve --stop`(按 pid 杀进程);
+// 停服务的主要路径是 `tg serve --stop` / `tt debug serve --stop`(按 pid 杀进程);
 // 这个端点留给"说得上话但拿不到 pid"的调用方(曾经是桌面外壳的关窗动作)。
 // 要求 JSON 请求体(与全站一致):浏览器跨站发不出这个 Content-Type(会先被预检挡下),
 // 所以只有本机同源调用方能用,不额外加鉴权。
@@ -2551,7 +2551,7 @@ func (s *Server) hHostsGet(w http.ResponseWriter, r *http.Request) {
 
 // ReloadConfig 重新从磁盘读取配置并热替换内存态。
 //
-// 统一服务(tt serve)的共享配置端点 /api/hosts 在写入后会调用它:统一设置页
+// 统一服务(tg serve)的共享配置端点 /api/hosts 在写入后会调用它:统一设置页
 // 改的就是同一份 hosts 节,不重读的话本服务还按旧环境连,表现就是"改了没生效"。
 //
 // 三条约定:

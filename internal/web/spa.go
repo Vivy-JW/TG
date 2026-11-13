@@ -86,7 +86,7 @@ code{background:#f2f2f2;padding:.1rem .3rem;border-radius:3px}</style></head>
 <body><h2>%s</h2>
 <p>前端尚未构建，所以还没有可视化配置页。构建方式：</p>
 <pre><code>cd web &amp;&amp; npm install &amp;&amp; npm run build</code></pre>
-<p>构建后重新运行 <code>tt serve</code> 即可。</p>
+<p>构建后重新运行 <code>tg serve</code> 即可。</p>
 <p>命令行也能改配置：<code>tt env list</code>、<code>tt config show</code>、<code>tt config validate</code>。</p>
 </body></html>`, title, title)
 }

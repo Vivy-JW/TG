@@ -18,7 +18,7 @@ import (
 // 告诉用户去构建 —— 这样后端开发不被前端依赖卡住。
 //
 // AI 技能文件不内嵌：以仓库根目录的 skills/ 随发行包（便携版）一起分发，
-// 用户可直接编辑；`tt install skills` 把它复制到目标目录。
+// 用户可直接编辑；`tg install skills` 把它复制到目标目录。
 // 与合并前的 TDebug / TDev / TDictCli 三边约定一致。
 //
 //go:embed all:web/dist

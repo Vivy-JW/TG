@@ -479,7 +479,7 @@ func LoadHosts(path string) (*Hosts, error) {
 	}
 	h := r.Hosts
 	if len(h.SSHs) == 0 {
-		return nil, fmt.Errorf("尚未配置 SSH 环境:请运行 tt serve 打开配置页添加，或编辑 config.json 的 hosts.sshs")
+		return nil, fmt.Errorf("尚未配置 SSH 环境:请运行 tg serve 打开配置页添加，或编辑 config.json 的 hosts.sshs")
 	}
 	return &h, nil
 }

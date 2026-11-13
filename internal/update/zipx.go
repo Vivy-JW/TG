@@ -75,7 +75,7 @@ func safeJoin(base, name string) (string, error) {
 	return p, nil
 }
 
-// PayloadRoot 找解包后的载荷根：便携包的 zip 里顶层是一个目录（tt-portable/），
+// PayloadRoot 找解包后的载荷根：便携包的 zip 里顶层是一个目录（tg-portable/），
 // 但别人重打的包也可能是平的，所以两种都认。
 func PayloadRoot(staging string) (string, error) {
 	ents, err := os.ReadDir(staging)

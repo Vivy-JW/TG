@@ -14,8 +14,8 @@ all: build test
 help: ## 列出全部目标
 	@grep -E '^[a-z][a-z0-9-]*:' $(MAKEFILE_LIST) | grep '## ' | sed 's/:[^#]*## /  -- /'
 
-build: ## go build -o tt.exe .（前端未构建也能过）
-	go build -o tt.exe .
+build: ## go build -o tg.exe .（前端未构建也能过）
+	go build -o tg.exe .
 
 test: ## 默认档：全量 go test（约 1 分钟，含文档新鲜度检查）
 	go test ./... -count=1
@@ -29,7 +29,7 @@ web-build: ## 前端构建（含 tsc 类型检查；check:app 不做类型检查
 skips: ## 回读：跑了多少、跳了多少（会真跑一遍全量）
 	go test ./... -count=1 -v 2>&1 | grep -E '^--- (PASS|SKIP)' | sort | uniq -c
 
-update-live-check: ## tt update 的真联网自检（要能访问 GitHub；代理用 TG_PROXY）
+update-live-check: ## tg update 的真联网自检（要能访问 GitHub；代理用 TG_PROXY）
 	@go build -ldflags "-X tg/internal/cli.Version=0.0.0" -o "$$TEMP/tt-updcheck.exe" .
 	@$$TEMP/tt-updcheck.exe update check --format table --proxy "$$TG_PROXY" ; code=$$? ; rm -f "$$TEMP/tt-updcheck.exe" ; if [ "$$code" = "0" ] || [ "$$code" = "10" ] ; then echo "live-check OK (exit $$code)" ; else echo "live-check FAILED (exit $$code)" ; exit 1 ; fi
 
@@ -43,7 +43,7 @@ update-live-check: ## tt update 的真联网自检（要能访问 GitHub；代�
 version-check: ## 版本号只有 VERSION 一个出处：对照 web 的两份 package.json 与 package-lock.json
 	@node -e 'const fs=require("fs");const want=fs.readFileSync("VERSION","utf8").trim();if(!/^[0-9]+\.[0-9]+\.[0-9]+$$/.test(want)){console.error("VERSION is not MAJOR.MINOR.PATCH: "+want);process.exit(1)}const lock=JSON.parse(fs.readFileSync("web/package-lock.json","utf8"));const rows=[["web/package.json",JSON.parse(fs.readFileSync("web/package.json","utf8")).version],["web/app/package.json",JSON.parse(fs.readFileSync("web/app/package.json","utf8")).version],["web/package-lock.json",lock.version],["web/package-lock.json packages[\"\"]",lock.packages[""].version]];const bad=rows.filter(r=>r[1]!==want);if(bad.length){console.error("version mismatch, VERSION = "+want+"\n  "+bad.map(r=>r[0]+" = "+r[1]).join("\n  "));process.exit(1)}console.log("version-check OK: "+want+" (VERSION is the single source)")'
 
-package: version-check ## 便携包 → dist/tt-portable/ 与 dist/tt-portable.zip
+package: version-check ## 便携包 → dist/tg-portable/ 与 dist/tg-portable.zip
 	MSYS2_ARG_CONV_EXCL="*" cmd.exe /c "build_portable.bat"
 
 msi: version-check ## MSI 安装包（需 WiX v3；复用便携包载荷）

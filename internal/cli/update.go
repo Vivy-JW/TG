@@ -5,10 +5,10 @@ package cli
 //
 // 四条边界（读代码前先读它们）：
 //
-//   - **默认不装**。`tt update` 会问一句，`--yes` 才免确认；非交互环境（agent/CI）
+//   - **默认不装**。`tg update` 会问一句，`--yes` 才免确认；非交互环境（agent/CI）
 //     没给 `--yes` 就拒绝，而不是猜。
-//   - **不对源码态动手**。`make build` 出的仓库根 tt.exe 只允许查，装会被拒（exit 4）。
-//   - **只在显式命令里联网**。`tt serve` 与日常命令都不查；`tt version` 只读缓存。
+//   - **不对源码态动手**。`make build` 出的仓库根 tg.exe 只允许查，装会被拒（exit 4）。
+//   - **只在显式命令里联网**。`tg serve` 与日常命令都不查；`tg version` 只读缓存。
 //   - 引擎与设计器 dll 随包走，不单独升 —— 更新单位是整包/MSI。
 //
 // 退出码（这条线自己的一张表，与 tt dev / tg dict 各不相干，见根帮助的退出码表）：
@@ -77,17 +77,17 @@ func newUpdateCmd() *cobra.Command {
 
   三种安装形态各自怎么装：
     便携包（exe 同目录有 .portable）  下载 zip，解到旁边校验后**就地覆盖**目录
-    MSI 安装（%LOCALAPPDATA%\Programs\TT）  下载 MSI，交给 msiexec /qb
+    MSI 安装（%LOCALAPPDATA%\Programs\TG）  下载 MSI，交给 msiexec /qb
     认不出的布局 / 源码态（make build）    只允许查，装会被拒（退出码 4）
 
   凭什么信得过：
     1. 更新源写死在代码里（` + update.RepoPage + `），没有指向别处的开关；
     2. 下载完对发布方给的 sha256 摘要，不符就删掉；
-    3. 装之前跑一遍制品的 ` + "`tt version`" + `，自报版本必须等于目标版本。
+    3. 装之前跑一遍制品的 ` + "`tg version`" + `，自报版本必须等于目标版本。
 
   装的动作由**另一个进程**完成：Windows 上运行中的 exe 不能替换自己，所以
-  ` + "`tt update`" + ` 把自己复制到 %TEMP% 再交棒，前台随即退出。升级日志落在数据目录的
-  .tt-update.log，` + "`tg update log`" + ` 可以回读它走到哪一步。
+  ` + "`tg update`" + ` 把自己复制到 %TEMP% 再交棒，前台随即退出。升级日志落在数据目录的
+  .tg-update.log，` + "`tg update log`" + ` 可以回读它走到哪一步。
 
 退出码: 0 已是最新或已交棒 | 10 有可用更新 | 2 用法错 | 3 校验失败 |
         4 拒绝自装 | 5 出网或落盘失败`,
@@ -119,7 +119,7 @@ func newUpdateCheckCmd() *cobra.Command {
 		Use:   "check",
 		Short: "查有没有新版（不下载、不安装）",
 		Long: `查一次更新源，与手上这份 tt 比较。结论写进缓存（<数据目录>/update/check.json），
-` + "`tt version`" + ` 与设置页离线读它。
+` + "`tg version`" + ` 与设置页离线读它。
 
 只查不动手，所以这份 tt 是什么形态都不影响它。
 
@@ -140,7 +140,7 @@ func newUpdateLogCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "log",
 		Short: "回读最近一次升级的阶段与结果",
-		Long: `回读升级状态（<数据目录>/.tt-update.json）与日志尾部（<数据目录>/.tt-update.log）。
+		Long: `回读升级状态（<数据目录>/.tg-update.json）与日志尾部（<数据目录>/.tg-update.log）。
 
 更新器是脱离了终端跑的进程：装完它改的是已经装好的那份 tt，前台早退出了。
 "到底装成了没有、卡在哪一步"只能从这里回答。`,
@@ -208,7 +208,7 @@ func newUpdateLogCmd() *cobra.Command {
 }
 
 // newUpdateApplyCmd 是更新器本体。**隐藏**：它不是给人敲的，参数由前台算好写进计划文件。
-// 留在命令树里是因为更新器就是同一个 tt.exe 的副本（见 update.Handoff 的说明）。
+// 留在命令树里是因为更新器就是同一个 tg.exe 的副本（见 update.Handoff 的说明）。
 func newUpdateApplyCmd() *cobra.Command {
 	var f updateFlags
 	cmd := &cobra.Command{
@@ -216,7 +216,7 @@ func newUpdateApplyCmd() *cobra.Command {
 		Short: "（内部）执行升级计划",
 		Long: `（内部）执行升级计划。不手工运行：参数由 tg update 算好写进计划文件。
 
-进展**只写日志**（数据目录的 .tt-update.log）：这个进程由 SpawnDetached 拉起，
+进展**只写日志**（数据目录的 .tg-update.log）：这个进程由 SpawnDetached 拉起，
 它的 stdout/stderr 已经被重定向到同一个日志文件，再往 stderr 写一遍会让每一行
 出现两次。看进展用 ` + "`tg update log`" + `。`,
 		Hidden: true,
@@ -450,9 +450,9 @@ func resolveUpdateEnv(proxyFlag string) (*updateEnv, error) {
 		cfgProxy = root.Net.Proxy
 	}
 	proxy := update.ExplicitProxy(proxyFlag, cfgProxy)
-	agent := "tt-update/" + Version
+	agent := "tg-update/" + Version
 	if Version == "" {
-		agent = "tt-update/devel"
+		agent = "tg-update/devel"
 	}
 	client, err := update.NewClient(proxy, agent)
 	if err != nil {
@@ -469,13 +469,13 @@ func resolveUpdateEnv(proxyFlag string) (*updateEnv, error) {
 }
 
 // stagePortable 把下载好的便携包解到**目标目录的兄弟位置**（同一卷，后面只做文件覆盖），
-// 并跑一遍载荷里的 tt.exe 自报版本。
+// 并跑一遍载荷里的 tg.exe 自报版本。
 //
 // 为什么先解到旁边而不是直接覆盖：解包/校验失败必须发生在动手之前 —— 覆盖到一半失败会
 // 留下一个半新半旧的 tt。
 func stagePortable(ctx context.Context, zipPath, exePath, target string, errOut io.Writer) (string, error) {
 	dir := filepath.Dir(exePath)
-	stage := filepath.Join(filepath.Dir(dir), fmt.Sprintf(".tt-update-stage-%d", time.Now().Unix()))
+	stage := filepath.Join(filepath.Dir(dir), fmt.Sprintf(".tg-update-stage-%d", time.Now().Unix()))
 	if err := os.RemoveAll(stage); err != nil {
 		return "", applyErr(err)
 	}
@@ -493,17 +493,17 @@ func stagePortable(ctx context.Context, zipPath, exePath, target string, errOut 
 		_ = os.RemoveAll(stage)
 		return "", &output.Error{Code: output.CodeUpdateChecksum, Exit: 3, Message: err.Error()}
 	}
-	got, err := update.VersionOf(ctx, filepath.Join(root, "tt.exe"))
+	got, err := update.VersionOf(ctx, filepath.Join(root, "tg.exe"))
 	if err != nil {
 		_ = os.RemoveAll(stage)
 		return "", &output.Error{Code: output.CodeUpdateChecksum, Exit: 3,
-			Message: fmt.Sprintf("载荷里的 tt.exe 跑不起来: %v", err)}
+			Message: fmt.Sprintf("载荷里的 tg.exe 跑不起来: %v", err)}
 	}
 	fmt.Fprintf(errOut, "载荷自报版本: %s\n", got)
 	if !update.OutputHasVersion(got, target) {
 		_ = os.RemoveAll(stage)
 		return "", &output.Error{Code: output.CodeUpdateChecksum, Exit: 3,
-			Message: fmt.Sprintf("载荷里的 tt.exe 自报版本是 %q，与目标 %s 不一致（文件名不算数）", got, target),
+			Message: fmt.Sprintf("载荷里的 tg.exe 自报版本是 %q，与目标 %s 不一致（文件名不算数）", got, target),
 			Hint:    "发布资产与 tag 对不上；这次升级中止，请反馈"}
 	}
 	return root, nil

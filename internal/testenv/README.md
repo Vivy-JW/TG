@@ -63,7 +63,7 @@ go test ./internal/testenv -count=1
 # TestCorpusRootDetailNamesTheRightCulprit 诊断点名**真正**卡住的那一处
 # TestLocalFileIsFoundFromASubdirectory    从包目录上溯定位仓库根
 
-./tt.exe dev tzs doctor          # ⑥ 语料根那一行就是本包的 CorpusRootDetail
+./tg.exe dev tzs doctor          # ⑥ 语料根那一行就是本包的 CorpusRootDetail
 ```
 
 **最后一条是关键**：`CorpusRootDetail` 的用处是给"还差什么"的文案兜底。自己拿"配置文件在不在"

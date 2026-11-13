@@ -86,7 +86,7 @@ func newServeCmd() *cobra.Command {
 				}
 				_, err := debugcli.StartBackground(path, debugcli.ServeSpec{
 					Prefix:   "TG",
-					StopHint: "tt serve --stop",
+					StopHint: "tg serve --stop",
 					APIBase:  debugcli.APIBaseUnderDebug,
 					Args:     args,
 				})
@@ -124,7 +124,7 @@ func newServeCmd() *cobra.Command {
 
 			return debugcli.RunForeground(path, debugcli.ServeSpec{
 				Prefix:   "TG",
-				StopHint: "tt serve --stop",
+				StopHint: "tg serve --stop",
 				APIBase:  debugcli.APIBaseUnderDebug,
 			}, func(ctx context.Context, onReady func(addr string)) error {
 				// 停止路径有两条（Ctrl+C 与 /api/shutdown），两条都可能先到，

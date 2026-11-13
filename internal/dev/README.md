@@ -122,7 +122,7 @@ pkgfile ─┬─ tapfile    包与条目（只读视图 + 字节级重建）
 
 ```bash
 go test ./internal/dev/...            # 各包单测（fence 与 tapfile 各约 48 秒）
-./tt.exe dev tzc selftest             # 内置对抗用例，不需要真实语料：通过 31，失败 0
+./tg.exe dev tzc selftest             # 内置对抗用例，不需要真实语料：通过 31，失败 0
 TDEV_DEEP=1 go test ./internal/cli/dev -run 'TestCorpusExportVerify|TestCorpusApplySimulation'
                                       # 全语料回归（9–11 分钟）
 ```

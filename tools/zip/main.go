@@ -13,7 +13,7 @@
 //     只配当回退、不配当正式实现的原因。
 //
 // 用法：go run ./tools/zip [暂存目录 [输出 zip]]
-// 缺省 dist/tt-portable -> dist/tt-portable.zip（与 build_portable.bat 的调用一致）。
+// 缺省 dist/tg-portable -> dist/tg-portable.zip（与 build_portable.bat 的调用一致）。
 package main
 
 import (
@@ -33,7 +33,7 @@ func main() {
 }
 
 func run() error {
-	stage, out := "dist/tt-portable", "dist/tt-portable.zip"
+	stage, out := "dist/tg-portable", "dist/tg-portable.zip"
 	if len(os.Args) > 1 {
 		stage = os.Args[1]
 	}
@@ -45,7 +45,7 @@ func run() error {
 		return fmt.Errorf("暂存目录不存在: %s", stage)
 	}
 
-	// zip 里的顶层目录名 = 暂存目录名（解开就是 tt-portable/ 一个顶层目录，
+	// zip 里的顶层目录名 = 暂存目录名（解开就是 tg-portable/ 一个顶层目录，
 	// 与旧回退 shutil.make_archive 的 includeBaseDirectory 语义一致）。
 	root := filepath.Base(filepath.Clean(stage))
 

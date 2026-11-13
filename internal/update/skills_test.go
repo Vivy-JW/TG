@@ -92,7 +92,7 @@ func TestSkillsDriftHint(t *testing.T) {
 		t.Errorf("同版不该提示，得到 %q", got)
 	}
 	got := SkillsDriftHint(dir, "0.2.2")
-	for _, want := range []string{"0.2.1", "1 处", "tt install skills --force"} {
+	for _, want := range []string{"0.2.1", "1 处", "tg install skills --force"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("提示里该有 %q: %q", want, got)
 		}

@@ -36,7 +36,7 @@ func newCacheCmd() *cobra.Command {
 
 **config.json 不是缓存**,清除时一律不动;正在运行的服务状态文件也不动。
 
-tt serve 启动时会自动清掉超过 7 天的缓存 —— 刻意不"启动即全清":spill 里那些文件
+tg serve 启动时会自动清掉超过 7 天的缓存 —— 刻意不"启动即全清":spill 里那些文件
 的用途正是"刚才那条查询的完整结果,想看全量去读它",启动就删会把上一条命令刚
 告诉你的东西删掉。要立刻清空用 tg cache clear。`,
 		Example: `  tg cache                      # 看各缓存目录占多少
@@ -66,7 +66,7 @@ tt serve 启动时会自动清掉超过 7 天的缓存 —— 刻意不"启动�
 				}
 				fmt.Fprintf(out, "  %-11s %10s  %d 个文件\n", d.Name, size, d.Files)
 			}
-			fmt.Fprintf(out, "\n共 %s / %d 个文件;tt serve 启动时清理超过 %d 小时的\n",
+			fmt.Fprintf(out, "\n共 %s / %d 个文件;tg serve 启动时清理超过 %d 小时的\n",
 				humanBytes(st.Bytes), st.Files, st.MaxAgeHours)
 			return nil
 		},

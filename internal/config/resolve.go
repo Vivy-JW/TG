@@ -51,7 +51,7 @@ func (h *Hosts) Resolve(name string) (*EnvRef, error) {
 		if names := h.Names(); len(names) > 0 {
 			return nil, fmt.Errorf("必须指定环境：--at <环境> 或 --env <环境名>；可用环境: %s", strings.Join(names, "、"))
 		}
-		return nil, fmt.Errorf("尚未配置 SSH 环境(运行 tt serve 添加,或编辑 config.json hosts.sshs)")
+		return nil, fmt.Errorf("尚未配置 SSH 环境(运行 tg serve 添加,或编辑 config.json hosts.sshs)")
 	}
 	target, from := h.pickName(name)
 	for i := range h.SSHs {
@@ -62,7 +62,7 @@ func (h *Hosts) Resolve(name string) (*EnvRef, error) {
 	if names := h.Names(); len(names) > 0 {
 		return nil, fmt.Errorf("未找到环境 %q；可用环境: %s（用 --at <环境> 或 --env <环境名>）", target, strings.Join(names, "、"))
 	}
-	return nil, fmt.Errorf("未找到环境 %q(配置里没有任何环境,运行 tt serve 添加)", target)
+	return nil, fmt.Errorf("未找到环境 %q(配置里没有任何环境,运行 tg serve 添加)", target)
 }
 
 // ResolveForTool 在 Resolve 之上叠加工具级环境覆盖。

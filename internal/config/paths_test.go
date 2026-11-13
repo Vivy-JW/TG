@@ -313,7 +313,7 @@ func TestLocations_SyncTarget(t *testing.T) {
 	}
 }
 
-// 引擎 exe：覆盖优先，否则 <tt.exe 目录>\tzs\tzs-server.exe。
+// 引擎 exe：覆盖优先，否则 <tg.exe 目录>\tzs\tzs-server.exe。
 func TestEngineExe(t *testing.T) {
 	override := filepath.Join(t.TempDir(), "custom-tzs-server.exe")
 	if got := EngineExe(override); got != override {

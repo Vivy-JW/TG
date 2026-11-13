@@ -223,7 +223,7 @@ TT 的 GP 面现在只有"环境 / 镜像 / 字典 / 调试会话"四件事，**
 | 编译 | `go build ./...` | 必须 |
 | 单测 | `go test ./...` | 沙箱里有 4 个包恒红，见 §8；真机应为绿 |
 | 前端 | `cd web && npm run check:app` | 只在改前端时 |
-| T100 自检 | ~~`./tt.exe dev tzc selftest`（31 项）~~ | 已随 `tt dev` 删除消失（2026-11-11） |
+| T100 自检 | ~~`./tg.exe dev tzc selftest`（31 项）~~ | 已随 `tt dev` 删除消失（2026-11-11） |
 | GP 全链路 | 配环境 → 测连通 → 同步字典 → 拉镜像 → 起 fgldb → 跑一条 `tt dict r.t` | **手工**，没有自动化；这条是"TG 还能用"的唯一判据 |
 
 ## 7. 今天实测出来的缺口（不是设计缺失，是没接线）
@@ -278,5 +278,5 @@ Get-ChildItem internal -Directory | ForEach-Object {
 - ~~**Q2**：`dict/live` 搬到 `erpdb` 还是新建 `livedb`~~ —— **已作废（2026-11-09）**：`internal/dict` 不删，改造成 GP 的字典层（§4.D），`cli/gp` 继续用它没有断 import 的问题。
 - ~~**Q3**：GP 镜像要不要扩到 `42f/42s/inc`~~ —— **已改（2026-11-12）：不做 profile，统一收 `4gl + 42f + inc`**。原计划（`debug` 只 4gl / `source` 收全四类）作废：一个镜像目录必须装齐所有读者的并集，否则某条命令会找不到文件；42s 在 GP 上不存在（标签在 `gae_file`，走字典线）。见 §7.3 第 3 条。
 - ~~**Q4**：`designer-src/` + `engine/`（16 MB、1264 文件）什么时候删~~ —— **已做（2026-11-12）**：连同 `tools/tzsmini`、`testdata/tzs-mini` 一起删，打包成 `D:\Digiwin\tt_work\archive\TG-t100-designer-assets-2026-11-12.zip`（7.13 MB / 1355 条目）；`build_portable.bat` 里打 engine + designer 的两段（`[3b/5]`/`[3c/5]`）同时删掉，发行包不再带任何厂商 DLL。
-- ~~**Q5**：阶段 3 的改名要不要一次性做~~ —— **已定（2026-11-09）：分三批**。①对外标识（二进制名、MSI 产品名、PATH 写入名、文档自称）②数据与配置（`~/.tt`→`~/.tg` 带一次性迁移、`TG_WEB_DIR`、`.tg-serve.json`、`TT_*` 变量读旧名兼容）③代码内部（`module tt`→`module tg` 全仓 import 重写 + 重生成 `commands.html`）。每批一个 commit、可单独回滚。**2026-11-13 进度**：②③ 已做（`%APPDATA%\tt`→`%APPDATA%\tg`、`~/.tt`→`~/.tg`、`.tt-serve.*`→`.tg-serve.*`、`TT_*`→`TG_*`、`module tg` + 176 文件 import 重写；**不保留旧名兼容**，TG 没有已发版的旧数据/旧脚本要接）；①未做（`tt.exe`、`installer/tt.wxs`、`%LOCALAPPDATA%\Programs\TT` 原样）。
+- ~~**Q5**：阶段 3 的改名要不要一次性做~~ —— **已定（2026-11-09）：分三批**。①对外标识（二进制名、MSI 产品名、PATH 写入名、文档自称）②数据与配置（`~/.tt`→`~/.tg` 带一次性迁移、`TG_WEB_DIR`、`.tg-serve.json`、`TT_*` 变量读旧名兼容）③代码内部（`module tt`→`module tg` 全仓 import 重写 + 重生成 `commands.html`）。每批一个 commit、可单独回滚。**2026-11-13 进度**：②③ 已做（`%APPDATA%\tt`→`%APPDATA%\tg`、`~/.tt`→`~/.tg`、`.tt-serve.*`→`.tg-serve.*`、`TT_*`→`TG_*`、`module tg` + 176 文件 import 重写；**不保留旧名兼容**，TG 没有已发版的旧数据/旧脚本要接）；①未做（`tg.exe`、`installer/tg.wxs`、`%LOCALAPPDATA%\Programs\TG` 原样）。
 - ~~**Q6**：GP 页的"查询数据源"怎么处理（§7.4）~~ —— **已完成（2026-11-13）**：设置页「数据字典 → 查询数据源」现在是真控件，下拉里列的是 GP 环境（数据来自 `/api/gp/meta` 的 `env.dict`），选「本地镜像」即 `tg dict … --env local:<环境>`（读 `dict\<环境>.db`），选「远程直查」即 `--env <环境>`；`query.source` 落 `config.json`，命令行 `--at`/`--env local:` 单次覆盖仍在。原计划的 `SHOW_QUERY_SOURCE = false` 与 `POST /api/gp/settings` 都随 §4.D 落地作废。

@@ -39,7 +39,7 @@ loc := config.LocationsAt(configPath)                        // 已有配置路�
 | `DictDBDir()` / `DictDBPath(env)` | 本地字典库目录与某环境的库文件：`<数据目录>/dict/<环境>.db`（一个环境一个文件） |
 | `DictDBCandidatesFor(env, flagPath)` / `ResolveDictDBFor(env, flagPath)` | 某环境本地库的候选与读侧定位：`TDICT_DB` → `-d` → `<数据目录>/dict/<环境>.db` |
 | `DictDBCandidates(flagPath)` / `ResolveDictDB(flagPath)` / `SyncTarget(configured, flagPath)` | **旧版单文件口径**，只用于显式 `-d/TDICT_DB` 的兼容路径；新代码走 `DictDB*For(env)` |
-| `config.EngineExe(override)` | `.tzs` 引擎 exe：`tzs.serverExe` 覆盖 → `<tt.exe 目录>\tzs\tzs-server.exe` |
+| `config.EngineExe(override)` | `.tzs` 引擎 exe：`tzs.serverExe` 覆盖 → `<tg.exe 目录>\tzs\tzs-server.exe` |
 
 两个配套约束：
 

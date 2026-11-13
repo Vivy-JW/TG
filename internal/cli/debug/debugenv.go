@@ -55,7 +55,7 @@ type dbgEnvItem struct {
 // dbgSettingsView /api/hosts 返回的环境清单(仅本命令需要)。
 //
 // 合并前这里读 /api/settings —— 那时它吐整个 debug 配置节,sshs 在节内。
-// 拆节后环境清单归顶层 hosts,统一服务(tt serve)把它作为顶层 sshs 下发。
+// 拆节后环境清单归顶层 hosts,统一服务(tg serve)把它作为顶层 sshs 下发。
 type dbgSettingsView struct {
 	SSHs []dbgEnvItem `json:"sshs"`
 }

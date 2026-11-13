@@ -9,7 +9,7 @@
 
 | 用途 | 谁在用 |
 |---|---|
-| 把自己重新拉起来做后台常驻 | [../cli/debug/README.md](../cli/debug/README.md)（`tt serve`） |
+| 把自己重新拉起来做后台常驻 | [../cli/debug/README.md](../cli/debug/README.md)（`tg serve`） |
 | 托管 C# 引擎守护进程 | [../dev/tzs/README.md](../dev/tzs/README.md) |
 
 **就这两处，所以它刻意很薄。** 两边的失败语义、状态文件、停止方式都不同（一个探 HTTP、

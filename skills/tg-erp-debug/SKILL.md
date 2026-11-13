@@ -16,7 +16,7 @@ description: 当需要对T100程序进行错误排查和DEBUG时，触发此技�
 1. 起服务（已在跑会提示，不会起第二个）：
 
 ```bash
-tt serve
+tg serve
 tt debug status
 ```
 
@@ -75,7 +75,7 @@ tt debug quit --session <ref>     # 结束作业，会话回空闲
 tt session rm --session <ref>     # 断连接、清资源
 ```
 
-`tt serve --stop` 只在用户要求时执行。
+`tg serve --stop` 只在用户要求时执行。
 
 带画面的程序停在 GDC 等输入时，不要发 `next`/`step`；先告诉用户点什么，等 `continue`/`wait` 返回。判断“在等用户”还是“在空转”：`tt debug why --session <ref>`。
 
@@ -86,7 +86,7 @@ tt session rm --session <ref>     # 断连接、清资源
 1. 起服务，确认这条日志存在，先看请求/响应：
 
 ```bash
-tt serve
+tg serve
 tt debug wslogs --show <rowid> --at <环境>
 ```
 

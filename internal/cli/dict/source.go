@@ -5,7 +5,7 @@ package dict
 //
 // 选择优先级:
 //  1. --env/--conn <环境名|local:<环境>>（覆盖本次调用；**显式指定即强制**）；
-//  2. config.json 顶层 query.source（环境名 或 local:<环境>；可在 tt serve 的「设置」页切换）；
+//  2. config.json 顶层 query.source（环境名 或 local:<环境>；可在 tg serve 的「设置」页切换）；
 //  3. 都没有 → 报错（没有默认环境，也不猜本地库是哪个环境的）。
 //
 // **明确不做自动降级**:在线就是在线、本地就是本地,连不上直接报错并提示怎么切

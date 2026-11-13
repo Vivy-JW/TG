@@ -2,7 +2,7 @@
 
 // Package winproc 只做三件事：起一个不随本进程死的子进程、判它活着、杀掉它。
 //
-// 单独成包是因为有两处要用：`tt serve` 把自己重新拉起来做后台常驻（internal/cli/debug），
+// 单独成包是因为有两处要用：`tg serve` 把自己重新拉起来做后台常驻（internal/cli/debug），
 // 和 `tt dev tzs` 托管 C# 引擎（internal/dev/tzs）。原来只有前者，实现就住在
 // internal/cli/debug/servebg_windows.go 里；第二处出现时按「清掉重复」的纪律抽出来。
 package winproc
@@ -39,7 +39,7 @@ var (
 // HideConsole 让**控制台子程序**不要在父进程没有控制台时弹出一个新的控制台窗口。
 //
 // 为什么需要它（用户实测：点界面上的一个按钮就弹出一大堆终端窗口/标签页）：
-// `tt serve` 起后台子进程走的是 winproc.SpawnDetached（DETACHED_PROCESS）——
+// `tg serve` 起后台子进程走的是 winproc.SpawnDetached（DETACHED_PROCESS）——
 // **没有控制台**。而它内部用 runSelf/runSelfOut 起的是一串控制台程序（`tt debug start`、
 // `tt debug exec`、`tt debug quit`…）：父进程没有控制台时，Windows 会给**每一个**子进程
 // **新分配一个控制台**，于是每起一个子进程就多一个窗口（Windows Terminal 下是多一个标签页）。

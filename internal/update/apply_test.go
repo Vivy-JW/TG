@@ -40,9 +40,9 @@ func makeZip(t *testing.T, dir string, entries map[string]string) string {
 func TestExtractZipRejectsEscape(t *testing.T) {
 	dir := t.TempDir()
 	escape := makeZip(t, dir, map[string]string{
-		"tt-portable/tt.exe":     "ok",
+		"tg-portable/tg.exe":     "ok",
 		"../outside-marker.txt":  "不该被写出来",
-		"tt-portable/../../x.md": "也不行",
+		"tg-portable/../../x.md": "也不行",
 	})
 	dest := filepath.Join(dir, "out")
 	if err := os.MkdirAll(dest, 0o755); err != nil {
@@ -73,8 +73,8 @@ func TestExtractZipRejectsEscape(t *testing.T) {
 func TestExtractZipHandlesBackslashEntries(t *testing.T) {
 	dir := t.TempDir()
 	p := makeZip(t, dir, map[string]string{
-		`tt-portable\tzs\designer\a.dll`: "dll",
-		`tt-portable/tt.exe`:             "exe",
+		`tg-portable\tzs\designer\a.dll`: "dll",
+		`tg-portable/tg.exe`:             "exe",
 	})
 	dest := filepath.Join(dir, "out")
 	if err := os.MkdirAll(dest, 0o755); err != nil {
@@ -83,20 +83,20 @@ func TestExtractZipHandlesBackslashEntries(t *testing.T) {
 	if err := ExtractZip(p, dest); err != nil {
 		t.Fatalf("ExtractZip: %v", err)
 	}
-	got, err := os.ReadFile(filepath.Join(dest, "tt-portable", "tzs", "designer", "a.dll"))
+	got, err := os.ReadFile(filepath.Join(dest, "tg-portable", "tzs", "designer", "a.dll"))
 	if err != nil || string(got) != "dll" {
 		t.Fatalf("反斜杠条目没解开: %v / %q", err, got)
 	}
 	root, err := PayloadRoot(dest)
-	if err != nil || filepath.Base(root) != "tt-portable" {
-		t.Fatalf("载荷根 = %q, %v；想要 .../tt-portable", root, err)
+	if err != nil || filepath.Base(root) != "tg-portable" {
+		t.Fatalf("载荷根 = %q, %v；想要 .../tg-portable", root, err)
 	}
 }
 
-// 平的包（顶层直接是文件）也要认：别人重打的包不一定带 tt-portable/ 那一层。
+// 平的包（顶层直接是文件）也要认：别人重打的包不一定带 tg-portable/ 那一层。
 func TestPayloadRootFlatAndEmpty(t *testing.T) {
 	flat := t.TempDir()
-	if err := os.WriteFile(filepath.Join(flat, "tt.exe"), []byte("x"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(flat, "tg.exe"), []byte("x"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(flat, "README.md"), []byte("x"), 0o644); err != nil {
@@ -127,10 +127,10 @@ func TestCopyTreeKeepsLocalFiles(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	write(src, "tt.exe", "新版")
+	write(src, "tg.exe", "新版")
 	write(src, "config.json", `{"hosts":{}}`) // 包里的空模板
 	write(src, filepath.Join("skills", "a", "SKILL.md"), "技能")
-	write(dst, "tt.exe", "旧版")
+	write(dst, "tg.exe", "旧版")
 	write(dst, "config.json", `{"我的":"口令"}`)
 	write(dst, "我的笔记.txt", "别动我")
 
@@ -139,10 +139,10 @@ func TestCopyTreeKeepsLocalFiles(t *testing.T) {
 		t.Fatalf("copyTree: %v", err)
 	}
 	if n != 2 {
-		t.Errorf("复制了 %d 个文件，想要 2（tt.exe 与技能；config.json 被跳过）", n)
+		t.Errorf("复制了 %d 个文件，想要 2（tg.exe 与技能；config.json 被跳过）", n)
 	}
-	if b, _ := os.ReadFile(filepath.Join(dst, "tt.exe")); string(b) != "新版" {
-		t.Errorf("tt.exe 该被覆盖，得到 %q", b)
+	if b, _ := os.ReadFile(filepath.Join(dst, "tg.exe")); string(b) != "新版" {
+		t.Errorf("tg.exe 该被覆盖，得到 %q", b)
 	}
 	if b, _ := os.ReadFile(filepath.Join(dst, "config.json")); !strings.Contains(string(b), "我的") {
 		t.Errorf("用户的 config.json 被模板盖掉了: %q", b)
@@ -155,7 +155,7 @@ func TestCopyTreeKeepsLocalFiles(t *testing.T) {
 	}
 }
 
-// `tt version` 的输出比对按词比：子串比会让 0.2.2 匹配上 0.2.20。
+// `tg version` 的输出比对按词比：子串比会让 0.2.2 匹配上 0.2.20。
 func TestOutputHasVersion(t *testing.T) {
 	out := "tt 0.2.2 (commit d569d10, 2026-10-07)"
 	for _, want := range []string{"0.2.2", "v0.2.2"} {
@@ -181,7 +181,7 @@ func TestPlanRoundTrip(t *testing.T) {
 	dir := t.TempDir()
 	p := &Plan{
 		Kind: TokenPortable, From: "0.2.1", Target: "0.2.2",
-		Dir: dir, Stage: filepath.Join(dir, "stage"), ExePath: filepath.Join(dir, "tt.exe"),
+		Dir: dir, Stage: filepath.Join(dir, "stage"), ExePath: filepath.Join(dir, "tg.exe"),
 		DataDir: dir, StopPIDs: []int{1, 2}, RestartServe: true,
 		RestartArgs:   []string{"serve", "--listen", "127.0.0.1:28670"},
 		SkillsTargets: []string{filepath.Join(dir, "skills")},
@@ -216,12 +216,12 @@ func TestCleanStaleStagesAndRemoveStage(t *testing.T) {
 	if err := os.MkdirAll(exeDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	exe := filepath.Join(exeDir, "tt.exe")
+	exe := filepath.Join(exeDir, "tg.exe")
 	if err := os.WriteFile(exe, []byte("x"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	fresh := filepath.Join(base, ".tt-update-stage-1")
-	old := filepath.Join(base, ".tt-update-stage-2")
+	fresh := filepath.Join(base, ".tg-update-stage-1")
+	old := filepath.Join(base, ".tg-update-stage-2")
 	for _, d := range []string{fresh, old} {
 		if err := os.MkdirAll(d, 0o755); err != nil {
 			t.Fatal(err)
@@ -251,8 +251,8 @@ func TestCleanStaleHelpers(t *testing.T) {
 	tmp := t.TempDir()
 	t.Setenv("TMP", tmp)
 	t.Setenv("TEMP", tmp)
-	fresh := filepath.Join(os.TempDir(), "tt-update-fresh")
-	old := filepath.Join(os.TempDir(), "tt-update-old")
+	fresh := filepath.Join(os.TempDir(), "tg-update-fresh")
+	old := filepath.Join(os.TempDir(), "tg-update-old")
 	for _, d := range []string{fresh, old} {
 		if err := os.MkdirAll(d, 0o755); err != nil {
 			t.Fatal(err)

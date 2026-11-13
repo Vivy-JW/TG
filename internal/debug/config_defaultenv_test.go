@@ -10,7 +10,7 @@ import (
 // ApplyDefaultEnv 在 sshs 被删空时不得 panic。
 // 回归场景(合并前由 hSettingsPut 触发):设置页删光所有环境后保存,请求体 sshs 为空,
 // 但服务端会把运行时 envName(非空)代入,修复前回落分支对空切片取下标越界。
-// 环境清单的保存入口现在统一在 tt serve 的 PUT /api/hosts(它仍拦下空列表),
+// 环境清单的保存入口现在统一在 tg serve 的 PUT /api/hosts(它仍拦下空列表),
 // 但配置文件被手改成空、或首次运行还没配时,这条兜底仍然必须成立。
 func TestApplyDefaultEnvEmptySSHs(t *testing.T) {
 	c := &Config{envName: "示例正式区", SSH: host.SSHConfig{Host: "10.0.0.2"}, Zone: "36"}

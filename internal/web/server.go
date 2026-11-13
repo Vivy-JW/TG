@@ -54,7 +54,7 @@ type Options struct {
 	Version string
 	// BareVersion 同一个版本的**裸形态**（`0.2.2`），只给更新机制用。
 	//
-	// 两个字段分开是必须的：检查缓存是以裸版本为键存的（`tt version` 读的也是它），
+	// 两个字段分开是必须的：检查缓存是以裸版本为键存的（`tg version` 读的也是它），
 	// 把展示串喂进比较会被解析器拒掉 —— 表现是设置页的「检查更新」永远失败，
 	// 而错误文案里那句 “不是 MAJOR.MINOR.PATCH” 看起来像是发布方写错了版本号。
 	// 空串 = 这份构建没有版本号（`make build`），更新只允许查到“版本号不可用”为止。
@@ -169,7 +169,7 @@ func (s *Server) routes() {
 	m.HandleFunc("DELETE /api/install", s.hInstallRemove)
 
 	// 技能：官方那一棵随包走，第三方靠设置页登记（config.json 的 skills.externals）。
-	// 这里只有**登记**（查/增/删）；**装到哪**是命令行的事（`tt install skills`）——
+	// 这里只有**登记**（查/增/删）；**装到哪**是命令行的事（`tg install skills`）——
 	// 前端不再提供第二条安装入口，也就没有“按请求里的路径往磁盘写”这个面。
 	m.HandleFunc("GET /api/skills", s.hSkillsGet)
 	m.HandleFunc("POST /api/skills/add", s.hSkillsAdd)

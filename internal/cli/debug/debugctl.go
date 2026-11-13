@@ -494,7 +494,7 @@ func dbgScreenVerify(want string, changed bool, snap *dbgSnapView) error {
 	}
 	fmt.Fprintf(os.Stderr, "⚠ --fglserver %q 未生效:本轮会话用的是 %q\n", want, snap.FGLServer)
 	fmt.Fprintf(os.Stderr, "  多半是对面的服务端还没重启(它不认这个字段时会静静忽略):\n")
-	fmt.Fprintf(os.Stderr, "  tt serve --stop; tt serve   然后重发这一轮\n")
+	fmt.Fprintf(os.Stderr, "  tg serve --stop; tg serve   然后重发这一轮\n")
 	return fmt.Errorf("--fglserver %q 未生效(实际 %q),本轮画面去向不对", want, snap.FGLServer)
 }
 

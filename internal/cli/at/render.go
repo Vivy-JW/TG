@@ -94,7 +94,7 @@ func PrintContract(w io.Writer, cmd *cobra.Command) (int, error) {
 		}
 		if len(values) == 0 {
 			c.Complete = false
-			c.Failed = append(c.Failed, contractFailure{Reason: "config", Error: "配置里还没有任何环境", Action: "tt serve 到设置页添加环境，或 tg env list 确认"})
+			c.Failed = append(c.Failed, contractFailure{Reason: "config", Error: "配置里还没有任何环境", Action: "tg serve 到设置页添加环境，或 tg env list 确认"})
 			exit = 3
 			break
 		}
