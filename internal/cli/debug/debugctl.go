@@ -47,7 +47,6 @@ var (
 
 	dbgExecMax int    // exec --max:单条命令**显示**的行数上限(0=不限;不影响本地完整副本)
 	dbgSQLFile string // sql --file:从本地文件读语句(不是远端 @)
-	dbgSQLEnt  int    // sql --ent:显式指定企业编号(不给 = 用这条会话当前生效的企业编号)
 	dbgEnvFlag string // start/wsdebug --env:这次启动要连哪个环境(权威;空=回落全局 --env/当前环境)
 	// dbgEntRun 是 start/wsdebug --ent：**这一轮跑在哪个企业**。
 	//
@@ -1449,40 +1448,8 @@ var debugSQLCmd = &cobra.Command{
 		if sqlText == "" {
 			return fmt.Errorf(`需要一条查询语句，或用 --file 指定语句文件`)
 		}
-		ent := dbgSQLEnt
-		if ent <= 0 {
-			ent = dbgSQLTopentForRun()
-		}
-		return cdb.QueryOnce(sqlText, ent, dbgTimeout, cdb.SQLRouteServer)
+		return cdb.QueryOnce(sqlText, 0, dbgTimeout, cdb.SQLRouteServer)
 	},
-}
-
-// dbgSQLTopentForRun 取"这条会话本轮生效的企业编号"，给只读 SQL 显式填 `ent` 用
-// （契约 C7.1-5：服务端那条"ent<=0 回落当前会话 TOPENT"的兜底已按 Q4/C8.2 删掉）。
-//
-// 判据与服务端原来的 `Session.TopentIntForDB` 同源：**会话内的 TOPENT 覆盖优先**，
-// 其次是启动时显式给的那个值（快照里的 `topentSession`），再次是登录 shell 里实际
-// 回读到的 `$TOPENT`（`topentShell` —— 用户没显式给 TOPENT 时，会话不会 export，
-// 所以"这台机器连的是哪个企业"以它为准）。
-//
-// 取不到、或不是纯数字（典型是把据点码填进了企业编号的位置）**返回 0、不猜**：
-// 那正是 `TopentIntForDB` 的注释里点名的危险现场 —— 拿错编号去查库的结果是 0 行，
-// 而 0 行会被读成"这条业务数据不存在"。返回 0 时由服务端按 USAGE 明确拒掉。
-func dbgSQLTopentForRun() int {
-	cur := dbgAmbientSession()
-	if cur == nil {
-		return 0 // 池空或多条（落不上目标）：不替调用方挑一条，让服务端报清楚
-	}
-	snap, err := dbgSnap(cur.ID)
-	if err != nil {
-		return 0
-	}
-	raw := strings.TrimSpace(firstNonEmpty(snap.Topent, snap.TopentSession, snap.TopentShell))
-	n, err := strconv.Atoi(raw)
-	if err != nil || n <= 0 {
-		return 0
-	}
-	return n
 }
 
 // debugWsdebugCmd 对指定日志发起重放调试
@@ -1616,7 +1583,6 @@ func init() {
 	debugStartCmd.Flags().StringVar(&dbgEntRun, "ent", "", entHelp)
 	debugWsdebugCmd.Flags().StringVar(&dbgEntRun, "ent", "", entHelp)
 	debugSQLCmd.Flags().StringVar(&dbgSQLFile, "file", "", "从本地文件读查询语句(长语句用)")
-	debugSQLCmd.Flags().IntVar(&dbgSQLEnt, "ent", 0, "企业编号(不给 = 用这条会话当前生效的企业编号；服务端要求显式给，见 C7.1-5)")
 	debugSQLCmd.Flags().IntVar(&dbgTimeout, "timeout", 0, "查询超时秒数(默认 30,上限 120)")
 	debugWsdebugCmd.Flags().IntVar(&dbgTimeout, "timeout", 150, "等待入口停站超时(秒)")
 	debugWsdebugCmd.Flags().StringArrayVar(&wsDebugSet, "set", nil, "改一个入参再重放:路径=值(可重复;路径形如 digi-body.std_data.parameter.x;等号后留空即清空该字段)")

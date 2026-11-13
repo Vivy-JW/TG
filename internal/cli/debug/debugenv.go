@@ -34,10 +34,10 @@ type dbgSnapshot struct {
 	Env    string `json:"env"`
 	State  string `json:"state"`
 	Topent string `json:"topent"` // 会话内手动设置的 TOPENT override(空=未设置)
-	// TopentSession 是**启动时显式给**的 TOPENT(`tt debug start --ent` / 界面面板填的)。
+	// TopentSession 是**启动时显式给**的 TOPENT(`tg debug start --ent` / 界面面板填的)。
 	// 它是"用户给了就 export 进 shell"的那一个；空 = 用户没给，企业由登录 shell 的
-	// $TOPENT 决定(见 TopentShell)。只读 SQL 的 `ent` 要显式填，判据就用这三个(见
-	// debugctl.go 的 dbgSQLTopentForRun)。
+	// $TOPENT 决定(见 TopentShell)。T100 的只读 SQL 以前按这三个值推 `ent`；GP 已经没有
+	// 企业编号那层（账号取 db.accounts[0]），这几个字段只剩展示与 T100 会话排查用。
 	TopentSession string `json:"topentSession"`
 	TopentCfg     string `json:"topentCfg"`   // 配置级企业 TOPENT 默认(该环境 db.ent)
 	TopentShell   string `json:"topentShell"` // 当前会话 shell 里的实际 TOPENT(连接时已按配置下发)

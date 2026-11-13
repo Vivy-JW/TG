@@ -21,7 +21,6 @@ var (
 	dbgModule string
 	dbgProg   string
 	dbgListen string
-	dbEnt     int
 )
 
 // debugProbeCmd 是调试链路自检：全自动跑 登录→启动→下断点→命中→源码→栈帧→步进→求值，
@@ -246,19 +245,14 @@ var debugServeCmd = &cobra.Command{
 }
 
 // debugDBCmd 已迁移到 tg db probe（服务器侧连接体检）；这里只保留隐藏转发。
-// 账号与 tg db probe 同一口径：GP 环境取 db.accounts[0]（--ent 是 T100 遗留，
-// 给了才按企业查账号），不再现查 gzou_t、也不再把"没有企业快照"当错误。
+// 账号与 tg db probe 同一口径：取 db.accounts[0]，不查 gzou_t、不认企业编号。
 var debugDBCmd = &cobra.Command{
 	Use:        "db",
 	Short:      "（已迁移）数据库连接体检 —— 用 tg db probe",
 	Hidden:     true,
 	Deprecated: "已迁移：请用 tg db probe --at <环境>",
 	RunE: func(cmd *cobra.Command, _ []string) error {
-		ent := dbEnt
-		if ent <= 0 {
-			ent = dbgSQLTopentForRun()
-		}
-		return cdb.ProbeOnce(ent)
+		return cdb.ProbeOnce(0)
 	},
 }
 
@@ -274,7 +268,6 @@ func init() {
 	debugServeCmd.Flags().StringVar(&dbgListen, "listen", "", "覆盖监听地址(默认取配置)")
 	debugServeCmd.Flags().BoolVar(&dbgServeForeground, "foreground", false, "前台运行,日志直出终端(默认后台常驻)")
 	debugServeCmd.Flags().BoolVar(&dbgServeStop, "stop", false, "停止后台运行的调试服务(单实例)")
-	debugDBCmd.Flags().IntVar(&dbEnt, "ent", 0, "企业编号(T100 遗留)：给了才按企业查账号；不给就用 db.accounts[0]")
 
 	Group.AddCommand(debugProbeCmd, debugServeCmd, debugDBCmd)
 }
