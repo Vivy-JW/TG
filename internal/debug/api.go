@@ -567,7 +567,7 @@ func (s *Server) hSourceFile(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	from, _ := strconv.Atoi(q.Get("from"))
 	to, _ := strconv.Atoi(q.Get("to"))
-	res, err := s.mgr.ReadSourceStandalone(q.Get("module"), q.Get("file"), q.Get("path"), from, to)
+	res, err := s.mgr.ReadSourceStandalone(q.Get("env"), q.Get("module"), q.Get("file"), q.Get("path"), from, to)
 	if err != nil {
 		fail(w, 400, err)
 		return
@@ -1975,9 +1975,10 @@ func (s *Server) hBPEnabled(w http.ResponseWriter, r *http.Request) {
 // hSourcePreview 会话建立前预取源码(消除启动期空白):GET /api/source-preview?module=&prog=
 func (s *Server) hSourcePreview(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
+	// 模块可以不填:不填/填错都按本地字典的 p_link 解析实际模块(与 tg debug source 同一套)。
 	module, prog := q.Get("module"), q.Get("prog")
-	if module == "" || prog == "" {
-		fail(w, 400, fmt.Errorf("需要 module 与 prog 参数"))
+	if prog == "" {
+		fail(w, 400, fmt.Errorf("需要 prog 参数(模块可以不填，按 p_link 解析)"))
 		return
 	}
 	sf, err := s.mgr.SourcePreview(module, prog)

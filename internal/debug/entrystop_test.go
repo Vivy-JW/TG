@@ -79,10 +79,10 @@ func TestEntryStopInfoFileResolves(t *testing.T) {
 	if file != "wss_wssp01131.4gl" {
 		t.Fatalf("File = %q,期望 wss_wssp01131.4gl", file)
 	}
-	// 模块自有目录(4gl/42m)优先,所以第一个候选应当就是去掉模块前缀的母版名
-	roots := []string{"/u1/t35prd/com"}
-	cands := sourceCandidatePaths(roots, "wss", file)
-	if len(cands) == 0 || cands[0] != "/u1/t35prd/com/wss/4gl/wssp01131.4gl" {
-		t.Fatalf("首个候选 = %v,期望 /u1/t35prd/com/wss/4gl/wssp01131.4gl", cands)
+	// GP 只有 <root>/<模块>/4gl/<程序>.4gl 一种布局
+	roots := []string{"/u1/toptest/tiptop"}
+	cands := sourceCandidatePaths(roots, []string{"wss"}, file)
+	if len(cands) == 0 || cands[0] != "/u1/toptest/tiptop/wss/4gl/wss_wssp01131.4gl" {
+		t.Fatalf("首个候选 = %v,期望 /u1/toptest/tiptop/wss/4gl/wss_wssp01131.4gl", cands)
 	}
 }

@@ -11,6 +11,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+	"tt/internal/config"
+	dictlib "tt/internal/dict"
 	"tt/internal/host"
 	sessionid "tt/internal/session"
 	"tt/internal/target"
@@ -391,14 +393,14 @@ func (m *Manager) launchWith(cfg *Config, module, prog, name, hostID string) (*S
 	gp := strings.EqualFold(cfg.Product, "gp")
 	if !gp {
 		if mod2, prog2, ref2, extra2, rerr := m.resolveJobWith(cfg, module, prog); rerr != nil {
-		log.Printf("[debug] launchWith 作业解析失败: %v", rerr)
-		return nil, rerr
-	} else if prog2 != "" {
-		runProg = prog2
-		launchRef, extra = ref2, extra2
-		if module == "" && mod2 != "" {
-			module = mod2
-		}
+			log.Printf("[debug] launchWith 作业解析失败: %v", rerr)
+			return nil, rerr
+		} else if prog2 != "" {
+			runProg = prog2
+			launchRef, extra = ref2, extra2
+			if module == "" && mod2 != "" {
+				module = mod2
+			}
 		}
 	}
 	sess, err := m.prepareSessionOn(cfg, module, prog, runProg, launchRef, extra, "", name, hostID)
@@ -1413,22 +1415,31 @@ func (m *Manager) CreateSessionOn(cfg *Config, name string) (*Session, error) {
 }
 
 // SourcePreview 会话建立前预取源码:读母版消除前端启动期空白,顺带落本地镜像。
-// module 为空(留待会话内自动解析)时直接跳过。
+//
+// 模块可以不填:和会话启动一样按 p_link(t_prog_link) 解析作业实际所属模块。
 //
 // 它跑在会话之前,所以作用域只能是**目标**（环境段,`srcConnScopeSeg`）——
 // 与从前的落点逐字相同;会话建起来之后由该会话自己的作用域接着落（见 mirrorScope）。
 func (m *Manager) SourcePreview(module, prog string) (*SourceFile, error) {
-	if module == "" {
-		return nil, fmt.Errorf("module 为空,跳过源码预取")
+	prog = strings.TrimSuffix(strings.TrimSpace(prog), ".4gl")
+	if prog == "" {
+		return nil, fmt.Errorf("需要 prog 参数")
 	}
-	dvmFile := module + "_" + prog + ".4gl"
+	cfg, cfgErr := m.sourceCfgFor("")
+	if cfgErr != nil {
+		return nil, cfgErr
+	}
+	mods := sourceModuleCandidates(cfg.sourceModuleOf, module, prog)
+	dvmFile := prog + ".4gl"
+	if strings.TrimSpace(module) != "" {
+		dvmFile = strings.TrimSpace(module) + "_" + prog + ".4gl"
+	}
 	// 一次调用只认一份配置快照:下面几处都用它,免得中途被别的请求改掉的共享态混进来。
-	cfg := m.sourceCfg()
 	scope := srcConnScopeSeg(cfg)
 	var out *SourceFile
 	err := m.withSrcConn(cfg, func(_ *host.SSHConn, cl *sftp.Client) error {
 		var lastErr error
-		for _, p := range sourceCandidatePaths(cfg.ModuleRootsActual(), module, dvmFile) {
+		for _, p := range sourceCandidatePaths(cfg.ModuleRootsActual(), mods, dvmFile) {
 			f, err := cl.Open(p)
 			if err != nil {
 				lastErr = err
@@ -1450,7 +1461,7 @@ func (m *Manager) SourcePreview(module, prog string) (*SourceFile, error) {
 			}
 			return nil
 		}
-		return fmt.Errorf("源码未找到(%s): %w", dvmFile, lastErr)
+		return fmt.Errorf("源码未找到(%s)：p_link 解析模块 %v 都没命中: %w", dvmFile, mods, lastErr)
 	})
 	if err != nil {
 		return nil, err
@@ -1463,8 +1474,75 @@ func (m *Manager) SourcePreview(module, prog string) (*SourceFile, error) {
 // 为什么是副本而不是 `m.cfg` 本身:探针会把动态路径写进拿到的那一份 cfg,
 // 而 `m.cfg` 是**共享**的 —— 一条会话的启动或一次源码读取都会改掉另一条看到的路径。
 func (m *Manager) sourceCfg() *Config {
+	c, err := m.sourceCfgFor("")
+	if err != nil {
+		return &Config{}
+	}
+	return c
+}
+
+// sourceCfgFor 同 sourceCfg,但可以点名环境(TG 只有一个产品,不再分 T100/GP)。
+//
+// m.cfg 是启动时的骨架:SSH/workspace/custRoot 要 ApplyDefaultEnv 才合并进来。
+// 以前 source 直接拷 m.cfg,拿到的 SSH 端口是 0,真机上就是 `dial tcp :0`。
+func (m *Manager) sourceCfgFor(env string) (*Config, error) {
 	cc := *m.cfg
-	return &cc
+	name := strings.TrimSpace(env)
+	if name == "" {
+		name = strings.TrimSpace(cc.envName)
+	}
+	// TG 通常只配一个环境：没点名就用它（服务启动时那份配置不一定带 activeEnv）。
+	if name == "" && len(cc.SSHs) == 1 {
+		name = strings.TrimSpace(cc.SSHs[0].Name)
+	}
+	if name != "" {
+		found := ""
+		for i := range cc.SSHs {
+			if strings.EqualFold(strings.TrimSpace(cc.SSHs[i].Name), name) {
+				found = cc.SSHs[i].Name
+				break
+			}
+		}
+		if found == "" {
+			return nil, fmt.Errorf("环境 %s 不存在：tg env list 看环境名（配置里现有的：%s）", name, strings.Join(envNamesOf(cc.SSHs), "、"))
+		}
+		cc.envName = found
+	}
+	cc.ApplyDefaultEnv()
+	return &cc, nil
+}
+
+// envNamesOf 现有环境名列表（错误文案里给候选，免得"环境不存在"后面还得再查一次）。
+func envNamesOf(sshs []config.NamedSsh) []string {
+	out := make([]string, 0, len(sshs))
+	for _, e := range sshs {
+		if n := strings.TrimSpace(e.Name); n != "" {
+			out = append(out, n)
+		}
+	}
+	return out
+}
+
+// sourceModuleOf 按本地字典里的 p_link(t_prog_link) 查作业实际属于哪个模块。
+func (c *Config) sourceModuleOf(prog string) (string, bool) {
+	for i := range c.SSHs {
+		if strings.EqualFold(c.SSHs[i].Name, c.envName) {
+			return dictlib.LookupModule(c.SSHs[i], prog)
+		}
+	}
+	return "", false
+}
+
+// sourceErrNoEnv 指明是哪一步没配,而不是一句"路径未知"。
+func sourceErrNoEnv(cfg *Config, env string) error {
+	name := strings.TrimSpace(env)
+	if name == "" && cfg != nil {
+		name = strings.TrimSpace(cfg.EnvName())
+	}
+	if name == "" {
+		return fmt.Errorf("没有可用的环境：先用 tg env list 看环境名，再 tg debug source <文件> --env <环境>")
+	}
+	return fmt.Errorf("环境 %s 没有可用的 SSH 连接：去设置页「SSH 服务器」补地址/端口/账号（当前配置里这份是空的）", name)
 }
 
 // ---------- 会话外只读能力(AI/CLI 信息通道;不经会话,独立短连接,白名单限登录区源码目录) ----------
@@ -1480,43 +1558,32 @@ type SourceResult struct {
 // maxSourceFileBytes 会话外读取的文件大小上限(源码一般远小于此)。
 const maxSourceFileBytes = 4 << 20
 
-// sourceRootsUnknownErr 登录区源码目录取不到时的错误（缺陷 #2 的修法落在文案上）。
+// sourceRootsUnknownErr 源码根取不到时的错误。
 //
-// 现场（.agents/plan/L1-结果-2026-10-18.md §7-2）：`tt debug source` 只回
-// 「登录区源码目录未知(环境路径解析失败)」—— 说了"不行"，没说"怎么办"。
-//
-// 事实：ModuleRootsActual 只认**登录后回读**的 Runtime（$TOP/$ERP/$COM，config.go），
-// 静态配置里没有、也不许有 T100 路径（契约：T100 路径不许静态配置）。所以这里
-// **取不到就是取不到**（A15 不猜：不回退某个默认目录，那会把"读错机器上的文件"伪装成成功），
-// 能做的是把三条可操作的路写清楚。
+// GP 的源码根就是环境里配的 $TOP 与 $CUST（见 ModuleRootsActual），
+// 不猜目录、也不回落到某个默认路径 —— 那会把"读了另一台机上的文件"伪装成成功。
 func sourceRootsUnknownErr(cfg *Config) error {
 	env := ""
 	if cfg != nil {
 		env = strings.TrimSpace(cfg.EnvName())
 	}
-	named := ""
-	if env != "" {
-		named = "（当前环境：" + env + "）"
+	if env == "" {
+		return fmt.Errorf("这个环境没有配 $TOP（workspace）：去设置页「SSH 服务器」填上，例如 /u1/<实例>/tiptop")
 	}
-	return fmt.Errorf("登录区源码目录未知%s：这台机器的登录后路径**取不到** —— "+
-		"$TOP/$ERP/$COM 是登录后回读出来的，T100 路径按契约不许静态配置，所以这里不猜路径、也没有默认目录可退。"+
-		"三条可操作的路：\n"+
-		"  1) 先起一条会话让它回读环境：tt debug start <作业> --env <环境名> —— "+
-		"登录后会把 $TOP/$ERP/$COM 写进该环境的 Runtime；源码目录就是 $ERP/<模块>/4gl 与 $COM/{lib,sub,qry}/42m；\n"+
-		"  2) 换过环境/区域后要在**同一个** serve 实例里重新落一次 Runtime（tt debug start 或 /api/sessions/switch）："+
-		"Runtime 是进程内状态，不跨实例；\n"+
-		"  3) 已经有值却仍报这条：先 tt debug env 看该环境有没有 TOP/ERP/COM —— "+
-		"有值说明你问的是另一个环境段（用 --env 点名）；没值说明选区后没回读到（看 tt debug status 的登录日志）。", named)
+	return fmt.Errorf("环境 %s 没有配 $TOP（workspace）：去设置页「SSH 服务器」填上，例如 /u1/<实例>/tiptop；"+
+		"客制源码根 $CUST（custRoot）没填也不要紧，会只查 $TOP", env)
 }
 
-// ReadSourceStandalone 读取登录区源码目录(动态 ERP/COM)内的源码文件。
-//   - path 非空:直接按路径读(白名单校验源码目录前缀);
-//   - path 为空:file(如 asf_bsft001_wf.4gl)按 sourceCandidatePaths 候选解析,module 可空(仅查公共目录);
+// ReadSourceStandalone 读取 GP 的 4GL 源码（$TOP / $CUST 两棵树,只读）。
+//   - path 非空:直接按路径读(白名单校验两棵树之内);
+//   - path 为空:file 按 <root>/<模块>/4gl/<程序>.4gl 解析。
+//     模块可以不填、也可以填错 —— 两种都先按本地字典的 p_link(t_prog_link)
+//     查作业实际属于哪个模块,查到的排在用户填的前面试(与启动会话同一套规则)。
 //   - from/to(1-based):返回行段(from<=0 从头,to<=0 到底),行文本超长截断防注入超长行。
 //
+// env 为空时用服务当前环境;点名环境时按该环境合并 SSH/workspace 后再连。
 // 走会话外复用连接(srcmirror.go),顺带把整份源码落本地镜像并在结果里带出 LocalPath。
-// 返回裁剪后的内容与文件总行数。
-func (m *Manager) ReadSourceStandalone(module, file, path string, from, to int) (*SourceResult, error) {
+func (m *Manager) ReadSourceStandalone(env, module, file, path string, from, to int) (*SourceResult, error) {
 	if path == "" && file == "" {
 		return nil, fmt.Errorf("需要 file 或 path 参数")
 	}
@@ -1526,7 +1593,13 @@ func (m *Manager) ReadSourceStandalone(module, file, path string, from, to int) 
 	)
 	// 一次调用只认一份配置快照（缺陷 Y / T5.2）:探到的动态路径写在这一份上,
 	// 共享的 `m.cfg` 一字不动。
-	cfg := m.sourceCfg()
+	cfg, cfgErr := m.sourceCfgFor(env)
+	if cfgErr != nil {
+		return nil, cfgErr
+	}
+	if strings.TrimSpace(cfg.SSH.Host) == "" {
+		return nil, sourceErrNoEnv(cfg, env)
+	}
 	scope := srcConnScopeSeg(cfg)
 	err := m.withSrcConn(cfg, func(_ *host.SSHConn, cl *sftp.Client) error {
 		roots := cfg.ModuleRootsActual()
@@ -1567,7 +1640,9 @@ func (m *Manager) ReadSourceStandalone(module, file, path string, from, to int) 
 			return nil
 		}
 		var lastErr error
-		for _, p := range sourceCandidatePaths(roots, module, file) {
+		prog := strings.TrimSuffix(sourceBaseName(file), ".4gl")
+		mods := sourceModuleCandidates(cfg.sourceModuleOf, module, prog)
+		for _, p := range sourceCandidatePaths(roots, mods, file) {
 			if !inRoots(p) {
 				continue
 			}
@@ -1578,7 +1653,7 @@ func (m *Manager) ReadSourceStandalone(module, file, path string, from, to int) 
 			}
 			lastErr = e
 		}
-		return fmt.Errorf("源码未找到(%s): %v", file, lastErr)
+		return fmt.Errorf("源码未找到(%s)：按 p_link 解析出的模块 %v 在 $TOP/$CUST 的 <模块>/4gl 下都没找到：%v", file, mods, lastErr)
 	})
 	if err != nil {
 		return nil, err

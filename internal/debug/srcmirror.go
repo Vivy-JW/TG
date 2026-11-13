@@ -322,11 +322,14 @@ func (m *Manager) srcConn(cfg *Config) (*host.SSHConn, *sftp.Client, error) {
 		return nil, nil, fmt.Errorf("SSH 连接失败: %w", err)
 	}
 	// 动态路径(登录区域 → 环境脚本):探针+缓存;失败即报错(无静态配置可回退)。
+	// TOP GP 没有 T100 的 Runtime($ERP/$COM),源码根直接取 $TOP/$CUST,不探。
 	// 探到的结果**不回写任何共享配置**（缺陷 Y / T5.2）:它是那个目标的事实,
 	// 由调用方按需拿去用（会话外读取只是要确认"这个目标解析得出来"）。
-	if _, err := m.getRuntimeEnv(conn, zoneOf(cfg)); err != nil {
-		_ = conn.Close()
-		return nil, nil, err
+	if !strings.EqualFold(cfg.Product, "gp") {
+		if _, err := m.getRuntimeEnv(conn, zoneOf(cfg)); err != nil {
+			_ = conn.Close()
+			return nil, nil, err
+		}
 	}
 	cl, err := conn.SFTP()
 	if err != nil {

@@ -18,6 +18,7 @@ import (
 
 var (
 	dbgSourceModule string
+	dbgSourceEnv    string
 	dbgSourceFrom   int
 	dbgSourceTo     int
 	dbgSourcePath   string
@@ -118,38 +119,48 @@ func withoutGlobalEnv() (restore func(), had bool) {
 
 // debugSourceCmd 读服务器源码:GET /api/source-file(会话外白名单只读,支持行段)
 var debugSourceCmd = &cobra.Command{
-	Use:   "source [DVM文件]",
-	Short: "读取服务器源码(登录区源码目录白名单只读,可指定行段)",
-	Long: `经 serve 独立短连接读取服务器上的 4GL 源码(不经会话、不执行任何命令,
-仅白名单只读登录区源码目录(ERP/COM);文件不存在/越界都有明确报错)。
+	Use:   "source [文件]",
+	Short: "读取服务器上的 4GL 源码($TOP/$CUST 只读,可指定行段)",
+	Long: `经 serve 独立短连接读服务器上的 4GL 源码(不经会话、不执行任何命令,
+只读环境里配的 $TOP 与 $CUST 两棵树)。
+
+模块可以不填、也可以填错:两种都先按本地字典的 p_link(t_prog_link) 查这个作业
+实际属于哪个模块,查到的排在前面试 —— 所以 CLI 和网页会话最终读到的是同一份源码。
 
 参数:
-  文件名       如 axm_axmt500_wf.4gl(按登录区源码目录候选路径解析;真名以 info breakpoints / 停站 file 字段为准)
-  --module     模块目录名(可省:留空只在公共目录搜,给错只会搜错地方,不会猜你的模块)
-  --path       绝对路径(必须在登录区源码目录内,跳过文件名解析)
+  文件名       如 cbmq100.4gl / cbmi600.4gl(短名与带模块前缀的全名都认;真名以停站 file 字段为准)
+  --module/-m  模块目录名(可省:留空/填错都按 p_link 解析)
+  --env        环境名(可省:用 serve 当前环境;多个环境时建议点名)
+  --path       绝对路径(必须在 $TOP 或 $CUST 之内,跳过文件名解析)
   --from/--to  只返回 1-based 行段(默认全文;大文件建议限行省上下文)
   --path-only  只打行数与本地副本路径,不打正文(上千行的文件先定位,再本地读那份副本)
 
 每次读取都会把**整份**源码落一份本地副本,并在输出里给出"本地副本"路径 ——
 想看整份文件、或要反复搜同一个文件,直接用那个本地路径读,不必再走 SSH。
 副本只活一轮调试(下次启动调试前清空),免得过期代码误导判断。`,
-	Example: `  tt debug source bsft001_wf.4gl -m asf
-  tt debug source --path /u1/topprd/erp/asf/4gl/asf_bsft001_wf.4gl
-  tt debug source bsft001_wf.4gl -m asf --from 4400 --to 4600`,
+	Example: `  tg debug source cbmq100.4gl --env 22主机
+  tg debug source cbmi600.4gl -m cbm --from 1 --to 80
+  tg debug source --path /u1/toptest/topcust/cbm/4gl/cbmq100.4gl --env 22主机`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// D27：本命令读的是**本机 serve**（源码目录由 serve 连的环境决定），与命令行 `--env` 无关；
-		// 而全局 `--env` 会把 API 基址解析成 `host:`（端口 0），真机报 `dial tcp :0`。
-		// 这里临时摘掉它并**说出来**（不静默地改变行为）。
+		// 本命令读的是**本机 serve**（源码根由 serve 那份配置决定），
+		// 环境用显式 --env 传给服务端；全局 --env 只影响 API 基址解析，
+		// 先摘掉免得到 "host:"（端口 0）上找服务，再把值当作 env 传给后端。
+		envName := strings.TrimSpace(dbgSourceEnv)
+		if envName == "" {
+			envName = strings.TrimSpace(common.Env)
+		}
 		if restore, had := withoutGlobalEnv(); had {
 			defer restore()
-			fmt.Fprintln(cmd.ErrOrStderr(), "· 本命令走本机 serve，全局 --env 对它无效（源码目录由 serve 连的环境决定）")
 		}
 		file, path := "", dbgSourcePath
 		if len(args) == 1 {
 			file = strings.TrimSpace(args[0])
 		}
 		q := url.Values{}
+		if envName != "" {
+			q.Set("env", envName)
+		}
 		q.Set("module", dbgSourceModule)
 		q.Set("file", file)
 		q.Set("path", path)
@@ -440,8 +451,9 @@ func dbgReportStopIfStopped(id, cmd string) error {
 }
 
 func init() {
-	debugSourceCmd.Flags().StringVarP(&dbgSourceModule, "module", "m", "", "模块目录名(帮助定位源码)")
-	debugSourceCmd.Flags().StringVar(&dbgSourcePath, "path", "", "绝对路径读取(须在登录区源码目录内)")
+	debugSourceCmd.Flags().StringVarP(&dbgSourceModule, "module", "m", "", "模块目录名(可省:留空/填错都按 p_link 解析)")
+	debugSourceCmd.Flags().StringVar(&dbgSourceEnv, "env", "", "环境名(可省:用 serve 当前环境)")
+	debugSourceCmd.Flags().StringVar(&dbgSourcePath, "path", "", "绝对路径读取(须在 $TOP 或 $CUST 之内)")
 	debugSourceCmd.Flags().BoolVar(&dbgSourceMeta, "path-only", false, "只输出行数与本地副本路径,不打正文(大文件先定位再本地读)")
 	debugSourceCmd.Flags().IntVar(&dbgSourceFrom, "from", 0, "返回起始行(1-based;0=文件头)")
 	debugSourceCmd.Flags().IntVar(&dbgSourceTo, "to", 0, "返回结束行(1-based;0=文件尾)")

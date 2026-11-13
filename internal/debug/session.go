@@ -8,6 +8,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"path"
 	"regexp"
 	"sort"
 	"strconv"
@@ -3442,53 +3443,101 @@ type srcCacheEntry struct {
 	file    SourceFile
 }
 
-// sourceCandidatePaths 生成源码查找候选路径(自由函数,会话与预取共用)
-// 模块自有目录(4gl/42m)优先,随后是公共库目录(com 的 lib/sub/qry 及 c 前缀变体)
-func sourceCandidatePaths(roots []string, module, dvmFile string) []string {
-	name := strings.TrimSuffix(dvmFile, ".4gl")
-	master := name
-	if module != "" && strings.HasPrefix(name, module+"_") {
-		master = strings.TrimPrefix(name, module+"_")
+// sourceBaseName 取文件名部分(不依赖 path 包,避免和参数名 path 打架)。
+func sourceBaseName(file string) string {
+	if i := strings.LastIndexAny(file, "/\\"); i >= 0 {
+		return file[i+1:]
 	}
-	var dirs []string
-	for _, root := range roots {
-		if module != "" {
-			// 客制目录(首字母 a→c,ain→cin)优先:转客制源码在 cin/4gl 等
-			if strings.HasPrefix(module, "a") && reProgName.MatchString(module) {
-				dirs = append(dirs, root+"/c"+module[1:]+"/4gl", root+"/c"+module[1:]+"/42m")
-			}
-			dirs = append(dirs, root+"/"+module+"/4gl", root+"/"+module+"/42m")
-		}
-		dirs = append(dirs,
-			root+"/4gl", root+"/42m",
-			root+"/lib/42m", root+"/sub/42m", root+"/qry/42m",
-			root+"/clib/42m", root+"/csub/42m", root+"/cqry/42m",
-			root+"/lib/4gl",
-		)
-	}
-	names := []string{master + ".4gl", name + ".4gl"}
-	// GP 的 DVM 报短名 csfi300_icd.4gl，磁盘上是 csf_csfi300_icd.4gl；
-	// 也试一次带模块前缀的名字（T100 若报短名同样受益）。
-	if module != "" && !strings.HasPrefix(name, module+"_") {
-		names = append(names, module+"_"+name+".4gl")
-	}
+	return file
+}
+
+// sourceCandidatePaths 生成源码查找候选路径(自由函数,会话与预取共用)。
+//
+// TOP GP 只有一种布局:<root>/<模块>/4gl/<程序>.4gl,$TOP 与 $CUST 两棵树。
+// 模块按 modules 的顺序逐个试(p_link 解析出来的在前、用户填的在后),
+// 这样"模块留空"或"模块填错"都能落到同一份实际源码上。
+func sourceCandidatePaths(roots, modules []string, dvmFile string) []string {
+	name := strings.TrimSuffix(path.Base(dvmFile), ".4gl")
 	var out []string
 	seen := map[string]bool{}
-	for _, d := range dirs {
-		for _, n := range names {
-			p := d + "/" + n
-			if !seen[p] {
-				seen[p] = true
-				out = append(out, p)
+	for _, mod := range modules {
+		mod = strings.ToLower(strings.TrimSpace(mod))
+		if mod == "" || !reProgName.MatchString(mod) {
+			continue
+		}
+		for _, root := range roots {
+			for _, n := range sourceNamesForModule(mod, name) {
+				p := root + "/" + mod + "/4gl/" + n
+				if !seen[p] {
+					seen[p] = true
+					out = append(out, p)
+				}
 			}
 		}
 	}
 	return out
 }
 
+// sourceNamesForModule 一个模块目录里要试的文件名。
+//
+// GP 的调试器(r.d2)报的是短名 csfi300_icd,磁盘上是 csf_csfi300_icd.4gl;
+// 会话里也可能拿到全名,所以三种写法都试。
+func sourceNamesForModule(mod, name string) []string {
+	var out []string
+	add := func(n string) {
+		if n == "" {
+			return
+		}
+		for _, s := range out {
+			if s == n {
+				return
+			}
+		}
+		out = append(out, n)
+	}
+	add(name + ".4gl")
+	if !strings.HasPrefix(name, mod+"_") {
+		add(mod + "_" + name + ".4gl")
+	}
+	if len(name) > 4 && name[3] == '_' {
+		short := name[4:]
+		add(short + ".4gl")
+		if !strings.HasPrefix(short, mod+"_") {
+			add(mod + "_" + short + ".4gl")
+		}
+	}
+	return out
+}
+
+// sourceModuleCandidates 模块候选:p_link(本地字典) 解析结果优先,其次用户填的,
+// 最后按作业名推一个(与启动时 gpModuleOf 同一套规则)。
+func sourceModuleCandidates(lookup func(string) (string, bool), module, name string) []string {
+	var mods []string
+	add := func(m string) {
+		m = strings.ToLower(strings.TrimSpace(m))
+		if m == "" || !reProgName.MatchString(m) {
+			return
+		}
+		for _, s := range mods {
+			if s == m {
+				return
+			}
+		}
+		mods = append(mods, m)
+	}
+	if m, ok := lookup(name); ok {
+		add(m)
+	}
+	add(module)
+	add(gpModuleOf(name))
+	return mods
+}
+
 // sourceCandidates 生成源码查找候选路径
 func (s *Session) sourceCandidates(dvmFile, module string) []string {
-	return sourceCandidatePaths(s.cfg.ModuleRootsActual(), module, dvmFile)
+	name := strings.TrimSuffix(path.Base(dvmFile), ".4gl")
+	mods := sourceModuleCandidates(s.pLinkModule, module, name)
+	return sourceCandidatePaths(s.cfg.ModuleRootsActual(), mods, dvmFile)
 }
 
 // ResolveSource 把 DVM 报告的源文件名解析为真实路径并读取(带 mtime 缓存,避免每次停站全量拉取)

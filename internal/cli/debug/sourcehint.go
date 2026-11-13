@@ -1,11 +1,8 @@
 package debug
 
-// `tt debug source` 现场缺陷（.agents/plan/L1-结果-2026-10-18.md §7-2）：
-// 报「登录区源码目录未知(环境路径解析失败)」，人只能猜。
-//
-// 服务端的错误文案现在自带三条可操作的路（internal/debug/manager.go 的
-// sourceRootsUnknownErr）；客户端再补一段**命令行视角**的"怎么办"，
-// 两边都敢丢一个也不会变成无法排障的哑错误。
+// `tg debug source` 出错时给一段**命令行视角**的"怎么办"。
+// 服务端文案（internal/debug/manager.go 的 sourceRootsUnknownErr / sourceErrNoEnv）
+// 已经说清是哪一步没配；这里再补下一步命令，免得两处都丢了线索。
 // 本文件只测这段纯字符串逻辑：不连服务、不读盘。
 
 import (
@@ -14,20 +11,30 @@ import (
 	"strings"
 )
 
-// sourceDirHowTo 命中"登录区源码目录未知"时返回命令行视角的补丁说明；不命中返回 nil。
+// sourceDirHowTo 命中"源码取不到"这一类错误时返回命令行视角的补丁说明；不命中返回 nil。
 //
-// 判据只看**文案关键词**（服务端错误码在信封 Code 里，源码读取没有专用码），
-// 所以宁可窄：只认这一条已知的失败，别把别的错误也包装成同一套提示。
+// 判据只看文案关键词（源码读取没有专用错误码），所以宁可窄：
+// 只认这几种已知失败，别把别的错误也包装成同一套提示。
 func sourceDirHowTo(errText string) []string {
-	if !strings.Contains(errText, "登录区源码目录未知") {
-		return nil
+	switch {
+	case strings.Contains(errText, "登录区源码目录未知"),
+		strings.Contains(errText, "没有配 $TOP"),
+		strings.Contains(errText, "没有可用的 SSH 连接"):
+		return []string{
+			"怎么办（GP 的源码根是环境里配的 $TOP / $CUST，不猜路径）：",
+			"  1) tg env show <环境>        —— 看 workspace（$TOP）与 custRoot（$CUST）是不是空的",
+			"  2) 设置页「站点管理 → SSH 服务器」补上，$TOP 形如 /u1/<实例>/tiptop",
+			"  3) 只查标准程序时 $CUST 可以不填；客制程序才需要它",
+		}
+	case strings.Contains(errText, "源码未找到"):
+		return []string{
+			"怎么办（模块留空或填错都会按本地字典的 p_link 解析实际模块）：",
+			"  1) tg site list --env <环境>              —— 确认连的是哪个资料库",
+			"  2) tg dict db status --env <环境>         —— 本地字典库要同步过，p_link 才查得到",
+			"  3) tg file ls <模块>/4gl --at <环境>      —— 直接看服务器上有没有这个文件",
+		}
 	}
-	return []string{
-		"怎么办（登录区源码目录是登录后回读的 $TOP/$ERP/$COM，取不到就不猜路径）：",
-		"  1) tt debug start <作业> --env <环境名>   —— 会话登录后会把 $TOP/$ERP/$COM 写进该环境的 Runtime",
-		"  2) 同一份 serve 实例里才会有那份 Runtime（换环境后重新 start 或 switch 一次）",
-		"  3) tt debug env                          —— 看该环境到底有没有 TOP/ERP/COM",
-	}
+	return nil
 }
 
 // printSourceDirHowTo 把补丁说明打到 stderr（stdout 留给 JSON/正文，别污染管道）。
