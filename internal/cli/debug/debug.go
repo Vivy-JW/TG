@@ -12,9 +12,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"tt/internal/cli/common"
-	cdb "tt/internal/cli/db"
-	"tt/internal/debug"
+	"tg/internal/cli/common"
+	cdb "tg/internal/cli/db"
+	"tg/internal/debug"
 )
 
 var (
@@ -200,7 +200,7 @@ var debugServeCmd = &cobra.Command{
 它与 tt serve 是同一个服务的两种装法,服务端能力完全相同:
   · tt debug serve  只服务调试面:工作台 API 直接在根的 /api/… 下;
   · tt serve        统一服务:调试工作台 /debug/ + 统一设置页,调试面在 /debug/api/… 下。
-两者默认都后台常驻、都写同一份状态文件(.tt-serve.json),控制端命令据此自动寻址
+两者默认都后台常驻、都写同一份状态文件(.tg-serve.json),控制端命令据此自动寻址
 (各自的前缀也记在里面),所以 tt debug start/exec/status 对着哪个跑着的实例都能用。
 同一个配置目录下只能起一个 —— 两条件会争同一份状态文件。
 

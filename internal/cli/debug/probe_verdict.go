@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"strings"
 
-	"tt/internal/debug"
+	"tg/internal/debug"
 )
 
 const (

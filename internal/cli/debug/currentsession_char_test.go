@@ -29,8 +29,8 @@ import (
 	"strings"
 	"testing"
 
-	"tt/internal/cli/common"
-	"tt/internal/target"
+	"tg/internal/cli/common"
+	"tg/internal/target"
 )
 
 // sessionPoolStub 起一个回答 `/api/sessions` 与 `/api/hosts` 的桩。

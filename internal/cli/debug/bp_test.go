@@ -21,9 +21,9 @@ import (
 	"sync"
 	"testing"
 
-	"tt/internal/cli/common"
-	"tt/internal/debug"
-	"tt/internal/testkit"
+	"tg/internal/cli/common"
+	"tg/internal/debug"
+	"tg/internal/testkit"
 )
 
 // bpStub 是本文件的"假通道"：一个只认断点面那几条路径的 HTTP 桩，

@@ -12,7 +12,7 @@
 //
 // 落点：下载物与检查结果在 `<数据目录>/update/`（在 config.CacheSubdirs 清单内，
 // 删了只是下次重下）；升级状态与日志在数据目录根（`.tt-update.json` / `.tt-update.log`，
-// 与 `.tt-serve.json` 同类 —— 排障要看，不是缓存）。
+// 与 `.tg-serve.json` 同类 —— 排障要看，不是缓存）。
 package update
 
 import (

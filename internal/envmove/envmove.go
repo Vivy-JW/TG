@@ -20,8 +20,8 @@ import (
 	"strings"
 	"time"
 
-	"tt/internal/config"
-	"tt/internal/entdir"
+	"tg/internal/config"
+	"tg/internal/entdir"
 )
 
 // Move 一份要搬的落点（文件或整个目录）。

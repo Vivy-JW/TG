@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"tt/internal/host"
+	"tg/internal/host"
 )
 
 type statJSON struct {

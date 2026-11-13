@@ -9,7 +9,7 @@ package config
 import (
 	"strings"
 
-	"tt/internal/dbconfig"
+	"tg/internal/dbconfig"
 )
 
 // EnvPatch 是 GP 环境的补丁。指针字段为 nil = 本次没提交，保留旧值；

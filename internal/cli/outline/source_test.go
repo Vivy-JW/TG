@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"tt/internal/cli/common"
-	"tt/internal/output"
+	"tg/internal/cli/common"
+	"tg/internal/output"
 )
 
 func write4gl(t *testing.T, p string) {

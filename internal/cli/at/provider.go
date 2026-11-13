@@ -11,9 +11,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"tt/internal/cli/common"
-	"tt/internal/config"
-	"tt/internal/debug"
+	"tg/internal/cli/common"
+	"tg/internal/config"
+	"tg/internal/debug"
 )
 
 // productGP 是 GP 环境的产品标识（config.json hosts.sshs[].product）。

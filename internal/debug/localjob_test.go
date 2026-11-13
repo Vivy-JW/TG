@@ -14,7 +14,7 @@ import (
 	"testing"
 
 	_ "modernc.org/sqlite"
-	"tt/internal/dbconfig"
+	"tg/internal/dbconfig"
 )
 
 // makeJobDB 造一份最小可用的本地字典库（gzzz_t JOIN gzza_t 的两张表）。

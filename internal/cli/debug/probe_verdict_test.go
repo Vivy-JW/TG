@@ -11,8 +11,8 @@ import (
 	"strings"
 	"testing"
 
-	"tt/internal/debug"
-	"tt/internal/testkit"
+	"tg/internal/debug"
+	"tg/internal/testkit"
 )
 
 // 六步全成、程序在步进之前自己跑完 ⇒ **通过**，但要把没覆盖的两步如实报出来。

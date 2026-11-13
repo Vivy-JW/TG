@@ -161,7 +161,7 @@
 1. **数据源解析不认 GP**：已改为环境 `product=="gp"` 时账号直接取 `db.accounts[0]`、schema 取
    「营运据点」（`azp_file.azp03`，默认 `ds`），解析链 `--at <环境>@<据点编号>` → `gp.ResolveSchema`
    （`dc9fad8`）；`db sql`/`db probe` 身份只有环境（`735f22d`），`--ent` 已删。
-2. **本地库路径两套**：已统一到 `internal/dict.DictPath`（`DictDir` → `TT_GP_DICT_DIR` → `~/.tt/gp-dict/<环境>.db`），
+2. **本地库路径两套**：已统一到 `internal/dict.DictPath`（`DictDir` → `TG_GP_DICT_DIR` → `~/.tg/gp-dict/<环境>.db`），
    `local:<环境>` 与网页同一条路径（`ff3215c`）。
 3. ~~命令组还没挂 GP~~：`tg gp` 整组已删，表/程序/消息/开窗/画面文字/链接/同步/据点都在
    `tg dict` 与 `tg site`（`5ac4903`）。

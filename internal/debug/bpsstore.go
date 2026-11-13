@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"tt/internal/config"
+	"tg/internal/config"
 )
 
 // StoredBP 持久化的断点

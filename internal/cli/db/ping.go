@@ -12,9 +12,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"tt/internal/cli/common"
-	"tt/internal/dict/live"
-	"tt/internal/output"
+	"tg/internal/cli/common"
+	"tg/internal/dict/live"
+	"tg/internal/output"
 )
 
 func newPingCmd() *cobra.Command {

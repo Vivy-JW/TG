@@ -15,9 +15,9 @@ import (
 	"testing"
 	"time"
 
-	"tt/internal/config"
-	"tt/internal/dbconfig"
-	"tt/internal/host"
+	"tg/internal/config"
+	"tg/internal/dbconfig"
+	"tg/internal/host"
 )
 
 // testCfg 造一份在内存里就能用的环境(不连任何东西)。

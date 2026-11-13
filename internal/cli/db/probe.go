@@ -8,9 +8,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"tt/internal/cli/common"
-	"tt/internal/debug"
-	"tt/internal/output"
+	"tg/internal/cli/common"
+	"tg/internal/debug"
+	"tg/internal/output"
 )
 
 func newProbeCmd() *cobra.Command {

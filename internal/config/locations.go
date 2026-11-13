@@ -3,7 +3,7 @@
 // 那就是第二份位置解析，某天两边悄悄分叉（历史上"服务写一处、命令行读另一处"
 // 就是这样来的）。
 //
-// 数据目录 = 配置所在目录（见 paths.go）。缺省形态下即 %APPDATA%\tt；
+// 数据目录 = 配置所在目录（见 paths.go）。缺省形态下即 %APPDATA%\tg；
 // 便携包配置在包内，数据也跟着包走。两种形态下 DataDir 都是"config.json 旁边"。
 package config
 
@@ -19,8 +19,8 @@ const DefaultDictDBName = "erp_data.db"
 // 服务状态与日志的文件名（数据目录下）。状态文件是**运行中**服务的进程记录，
 // 日志是排障依据 —— 与 config.json 同为"不是缓存"的东西（见 cache.go 的清单）。
 const (
-	ServeStateFileName = ".tt-serve.json"
-	ServeLogFileName   = ".tt-serve.log"
+	ServeStateFileName = ".tg-serve.json"
+	ServeLogFileName   = ".tg-serve.log"
 )
 
 // Locations 一次运行所需的全部落点，由配置路径派生。
@@ -43,7 +43,7 @@ func LocationsAt(configPath string) *Locations {
 	return &Locations{ConfigPath: configPath}
 }
 
-// DataDir 数据目录 = 配置所在目录（ents/、srccache/、.tt-serve.json 都跟着它）。
+// DataDir 数据目录 = 配置所在目录（ents/、srccache/、.tg-serve.json 都跟着它）。
 func (l *Locations) DataDir() string {
 	if l.ConfigPath == "" {
 		return ""
@@ -57,12 +57,12 @@ func (l *Locations) CacheDir(name string) string {
 	return CacheDir(l.DataDir(), name)
 }
 
-// StateFile 后台服务状态文件（.tt-serve.json）：pid/地址/API 前缀，--stop 靠它寻址。
+// StateFile 后台服务状态文件（.tg-serve.json）：pid/地址/API 前缀，--stop 靠它寻址。
 func (l *Locations) StateFile() string {
 	return filepath.Join(l.DataDir(), ServeStateFileName)
 }
 
-// LogFile 后台服务日志（.tt-serve.log）。
+// LogFile 后台服务日志（.tg-serve.log）。
 func (l *Locations) LogFile() string {
 	return filepath.Join(l.DataDir(), ServeLogFileName)
 }

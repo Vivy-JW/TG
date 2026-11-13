@@ -12,11 +12,11 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-	"tt/internal/config"
-	dictlib "tt/internal/dict"
-	"tt/internal/host"
-	sessionid "tt/internal/session"
-	"tt/internal/target"
+	"tg/internal/config"
+	dictlib "tg/internal/dict"
+	"tg/internal/host"
+	sessionid "tg/internal/session"
+	"tg/internal/target"
 
 	"github.com/pkg/sftp"
 )
@@ -44,7 +44,7 @@ type Manager struct {
 	// auditPath 是会话操作审计行的落点（`<DataDir>/audit/sessions.jsonl`）。
 	// 空 = 不落盘（DataDir 为空：单测与未开持久化的部署，见 audit.go）。
 	auditPath string
-	// auditActor 取"谁"（缺省 `target.DefaultActor(os.Getenv)`，读 `TT_ACTOR`）。
+	// auditActor 取"谁"（缺省 `target.DefaultActor(os.Getenv)`，读 `TG_ACTOR`）。
 	// 做成字段是为了让判据测试能注入一个确定的身份，而不必去改进程环境。
 	auditActor func(string) string
 
@@ -123,7 +123,7 @@ func NewManager(cfg *Config) *Manager {
 		Epoch: strconv.FormatInt(time.Now().UnixNano(), 36),
 		// 会话操作审计（WP6）：<DataDir>/audit/sessions.jsonl，谁 / 哪条 / 干了什么。
 		auditPath: auditPath(cfg.DataDir),
-		// "谁"的缺省来源是 `TT_ACTOR`（与 api.go 的 actorOf 同一个开关，不另立第二个）。
+		// "谁"的缺省来源是 `TG_ACTOR`（与 api.go 的 actorOf 同一个开关，不另立第二个）。
 		// 包一层是因为 `target.DefaultActor` 要一个**注入的** getenv（那样它才是纯函数、可测）。
 		auditActor: func(string) string { return target.DefaultActor(os.Getenv) },
 		// 生产路径就是 NewSession：行为与从前一字不差（只有 _test.go 会替换它）。

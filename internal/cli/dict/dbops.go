@@ -10,11 +10,11 @@ import (
 	"fmt"
 	"strings"
 
-	"tt/internal/cli/common"
-	"tt/internal/config"
-	"tt/internal/dbconfig"
-	"tt/internal/host"
-	"tt/internal/output"
+	"tg/internal/cli/common"
+	"tg/internal/config"
+	"tg/internal/dbconfig"
+	"tg/internal/host"
+	"tg/internal/output"
 
 	"github.com/spf13/cobra"
 )

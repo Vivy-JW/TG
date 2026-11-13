@@ -20,9 +20,9 @@ import (
 	"strings"
 	"time"
 
-	"tt/internal/dbconfig"
-	"tt/internal/host"
-	"tt/internal/safesql"
+	"tg/internal/dbconfig"
+	"tg/internal/host"
+	"tg/internal/safesql"
 )
 
 // sqlTimeoutDefault 单条只读查询的默认超时(秒)。上限见 clampSQLTimeout。

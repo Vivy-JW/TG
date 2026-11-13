@@ -28,7 +28,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"tt/internal/debug"
+	"tg/internal/debug"
 )
 
 // bpView 是 `bp list` 的输出单元。

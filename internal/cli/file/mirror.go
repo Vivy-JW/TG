@@ -20,9 +20,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"tt/internal/cli/common"
-	"tt/internal/config"
-	"tt/internal/mirror"
+	"tg/internal/cli/common"
+	"tg/internal/config"
+	"tg/internal/mirror"
 )
 
 // NewMirrorCmd 构造 mirror 子树（file 组与 dict 的隐藏转发各持一棵，
@@ -51,7 +51,7 @@ t_ui_text（tg interface --labels 用），不在镜像里。
   path [<环境>]     打印该环境镜像目录的绝对路径与上次拉取时间（AI 直接前往）
 
 环境用 --at <环境> 点名（也可给位置参数，二选一）。落点优先级：
-环境自己的 mirrorDir > 全局根目录/<环境名> > TT_GP_MIRROR_DIR/<环境名> > ~/.tt/gp-mirror/<环境名>。`,
+环境自己的 mirrorDir > 全局根目录/<环境名> > TG_GP_MIRROR_DIR/<环境名> > ~/.tg/gp-mirror/<环境名>。`,
 		RunE: func(cmd *cobra.Command, _ []string) error { return cmd.Help() },
 	}
 	pullCmd := newMirrorPullCmd(&full)
@@ -152,7 +152,7 @@ func newMirrorDirCmd() *cobra.Command {
 		Long: `不带 --at：查看或设置全局镜像根目录（config.json 顶层 mirror.dir）。
 带 --at <环境>：查看或设置该环境自己的镜像目录；不设置时回退到全局根目录/<环境名>。
 --clear 只清除某环境的单独目录（必须同时给 --at <环境>），回退到全局根目录。
-两者都没有时，落点退到 TT_GP_MIRROR_DIR/<环境名> 或 ~/.tt/gp-mirror/<环境名>。
+两者都没有时，落点退到 TG_GP_MIRROR_DIR/<环境名> 或 ~/.tg/gp-mirror/<环境名>。
 
 目录可为相对路径，保存时转为绝对路径。`,
 		Example: `  tg file mirror dir
@@ -235,7 +235,7 @@ func newMirrorDirCmd() *cobra.Command {
 			}
 			if !ok {
 				fmt.Printf("镜像根目录未设置。请执行: tg file mirror dir <目录>（或加 --at <环境> 只给该环境）\n" +
-					"未设置时落点退到 TT_GP_MIRROR_DIR/<环境名> 或 ~/.tt/gp-mirror/<环境名>。\n")
+					"未设置时落点退到 TG_GP_MIRROR_DIR/<环境名> 或 ~/.tg/gp-mirror/<环境名>。\n")
 				return nil
 			}
 			fmt.Println(dir)

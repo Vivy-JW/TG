@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"tt/internal/config"
+	"tg/internal/config"
 )
 
 func TestLookupModule(t *testing.T) {

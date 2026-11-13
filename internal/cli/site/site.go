@@ -16,10 +16,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"tt/internal/cli/common"
-	"tt/internal/config"
-	dictlib "tt/internal/dict"
-	"tt/internal/output"
+	"tg/internal/cli/common"
+	"tg/internal/config"
+	dictlib "tg/internal/dict"
+	"tg/internal/output"
 )
 
 const siteLong = `营运据点取自 GP 的 azp_file（aooi901 工厂基本资料维护作业维护的那张表）。

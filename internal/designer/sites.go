@@ -41,7 +41,7 @@ import (
 	"strings"
 
 	"golang.org/x/crypto/pbkdf2"
-	"tt/internal/config"
+	"tg/internal/config"
 )
 
 // 加解密参数(来自 SiteFileHelper.cs,见包注释)
@@ -57,7 +57,7 @@ const (
 //
 // 存在的理由:自动化测试不能去动用户真实的 %APPDATA%\SpecDesigner —— 那既是别人的
 // 文件,也让测试结果依赖这台机器装没装设计器。设了它就只认这个路径。
-const EnvOverride = "TT_DESIGNER_SITES"
+const EnvOverride = "TG_DESIGNER_SITES"
 
 // SiteFile 返回设计器站点文件的路径与它是否存在的判断依据。
 //

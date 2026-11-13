@@ -10,12 +10,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"tt/internal/cli/common"
-	debugcli "tt/internal/cli/debug"
-	"tt/internal/config"
-	"tt/internal/debug"
-	dictserver "tt/internal/dict/server"
-	"tt/internal/web"
+	"tg/internal/cli/common"
+	debugcli "tg/internal/cli/debug"
+	"tg/internal/config"
+	"tg/internal/debug"
+	dictserver "tg/internal/dict/server"
+	"tg/internal/web"
 )
 
 // newServeCmd 是统一的本地 Web 服务。
@@ -29,7 +29,7 @@ import (
 //
 // 默认后台常驻（单实例）：把自身以 --foreground 重新拉起来后立即返回，终端不被占住；
 // 前台运行（看实时日志）用 --foreground，停止用 --stop。运行状态写在与调试服务同一份
-// 状态文件里（.tt-serve.json），所以 `tt debug status/start/exec` 对着哪个实例都能用。
+// 状态文件里（.tg-serve.json），所以 `tt debug status/start/exec` 对着哪个实例都能用。
 func newServeCmd() *cobra.Command {
 	var (
 		listen     string
@@ -85,7 +85,7 @@ func newServeCmd() *cobra.Command {
 					args = append(args, "--listen", listen)
 				}
 				_, err := debugcli.StartBackground(path, debugcli.ServeSpec{
-					Prefix:   "TT",
+					Prefix:   "TG",
 					StopHint: "tt serve --stop",
 					APIBase:  debugcli.APIBaseUnderDebug,
 					Args:     args,
@@ -123,7 +123,7 @@ func newServeCmd() *cobra.Command {
 			dictSrv := dictserver.New(path)
 
 			return debugcli.RunForeground(path, debugcli.ServeSpec{
-				Prefix:   "TT",
+				Prefix:   "TG",
 				StopHint: "tt serve --stop",
 				APIBase:  debugcli.APIBaseUnderDebug,
 			}, func(ctx context.Context, onReady func(addr string)) error {

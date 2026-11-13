@@ -21,10 +21,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"tt/internal/cli/common"
-	"tt/internal/config"
-	"tt/internal/host"
-	"tt/internal/output"
+	"tg/internal/cli/common"
+	"tg/internal/config"
+	"tg/internal/host"
+	"tg/internal/output"
 )
 
 // 组级开关（只影响本组）。

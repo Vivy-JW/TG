@@ -7,7 +7,7 @@ package debug
 import (
 	"github.com/spf13/cobra"
 
-	"tt/internal/cli/common"
+	"tg/internal/cli/common"
 )
 
 // Group 是 tg debug 命令组。各命令文件在自己的 init() 里往它挂子命令。

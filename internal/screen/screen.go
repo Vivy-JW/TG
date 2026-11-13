@@ -12,7 +12,7 @@ import (
 	"fmt"
 	"strings"
 
-	"tt/internal/form42f"
+	"tg/internal/form42f"
 )
 
 // Labels 是 token → 译文 的只读查询。

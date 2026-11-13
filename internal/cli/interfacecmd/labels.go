@@ -7,13 +7,13 @@ import (
 	"strings"
 	"time"
 
-	"tt/internal/cli/common"
-	"tt/internal/config"
-	"tt/internal/dict"
-	"tt/internal/dict/db"
-	"tt/internal/dict/live"
-	"tt/internal/output"
-	"tt/internal/screen"
+	"tg/internal/cli/common"
+	"tg/internal/config"
+	"tg/internal/dict"
+	"tg/internal/dict/db"
+	"tg/internal/dict/live"
+	"tg/internal/output"
+	"tg/internal/screen"
 )
 
 // 画面文字（标签）的来源。

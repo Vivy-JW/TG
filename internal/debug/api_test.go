@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"tt/internal/host"
+	"tg/internal/host"
 )
 
 // launchCfg:点名的环境是**权威**的。

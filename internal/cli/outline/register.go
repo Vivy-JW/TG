@@ -14,9 +14,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"tt/internal/cli/common"
-	"tt/internal/dev/fgl"
-	"tt/internal/output"
+	"tg/internal/cli/common"
+	"tg/internal/dev/fgl"
+	"tg/internal/output"
 )
 
 const schemaVersion = "tt.outline/v1"

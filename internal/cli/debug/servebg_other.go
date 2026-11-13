@@ -4,7 +4,7 @@ package debug
 
 // 非 Windows 后台常驻：实现在 internal/winproc（见 servebg_windows.go 的说明）。
 
-import "tt/internal/winproc"
+import "tg/internal/winproc"
 
 func spawnDetached(exe string, args []string, logPath string) (int, error) {
 	return winproc.SpawnDetached(exe, args, logPath)

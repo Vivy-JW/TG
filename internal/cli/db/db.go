@@ -24,9 +24,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"tt/internal/cli/common"
-	"tt/internal/dbconfig"
-	"tt/internal/debug"
+	"tg/internal/cli/common"
+	"tg/internal/dbconfig"
+	"tg/internal/debug"
 )
 
 // Register 把 db 组挂到根命令。

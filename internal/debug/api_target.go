@@ -43,7 +43,7 @@ import (
 	"strconv"
 	"strings"
 
-	"tt/internal/target"
+	"tg/internal/target"
 )
 
 // sessionView 把一条服务端会话快照投影成目标层的**只读视图**（契约 C5.1 的十键）。

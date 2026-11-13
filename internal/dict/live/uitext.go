@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"tt/internal/dict/db"
+	"tg/internal/dict/db"
 )
 
 // QueryUITexts 直查 gae_file：画面元件译文。

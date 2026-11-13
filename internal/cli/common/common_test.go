@@ -9,9 +9,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"tt/internal/config"
-	"tt/internal/output"
-	"tt/internal/testkit"
+	"tg/internal/config"
+	"tg/internal/output"
+	"tg/internal/testkit"
 )
 
 // 本包是**叶子包**（三个命令组共享的 CLI 上下文），所以它自己的状态就是全局状态：
@@ -120,7 +120,7 @@ func TestCurrentMetaDelegatesToProvider(t *testing.T) {
 // TestConfigHintAndResolveConfigDelegate 钉的是**接线**，不是取值：
 // 这两个函数的取值依赖环境（便携包判定、用户配置目录），断言具体值会在别人的机器上红。
 func TestConfigHintAndResolveConfigDelegate(t *testing.T) {
-	t.Setenv("TT_CONFIG", "") // 隔离开发机上的真实 TT_CONFIG,否则会盖过显式 --config(见 config.ResolvePath)
+	t.Setenv("TG_CONFIG", "") // 隔离开发机上的真实 TG_CONFIG,否则会盖过显式 --config(见 config.ResolvePath)
 	resetCommon(t)
 	if got, want := ConfigHint(), config.DefaultConfigPathHint(); got != want {
 		t.Errorf("ConfigHint 该原样转发 config.DefaultConfigPathHint：得 %q，想 %q", got, want)

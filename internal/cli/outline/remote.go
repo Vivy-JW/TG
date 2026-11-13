@@ -4,9 +4,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"tt/internal/cli/common"
-	"tt/internal/config"
-	"tt/internal/dict"
+	"tg/internal/cli/common"
+	"tg/internal/config"
+	"tg/internal/dict"
 )
 
 // remoteSource 直接从服务器读一个 .4gl，不落本地：

@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"tt/internal/config"
+	"tg/internal/config"
 )
 
 // Kind 是 tt 这份二进制的**安装形态**，它决定"怎么装新版"。

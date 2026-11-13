@@ -26,7 +26,7 @@ import (
 	"strings"
 	"testing"
 
-	"tt/internal/target"
+	"tg/internal/target"
 )
 
 // TestCharTargetFlagPlacement 见文件头。

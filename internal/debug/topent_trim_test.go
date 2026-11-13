@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
-	"tt/internal/host"
+	"tg/internal/host"
 )
 
 // hTopent 服务端 trim 语义(文本值 + 剔除两侧空白)——纯字符串逻辑验证

@@ -36,11 +36,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"tt/internal/cli/common"
-	"tt/internal/cli/debug"
-	"tt/internal/config"
-	"tt/internal/output"
-	"tt/internal/update"
+	"tg/internal/cli/common"
+	"tg/internal/cli/debug"
+	"tg/internal/config"
+	"tg/internal/output"
+	"tg/internal/update"
 )
 
 // exitUpdateAvailable "有可用更新"。它不是失败，见上面那段说明。

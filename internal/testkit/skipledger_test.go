@@ -76,7 +76,7 @@ const (
 var switchNames = []string{
 	// 语料与表单样本：删掉 T100 的 dev 包之后，只剩这两个门槛还会出现在跳过里。
 	"TDEV_CORPUS", "TTZS_CORPUS",
-	"TT_FORM_SAMPLE_DIR", "TT_FORM_CORPUS_MAP",
+	"TG_FORM_SAMPLE_DIR", "TG_FORM_CORPUS_MAP",
 }
 
 // skipSite 是台账里的一处跳过。
@@ -144,7 +144,7 @@ var skipLedger = []skipSite{
 	// **没有留 t.Skip**：旧断言作废不值得在台账里长期占一行（留注释说明即可）。
 	// 于是本台账里 `layPending` 这一层现在是 **0 条** —— 它保留着以备下次"先写测试后写实现"。
 
-	// ---- 表单真样本那一路（`fixtures/forms/`）：TT_FORM_* 开关 + 现场真配对 ----
+	// ---- 表单真样本那一路（`fixtures/forms/`）：TG_FORM_* 开关 + 现场真配对 ----
 	//
 	// 这一批 9 条的病因是同一个：**真 `.42f` 与真归档语料表不随仓库走**。
 	// 契约 C7.2/C7.3 的口径是"仓库内只放合成夹具，缺真样本时写明原因、
@@ -152,11 +152,11 @@ var skipLedger = []skipSite{
 	// 否则默认档少验一整块表单解析，而报告里什么都看不出来。
 	//
 	// 分层按"怎么补救"分：
-	//   · 几乎全是 L3，开关名统一落在 TT_FORM_SAMPLE_DIR / TT_FORM_CORPUS_MAP 上；
+	//   · 几乎全是 L3，开关名统一落在 TG_FORM_SAMPLE_DIR / TG_FORM_CORPUS_MAP 上；
 	//   · 三条是「L3-缺件」——语料（或仓库自带的最小语料）在，但里面没有**这一件**，
 	//     补救是换份语料/重新生成，没有开关可点名；
-	//   · `form42f_realpair_test.go` 那条要两个开关同时指对（TT_TZS_REAL_DIR +
-	//     TT_FORM_42F）：要的不是一份 .42f，而是**同一个现场**打出来的 .tzs 与 .42f。
+	//   · `form42f_realpair_test.go` 那条要两个开关同时指对（TG_TZS_REAL_DIR +
+	//     TG_FORM_42F）：要的不是一份 .42f，而是**同一个现场**打出来的 .tzs 与 .42f。
 	//
 	// 注意这批文件的归属：`dev/tzs`、`form42f` 都另有切片在改。
 	// 台账只登记**当前源文件里的字面量**；那些文件里的跳过文案一改（含标点），
@@ -166,10 +166,10 @@ var skipLedger = []skipSite{
 	// 就有意义 —— 所以归 L0-环境，不是"缺开关"。
 	{file: "internal/host/dbprobe_test.go", msg: "本机 bash 会展开单引号内的命令替换：这条用例在这台机器上测不出真结果（台账 D8）", layer: layEnv, why: "本机 bash 对单引号内的 `$(…)` 仍做命令替换（WSL/中间层特性）：换了 POSIX 环境自然跑；与 TT 代码无关"},
 	{file: "internal/host/dbprobe_test.go", msg: "本机 bash 会展开单引号内的命令替换：这条脚本在这台机器上测不出真结果（台账 D8）", layer: layEnv, why: "同上：本机 bash 会展开单引号内的命令替换"},
-	{file: "internal/form42f/form42f_test.go", msg: "没有真样本（%s 打不开：%v）—— 设 TT_FORM_SAMPLE_DIR 指向 fixtures/forms/", layer: layL3, why: "需真样本：开关 TT_FORM_SAMPLE_DIR"},
-	{file: "internal/form42f/form42f_test.go", msg: "没有归档语料表（%v）—— 设 TT_FORM_CORPUS_MAP 指向 colname-fieldid.json", layer: layL3, why: "需真归档语料表：开关 TT_FORM_CORPUS_MAP"},
+	{file: "internal/form42f/form42f_test.go", msg: "没有真样本（%s 打不开：%v）—— 设 TG_FORM_SAMPLE_DIR 指向 fixtures/forms/", layer: layL3, why: "需真样本：开关 TG_FORM_SAMPLE_DIR"},
+	{file: "internal/form42f/form42f_test.go", msg: "没有归档语料表（%v）—— 设 TG_FORM_CORPUS_MAP 指向 colname-fieldid.json", layer: layL3, why: "需真归档语料表：开关 TG_FORM_CORPUS_MAP"},
 	{file: "internal/form42f/form42f_test.go", msg: "归档语料表里没有 w_axmt500（换台机器/换份语料就跳）", layer: layL3Missing, why: "归档语料表在，但里面没有 w_axmt500（换台机器/换份语料就有）"},
-	{file: "internal/form42f/form42f_test.go", msg: "没有真样本（%v）", layer: layL3, why: "需真样本：开关 TT_FORM_SAMPLE_DIR"},
+	{file: "internal/form42f/form42f_test.go", msg: "没有真样本（%v）", layer: layL3, why: "需真样本：开关 TG_FORM_SAMPLE_DIR"},
 }
 
 // reSkipCall 匹配 t.Skip / t.Skipf 且第一个参数是同行的字符串字面量。

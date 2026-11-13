@@ -19,11 +19,11 @@ func isolateEnv(t *testing.T) string {
 	default:
 		t.Setenv("XDG_CONFIG_HOME", home)
 	}
-	t.Setenv("TT_CONFIG", "")
+	t.Setenv("TG_CONFIG", "")
 	return home
 }
 
-// 默认落点：%APPDATA%\tt —— 中间不再有 T100 一层。
+// 默认落点：%APPDATA%\tg —— 中间不再有 T100 一层。
 func TestUserConfigDir(t *testing.T) {
 	home := isolateEnv(t)
 
@@ -36,7 +36,7 @@ func TestUserConfigDir(t *testing.T) {
 	}
 }
 
-// TT_CONFIG 优先级最高。
+// TG_CONFIG 优先级最高。
 func TestResolvePath_EnvVar(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "my.json")
@@ -45,7 +45,7 @@ func TestResolvePath_EnvVar(t *testing.T) {
 	}
 
 	isolateEnv(t)
-	t.Setenv("TT_CONFIG", path)
+	t.Setenv("TG_CONFIG", path)
 
 	got, err := ResolvePath("", false)
 	if err != nil {
@@ -92,7 +92,7 @@ func TestResolvePath_NoneFound(t *testing.T) {
 		t.Fatal("找不到配置时应当报错")
 	}
 	msg := err.Error()
-	for _, want := range []string{"配置文件未找到", "TT_CONFIG", "尝试了以下路径"} {
+	for _, want := range []string{"配置文件未找到", "TG_CONFIG", "尝试了以下路径"} {
 		if !contains(msg, want) {
 			t.Errorf("错误信息缺少 %q:\n%s", want, msg)
 		}
@@ -110,7 +110,7 @@ func TestResolvePath_NoneFound(t *testing.T) {
 
 // 旧位置兜底已经移除：哪怕当前目录、旧统一目录（%APPDATA%\T100\tt）、
 // 旧工具目录（tdebug / tdict）里摆着**长得完全像本工具配置**的诱饵，
-// 解析也不许捡走任何一份 —— 数据统一在 %APPDATA%\tt，不向后兼容。
+// 解析也不许捡走任何一份 —— 数据统一在 %APPDATA%\tg，不向后兼容。
 func TestResolvePath_NoLegacyFallback(t *testing.T) {
 	home := isolateEnv(t)
 
@@ -145,11 +145,11 @@ func TestResolvePath_NoLegacyFallback(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// 读路径：统一目录（%APPDATA%\tt）没有文件 → 必须报错，而不是捡走诱饵
+	// 读路径：统一目录（%APPDATA%\tg）没有文件 → 必须报错，而不是捡走诱饵
 	if got, err := ResolvePath("", false); err == nil {
 		t.Fatalf("旧位置兜底被捡走了: %q", got)
 	}
-	// 写路径：落点必须是 %APPDATA%\tt\config.json，而不是任何诱饵
+	// 写路径：落点必须是 %APPDATA%\tg\config.json，而不是任何诱饵
 	got, err := ResolvePath("", true)
 	if err != nil {
 		t.Fatalf("allowMissing=true 不应报错: %v", err)
@@ -179,12 +179,12 @@ func TestResolvePath_ExplicitWinsWhenMissing(t *testing.T) {
 	}
 }
 
-// 环境变量指定的路径同理（TT_CONFIG 指向一个还不存在的文件）。
+// 环境变量指定的路径同理（TG_CONFIG 指向一个还不存在的文件）。
 func TestResolvePath_EnvWinsWhenMissing(t *testing.T) {
 	isolateEnv(t)
 
 	want := filepath.Join(t.TempDir(), "from-env.json")
-	t.Setenv("TT_CONFIG", want)
+	t.Setenv("TG_CONFIG", want)
 
 	got, err := ResolvePath("", true)
 	if err != nil {
@@ -218,10 +218,10 @@ func TestLocations_DataDir(t *testing.T) {
 	if l.DataDir() != want {
 		t.Errorf("DataDir = %q, 期望 %q", l.DataDir(), want)
 	}
-	if l.StateFile() != filepath.Join(want, ".tt-serve.json") {
+	if l.StateFile() != filepath.Join(want, ".tg-serve.json") {
 		t.Errorf("StateFile = %q", l.StateFile())
 	}
-	if l.LogFile() != filepath.Join(want, ".tt-serve.log") {
+	if l.LogFile() != filepath.Join(want, ".tg-serve.log") {
 		t.Errorf("LogFile = %q", l.LogFile())
 	}
 	if l.CacheDir("spill") != filepath.Join(want, "spill") {

@@ -20,7 +20,7 @@ package file
 import (
 	"strings"
 
-	"tt/internal/config"
+	"tg/internal/config"
 )
 
 // resolveRoots 取本次的三个根：实例目录（越界判定的根）、$TOP、$CUST。

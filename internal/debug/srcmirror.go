@@ -36,9 +36,9 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"tt/internal/config"
-	"tt/internal/entdir"
-	"tt/internal/host"
+	"tg/internal/config"
+	"tg/internal/entdir"
+	"tg/internal/host"
 
 	"github.com/pkg/sftp"
 )

@@ -2,7 +2,7 @@
 
 依据：`.agents/plan/tt-genero-formdef-contract.md` 的 **C7.2 / C7.3**（Q6 定案）。
 
-**这里只放合成数据**：字段名一律 `demo*`，**不含任何真实业务数据**（真样本走 `TT_FORM_SAMPLE_DIR`，
+**这里只放合成数据**：字段名一律 `demo*`，**不含任何真实业务数据**（真样本走 `TG_FORM_SAMPLE_DIR`，
 默认指向 `.agents/Genero Original Factory Compatible/fixtures/forms/`）。
 
 | 文件 | 用途 | 守哪条 |

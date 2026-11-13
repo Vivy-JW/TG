@@ -13,7 +13,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"tt/internal/host"
+	"tg/internal/host"
 )
 
 // grepFileMax 单文件扫描上限：源码远小于此；超过的按“跳过”处理并提示。

@@ -25,7 +25,7 @@ import (
 	"strings"
 	"time"
 
-	"tt/internal/config"
+	"tg/internal/config"
 )
 
 const (

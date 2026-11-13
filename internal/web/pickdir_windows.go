@@ -28,7 +28,7 @@ import (
 const pickDirPS = `
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-$initial = $env:TT_PICK_INITIAL
+$initial = $env:TG_PICK_INITIAL
 if ($initial -and -not (Test-Path -LiteralPath $initial -PathType Container)) {
   $p = $initial
   while ($p) {
@@ -39,7 +39,7 @@ if ($initial -and -not (Test-Path -LiteralPath $initial -PathType Container)) {
   }
   $initial = $p
 }
-$title = if ($env:TT_PICK_TITLE) { $env:TT_PICK_TITLE } else { '选择文件夹' }
+$title = if ($env:TG_PICK_TITLE) { $env:TG_PICK_TITLE } else { '选择文件夹' }
 $shell = New-Object -ComObject Shell.Application
 $f = $null
 if ($initial) {
@@ -57,8 +57,8 @@ func pickDirectory(ctx context.Context, initial, title string) (string, bool, er
 	cmd := exec.CommandContext(ctx, "powershell.exe",
 		"-NoProfile", "-STA", "-WindowStyle", "Hidden", "-Command", pickDirPS)
 	cmd.Env = append(os.Environ(),
-		"TT_PICK_INITIAL="+initial,
-		"TT_PICK_TITLE="+title,
+		"TG_PICK_INITIAL="+initial,
+		"TG_PICK_TITLE="+title,
 	)
 	out, err := cmd.CombinedOutput()
 	if err != nil {

@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"tt/internal/dbconfig"
+	"tg/internal/dbconfig"
 )
 
 // Options 一次同步的输入。

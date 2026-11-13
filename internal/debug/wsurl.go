@@ -9,7 +9,7 @@ package debug
 // 单独抽到本文件，是为了让"这条规则只剩这一份实现"这件事在删掉 wstest.go 之后
 // 仍然看得见（它的注释是从原文件逐字搬过来的，出处仍然准确）。
 
-import "tt/internal/host"
+import "tg/internal/host"
 
 // wsURLPrefix 是服务地址的前缀：出貨區(topprd)走 `/ws`，其余区走 `/w`。
 //

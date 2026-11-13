@@ -12,9 +12,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"tt/internal/cli/common"
-	"tt/internal/config"
-	"tt/internal/output"
+	"tg/internal/cli/common"
+	"tg/internal/config"
+	"tg/internal/output"
 )
 
 // cacheOlderThan --older-than:只清比这旧的(0 = 全清)。

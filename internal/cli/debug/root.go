@@ -14,7 +14,7 @@ package debug
 // 读写分别走 config.LoadHosts、config.SaveHosts、config.EditSection、config.SetListen。
 
 import (
-	"tt/internal/cli/common"
+	"tg/internal/cli/common"
 )
 
 // IsJSON 是否要求 JSON 输出(根命令的持久 --json,绑定在 common.JSON)。

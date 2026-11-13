@@ -66,7 +66,7 @@ echo [2/4] Building tt.exe (v%VERSION%) ...
 rem Built straight into the stage, never into the repo root: packaging must not
 rem leave a tt.exe behind. The exe has to sit next to skills/ (tt install skills
 rem reads <exe dir>\skills), and this stage gets skills/ in the next step.
-call go build -trimpath -ldflags "-X tt/internal/cli.Version=%VERSION%" -o "%STAGE%\tt.exe" .
+call go build -trimpath -ldflags "-X tg/internal/cli.Version=%VERSION%" -o "%STAGE%\tt.exe" .
 if errorlevel 1 (
     echo BUILD FAILED
     exit /b 1

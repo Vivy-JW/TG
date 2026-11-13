@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"tt/internal/testkit"
+	"tg/internal/testkit"
 )
 
 /* ============================================================================

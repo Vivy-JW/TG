@@ -12,8 +12,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"tt/internal/cli/common"
-	"tt/internal/output"
+	"tg/internal/cli/common"
+	"tg/internal/output"
 )
 
 // tg dict spill —— 读「结果被截断时落盘的那一份完整结果」。
@@ -66,7 +66,7 @@ func spillDir() (string, error) {
 		return "", err
 	}
 	if path == "" {
-		return "", fmt.Errorf("定位不到配置目录（--config / TT_CONFIG / 用户目录都读不到）")
+		return "", fmt.Errorf("定位不到配置目录（--config / TG_CONFIG / 用户目录都读不到）")
 	}
 	return filepath.Join(filepath.Dir(path), spillDirName), nil
 }

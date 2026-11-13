@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"tt/internal/dbconfig"
+	"tg/internal/dbconfig"
 
 	_ "github.com/sijms/go-ora/v2" // 注册 sql 驱动 "oracle"
 )

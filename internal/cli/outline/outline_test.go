@@ -8,10 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"tt/internal/cli/common"
-	"tt/internal/dev/fgl"
-	"tt/internal/output"
-	"tt/internal/testkit"
+	"tg/internal/cli/common"
+	"tg/internal/dev/fgl"
+	"tg/internal/output"
+	"tg/internal/testkit"
 )
 
 func fixturePath(t *testing.T, name string) string {

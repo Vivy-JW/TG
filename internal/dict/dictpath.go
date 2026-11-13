@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"tt/internal/config"
+	"tg/internal/config"
 )
 
 // SyncCompany 是本地字典库**固定**取自的据点代号。
@@ -34,11 +34,11 @@ func DictPath(e config.NamedSsh) string { return dictPath(e) }
 func dictPath(e config.NamedSsh) string {
 	dir := e.DictDir
 	if dir == "" {
-		dir = os.Getenv("TT_GP_DICT_DIR")
+		dir = os.Getenv("TG_GP_DICT_DIR")
 	}
 	if dir == "" {
 		home, _ := os.UserHomeDir()
-		dir = filepath.Join(home, ".tt", "gp-dict")
+		dir = filepath.Join(home, ".tg", "gp-dict")
 	}
 	return filepath.Join(dir, e.Name+".db")
 }

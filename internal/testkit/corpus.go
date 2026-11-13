@@ -3,7 +3,7 @@ package testkit
 import (
 	"testing"
 
-	"tt/internal/dev/testutil"
+	"tg/internal/dev/testutil"
 )
 
 // CorpusRoot 解析真实语料根；解析不出来就**跳过**这条用例。

@@ -20,10 +20,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"tt/internal/cli/common"
-	"tt/internal/config"
-	"tt/internal/dict/db"
-	"tt/internal/output"
+	"tg/internal/cli/common"
+	"tg/internal/config"
+	"tg/internal/dict/db"
+	"tg/internal/output"
 )
 
 // dbPath -d/--db:本地 SQLite 镜像路径(查询命令读它,db sync 写它)。

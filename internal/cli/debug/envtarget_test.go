@@ -13,8 +13,8 @@ import (
 	"strings"
 	"testing"
 
-	"tt/internal/cli/common"
-	"tt/internal/target"
+	"tg/internal/cli/common"
+	"tg/internal/target"
 )
 
 // 环境名解析:子命令上的 --env 优先,其次根命令的持久 --env,再没有就是空(用当前环境)。
@@ -91,7 +91,7 @@ func TestDBGReusedHost(t *testing.T) {
 //
 // 两行**缺一个字段都不行**（C5.9：取不到写字面量，不省整段 —— 否则字段位置会随会话漂）。
 func TestDBGIdentity(t *testing.T) {
-	t.Setenv("TT_CONFIG", "") // 隔离真实配置
+	t.Setenv("TG_CONFIG", "") // 隔离真实配置
 	dir := t.TempDir()
 	cfgPath := filepath.Join(dir, "config.json")
 	cfg := `{"schemaVersion":4,"hosts":{"activeEnv":"22主机","sshs":[

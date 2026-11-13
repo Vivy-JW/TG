@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"tt/internal/cli/common"
-	"tt/internal/output"
-	"tt/internal/screen"
+	"tg/internal/cli/common"
+	"tg/internal/output"
+	"tg/internal/screen"
 )
 
 const schemaVersion = "tt.interface/v1"

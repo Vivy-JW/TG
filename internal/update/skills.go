@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"tt/internal/config"
+	"tg/internal/config"
 )
 
 // 技能一致性：`tt install skills` 把 mkdir 之外的技能树复制到 agent 会读的目录里，
@@ -15,7 +15,7 @@ import (
 // 0.2.1 的手册"——而 skills/ 是评测里执行者唯一能读的东西，这种错位比二进制旧更坏。
 //
 // 这份戳就是为了把两件事对上：装过哪些目录、装它们的是哪个 tt 版本。它住在数据目录
-// （`.tt-skills.json`，与 `.tt-serve.json` 同类：不是缓存），因为它是**两个命令之间的
+// （`.tt-skills.json`，与 `.tg-serve.json` 同类：不是缓存），因为它是**两个命令之间的
 // 状态**：install 写、update 与 version 读。
 //
 // 为什么不给 SKILL.md 加 `version:` 字段：frontmatter 是跨客户端契约（我们的校验器正是

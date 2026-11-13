@@ -27,16 +27,16 @@ import (
 	"sync"
 	"time"
 
-	"tt/internal/config"
-	dictlib "tt/internal/dict"
-	"tt/internal/dict/dbsync"
-	"tt/internal/dict/live"
-	"tt/internal/envmove"
-	_ "tt/internal/erpdb" // 注册 sql 驱动 "oracle"（go-ora）
-	"tt/internal/gpsession"
-	"tt/internal/host"
-	"tt/internal/mirror"
-	"tt/internal/web/jobs"
+	"tg/internal/config"
+	dictlib "tg/internal/dict"
+	"tg/internal/dict/dbsync"
+	"tg/internal/dict/live"
+	"tg/internal/envmove"
+	_ "tg/internal/erpdb" // 注册 sql 驱动 "oracle"（go-ora）
+	"tg/internal/gpsession"
+	"tg/internal/host"
+	"tg/internal/mirror"
+	"tg/internal/web/jobs"
 )
 
 // GPAPI 是 /api/gp/ 的处理器。

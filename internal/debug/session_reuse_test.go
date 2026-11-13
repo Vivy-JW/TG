@@ -3,8 +3,8 @@ package debug
 import (
 	"testing"
 
-	"tt/internal/dbconfig"
-	"tt/internal/host"
+	"tg/internal/dbconfig"
+	"tg/internal/host"
 )
 
 // 单一常驻会话:目标身份判定/空闲宿主复用/环境克隆的纯逻辑单测

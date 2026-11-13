@@ -17,7 +17,7 @@ import (
 	"testing"
 	"time"
 
-	"tt/internal/target"
+	"tg/internal/target"
 )
 
 // TestFailureKeepsCodeCandidatesAndHint：失败信封的三个关键部分都要留住。
@@ -144,7 +144,7 @@ func TestWaitStoppedTimeoutIsNotAnError(t *testing.T) {
 func TestDiscoverUsesStateFile(t *testing.T) {
 	dir := t.TempDir()
 	st := `{"pid":1,"url":"http://127.0.0.1:29000","apiBase":"/debug/api"}`
-	if err := os.WriteFile(filepath.Join(dir, ".tt-serve.json"), []byte(st), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, ".tg-serve.json"), []byte(st), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	if got, want := Discover(dir, ""), "http://127.0.0.1:29000/debug/api"; got != want {

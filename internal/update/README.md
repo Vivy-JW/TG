@@ -44,7 +44,7 @@
 | 东西 | 落点 | 性质 |
 |---|---|---|
 | 下载的安装包、检查结果、升级计划 | `<数据目录>/update/` | 缓存（在 `config.CacheSubdirs` 里），删了重新下 |
-| 升级状态、日志、技能安装戳 | `<数据目录>/.tt-update.{json,log}`、`.tt-skills.json` | **不是缓存**：排障要看，与 `.tt-serve.json` 同类 |
+| 升级状态、日志、技能安装戳 | `<数据目录>/.tt-update.{json,log}`、`.tt-skills.json` | **不是缓存**：排障要看，与 `.tg-serve.json` 同类 |
 
 **便携包不能整目录换掉。** 便携形态的 `config.json` 就住在被覆盖的那个目录里，而 zip 带的
 是一份空模板 —— 覆盖它等于删掉用户的口令与环境。`zipx.go` 的 `keepLocal` 是那条防线，

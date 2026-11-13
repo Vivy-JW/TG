@@ -21,14 +21,14 @@ import (
 	"strings"
 	"time"
 
-	atpkg "tt/internal/cli/at"
-	"tt/internal/cli/common"
-	"tt/internal/config"
-	"tt/internal/dbconfig"
-	"tt/internal/dict/db"
-	 dictlib "tt/internal/dict"
-	"tt/internal/dict/live"
-	"tt/internal/output"
+	atpkg "tg/internal/cli/at"
+	"tg/internal/cli/common"
+	"tg/internal/config"
+	"tg/internal/dbconfig"
+	"tg/internal/dict/db"
+	 dictlib "tg/internal/dict"
+	"tg/internal/dict/live"
+	"tg/internal/output"
 )
 
 var (

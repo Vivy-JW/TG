@@ -25,20 +25,20 @@ import (
 
 	"github.com/pkg/sftp"
 
-	"tt/internal/config"
-	"tt/internal/host"
+	"tg/internal/config"
+	"tg/internal/host"
 )
 
 // Dir 该环境的镜像目录：环境自己指定优先，否则 <默认根>/<环境名>。
 //
-// 默认根可以用 TT_GP_MIRROR_DIR 覆盖（多套环境放同一块盘时用）。
+// 默认根可以用 TG_GP_MIRROR_DIR 覆盖（多套环境放同一块盘时用）。
 //
 // 注意：这里不读 config.json 顶层 mirror.dir —— 需要那个兜底时用 DirFor。
 func Dir(e config.NamedSsh) string { return DirFor("", e) }
 
 // DirFor 同 Dir，但会先看 config.json 顶层 mirror.dir（tg file mirror dir 写的全局根）。
 //
-// 优先级：环境自己的 mirrorDir > 全局根/<环境名> > TT_GP_MIRROR_DIR/<环境名> > ~/.tt/gp-mirror/<环境名>。
+// 优先级：环境自己的 mirrorDir > 全局根/<环境名> > TG_GP_MIRROR_DIR/<环境名> > ~/.tg/gp-mirror/<环境名>。
 // cfgPath 为空（不知道配置在哪）时跳过全局根这一层。
 func DirFor(cfgPath string, e config.NamedSsh) string {
 	if strings.TrimSpace(e.MirrorDir) != "" {
@@ -51,10 +51,10 @@ func DirFor(cfgPath string, e config.NamedSsh) string {
 			}
 		}
 	}
-	base := os.Getenv("TT_GP_MIRROR_DIR")
+	base := os.Getenv("TG_GP_MIRROR_DIR")
 	if base == "" {
 		home, _ := os.UserHomeDir()
-		base = filepath.Join(home, ".tt", "gp-mirror")
+		base = filepath.Join(home, ".tg", "gp-mirror")
 	}
 	return filepath.Join(base, e.Name)
 }

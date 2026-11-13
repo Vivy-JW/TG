@@ -77,8 +77,8 @@ func TestAuditRefIsTheCanonicalID(t *testing.T) {
 	}
 }
 
-// TestDefaultActor 钉住"谁"的缺省来源：环境变量 `TT_ACTOR`
-// （与 `internal/debug/api.go:279` 的 `TT_ACTOR` 同一个口径，不另立一个开关）。
+// TestDefaultActor 钉住"谁"的缺省来源：环境变量 `TG_ACTOR`
+// （与 `internal/debug/api.go:279` 的 `TG_ACTOR` 同一个口径，不另立一个开关）。
 func TestDefaultActor(t *testing.T) {
 	getenv := func(k string) string {
 		if k == ActorEnv {
@@ -92,7 +92,7 @@ func TestDefaultActor(t *testing.T) {
 	if got := DefaultActor(func(string) string { return "  " }); got == "" || strings.TrimSpace(got) == "" {
 		t.Errorf("取不到（或只有空白）时该给一个字面量占位，而不是空串 —— 否则审计行会缺一段，实得 %q", got)
 	}
-	if ActorEnv != "TT_ACTOR" {
-		t.Errorf("环境变量名 = %q，internal/debug 用的那个是 TT_ACTOR", ActorEnv)
+	if ActorEnv != "TG_ACTOR" {
+		t.Errorf("环境变量名 = %q，internal/debug 用的那个是 TG_ACTOR", ActorEnv)
 	}
 }

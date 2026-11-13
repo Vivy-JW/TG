@@ -13,9 +13,9 @@ import (
 	"context"
 	"strings"
 
-	"tt/internal/dbconfig"
-	"tt/internal/erpdb"
-	"tt/internal/sshtun"
+	"tg/internal/dbconfig"
+	"tg/internal/erpdb"
+	"tg/internal/sshtun"
 )
 
 // Live 一个远程数据源:底层连接器 + 可选 SSH 隧道(Close 一并释放)。

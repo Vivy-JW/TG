@@ -8,11 +8,11 @@ import (
 	"sort"
 	"strings"
 
-	"tt/internal/cli/common"
-	"tt/internal/config"
-	"tt/internal/dict"
-	"tt/internal/mirror"
-	"tt/internal/output"
+	"tg/internal/cli/common"
+	"tg/internal/config"
+	"tg/internal/dict"
+	"tg/internal/mirror"
+	"tg/internal/output"
 )
 
 // sourceInputs 一次 interface 查询实际要读的东西。

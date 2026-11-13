@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"tt/internal/config"
+	"tg/internal/config"
 )
 
 // CheckTTL 检查结果的保鲜期。

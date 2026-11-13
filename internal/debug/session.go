@@ -16,8 +16,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-	"tt/internal/host"
-	sessionid "tt/internal/session"
+	"tg/internal/host"
+	sessionid "tg/internal/session"
 
 	"github.com/pkg/sftp"
 )

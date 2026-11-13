@@ -3,7 +3,7 @@ package config
 import (
 	"testing"
 
-	"tt/internal/dbconfig"
+	"tg/internal/dbconfig"
 )
 
 func testGpEnv() NamedSsh {

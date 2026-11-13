@@ -19,7 +19,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"tt/internal/cli/common"
+	"tg/internal/cli/common"
 )
 
 // Scope 是“这条命令把 --at 用在哪”的唯一分类。

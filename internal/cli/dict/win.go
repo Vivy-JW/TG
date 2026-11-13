@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"strings"
 
-	"tt/internal/dict/db"
-	dictlib "tt/internal/dict"
-	"tt/internal/output"
+	"tg/internal/dict/db"
+	dictlib "tg/internal/dict"
+	"tg/internal/output"
 
 	"github.com/spf13/cobra"
 )

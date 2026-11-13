@@ -8,8 +8,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"tt/internal/host"
-	"tt/internal/output"
+	"tg/internal/host"
+	"tg/internal/output"
 )
 
 func newGetCmd() *cobra.Command {

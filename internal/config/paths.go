@@ -14,30 +14,30 @@ import (
 // ---------- 配置文件位置 ----------
 //
 // 存放规则（第一个存在的胜出）：
-//  1. TT_CONFIG 环境变量          显式指定
+//  1. TG_CONFIG 环境变量          显式指定
 //  2. --config <路径>             显式指定
 //  3. <exe 目录>\.portable 存在    便携包：配置留在包内
-//  4. %APPDATA%\tt\config.json    默认：固定用户的统一位置
+//  4. %APPDATA%\tg\config.json    默认：固定用户的统一位置
 //
 // 没有旧位置兜底，也不做自动迁移：旧版的各种落点（%APPDATA%\T100\tt、tdebug/tdict、
-// exe 或当前目录的 config.json）一律不读 —— 数据统一在 %APPDATA%\tt。
+// exe 或当前目录的 config.json）一律不读 —— 数据统一在 %APPDATA%\tg。
 //
-// 显式指定的路径就是答案。--config / TT_CONFIG 指向一个还不存在的文件时，**不**悄悄
+// 显式指定的路径就是答案。--config / TG_CONFIG 指向一个还不存在的文件时，**不**悄悄
 // 改用默认落点 —— 否则便携版会把配置写进用户目录，测试脚本也会落在别处。
 //
 // 数据目录 = 配置所在目录，所以缓存、快照、状态文件都跟着落在同一个目录下。
 
 const (
 	// ToolDirName 统一用户目录（%APPDATA%）下本工具的目录。数据目录 = 配置所在目录，
-	// 所以 ents / srccache / .tt-serve.json 都跟着落在同一个目录里。
-	ToolDirName = "tt"
+	// 所以 ents / srccache / .tg-serve.json 都跟着落在同一个目录里。
+	ToolDirName = "tg"
 	// DefaultConfigName 缺省配置文件名。
 	DefaultConfigName = "config.json"
 	// PortableMark 便携标记：exe 同目录存在该文件即视为便携包。
 	PortableMark = ".portable"
 )
 
-// UserConfigDir 统一用户目录：%APPDATA%\tt（os.UserConfigDir() 在 Windows 上即
+// UserConfigDir 统一用户目录：%APPDATA%\tg（os.UserConfigDir() 在 Windows 上即
 // %AppData%）。定位不到时返回空串。
 func UserConfigDir() string {
 	if dir, err := os.UserConfigDir(); err == nil {
@@ -109,7 +109,7 @@ func ResolvePath(flagPath string, allowMissing bool) (string, error) {
 	explicit := false // 是否由用户显式指定（环境变量或 --config）
 
 	// 1. 环境变量（最高优先级）
-	if v := os.Getenv("TT_CONFIG"); v != "" {
+	if v := os.Getenv("TG_CONFIG"); v != "" {
 		candidates = append(candidates, v)
 		explicit = true
 	}
@@ -133,7 +133,7 @@ func ResolvePath(flagPath string, allowMissing bool) (string, error) {
 				candidates = append(candidates, filepath.Join(dir, DefaultConfigName))
 			}
 		} else if p := UserConfigPath(); p != "" {
-			// 4. 统一用户目录 %APPDATA%\tt
+			// 4. 统一用户目录 %APPDATA%\tg
 			candidates = append(candidates, p)
 		}
 	}
@@ -163,7 +163,7 @@ func ResolvePath(flagPath string, allowMissing bool) (string, error) {
 	}
 
 	return "", fmt.Errorf(
-		"配置文件未找到。\n\n尝试了以下路径:\n%s\n\n缺省位置: %s\n设置 TT_CONFIG 环境变量或使用 --config 指定正确路径:\n  setx TT_CONFIG \"D:\\path\\to\\config.json\"\n  tt --config \"D:\\path\\to\\config.json\" config path",
+		"配置文件未找到。\n\n尝试了以下路径:\n%s\n\n缺省位置: %s\n设置 TG_CONFIG 环境变量或使用 --config 指定正确路径:\n  setx TG_CONFIG \"D:\\path\\to\\config.json\"\n  tt --config \"D:\\path\\to\\config.json\" config path",
 		FormatTriedPaths(tried), DefaultConfigPath(),
 	)
 }

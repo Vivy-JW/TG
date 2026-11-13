@@ -31,11 +31,11 @@ import (
 	"strings"
 	"time"
 
-	"tt/internal/config"
-	"tt/internal/target"
+	"tg/internal/config"
+	"tg/internal/target"
 )
 
-// State 是后台服务写的状态文件（`<数据目录>/.tt-serve.json`）里本包关心的部分。
+// State 是后台服务写的状态文件（`<数据目录>/.tg-serve.json`）里本包关心的部分。
 //
 // 字段名必须与 `internal/cli/debug` 写出去的那份一致 —— 读取侧只认文件，不认谁的代码写的。
 type State struct {
@@ -145,7 +145,7 @@ func New(base string) *Client {
 }
 
 // actorDefault 与 `internal/cli/debug` 的 actorSelf 同一套取值：
-// TT_ACTOR 由"人点的按钮"那条链路注入（serve 起子进程时带上），默认按 ai 算。
+// TG_ACTOR 由"人点的按钮"那条链路注入（serve 起子进程时带上），默认按 ai 算。
 // 常量取自 internal/target（与调试面读的是同一个环境变量），本包不另立一份。
 func actorDefault() string {
 	if v := strings.TrimSpace(os.Getenv(target.ActorEnv)); v != "" {

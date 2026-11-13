@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"tt/internal/dbconfig"
-	"tt/internal/safesql"
+	"tg/internal/dbconfig"
+	"tg/internal/safesql"
 )
 
 type fakeDirect struct {

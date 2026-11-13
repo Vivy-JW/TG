@@ -16,7 +16,7 @@ import (
 	"testing"
 	"time"
 
-	"tt/internal/update"
+	"tg/internal/update"
 )
 
 func TestUpdateGetReadsCacheOffline(t *testing.T) {

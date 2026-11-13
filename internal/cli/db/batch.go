@@ -23,10 +23,10 @@ import (
 	"strings"
 	"time"
 
-	"tt/internal/cli/common"
-	"tt/internal/debug"
-	"tt/internal/output"
-	"tt/internal/safesql"
+	"tg/internal/cli/common"
+	"tg/internal/debug"
+	"tg/internal/output"
+	"tg/internal/safesql"
 )
 
 // batchStmt 批量输入里的一条语句。

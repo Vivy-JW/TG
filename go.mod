@@ -1,4 +1,4 @@
-module tt
+module tg
 
 go 1.26.5
 

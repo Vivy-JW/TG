@@ -15,10 +15,10 @@ import (
 	"errors"
 	"fmt"
 
-	"tt/internal/dbconfig"
-	"tt/internal/debug"
-	"tt/internal/host"
-	"tt/internal/output"
+	"tg/internal/dbconfig"
+	"tg/internal/debug"
+	"tg/internal/host"
+	"tg/internal/output"
 )
 
 // sqlSession 一次执行要用的连接。direct 与 ssh 恰有一个非空。

@@ -14,8 +14,8 @@ import (
 	"strings"
 	"testing"
 
-	"tt/internal/host"
-	"tt/internal/target"
+	"tg/internal/host"
+	"tg/internal/target"
 )
 
 // TestRequireExplicitEntRejectsSilentFallback：谁都没说 → **必须拒绝**，且码是 USAGE。

@@ -84,7 +84,7 @@ func SpawnDetached(exe string, args []string, logPath string, extraEnv ...string
 	cmd.Stdout = logf
 	cmd.Stderr = logf
 	cmd.Stdin = nil // os.DevNull：子进程不该等着谁的输入
-	cmd.Env = append(append(os.Environ(), "TT_SERVE_LOG="+logPath), extraEnv...)
+	cmd.Env = append(append(os.Environ(), "TG_SERVE_LOG="+logPath), extraEnv...)
 
 	// DETACHED_PROCESS(0x8) 脱离控制台；CREATE_NEW_PROCESS_GROUP(0x200) 独立进程组
 	cmd.SysProcAttr = &syscall.SysProcAttr{CreationFlags: 0x8 | 0x200}

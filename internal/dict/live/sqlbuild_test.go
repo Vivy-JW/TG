@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"tt/internal/dict/db"
+	"tg/internal/dict/db"
 )
 
 // 本文件测的是**拼 SQL 那一层**（纯字符串），不是查询本身 —— 那些要真远程库，

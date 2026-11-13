@@ -41,7 +41,7 @@ import (
 
 	"github.com/coder/websocket"
 
-	"tt/internal/target"
+	"tg/internal/target"
 )
 
 // ---------------------------------------------------------------------------
@@ -369,7 +369,7 @@ func TestWP6AuditLinesCoverCreateReuseAndAmbiguity(t *testing.T) {
 			t.Fatalf("审计行不是合法 JSON（形状取 internal/target 的 AuditEntry）：%v\n%s", err, ln)
 		}
 		if e.Actor != "agent" {
-			t.Errorf("审计行的「谁」= %q，该是注入的 agent（缺省来源是 TT_ACTOR）", e.Actor)
+			t.Errorf("审计行的「谁」= %q，该是注入的 agent（缺省来源是 TG_ACTOR）", e.Actor)
 		}
 		if strings.TrimSpace(e.Ref) == "" {
 			t.Errorf("审计行的「哪条」是空的 —— 它写的是规范 id（C5.4 / C2.0）")

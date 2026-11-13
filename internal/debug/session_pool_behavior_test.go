@@ -21,7 +21,7 @@ import (
 	"strings"
 	"testing"
 
-	"tt/internal/target"
+	"tg/internal/target"
 )
 
 // sameTarget 的两条**还没被钉住**的语义。

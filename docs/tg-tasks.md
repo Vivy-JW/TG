@@ -72,9 +72,9 @@
 
 ## 阶段 5 改名三批
 
-- ☐ ①对外：二进制 `tg.exe`、MSI 产品名、PATH 写入名、文档自称
-- ☐ ②数据与配置：`~/.tt` → `~/.tg`（带一次性迁移）、`TT_WEB_DIR`、`.tt-serve.json`、`TT_*` 读旧名兼容
-- ☐ ③代码内部：`module tt` → `tg` 全仓 import 重写 + 重生成 `commands.html`
+- ☐ ①对外：二进制 `tg.exe`、MSI 产品名、PATH 写入名、文档自称（**未做**：`Makefile`/`build_*.bat` 仍出 `tt.exe`，`installer/tt.wxs` 与 `%LOCALAPPDATA%\Programs\TT` 未改）
+- ☑ ②数据与配置（2026-11-13）：`%APPDATA%\tt` → `%APPDATA%\tg`、`~/.tt` → `~/.tg`（字典/镜像兜底）、`.tt-serve.json|log` → `.tg-serve.json|log`、`TT_*` 环境变量全改 `TG_*`。**不做旧名兼容**（TG 没有已发版的旧脚本/旧数据要接）
+- ☑ ③代码内部（2026-11-13）：`module tt` → `module tg`，176 个 Go 文件的 import 全量重写、`-ldflags -X tg/internal/cli.Version` 同步；`go build ./...` 与 `go test ./internal/...` 通过（`internal/host` 仍因沙箱无 bash 恒红）
 
 ## 阶段 6 验证与发布
 

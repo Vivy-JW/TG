@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"tt/internal/cli/common"
-	"tt/internal/config"
+	"tg/internal/cli/common"
+	"tg/internal/config"
 
 	_ "modernc.org/sqlite"
 )

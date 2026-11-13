@@ -14,9 +14,9 @@ import (
 	"fmt"
 	"strings"
 
-	"tt/internal/config"
-	"tt/internal/dbconfig"
-	"tt/internal/host"
+	"tg/internal/config"
+	"tg/internal/dbconfig"
+	"tg/internal/host"
 )
 
 // Config debug 功能配置,由统一配置的三段组装而成:

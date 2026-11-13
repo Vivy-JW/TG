@@ -6,7 +6,7 @@ package server
 // 再手工读-改-写整份文件,合并后统一到 internal/config 的一份实现。
 
 import (
-	"tt/internal/config"
+	"tg/internal/config"
 )
 
 // loadConfig 读类型化配置。文件不存在不是错误(首次运行返回填好缺省值的空配置)。

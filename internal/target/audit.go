@@ -16,17 +16,17 @@ import (
 // 因为它在会话生命周期内恒定不变（C2.0）—— 拿会漂的 `display`（含作业段）记审计，
 // 事后就没法把两条记录对上同一条会话。
 
-// ActorEnv 是"谁"的缺省来源：环境变量 `TT_ACTOR`。
+// ActorEnv 是"谁"的缺省来源：环境变量 `TG_ACTOR`。
 //
 // 它是"这次调用算谁的动作"的唯一开关，由**发起方**在起子进程时设置。为什么需要它：那条链路是
 // "人点界面按钮 → serve 起 tt 子进程 → 子进程再调调试线 REST"，而 CLI 默认声明 X-Actor: ai
 // （命令行本来是 AI 的接口）。于是纯人工模式下，人点出来的动作会被自己设的模式闸门拦下
-// （实测 2026-10-16："纯人工模式:AI 不可操作"）。serve 起这条链路时把 TT_ACTOR=human 传下去，
+// （实测 2026-10-16："纯人工模式:AI 不可操作"）。serve 起这条链路时把 TG_ACTOR=human 传下去，
 // 子进程逐层继承（exec.Command 默认继承环境）。
 //
 // 调试面（`internal/debug`）、它的客户端（`internal/debugclient`）与审计行都读这一份，
 // **不另立第二个开关**，也不在各自包里重复定义常量。
-const ActorEnv = "TT_ACTOR"
+const ActorEnv = "TG_ACTOR"
 
 // AuditEntry 是一条会话操作审计。
 type AuditEntry struct {
@@ -69,7 +69,7 @@ func (e AuditEntry) HumanLine() string {
 		at.Format(time.RFC3339), e.Actor, e.Ref, e.Action)
 }
 
-// DefaultActor 是"谁"的缺省来源：读 `TT_ACTOR`（见 ActorEnv）。
+// DefaultActor 是"谁"的缺省来源：读 `TG_ACTOR`（见 ActorEnv）。
 //
 // getenv 由调用方注入（本包不直接读环境变量：那会让纯函数变成不可测的副作用）。
 // 取不到就给字面量占位，绝不返回空串。

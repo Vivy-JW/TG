@@ -8,9 +8,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"tt/internal/dbconfig"
-	"tt/internal/erpdb"
-	"tt/internal/host"
+	"tg/internal/dbconfig"
+	"tg/internal/erpdb"
+	"tg/internal/host"
 )
 
 // 三个"动作"端点：POST /api/dbprobe、POST /api/dbaccverify、POST /api/conntest。

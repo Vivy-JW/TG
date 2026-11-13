@@ -12,7 +12,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"tt/internal/host"
+	"tg/internal/host"
 )
 
 const binaryProbe = 8 << 10 // 前 8KB 里有 NUL 就按二进制处理

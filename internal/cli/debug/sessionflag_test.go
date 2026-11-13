@@ -34,7 +34,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"tt/internal/target"
+	"tg/internal/target"
 )
 
 // recordedBody 收下桩看到的 POST 请求体（nil = 一次 POST 都没来）。

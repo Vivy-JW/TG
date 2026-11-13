@@ -10,8 +10,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"tt/internal/cli/common"
-	"tt/internal/testkit"
+	"tg/internal/cli/common"
+	"tg/internal/testkit"
 )
 
 // 这一组测的是 tg dict spill：那条"读已经落盘的那份完整结果"的入口。

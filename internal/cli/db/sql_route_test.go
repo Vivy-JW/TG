@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"tt/internal/cli/common"
-	"tt/internal/dbconfig"
-	"tt/internal/output"
+	"tg/internal/cli/common"
+	"tg/internal/dbconfig"
+	"tg/internal/output"
 )
 
 func TestSQLRouteValid(t *testing.T) {

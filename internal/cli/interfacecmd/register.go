@@ -15,10 +15,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"tt/internal/cli/common"
-	"tt/internal/form42f"
-	"tt/internal/output"
-	"tt/internal/screen"
+	"tg/internal/cli/common"
+	"tg/internal/form42f"
+	"tg/internal/output"
+	"tg/internal/screen"
 )
 
 type flags struct {

@@ -13,8 +13,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"tt/internal/config"
-	"tt/internal/output"
+	"tg/internal/config"
+	"tg/internal/output"
 )
 
 // 全局开关。由根命令的 persistent flags 绑定；各命令组只读。

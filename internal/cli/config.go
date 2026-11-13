@@ -9,8 +9,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"tt/internal/cli/common"
-	"tt/internal/config"
+	"tg/internal/cli/common"
+	"tg/internal/config"
 )
 
 // configGetRaw --raw：config get 不过滤口令（与 config show 的 --raw 同义）。
@@ -30,7 +30,7 @@ func newConfigCmd() *cobra.Command {
 debug / query / mirror / dict / sync / tdev 是各命令组自己的设置。
 
 配置位置按以下顺序确定（第一个存在的胜出）：
-  1. TT_CONFIG 环境变量
+  1. TG_CONFIG 环境变量
   2. --config <路径>
   3. <exe 目录>\.portable 存在 → 便携包，配置留在包内
   4. ` + config.DefaultConfigPathHint() + `

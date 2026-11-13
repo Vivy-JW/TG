@@ -3,8 +3,8 @@ package web
 import (
 	"net/http"
 
-	"tt/internal/config"
-	"tt/internal/pathinstall"
+	"tg/internal/config"
+	"tg/internal/pathinstall"
 )
 
 // configStatus 是"配置里那些路径型取值"的派生状态:值本身在 /api/hosts 里,

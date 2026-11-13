@@ -7,16 +7,16 @@ tt 访问的一切自有外部资源（缓存、服务状态、本地字典库�
 
 按优先级取**第一个存在**的：
 
-1. `TT_CONFIG` 环境变量
+1. `TG_CONFIG` 环境变量
 2. `--config <路径>`
 3. `<exe 目录>\.portable` 存在 → 便携包，配置留在包内
-4. `%APPDATA%\tt\config.json` —— 默认位置
+4. `%APPDATA%\tg\config.json` —— 默认位置
 
 **没有旧位置兜底，也不做自动迁移。** 旧版的各种落点（`%APPDATA%\T100\tt`、tdebug/tdict、
-exe 或当前目录的 `config.json`）一律不读 —— 数据统一在 `%APPDATA%\tt`，不向后兼容。
+exe 或当前目录的 `config.json`）一律不读 —— 数据统一在 `%APPDATA%\tg`，不向后兼容。
 `tt config validate` 会对 `schemaVersion` 低于当前的配置给出提示（不再自动迁移）。
 
-**显式指定的路径就是答案。** `--config` / `TT_CONFIG` 指向一个还不存在的文件时，**不**悄悄
+**显式指定的路径就是答案。** `--config` / `TG_CONFIG` 指向一个还不存在的文件时，**不**悄悄
 改用默认落点 —— 否则便携版会把配置写进用户目录，测试脚本也会落在别处。
 
 **数据目录 = 配置所在目录**，所以缓存、快照、状态文件都跟着落在同一个目录下。
@@ -35,7 +35,7 @@ loc := config.LocationsAt(configPath)                        // 已有配置路�
 |---|---|
 | `DataDir()` | 数据目录 = `config.json` 所在目录 |
 | `CacheDir(name)` | 数据目录下的缓存子目录；名字必须在 `CacheSubdirs` 清单里，否则空串 |
-| `StateFile()` / `LogFile()` | `.tt-serve.json` / `.tt-serve.log`（后台服务状态与日志） |
+| `StateFile()` / `LogFile()` | `.tg-serve.json` / `.tg-serve.log`（后台服务状态与日志） |
 | `DictDBDir()` / `DictDBPath(env)` | 本地字典库目录与某环境的库文件：`<数据目录>/dict/<环境>.db`（一个环境一个文件） |
 | `DictDBCandidatesFor(env, flagPath)` / `ResolveDictDBFor(env, flagPath)` | 某环境本地库的候选与读侧定位：`TDICT_DB` → `-d` → `<数据目录>/dict/<环境>.db` |
 | `DictDBCandidates(flagPath)` / `ResolveDictDB(flagPath)` / `SyncTarget(configured, flagPath)` | **旧版单文件口径**，只用于显式 `-d/TDICT_DB` 的兼容路径；新代码走 `DictDB*For(env)` |

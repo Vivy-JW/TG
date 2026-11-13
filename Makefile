@@ -29,9 +29,9 @@ web-build: ## 前端构建（含 tsc 类型检查；check:app 不做类型检查
 skips: ## 回读：跑了多少、跳了多少（会真跑一遍全量）
 	go test ./... -count=1 -v 2>&1 | grep -E '^--- (PASS|SKIP)' | sort | uniq -c
 
-update-live-check: ## tt update 的真联网自检（要能访问 GitHub；代理用 TT_PROXY）
-	@go build -ldflags "-X tt/internal/cli.Version=0.0.0" -o "$$TEMP/tt-updcheck.exe" .
-	@$$TEMP/tt-updcheck.exe update check --format table --proxy "$$TT_PROXY" ; code=$$? ; rm -f "$$TEMP/tt-updcheck.exe" ; if [ "$$code" = "0" ] || [ "$$code" = "10" ] ; then echo "live-check OK (exit $$code)" ; else echo "live-check FAILED (exit $$code)" ; exit 1 ; fi
+update-live-check: ## tt update 的真联网自检（要能访问 GitHub；代理用 TG_PROXY）
+	@go build -ldflags "-X tg/internal/cli.Version=0.0.0" -o "$$TEMP/tt-updcheck.exe" .
+	@$$TEMP/tt-updcheck.exe update check --format table --proxy "$$TG_PROXY" ; code=$$? ; rm -f "$$TEMP/tt-updcheck.exe" ; if [ "$$code" = "0" ] || [ "$$code" = "10" ] ; then echo "live-check OK (exit $$code)" ; else echo "live-check FAILED (exit $$code)" ; exit 1 ; fi
 
 
 # 调 .bat 为什么长这样（两处都别退回去）：

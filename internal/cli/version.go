@@ -9,8 +9,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"tt/internal/cli/common"
-	"tt/internal/update"
+	"tg/internal/cli/common"
+	"tg/internal/update"
 )
 
 // Version 由打包脚本注入：build_portable.bat / build_msi.bat 读仓库根的 VERSION

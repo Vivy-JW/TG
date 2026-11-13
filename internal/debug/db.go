@@ -17,9 +17,9 @@ import (
 	"sync"
 	"time"
 
-	"tt/internal/dbconfig"
-	"tt/internal/entdir"
-	"tt/internal/host"
+	"tg/internal/dbconfig"
+	"tg/internal/entdir"
+	"tg/internal/host"
 )
 
 // EntMapping 一个企业编号 → 账号。定义在 internal/entdir:

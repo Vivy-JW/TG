@@ -5,10 +5,10 @@ import (
 	"os"
 	"strings"
 
-	"tt/internal/cli/common"
-	"tt/internal/config"
-	"tt/internal/dict/dbsync"
-	"tt/internal/output"
+	"tg/internal/cli/common"
+	"tg/internal/config"
+	"tg/internal/dict/dbsync"
+	"tg/internal/output"
 
 	"github.com/spf13/cobra"
 )

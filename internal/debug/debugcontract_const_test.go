@@ -22,7 +22,7 @@ package debug
 // **这个文件只放数据，不放判断** —— 判断（"这条契约今天实现了没有"）在
 // `contract_debug_test.go` 与 `internal/testkit` 的扫描里。
 
-import "tt/internal/target"
+import "tg/internal/target"
 
 // ---------------------------------------------------------------------------
 // 一、返回信封的键集（契约 5.1 / 5.2 / C5.1 / C5.10 / C5.12）

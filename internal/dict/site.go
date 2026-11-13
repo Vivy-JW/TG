@@ -18,8 +18,8 @@ import (
 	"regexp"
 	"strings"
 
-	"tt/internal/dbconfig"
-	"tt/internal/dict/live"
+	"tg/internal/dbconfig"
+	"tg/internal/dict/live"
 )
 
 // siteCodeRE 据点代号的合法字符。据点代号会成为 Oracle schema 名，拼进 SQL 前

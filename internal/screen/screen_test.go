@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"tt/internal/form42f"
+	"tg/internal/form42f"
 )
 
 func labels(pairs [][2]string) MapLabels {

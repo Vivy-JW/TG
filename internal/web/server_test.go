@@ -12,8 +12,8 @@ import (
 	"testing"
 	"testing/fstest"
 
-	"tt/internal/config"
-	"tt/internal/designer"
+	"tg/internal/config"
+	"tg/internal/designer"
 )
 
 // newTestServer 造一个只带共享 API 的服务（不接子系统），指向临时配置。

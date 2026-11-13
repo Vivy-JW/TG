@@ -14,11 +14,11 @@ import (
 	"strings"
 	"time"
 
-	"tt/internal/cli/common"
-	cdb "tt/internal/cli/db"
-	"tt/internal/debug"
-	"tt/internal/debugclient"
-	"tt/internal/target"
+	"tg/internal/cli/common"
+	cdb "tg/internal/cli/db"
+	"tg/internal/debug"
+	"tg/internal/debugclient"
+	"tg/internal/target"
 
 	"github.com/spf13/cobra"
 )
@@ -85,7 +85,7 @@ func joinAPIBase(url, prefix string) string {
 	return u + prefix
 }
 
-// actorSelf 这次调用算谁的动作：TT_ACTOR 环境变量优先（serve 起"人点的按钮"那条链路时
+// actorSelf 这次调用算谁的动作：TG_ACTOR 环境变量优先（serve 起"人点的按钮"那条链路时
 // 会传 human），否则按 ai 算 —— 命令行本来就是 AI 的接口。取值与 internal/debug 的
 // actorHeader 同一套词汇（ai / human）。常量取自 internal/target，不在命令层另立一份。
 func actorSelf() string {

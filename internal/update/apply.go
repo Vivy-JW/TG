@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"tt/internal/config"
-	"tt/internal/winproc"
+	"tg/internal/config"
+	"tg/internal/winproc"
 )
 
 // Plan 一次升级的全部输入。它由前台命令写好、交给脱离的更新器进程读 —— 所以是**跨进程
@@ -35,7 +35,7 @@ type Plan struct {
 
 	// StopPIDs 是升级前要停掉的进程（后台服务 + 各工作区的引擎守护进程）。
 	// **由命令层算好**：状态文件的形状与"哪些进程会锁着安装目录"是命令层的知识
-	// （`.tt-serve.json` 在 internal/cli/debug、`.tt-tzs.json` 在 internal/dev/tzs），
+	// （`.tg-serve.json` 在 internal/cli/debug、`.tt-tzs.json` 在 internal/dev/tzs），
 	// 这里只负责把它们杀掉 —— 不然这个包就得持有两份状态文件的第二份形状。
 	StopPIDs []int `json:"stopPids,omitempty"`
 	// RestartServe 为真时，更新器做完要把后台服务拉回来（升级前它在跑）。
@@ -358,7 +358,7 @@ func refreshSkills(p *Plan, log func(string, ...any)) []string {
 
 // restartServe 用升级前记下的参数把后台服务拉回来。
 //
-// 日志落到**服务自己的那个日志**（`.tt-serve.log`）而不是更新日志：`tt serve` 自己
+// 日志落到**服务自己的那个日志**（`.tg-serve.log`）而不是更新日志：`tt serve` 自己
 // 起的那些进程都把输出写在那里，混到更新日志里会让“服务为什么没起来”要在两个文件里找。
 func restartServe(p *Plan, log func(string, ...any)) {
 	args := p.RestartArgs

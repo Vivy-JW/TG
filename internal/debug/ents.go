@@ -23,8 +23,8 @@ import (
 	"sync"
 	"time"
 
-	"tt/internal/entdir"
-	"tt/internal/host"
+	"tg/internal/entdir"
+	"tg/internal/host"
 )
 
 const (

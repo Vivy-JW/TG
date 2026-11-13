@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"tt/internal/config"
-	"tt/internal/host"
-	"tt/internal/output"
+	"tg/internal/config"
+	"tg/internal/host"
+	"tg/internal/output"
 )
 
 // RemoteReadLimit 单文件远程读取上限。GP 的 4GL 单个最大约 2.6 MB（saapt110），

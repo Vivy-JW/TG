@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"tt/internal/config"
+	"tg/internal/config"
 )
 
 // LookupModule 从本地 GP 字典里查“程序 → 实际模块”。

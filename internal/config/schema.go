@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"tt/internal/dbconfig"
+	"tg/internal/dbconfig"
 )
 
 // SchemaVersion 当前配置结构版本。随新配置文件写入（见 NewSkeleton / ensureSchemaVersion）。

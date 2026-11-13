@@ -7,10 +7,10 @@ import (
 	"sort"
 	"strings"
 
-	"tt/internal/cli/common"
-	"tt/internal/config"
-	"tt/internal/mirror"
-	"tt/internal/output"
+	"tg/internal/cli/common"
+	"tg/internal/config"
+	"tg/internal/mirror"
+	"tg/internal/output"
 )
 
 type sourceOpts struct {

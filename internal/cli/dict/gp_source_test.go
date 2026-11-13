@@ -9,7 +9,7 @@ import (
 
 	_ "modernc.org/sqlite"
 
-	"tt/internal/cli/common"
+	"tg/internal/cli/common"
 )
 
 // gpConfig 造一份只有一个 GP 环境的 config.json，字典库目录指向 dir。

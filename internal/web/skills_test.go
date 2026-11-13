@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"tt/internal/config"
+	"tg/internal/config"
 )
 
 // withOfficialSkills 在临时目录造一棵官方技能树，并让本包把它当成 <exe>/skills。

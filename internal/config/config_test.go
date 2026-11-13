@@ -178,7 +178,7 @@ func TestSave_AtomicAndKeepsMode(t *testing.T) {
 // 配置目录不存在时要能自动创建 —— 缺省位置在新机器上还没有。
 func TestSave_CreatesMissingDir(t *testing.T) {
 	dir := t.TempDir()
-	path := filepath.Join(dir, "T100", "tt", "config.json")
+	path := filepath.Join(dir, "T100", "tg", "config.json")
 	if err := Save(path, map[string]any{"a": 1}); err != nil {
 		t.Fatalf("Save 应当自动创建目录: %v", err)
 	}

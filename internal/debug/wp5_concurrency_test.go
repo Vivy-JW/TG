@@ -17,7 +17,7 @@ import (
 	"testing"
 	"time"
 
-	"tt/internal/host"
+	"tg/internal/host"
 )
 
 // ---------- Y（T5.2）:会话级操作不许改写共享配置 ----------

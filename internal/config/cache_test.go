@@ -15,8 +15,8 @@ func buildCacheDir(t *testing.T) string {
 	if err := os.WriteFile(filepath.Join(dir, "config.json"), []byte(`{"schemaVersion":2}`), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	// .tt-serve.json 是**运行中**服务的状态文件,删了 --stop 就找不着实例 —— 它不是缓存
-	if err := os.WriteFile(filepath.Join(dir, ".tt-serve.json"), []byte(`{"pid":1}`), 0o600); err != nil {
+	// .tg-serve.json 是**运行中**服务的状态文件,删了 --stop 就找不着实例 —— 它不是缓存
+	if err := os.WriteFile(filepath.Join(dir, ".tg-serve.json"), []byte(`{"pid":1}`), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	for _, sub := range CacheSubdirs {
@@ -62,7 +62,7 @@ func TestCleanCacheKeepsConfig(t *testing.T) {
 		t.Errorf("应删 %d 个文件 / %d 字节, got %d / %d",
 			len(CacheSubdirs), 10*len(CacheSubdirs), removed, freed)
 	}
-	for _, keep := range []string{"config.json", ".tt-serve.json"} {
+	for _, keep := range []string{"config.json", ".tg-serve.json"} {
 		if _, err := os.Stat(filepath.Join(dir, keep)); err != nil {
 			t.Errorf("%s 不该被删: %v", keep, err)
 		}

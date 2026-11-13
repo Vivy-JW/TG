@@ -18,7 +18,7 @@ package debug
 import (
 	"testing"
 
-	"tt/internal/host"
+	"tg/internal/host"
 )
 
 // TestIdentitySeqIsAllocatedPerEnvironment 钉住序号的**作用域**（C2.2 / 2.1.3 / Q24）：

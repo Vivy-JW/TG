@@ -13,8 +13,8 @@
 package host
 
 import (
-	"tt/internal/config"
-	"tt/internal/dbconfig"
+	"tg/internal/config"
+	"tg/internal/dbconfig"
 )
 
 // 环境模型的别名。定义在 internal/config/schema.go。
@@ -39,7 +39,7 @@ var LoadHosts = config.LoadHosts
 // LoadConfigRoot 读取完整配置的类型化视图（需要环境之外的节时用它）。
 var LoadConfigRoot = config.Load
 
-// ResolveConfigPath 解析配置文件路径（--config / TT_CONFIG / 便携包 / 统一用户目录）。
+// ResolveConfigPath 解析配置文件路径（--config / TG_CONFIG / 便携包 / 统一用户目录）。
 var ResolveConfigPath = config.ResolvePath
 
 // DefaultConfigPathHint 给 --help 用的一行提示。

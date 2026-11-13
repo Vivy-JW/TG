@@ -4,7 +4,7 @@ package form42f
 //
 // 纪律：
 //   - 仓库内只放**合成小夹具**（`testdata/form42f/`，无真实业务数据）；
-//   - 真样本走 `TT_FORM_SAMPLE_DIR`（默认指向成果目录的 `fixtures/forms/`），缺失就 `Skip` 并说明原因（C7.3）；
+//   - 真样本走 `TG_FORM_SAMPLE_DIR`（默认指向成果目录的 `fixtures/forms/`），缺失就 `Skip` 并说明原因（C7.3）；
 //   - 其中 `TestParseForm42F_CollectsTableColumns` 是**反证测试**：把 `TableColumn` 过滤掉必须红（C7.5）。
 
 import (
@@ -29,7 +29,7 @@ func readFixture42F(t *testing.T, name string) string {
 // sampleDir42F 真样本目录（仓库外，契约 C7.3 / 变更记录 A5）。
 func sampleDir42F(t *testing.T) string {
 	t.Helper()
-	if d := os.Getenv("TT_FORM_SAMPLE_DIR"); d != "" {
+	if d := os.Getenv("TG_FORM_SAMPLE_DIR"); d != "" {
 		return d
 	}
 	return filepath.Join("..", "..", ".agents", "Genero Original Factory Compatible", "fixtures", "forms")
@@ -38,7 +38,7 @@ func sampleDir42F(t *testing.T) string {
 // corpusMap42F 归档语料表（契约 A5 的基线）。
 func corpusMap42F(t *testing.T) string {
 	t.Helper()
-	if p := os.Getenv("TT_FORM_CORPUS_MAP"); p != "" {
+	if p := os.Getenv("TG_FORM_CORPUS_MAP"); p != "" {
 		return p
 	}
 	return filepath.Join("..", "..", ".agents", "Genero Original Factory Compatible",
@@ -212,7 +212,7 @@ func TestParseForm42F_T100Samples(t *testing.T) {
 	path := filepath.Join(dir, "t100", "axmt500_wf.42f")
 	b, err := os.ReadFile(path)
 	if err != nil {
-		t.Skipf("没有真样本（%s 打不开：%v）—— 设 TT_FORM_SAMPLE_DIR 指向 fixtures/forms/", path, err)
+		t.Skipf("没有真样本（%s 打不开：%v）—— 设 TG_FORM_SAMPLE_DIR 指向 fixtures/forms/", path, err)
 	}
 	f, err := ParseForm42F("axmt500_wf", string(b))
 	if err != nil {
@@ -272,7 +272,7 @@ func TestParseForm42F_T100Samples(t *testing.T) {
 func TestFormMatchesCorpus(t *testing.T) {
 	raw, err := os.ReadFile(corpusMap42F(t))
 	if err != nil {
-		t.Skipf("没有归档语料表（%v）—— 设 TT_FORM_CORPUS_MAP 指向 colname-fieldid.json", err)
+		t.Skipf("没有归档语料表（%v）—— 设 TG_FORM_CORPUS_MAP 指向 colname-fieldid.json", err)
 	}
 	var doc struct {
 		Map map[string]map[string]json.RawMessage `json:"map"`

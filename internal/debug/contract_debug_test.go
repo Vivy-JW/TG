@@ -28,8 +28,8 @@ import (
 	"strings"
 	"testing"
 
-	"tt/internal/output"
-	"tt/internal/target"
+	"tg/internal/output"
+	"tg/internal/target"
 )
 
 // ---------------------------------------------------------------------------

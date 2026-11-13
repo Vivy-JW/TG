@@ -17,11 +17,11 @@ import (
 
 	"github.com/coder/websocket"
 
-	"tt/internal/config"
-	"tt/internal/dbconfig"
-	"tt/internal/host"
-	"tt/internal/output"
-	"tt/internal/target"
+	"tg/internal/config"
+	"tg/internal/dbconfig"
+	"tg/internal/host"
+	"tg/internal/output"
+	"tg/internal/target"
 )
 
 // Server 本地调试服务:REST + WebSocket + Web 前端
@@ -345,7 +345,7 @@ const actorHeader = "X-Actor"
 // 不是攻击者 —— 与既有两道闸门同一档。
 const ActorSystem = "system"
 
-// 环境变量 TT_ACTOR（"这次调用算谁的动作"）的常量定义在 internal/target.ActorEnv，
+// 环境变量 TG_ACTOR（"这次调用算谁的动作"）的常量定义在 internal/target.ActorEnv，
 // 调试面不再重复定义一份 —— 两边读的必须字面相同，两份定义就会漂。
 // 为什么需要它、serve 起链路时怎么传，见那处的注释。
 

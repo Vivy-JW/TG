@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	dictlib "tt/internal/dict"
+	dictlib "tg/internal/dict"
 )
 
 // gpReMenu 登录器问实例的那一行。

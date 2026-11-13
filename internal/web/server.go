@@ -26,13 +26,13 @@ import (
 	"strings"
 	"time"
 
-	"tt/internal/config"
-	"tt/internal/dbconfig"
-	"tt/internal/designer"
-	"tt/internal/envmove"
-	"tt/internal/erpdb"
-	"tt/internal/host"
-	"tt/internal/sshtun"
+	"tg/internal/config"
+	"tg/internal/dbconfig"
+	"tg/internal/designer"
+	"tg/internal/envmove"
+	"tg/internal/erpdb"
+	"tg/internal/host"
+	"tg/internal/sshtun"
 )
 
 // DefaultListen 是 serve 未显式配置监听地址时的默认地址。

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"tt/internal/host"
+	"tg/internal/host"
 )
 
 // ApplyDefaultEnv 在 sshs 被删空时不得 panic。

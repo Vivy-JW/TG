@@ -38,8 +38,8 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"tt/internal/host"
-	"tt/internal/target"
+	"tg/internal/host"
+	"tg/internal/target"
 )
 
 // ---------------------------------------------------------------------------

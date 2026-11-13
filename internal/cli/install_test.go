@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"tt/internal/testkit"
-	"tt/internal/update"
+	"tg/internal/testkit"
+	"tg/internal/update"
 )
 
 // mkSkills 在 dir 下建一个技能源树：每个技能一个目录 + SKILL.md。
@@ -43,7 +43,7 @@ func writeConfig(t *testing.T, body string) string {
 	if err := os.WriteFile(cfg, []byte(body), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("TT_CONFIG", cfg)
+	t.Setenv("TG_CONFIG", cfg)
 	return dataDir
 }
 

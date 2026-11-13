@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"tt/internal/dict/db"
-	"tt/internal/output"
+	"tg/internal/dict/db"
+	"tg/internal/output"
 
 	"github.com/spf13/cobra"
 )

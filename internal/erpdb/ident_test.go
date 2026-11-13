@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"tt/internal/dbconfig"
+	"tg/internal/dbconfig"
 )
 
 // conn 造一个只填了本文件关心的那几个字段的连接（用户名词典表要的是 User/Type/Host）。
@@ -345,7 +345,7 @@ func TestDebugPathDoesNotImportErpdb(t *testing.T) {
 	if len(files) < 10 {
 		t.Fatalf("只扫到 %d 个 .go —— 定位错了，这条断言等于空转", len(files))
 	}
-	const mod = "tt/internal/erpdb"
+	const mod = "tg/internal/erpdb"
 	for _, f := range files {
 		b, err := os.ReadFile(f)
 		if err != nil {

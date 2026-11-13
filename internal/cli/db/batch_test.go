@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"tt/internal/cli/common"
-	"tt/internal/debug"
-	"tt/internal/output"
+	"tg/internal/cli/common"
+	"tg/internal/debug"
+	"tg/internal/output"
 )
 
 type fakeQuerier struct {

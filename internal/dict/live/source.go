@@ -22,8 +22,8 @@ import (
 	"fmt"
 	"strings"
 
-	"tt/internal/dict/db"
-	"tt/internal/erpdb"
+	"tg/internal/dict/db"
+	"tg/internal/erpdb"
 )
 
 // q 执行单条只读 SQL(查询命令无需外部 ctx,沿用连接自身生命周期)。

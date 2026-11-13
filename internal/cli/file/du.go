@@ -8,8 +8,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"tt/internal/cli/common"
-	"tt/internal/host"
+	"tg/internal/cli/common"
+	"tg/internal/host"
 )
 
 func newDuCmd() *cobra.Command {

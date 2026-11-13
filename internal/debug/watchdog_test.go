@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"tt/internal/host"
+	"tg/internal/host"
 )
 
 // 停站看门狗的默认值。配置里没写这个键时取 DefaultWatchdogSeconds ——

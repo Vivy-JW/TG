@@ -6,9 +6,9 @@ import (
 	"os"
 	"time"
 
-	"tt/internal/cli/common"
-	"tt/internal/config"
-	dictlib "tt/internal/dict"
+	"tg/internal/cli/common"
+	"tg/internal/config"
+	dictlib "tg/internal/dict"
 
 	"github.com/spf13/cobra"
 )
@@ -18,7 +18,7 @@ var dbSyncCmd = &cobra.Command{
 	Short: "从 TOP GP 拉取字典，重建本地 SQLite",
 	Long: `连 TOP GP 的 Oracle，把表档/字段/索引/约束/程序/程序用表/错误消息拉进本地 SQLite。
 
-落盘位置：该环境配置里的 dictDir，默认 ~/.tt/gp-dict/<环境>.db（Web 默认在数据目录/dict）。
+落盘位置：该环境配置里的 dictDir，默认 ~/.tg/gp-dict/<环境>.db（Web 默认在数据目录/dict）。
 字典据点固定按 ds 取（ds 表档最全，2,962 张），与设置页「营运据点」选哪家无关 ——
 营运据点只决定直查（dict r.t --env <环境>）连哪个 schema。
 环境必须点名：--env <环境> 或 --at <环境>。

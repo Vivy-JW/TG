@@ -32,7 +32,7 @@ func SpawnDetached(exe string, args []string, logPath string, extraEnv ...string
 	cmd.Stdout = logf
 	cmd.Stderr = logf
 	cmd.Stdin = nil
-	cmd.Env = append(append(os.Environ(), "TT_SERVE_LOG="+logPath), extraEnv...)
+	cmd.Env = append(append(os.Environ(), "TG_SERVE_LOG="+logPath), extraEnv...)
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
 	if err := cmd.Start(); err != nil {
 		return 0, err

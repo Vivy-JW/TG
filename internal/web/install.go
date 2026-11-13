@@ -3,7 +3,7 @@ package web
 import (
 	"net/http"
 
-	"tt/internal/pathinstall"
+	"tg/internal/pathinstall"
 )
 
 // ---------- 命令行安装(把可执行文件目录加入用户 PATH) ----------

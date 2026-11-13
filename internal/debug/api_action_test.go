@@ -9,8 +9,8 @@ import (
 	"testing"
 	"testing/fstest"
 
-	"tt/internal/host"
-	"tt/internal/target"
+	"tg/internal/host"
+	"tg/internal/target"
 )
 
 // 四个"动作型"端点的**错误半边**：POST /api/wslogs/debug、POST /api/dbsql、

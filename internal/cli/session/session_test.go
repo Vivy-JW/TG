@@ -14,9 +14,9 @@ import (
 	"sync"
 	"testing"
 
-	"tt/internal/cli/common"
-	"tt/internal/debugclient"
-	"tt/internal/testkit"
+	"tg/internal/cli/common"
+	"tg/internal/debugclient"
+	"tg/internal/testkit"
 )
 
 type recFake struct {

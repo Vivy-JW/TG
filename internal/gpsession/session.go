@@ -22,8 +22,8 @@ import (
 	"sync"
 	"time"
 
-	"tt/internal/config"
-	"tt/internal/host"
+	"tg/internal/config"
+	"tg/internal/host"
 )
 
 // fgldbPrompt 是 fgldb 的提示符。所有命令都以它为界。

@@ -17,8 +17,8 @@ import (
 	"strings"
 	"time"
 
-	"tt/internal/config"
-	"tt/internal/dict/dbsync"
+	"tg/internal/config"
+	"tg/internal/dict/dbsync"
 )
 
 // SyncEnv 同步一个 GP 环境的字典，阻塞到完成。

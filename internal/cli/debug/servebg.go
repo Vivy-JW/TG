@@ -5,7 +5,7 @@ package debug
 //   - 默认后台常驻(单实例):打印实际地址后立即返回,终端/会话不被占用,可继续输入其它命令;
 //   - `--foreground` 前台运行(调试用,日志直接到终端);
 //   - `--stop` 停止后台实例;
-//   - 运行状态记录在 config.json 同目录的 .tt-serve.json(pid/地址/API 前缀/日志),
+//   - 运行状态记录在 config.json 同目录的 .tg-serve.json(pid/地址/API 前缀/日志),
 //     端口被占用自动顺延时,控制端命令据状态文件自动找到真实地址。
 //
 // 两个服务是同一套机制的两个实例,只差三样东西(见 ServeSpec):
@@ -31,9 +31,9 @@ import (
 	"strings"
 	"time"
 
-	"tt/internal/cli/common"
-	"tt/internal/config"
-	"tt/internal/debug"
+	"tg/internal/cli/common"
+	"tg/internal/config"
+	"tg/internal/debug"
 )
 
 const (
@@ -240,7 +240,7 @@ func RunForeground(cfgPath string, spec ServeSpec, start func(ctx context.Contex
 	err := start(ctx, func(addr string) {
 		st := &ServeInfo{
 			PID: os.Getpid(), URL: "http://" + addr, APIBase: spec.APIBase,
-			Log: os.Getenv("TT_SERVE_LOG"), Since: time.Now().Format(time.RFC3339),
+			Log: os.Getenv("TG_SERVE_LOG"), Since: time.Now().Format(time.RFC3339),
 		}
 		_ = writeServeInfo(st, dir)
 		printRunning(spec, st, cfgPath)

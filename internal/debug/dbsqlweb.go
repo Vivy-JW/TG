@@ -18,7 +18,7 @@ import (
 	"strconv"
 	"time"
 
-	"tt/internal/dbconfig"
+	"tg/internal/dbconfig"
 )
 
 // directSQL 尝试走常驻直连；第二个返回值只在 handled=true 时有意义。

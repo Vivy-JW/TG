@@ -19,7 +19,7 @@ import (
 	"sort"
 	"strings"
 
-	"tt/internal/testenv"
+	"tg/internal/testenv"
 )
 
 // DefaultCorpusRoot 是语料的内置缺省。**定义在 internal/testenv**，这里只是个转发，

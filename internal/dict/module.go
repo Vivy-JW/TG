@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"tt/internal/config"
-	"tt/internal/dict/live"
+	"tg/internal/config"
+	"tg/internal/dict/live"
 )
 
 // 模块来源：debug 的解析链要把它写进信封，用户才知道"这次能跑"是不是碰巧碰上了线上库。
