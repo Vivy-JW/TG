@@ -473,18 +473,11 @@ func (l *Live) QueryMsgLangs(q db.MsgQuery) ([]string, error) {
 	return out, nil
 }
 
-// ---- GP 没有的字典族：返回空集（命令层据此说“GP 没有这类数据”） ----
-
-func (l *Live) QuerySubProgInfo(code, lang string) (*db.SubProgInfo, error) { return nil, nil }
-func (l *Live) QuerySubProgList(lang, keyword string) ([]db.SubProgListItem, error) {
-	return []db.SubProgListItem{}, nil
-}
-
 // ---- 开窗定义 r.q：GP 用 gab_file + gac_file ----
 //
 // 与 T100 的差别：GP 没有整段 SQL 模板（dzca003），也没有 arg1~9 的参数档（dzcb_t）。
 // 这里只负责把定义读出来；SQL 由命令层按 cl_create_qry() 的规则现拼
-// （见 gp.QryDef.BuildSQL），所以 WinHeaderRow.SQL 留空。
+// （见 internal/dict/qry.go 的 QryDef.BuildSQL），所以 WinHeaderRow.SQL 留空。
 
 // winLangCode 语系码：0 = 繁中，2 = 简中（gae_file.gae03 / gaq_file.gaq02 同用）。
 func winLangCode(lang string) string { return progNameCol(lang) }
@@ -579,11 +572,6 @@ func (l *Live) QueryWinHeaders(id, lang string) ([]db.WinHeaderRow, error) {
 		})
 	}
 	return out, nil
-}
-
-// QueryWinParams GP 没有参数档（T100 的 dzcb_t 对端），返回空集。
-func (l *Live) QueryWinParams(id, lang string) ([]db.WinParamRow, error) {
-	return []db.WinParamRow{}, nil
 }
 
 // QueryWinCols 取一条开窗的全部显现栏位：gac_file + gaq_file 显示名 + 列类型。

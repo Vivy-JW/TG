@@ -63,7 +63,7 @@ func resetDictPackageState(t *testing.T) {
 	// 布尔
 	t.Cleanup(snapVars(
 		&discoverSave, &dbListSecrets, &msgFull,
-		&progSub, &progLinks, &tableBrief, &tableWho, &tableFields, &srcLocal, &dictFull,
+		&progLinks, &tableBrief, &tableWho, &tableFields, &srcLocal, &dictFull,
 		&common.JSON, &common.CSV, &common.Verbose,
 	))
 	// 整数
@@ -188,7 +188,7 @@ var dictMutableVars = []string{
 	"dbPath", "srcConfigPath", "queryLimit", "srcQueryLimit", "dictEnt", "dictCompany", "dictFull", "srcProduct", "srcDetail", "srcCompany",
 	"discoverType", "discoverHost", "discoverSave", "dbListSecrets",
 	"msgLang", "msgText", "msgType", "msgStatus", "msgProg", "msgFull",
-	"progKW", "progLang", "progTablesMode", "progSub", "progLinks",
+	"progKW", "progLang", "progTablesMode", "progLinks",
 	"tableKW", "tableLang", "tableCols", "tableBrief", "tableWho", "tableFields",
 	"winKW", "winLang",
 	"dataSrc", "srcLocal", "srcTarget", "srcNotes", "srcStarted",

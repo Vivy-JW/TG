@@ -102,45 +102,6 @@ func (d *DB) QueryWinHeaders(id, lang string) ([]WinHeaderRow, error) {
 	return result, rows.Err()
 }
 
-// WinParamRow holds an external parameter definition (dzcb_t + dzcbl_t).
-type WinParamRow struct {
-	Cust     string // dzcb004
-	Seq      string // dzcb002
-	Name     string // dzcb003 (参数名称, 对应 argN 序号)
-	DateType string // dzcbstus
-	Desc     string // dzcbl004 (指定语言别)
-	Memo     string // dzcbl005
-}
-
-// QueryWinParams returns the external parameter (argN) definitions of a window.
-func (d *DB) QueryWinParams(id, lang string) ([]WinParamRow, error) {
-	query := `
-		SELECT COALESCE(b.dzcb004, ''), b.dzcb002,
-		       COALESCE(b.dzcb003, ''),
-		       COALESCE(b.dzcbstus, ''),
-		       COALESCE(bl.dzcbl004, ''),
-		       COALESCE(bl.dzcbl005, '')
-		FROM dzcb_t b
-		LEFT JOIN dzcbl_t bl ON bl.dzcbl001 = b.dzcb001 AND bl.dzcbl002 = b.dzcb002 AND bl.dzcbl003 = ?
-		WHERE b.dzcb001 = ?
-		ORDER BY CAST(b.dzcb002 AS INTEGER)
-	`
-	rows, err := d.conn.Query(query, lang, id)
-	if err != nil {
-		return nil, fmt.Errorf("query win params %s: %w", id, err)
-	}
-	defer rows.Close()
-
-	var result []WinParamRow
-	for rows.Next() {
-		var r WinParamRow
-		if err := rows.Scan(&r.Cust, &r.Seq, &r.Name, &r.DateType, &r.Desc, &r.Memo); err != nil {
-			return nil, fmt.Errorf("scan win param: %w", err)
-		}
-		result = append(result, r)
-	}
-	return result, rows.Err()
-}
 
 // WinColRow holds a display column setting (dzcc_t).
 //

@@ -122,17 +122,6 @@ func TestQueryProgJobs(t *testing.T) {
 	}
 }
 
-// TestQueryProgSubProgEmpty GP 没有"子程序登记表"，这两个方法返回空。
-func TestQueryProgSubProgEmpty(t *testing.T) {
-	d := buildProgDB(t)
-	if sub, err := d.QuerySubProgInfo("apmt420", "zh_CN"); err != nil || sub != nil {
-		t.Errorf("QuerySubProgInfo 应返回 (nil,nil): %+v, %v", sub, err)
-	}
-	if list, err := d.QuerySubProgList("zh_CN", ""); err != nil || list == nil || len(list) != 0 {
-		t.Errorf("QuerySubProgList 应返回空切片: %#v, %v", list, err)
-	}
-}
-
 // TestQueryProgTables 程序 → 表：按表名升序，表档没收录的表也照样出（LEFT JOIN）。
 func TestQueryProgTables(t *testing.T) {
 	d := buildProgDB(t)

@@ -158,52 +158,6 @@ func mergeOps(ops []string) string {
 	return strings.Join(append(out, rest...), "/")
 }
 
-// ---- 子程序与元件(gzde_t 子程序及应用元件基本数据表,参考作业 azzi901) ----
-//
-//	gzde001 规格编号(PK)、gzde002 归属模块(LIB/SUB 等 $COM 子目录)、
-//	gzde003 规格类别(SCC 91:B=应用元件 M=主程序 S=子程序 G=报表元件-GR类
-//	X=报表元件-XG/FR类 K=报表组件-XR类 W=WebService元件)、gzde005 程序类别、
-//	gzde008 客制、gzde009 归属行业别;说明在 gzdel_t(多语言)。
-//
-// 与 gzza_t(主程序)的关系:**互不重叠**——实测正式区 gzde_t 4,036 个、
-// gzza_t 4,147 个,交集 0(本站 gzde_t 无 M 主程序行)。两者合起来才是完整的
-// "这个编号是什么":主程序查 gzza_t,子程序/元件/库查 gzde_t。
-
-// SubProgInfo 一个编号在"子程序/元件/库"登记里的信息。
-type SubProgInfo struct {
-	Code     string `json:"规格编号"`   // gzde001
-	Name     string `json:"说明"`     // gzdel003(指定语言)
-	Category string `json:"规格类别"`   // gzde003(SCC 91)
-	Module   string `json:"归属模块"`   // gzde002
-	Cust     string `json:"客制"`     // gzde008
-	Industry string `json:"归属行业别"`  // gzde009
-	ProgCat  string `json:"程序类别"`   // gzde005
-	GenType  string `json:"程序生成类型"` // gzde006
-	Status   string `json:"状态码"`    // gzdestus
-}
-
-// SubProgListItem 子程序/元件列表的一行。
-type SubProgListItem struct {
-	Code     string `json:"规格编号"`
-	Name     string `json:"说明"`
-	Category string `json:"规格类别"`
-	Module   string `json:"归属模块"`
-	Cust     string `json:"客制"`
-}
-
-// QuerySubProgInfo 查子程序/元件/库的登记。
-//
-// TOP GP 没有目录中的"子程序"实体：4GL 的 FUNCTION 住在本程序自己的源码里，
-// 不登记到字典表。这里固定返回"未收录"，命令层据此走"没有这条记录"的分支。
-func (d *DB) QuerySubProgInfo(code, lang string) (*SubProgInfo, error) {
-	return nil, nil
-}
-
-// QuerySubProgList 列出/搜索子程序与元件。GP 无子程序目录，恒为空。
-func (d *DB) QuerySubProgList(lang, keyword string) ([]SubProgListItem, error) {
-	return []SubProgListItem{}, nil
-}
-
 // progNameColumn 按语言挑程序名称列：zh_TW 用 gaz_file 的繁体名（同步时落到 name_tw），
 // 其余语言用简体名（name）。GP 的 gaz02 只有 0（繁）/2（简）两种。
 func progNameColumn(lang string) string {
@@ -237,28 +191,6 @@ func CategoryName(code string) string {
 		return "设定"
 	case "O":
 		return "其他"
-	default:
-		return ""
-	}
-}
-
-// SubProgCategoryLabel 规格类别(SCC 91)的中文注解。
-func SubProgCategoryLabel(code string) string {
-	switch strings.ToUpper(code) {
-	case "B":
-		return "(应用元件)"
-	case "M":
-		return "(主程序)"
-	case "S":
-		return "(子程序)"
-	case "G":
-		return "(报表元件-GR类)"
-	case "X":
-		return "(报表元件-XG/FR类)"
-	case "K":
-		return "(报表组件-XR类)"
-	case "W":
-		return "(WebService元件)"
 	default:
 		return ""
 	}

@@ -39,16 +39,7 @@ type winHeaderView struct {
 	Industry string         `json:"行业别"`
 	Desc     string         `json:"说明"`
 	Memo     string         `json:"助记码"`
-	Params   []winParamView `json:"参数"`
 	Cols     []winColView   `json:"显现设定"`
-}
-
-type winParamView struct {
-	Seq      string `json:"顺序"`
-	Name     string `json:"参数名称"`
-	DateType string `json:"日期型态"`
-	Desc     string `json:"说明"`
-	Memo     string `json:"助记码"`
 }
 
 type winColView struct {
@@ -164,10 +155,6 @@ func runWinDetail(id string) error {
 		return runWinDetailGP(id, headers)
 	}
 
-	params, err := GetDB().QueryWinParams(id, winLang)
-	if err != nil && !db.IsMissingTable(err) {
-		return err
-	}
 	cols, err := GetDB().QueryWinCols(id, winLang)
 	if err != nil && !db.IsMissingTable(err) {
 		return err
@@ -185,18 +172,6 @@ func runWinDetail(id string) error {
 			Industry: h.Industry,
 			Desc:     h.Desc,
 			Memo:     h.Memo,
-		}
-		for _, p := range params {
-			if p.Cust != h.Cust {
-				continue
-			}
-			view.Params = append(view.Params, winParamView{
-				Seq:      p.Seq,
-				Name:     p.Name,
-				DateType: typeWithCode(checkDateTypeLabel(p.DateType), p.DateType),
-				Desc:     p.Desc,
-				Memo:     p.Memo,
-			})
 		}
 		for _, c := range cols {
 			if c.Cust != h.Cust {
@@ -242,16 +217,6 @@ func printWinDetail(d *winDetail) {
 			for _, line := range strings.Split(h.SQL, "\n") {
 				fmt.Println("  " + line)
 			}
-		}
-
-		if len(h.Params) > 0 {
-			fmt.Printf("\n参数 (dzcb_t, %d):\n", len(h.Params))
-			headers := []string{"顺序", "参数名称", "日期型态", "说明", "助记码"}
-			var rows [][]string
-			for _, p := range h.Params {
-				rows = append(rows, []string{p.Seq, p.Name, p.DateType, p.Desc, p.Memo})
-			}
-			output.PrintTable(headers, rows)
 		}
 
 		if len(h.Cols) > 0 {

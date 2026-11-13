@@ -13,7 +13,6 @@ import (
 var (
 	progKW         string
 	progLang       string
-	progSub        bool
 	progLinks      bool
 	progTablesMode string
 )
@@ -23,41 +22,36 @@ const progBatchTip = `批量查多个程序：tg dict prog "a,b,c"`
 var progCmd = &cobra.Command{
 	Use:     "prog [程序编号...]",
 	Aliases: []string{"program", "job"},
-	Short:   "查询程序/作业字典 (程序做什么、被哪些作业使用)",
-	Long: `查询 T100 的程序与作业登记(azzi900 程式基本資料 / azzi910 作業基本資料):
-程序编号对应的中文作业名、程序类别、归属模块、是否客制、引用主程序,
-以及**哪些作业用了这个程序**——作业通过 gzzz_t.gzzz002 挂到程序上,
-一个程序可以被多个作业使用(作业名称取它所挂程序的名称,与 azzi910 一致)。
+	Short:   "查询程序字典 (程序做什么、用了哪些表、链到哪些模块)",
+	Long: `查询 TOP GP 的程序目录(t_prog，同步自 gaz_file + zz_file + gal_file):
+程序编号对应的中文名称(简/繁)、程序类别、归属模块、作用说明(gaz04)，
+以及**这个程序用了哪些表**(t_prog_table ← zr_file，带 S/I/U/D 操作类别)
+与**它链到哪些模块**(t_prog_link ← gal_file，入口模块由 gal03 = gal01 那行给出)。
+程序链接也可以单独看：--links。GP 里"作业"就是程序本身，没有独立的作业实体。
 
-读代码时的第一个问题"这个程序做什么"就用它;也可以拿作业编号去查它挂的是哪个程序。
-主程序查不到时会继续查**子程序/元件登记**(gzde_t,参考作业 azzi901):子程序(aapq110_01)、
-应用元件/库(cl_abi、s_xxx)都能给出它自己的说明与规格类别——两类登记互不重叠。
-子程序/元件的列表与搜索用 --sub。
+读代码时的第一个问题"这个程序做什么"就用它。
+主程序查不到时，会看 t_prog_table 里有没有它的用表索引（库/元件也能命中）。
 无参数时列出全部程序(--kw 按程序编号/中文名称搜索,从业务词找程序)。
-程序名称有简体(--lang zh_CN,默认)与繁体(--lang zh_TW)两份,搜索用字要对应;
-一个程序被很多作业使用时(如共用维护程序可达数百个),作业表默认只列前 --limit 行。
-默认是 summary：保留程序/作业身份，用表只回编号。
+程序名称有简体(--lang zh_CN,默认)与繁体(--lang zh_TW)两份,搜索用字要对应。
+默认是 summary：保留程序身份，用表只回编号。
 用 --tables none|names|full 控制用表矩阵：none 不查/不返回，names 只回表格编号，
 full 保留表说明与操作类别。--full 回到完整视图（默认用表也展开为 full）。
 编号可用逗号分隔批量查询：单编号返回程序详情对象，多编号返回 items[] 数组
 （每个编号带 found；缺失的列在 missing[]，单编号缺失则报 NOT_FOUND）。
 
 JSON 形状（单编号响应会在 notes 里提示批量写法）：
-  单编号 data = {程序?, 子程序?, 作业[], 表格[]}
-  作业参数：程序对象上的“应用参数组/额外参数”；程序详情里的作业行也带同名字段
-  多编号 data = {items: [{编号, found, 程序?, 子程序?, 作业[], 表格[]}], missing[]}
+  单编号 data = {程序?, 作业[], 表格[]}
+  多编号 data = {items: [{编号, found, 程序?, 作业[], 表格[]}], missing[]}
   搜索     data = [{程序编号, 程序名称, 程序类别, 归属模块, 客制, 作业数}]
-数据族为"程序与作业/程序与表格/子程序与元件"(--help 末尾会显示本地是否已同步)。`,
-	Example: `  tg dict prog aapi011          # 程序做什么 + 被哪些作业使用 + 用了哪些表
-  tg dict prog aapq110_01       # 子程序:自己的说明 + 它的主程序
-  tg dict prog cl_abi           # 库/元件:说明 + 用表清单
-  tg dict prog --kw 对帐        # 按中文作业名找程序
-  tg dict prog --sub --kw ABI   # 在子程序/元件里按业务词搜
+数据族为"程序与模块/程序与表格"(--help 末尾会显示本地是否已同步)。`,
+	Example: `  tg dict prog aapi011          # 程序做什么 + 用了哪些表
+  tg dict prog aapi011 --links  # 链到哪些模块、入口模块是哪个
+  tg dict prog --kw 对帐        # 按中文名称找程序
   tg dict prog aapi011 --tables names  # 只要用表编号（默认）
   tg dict prog aapi011 --tables none   # 不看用表矩阵
-  tg dict prog aapi011 --full          # 完整程序/作业/用表矩阵
+  tg dict prog aapi011 --full          # 完整程序/用表矩阵
   tg dict prog aapi011 --json
-  tg dict prog "aapi011,aapq110_01,cl_abi"   # 批量；每个编号一条结果`,
+  tg dict prog "aapi011,aapq110,cl_abi"   # 批量；每个编号一条结果`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if _, err := normalizeProgTables(progTablesMode); err != nil {
@@ -79,9 +73,6 @@ JSON 形状（单编号响应会在 notes 里提示批量写法）：
 			}
 		}
 		if len(args) == 0 {
-			if progSub {
-				return runSubProgList()
-			}
 			return runProgList()
 		}
 		codes := splitNames(args[0])
@@ -172,47 +163,21 @@ func runProgDetail(code string) error {
 		return err
 	}
 	if info == nil {
-		// 主程序登记(gzza_t)里没有 → 查子程序/元件/库登记(gzde_t,参考作业 azzi901)。
-		// 两张表互不重叠:实测 gzde_t 4,036 个 / gzza_t 4,147 个、交集 0。
-		sub, serr := GetDB().QuerySubProgInfo(code, progLang)
-		if serr != nil && !db.IsMissingTable(serr) {
-			return serr
-		}
-		if sub != nil {
-			tables, _ := GetDB().QueryProgTables(code, progLang)
-			if Format() != output.FormatTable {
-				item := map[string]any{
-					"编号": code, "found": true, "程序": nil, "子程序": sub,
-					"表格": tables, "作业": []any{},
-				}
-				if err := shapeProgTables(item); err != nil {
-					return err
-				}
-				return emitOneNotes(item, progBatchTip)
-			}
-			printSubProgInfo(sub)
-			if base := progBaseCode(code); base != "" {
-				if bi, err := GetDB().QueryProgInfo(base, progLang); err == nil && bi != nil && bi.IsProg {
-					fmt.Println("它的主程序: " + base + "(" + bi.Name + ");子程序自己做的事以文件头 `#+ Description:` 为准。")
-				}
-			}
-			return printProgTables(code, true)
-		}
 		tables, _ := GetDB().QueryProgTables(code, progLang)
 		if len(tables) == 0 {
-			return notFoundErr("程序/作业/元件 %s 不存在", code).WithHint(progBatchTip)
+			return notFoundErr("程序 %s 不存在", code).WithHint(progBatchTip)
 		}
 		if Format() != output.FormatTable {
 			item := map[string]any{
 				"编号": code, "found": false, "程序": nil, "作业": []any{},
-				"表格": tables, "note": "未登记为程序/作业；gzdg_t 有用表索引",
+				"表格": tables, "note": "未登记为程序；t_prog_table 里有它的用表索引",
 			}
 			if err := shapeProgTables(item); err != nil {
 				return err
 			}
 			return emitOneNotes(item, progBatchTip)
 		}
-		fmt.Println("未找到程序/作业/元件 '" + code + "' 的登记；但 gzdg_t 有用表索引：")
+		fmt.Println("未找到程序 '" + code + "' 的登记；但 t_prog_table 里有它的用表索引：")
 		return printProgTables(code, true)
 	}
 	// 作用说明（GP 的 gaz04）可能是上千字的作业说明，一份 JSON 里塞几段就把
@@ -329,12 +294,6 @@ func runProgBatch(codes []string) error {
 		case *db.ProgInfo:
 			name = p.Name
 		}
-		if name == "" {
-			switch p := item["子程序"].(type) {
-			case *db.SubProgInfo:
-				name = p.Name
-			}
-		}
 		var jobN, tableN int
 		switch v := item["作业"].(type) {
 		case []db.ProgJob:
@@ -439,99 +398,20 @@ func progDetailItem(code string) (map[string]any, bool, error) {
 		}
 		return item, true, nil
 	}
-	sub, serr := GetDB().QuerySubProgInfo(code, progLang)
-	if serr != nil && !db.IsMissingTable(serr) {
-		return nil, false, serr
-	}
 	tables, terr := queryProgTablesForDetail(code)
 	if terr != nil && !db.IsMissingTable(terr) {
 		return nil, false, terr
-	}
-	if sub != nil {
-		item := map[string]any{"编号": code, "found": true, "程序": nil, "子程序": sub, "作业": []any{}, "表格": tables}
-		if err := shapeProgTables(item); err != nil {
-			return nil, false, err
-		}
-		return item, true, nil
 	}
 	item := map[string]any{"编号": code, "found": false, "程序": nil, "作业": []any{}, "表格": tables}
 	if err := shapeProgTables(item); err != nil {
 		return nil, false, err
 	}
 	if len(tables) > 0 {
-		item["note"] = "未登记为程序/作业；gzdg_t 有用表索引"
+		item["note"] = "未登记为程序；t_prog_table 里有它的用表索引"
 	} else {
-		item["note"] = "没有任何程序/作业/子程序/用表登记"
+		item["note"] = "没有任何程序登记与用表索引"
 	}
 	return item, false, nil
-}
-
-// printSubProgInfo 打印子程序/元件/库的登记(gzde_t + gzdel_t,参考作业 azzi901)。
-func printSubProgInfo(p *db.SubProgInfo) {
-	fmt.Printf("=== %s ===\n", p.Code)
-	if p.Name != "" {
-		fmt.Printf("说明: %s\n", p.Name)
-	}
-	var parts []string
-	if p.Category != "" {
-		parts = append(parts, "规格类别: "+p.Category+db.SubProgCategoryLabel(p.Category))
-	}
-	if p.Module != "" {
-		parts = append(parts, "归属模块: "+p.Module)
-	}
-	if p.ProgCat != "" {
-		parts = append(parts, "程序类别: "+p.ProgCat+categoryLabel(p.ProgCat))
-	}
-	if p.Cust != "" {
-		parts = append(parts, "客制: "+p.Cust)
-	}
-	if p.Status != "" {
-		parts = append(parts, "状态码: "+p.Status)
-	}
-	for _, x := range parts {
-		fmt.Println(x)
-	}
-	if p.Industry != "" {
-		fmt.Printf("归属行业别: %s\n", p.Industry)
-	}
-	fmt.Println("(登记在「子程序及应用元件基本数据表」gzde_t,不在程序/作业登记里)")
-}
-
-// runSubProgList 列出/搜索子程序与元件(--sub,--kw 按编号或说明过滤)。
-func runSubProgList() error {
-	list, err := GetDB().QuerySubProgList(progLang, progKW)
-	if err != nil {
-		if db.IsMissingTable(err) {
-			return missingTableErr("子程序与元件 (gzde_t/gzdel_t)")
-		}
-		return err
-	}
-	headers := []string{"规格编号", "说明", "规格类别", "归属模块", "客制"}
-	if len(list) == 0 {
-		if Format() != output.FormatTable {
-			return emit([]db.SubProgListItem{}, headers, nil)
-		}
-		if progKW != "" {
-			fmt.Printf("没有匹配 '%s' 的子程序/元件。\n提示: 说明可能只有繁体或其它语言,换 --lang 或更短的词再试。\n", progKW)
-		} else {
-			fmt.Println(emptyHint("子程序与元件"))
-		}
-		return nil
-	}
-	var rows [][]string
-	for _, p := range list {
-		rows = append(rows, []string{p.Code, p.Name, p.Category, p.Module, p.Cust})
-	}
-	if Format() != output.FormatTable {
-		return emit(list, headers, rows)
-	}
-	output.PrintTable(headers, rows)
-	fmt.Printf("\n共 %d 个", len(list))
-	if progKW == "" {
-		fmt.Print(";用 --kw <业务词> 过滤")
-	}
-	fmt.Println()
-	return nil
 }
 
 // printProgTables 打印"这个编号用了哪些表"(gzdg_t,由 T100 自己维护;参考作业 azzq902)。
@@ -756,7 +636,6 @@ func isDigits(s string) bool {
 func init() {
 	progCmd.Flags().StringVar(&progKW, "kw", "", "按程序编号/中文名称搜索 (无编号时的列表模式)")
 	progCmd.Flags().StringVar(&progLang, "lang", "zh_CN", "程序名称语言别 (gzzal002, 默认 zh_CN)")
-	progCmd.Flags().BoolVar(&progSub, "sub", false, "无编号时:列出/搜索子程序与元件(gzde_t)而不是主程序")
 	progCmd.Flags().BoolVar(&progLinks, "links", false, "查程序链接:链到哪些模块、入口模块是哪个（本地库走 t_prog_link，重跑 tg dict db sync 可补齐）")
 	progCmd.Flags().StringVar(&progTablesMode, "tables", "names", "用表矩阵: none | names | full（默认 names）")
 	progCmd.Flags().BoolVar(&dictFull, "full", false, "完整视图：用表展开为 full（等同于显式 --tables full）")

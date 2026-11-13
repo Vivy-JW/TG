@@ -6,9 +6,10 @@
 > **数据来源：2026-11-09 对一套 TOPTEST 环境（主机 / 端口 / 账号见本地 `config.json`，本仓库不记录连接信息）的只读实测**，
 > 不是从 T100 推断的。全部是 `SELECT`，没有建表、没有写库。
 >
-> **2026-11-13 复核**：接口随命令面收口从 30 个方法瘦到 **20 个** —— `r.v`(check)、`desc`(spec)、
+> **2026-11-13 复核**：接口随命令面收口从 30 个方法瘦到 **17 个** —— `r.v`(check)、`desc`(spec)、
 > `scc`、`acc`、`sysp`/`docp`(param) 六条命令已删（GP 侧那几张表实测全 `ORA-00942`），
-> 它们的方法也一并从接口移除；§3 表里对应的行标成「已删」。同期新增了 `QueryUITexts`（画面文字，`gae_file` →
+> 它们的方法也一并从接口移除；§3 表里对应的行标成「已删」。同日第二刀又删掉三个空壳
+> （`QuerySubProgInfo`/`QuerySubProgList`/`QueryWinParams`）。同期新增了 `QueryUITexts`（画面文字，`gae_file` →
 > `t_ui_text`）与 `QueryProgLinks`（程序链接，`gal_file` → `t_prog_link`，本地也能查），
 > `QueryProgTables`/`QueryTablePrograms` 也从「⬜ 只能扫源码」变成 ✅（同步 `zr_file` 后本地与远程都出数，实测 164 张）。
 
@@ -24,8 +25,8 @@
 
 | 类别 | 方法数 | 含义 |
 |---|---|---|
-| ✅ 直连 | 16 | GP 侧数据完整（含同步进本地库的 `t_*` 与直查 `GA*/ZT*/ZE_FILE`） |
-| ⬜ GP 没有 | 4 | 实测不存在对应元数据；按 §4.D 的约定返回空、不报错 |
+| ✅ 有真实数据 | 17 | GP 侧数据完整（含同步进本地库的 `t_*` 与直查 `GA*/ZT*/ZE_FILE`） |
+| ⬜ 空壳 | 0 | 2026-11-13 全部清掉：没有对端的族连命令带方法一起删 |
 
 **GP 的字典是"物理表结构 + 表/字段中文名 + 程序目录与程序用表 + 错误消息 + 画面文字 + 开窗定义"**，
 表结构这一层很扎实（2,962 张表 / 60,870 个字段，含 61 张只登记不建列的同义词），
@@ -123,8 +124,6 @@
 | 8 | `QueryProgList` | 程序列表 | 同 #6，另带 `p_link` 解析出的模块 | ✅ |
 | 9 | `QueryProgTables` | 程序用了哪些表 | `t_prog_table` ← `zr_file`（118,420 行，含 S/I/U/D 操作码）；远程直查同源 | ✅ |
 | 10 | `QueryTablePrograms` | 反查程序 | 同上（按表反查） | ✅ |
-| 11 | `QuerySubProgInfo` | 子程序详情 | GP 的子程序是 4GL `FUNCTION`，不在字典 | ⬜ |
-| 12 | `QuerySubProgList` | 子程序列表 | 同上 | ⬜ |
 | 13 | `QueryProgLinks` | 程序链接 | `t_prog_link` ← `gal_file`（17,810 行，入口行 `gal03=gal01`）；本地 3ms | ✅ |
 | 14 | `QueryUITexts` | 画面文字 | `t_ui_text` ← `gae_file`（427,553 行，多语系）；`tg interface` 的标签源 | ✅ |
 
@@ -142,7 +141,8 @@
 | 18–20 | `QueryScc*`（`scc`） | **命令已删**（2026-11-11）。GP 没有分类码字典（`gzca_t` 不存在） | — |
 | 21–22 | `QueryACC*`（`acc`） | **命令已删**。GP 没有（`oocq/oocql/gzzz` 不存在；`ooc_file` 只有 4 行会计科目） | — |
 | 23 | `QueryWinList` | `gab_file` + `gae_file`（wintitle） | ✅ 已接（`r.q` 列表） |
-| 24/25 | `QueryWinHeaders/Params` | `gab_file` 单头；GP 没有开窗参数这一层（`dzcb_t` 无对端） | ✅ 单头 / ⬜ 参数 |
+| 24 | `QueryWinHeaders` | `gab_file` 单头（WHERE / DISTINCT / JOIN 表 / HardCode） | ✅ 已接 |
+| ~~25~~ | ~~`QueryWinParams`~~ | GP 的开窗没有参数层（`dzcb_t` 无对端）—— **方法已删**，`r.q` 明细不再有参数段 | — |
 | 26 | `QueryWinCols` | `gac_file` + `gaq_file` 显示名 + `all_tab_columns` 列类型 | ✅ 已接 |
 | 27 | `QueryParam`（`sysp`） | **命令已删**（2026-11-11）。GP 没有参数定义档：参数是各模块参数档里的列（`aaa_file`/`aaz_file`/`apz_file`…，表说明含"参数"的 77 张） | — |
 | 28 | `QueryDocTypes`（`docp`） | **命令已删**。GP 没有单据性质档，也没有"参数绑定单据别"这层 | — |
@@ -185,8 +185,10 @@
 4. **第四步**：剩下 ⬜ 统一返回空、把没有对端的子命令标成"GP 不支持" → **改成了更彻底的做法**：
    直接删命令（`r.v`/`desc`/`scc`/`acc`/`sysp`/`docp`，`1df9d4f`…`baee36e`），不再留空壳。
 
-**现在只剩 4 个 ⬜**：`QueryProgJobs`（GP 没有作业登记）、`QuerySubProgInfo`/`QuerySubProgList`（子程序不在字典里，
-是 4GL `FUNCTION`）、`QueryWinParams`（GP 的开窗没有参数层）。这 4 个返回空集，不报错、不编数据。
+**2026-11-13 再收一刀：连"空集"也不留了。** `QuerySubProgInfo`/`QuerySubProgList`（子程序是 4GL `FUNCTION`，
+不在字典里）与 `QueryWinParams`（GP 的开窗没有参数层）已从接口删除，`tg dict prog --sub` 与 `r.q` 明细里的
+参数段一并消失。接口现在是 **17 个方法、全部有真实数据**；`QueryProgJobs` 保留 —— GP 里"作业 = 程序"，
+它返回的是真数据（恒 1 条），不是空壳。
 
 ## 7. 两个取舍
 

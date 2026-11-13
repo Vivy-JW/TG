@@ -14,30 +14,25 @@ type Source interface {
 	QueryKeys(tableName string) ([]KeyInfo, error)
 	QueryIndexes(tableName string) ([]IndexInfo, error)
 	QueryTableList(lang, keyword string) ([]TableListItem, error) // 列表/搜索(--kw)
-	// prog 程序与作业字典:程序档 gzza_t / 程序名称 gzzal_t / 作业 zzz_t(作业挂程序)
+	// prog 程序字典:程序目录 gaz_file(+zz_file 类别、gal_file 模块)同步成 t_prog；作业与程序在 GP 是同一个东西
 	// / 应用参数组 gzzk_t。见 db/prog.go 注释里的表结构说明。
 	QueryProgInfo(code, lang string) (*ProgInfo, error) // 未收录返回 (nil, nil)
 	QueryProgJobs(code, lang string) ([]ProgJob, error)
 	QueryProgList(lang, keyword string) ([]ProgListItem, error)
-	// 程序 ↔ 表格:gzdg_t(程序与应用表格功能分析表,参考作业 azzq902),两侧都按操作类别合并
+	// 程序 ↔ 表格:zr_file 同步成 t_prog_table,两侧都按操作类别合并
 	QueryProgTables(code, lang string) ([]ProgTableRow, error)
 	QueryTablePrograms(table, lang string) ([]TableProgRow, error)
-	// 子程序与元件:gzde_t(子程序及应用元件基本数据表,参考作业 azzi901)+ gzdel_t(说明)
-	QuerySubProgInfo(code, lang string) (*SubProgInfo, error) // 未收录返回 (nil, nil)
-	QuerySubProgList(lang, keyword string) ([]SubProgListItem, error)
-	// 程序链接:GP 的 gal_file(程序 → 模块),入口行是 gal03 == gal01。
-	// 本地字典库不同步这张表,只有远程实现(本地实现返回明确的错误)。
+	// 程序链接:gal_file 同步成 t_prog_link(程序 → 模块),入口行是 gal03 == gal01。
 	QueryProgLinks(prog string) ([]ProgLinkRow, error)
 
 	// 画面元件译文(gae_file,p_perlang 维护):GP 没有 .42s,画面文字运行期从这张表取。
 	QueryUITexts(prog, lang string) ([]UIElementText, error)
 
-	// rq 可复用开窗:dzca_t/dzcb_t/dzcc_t
+	// rq 可复用开窗:gab_file(单头) + gac_file(栏位) + gae_file/gaq_file(标题与显示名)
 	QueryWinList(lang, keyword string) ([]WinListRow, error)
 	QueryWinHeaders(id, lang string) ([]WinHeaderRow, error)
-	QueryWinParams(id, lang string) ([]WinParamRow, error)
 	QueryWinCols(id, lang string) ([]WinColRow, error)
-	// msg 系统消息档:gzze_t(azzi920 维护;按编号/语句/语言多条件查)+ gzzal_t 作业名称
+	// msg 系统消息档:ze_file 同步成 t_msg(按编号/语句/语言多条件查)
 	QueryMsgs(q MsgQuery) ([]MsgRow, error)
 	QueryMsgLangs(q MsgQuery) ([]string, error) // 同条件去掉语言:该编号有哪些语言行
 
