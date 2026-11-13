@@ -245,18 +245,20 @@ var debugServeCmd = &cobra.Command{
 	},
 }
 
-// debugDBCmd 已迁移到 tt db probe（服务器侧连接体检）；这里只保留隐藏转发，
-// 下一个版本移除。企业/账号来自配置的 ENT 清单，不再现查 gzou_t。
+// debugDBCmd 已迁移到 tg db probe（服务器侧连接体检）；这里只保留隐藏转发。
+// 账号与 tg db probe 同一口径：GP 环境取 db.accounts[0]（--ent 是 T100 遗留，
+// 给了才按企业查账号），不再现查 gzou_t、也不再把"没有企业快照"当错误。
 var debugDBCmd = &cobra.Command{
 	Use:        "db",
-	Short:      "（已迁移）数据库连接体检 —— 用 tt db probe",
+	Short:      "（已迁移）数据库连接体检 —— 用 tg db probe",
 	Hidden:     true,
 	Deprecated: "已迁移：请用 tg db probe --at <环境>",
 	RunE: func(cmd *cobra.Command, _ []string) error {
-		if dbEnt <= 0 {
-			return fmt.Errorf("需要 --at <环境>@<企业>（或 --env + --ent）：验的是这个企业的账号")
+		ent := dbEnt
+		if ent <= 0 {
+			ent = dbgSQLTopentForRun()
 		}
-		return cdb.ProbeOnce(dbEnt)
+		return cdb.ProbeOnce(ent)
 	},
 }
 
@@ -272,7 +274,7 @@ func init() {
 	debugServeCmd.Flags().StringVar(&dbgListen, "listen", "", "覆盖监听地址(默认取配置)")
 	debugServeCmd.Flags().BoolVar(&dbgServeForeground, "foreground", false, "前台运行,日志直出终端(默认后台常驻)")
 	debugServeCmd.Flags().BoolVar(&dbgServeStop, "stop", false, "停止后台运行的调试服务(单实例)")
-	debugDBCmd.Flags().IntVar(&dbEnt, "ent", 0, "企业编号(TOPENT),验证该企业账号连接;0=取该环境的 topent")
+	debugDBCmd.Flags().IntVar(&dbEnt, "ent", 0, "企业编号(T100 遗留)：给了才按企业查账号；不给就用 db.accounts[0]")
 
 	Group.AddCommand(debugProbeCmd, debugServeCmd, debugDBCmd)
 }

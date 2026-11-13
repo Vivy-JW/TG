@@ -1418,13 +1418,16 @@ func showWSLog(rowid string, asJSON bool, reqSave string) error {
 	return nil
 }
 
-// debugSQLCmd 已迁移到 tt db sql；这里只保留隐藏转发（下一个版本移除）。
+// debugSQLCmd 已迁移到 tg db sql；这里只保留隐藏转发。
 //
 // 转发到 db.QueryOnce 的原因：旧命令走 serve（POST /api/dbsql），而 db sql 是本机
 // 直连（SSH + sqlplus/ksql）。两条路必须给出同一份信封，所以共用同一个渲染实现。
+//
+// 账号与 tg db sql 同一口径：GP 环境取 db.accounts[0]（--ent 是 T100 遗留，给了才
+// 按企业查账号），不再把"没有企业编号"当错误。
 var debugSQLCmd = &cobra.Command{
 	Use:        `sql "<查询语句>"`,
-	Short:      "（已迁移）执行一条只读 SQL —— 用 tt db sql",
+	Short:      "（已迁移）执行一条只读 SQL —— 用 tg db sql",
 	Hidden:     true,
 	Deprecated: "已迁移：请用 tg db sql --at <环境>",
 	Args:       cobra.MaximumNArgs(1),
@@ -1449,9 +1452,6 @@ var debugSQLCmd = &cobra.Command{
 		ent := dbgSQLEnt
 		if ent <= 0 {
 			ent = dbgSQLTopentForRun()
-		}
-		if ent <= 0 {
-			return fmt.Errorf("需要 --at <环境>@<企业>（或 --env + --ent）：企业编号决定用哪个账号")
 		}
 		return cdb.QueryOnce(sqlText, ent, dbgTimeout, cdb.SQLRouteServer)
 	},
