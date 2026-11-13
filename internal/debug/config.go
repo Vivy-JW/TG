@@ -97,6 +97,36 @@ func (c *Config) applySsh(e *host.NamedSsh) {
 
 // ApplyDefaultEnv 把**当前会话环境**(envName)的 SSH/zone/库引用合并到运行时字段。
 //
+// ActiveEnvOf 取"这份配置指向的环境"：envName 优先；serve 没带 --env 时按唯一环境算。
+// 取不到（多环境且没点名）返回 nil —— 调用方要给出"点名环境"的提示，而不是猜。
+func (c *Config) ActiveEnvOf() *host.NamedSsh {
+	name := strings.TrimSpace(c.envName)
+	if name == "" {
+		if len(c.SSHs) == 1 {
+			return &c.SSHs[0]
+		}
+		return nil
+	}
+	for i := range c.SSHs {
+		if strings.EqualFold(c.SSHs[i].Name, name) {
+			return &c.SSHs[i]
+		}
+	}
+	return nil
+}
+
+// IsGPEnv 这条配置是不是 TOP GP。运行期 c.Product 只有在 ApplyDefaultEnv/CloneEnv
+// 之后才有值；serve 刚加载配置时它还是空的，所以再看一眼被点名的那个环境。
+func (c *Config) IsGPEnv() bool {
+	if strings.EqualFold(strings.TrimSpace(c.Product), "gp") {
+		return true
+	}
+	if e := c.ActiveEnvOf(); e != nil {
+		return strings.EqualFold(strings.TrimSpace(e.Product), "gp")
+	}
+	return false
+}
+
 // 「当前会话环境」必须已经明确(c.envName 非空)——**不再有"未确定时取首条"这回事**:
 // 解不出环境就清空运行时字段,由调用方去要一个明确的环境名。
 // 无任何 ssh 时(设置页可删空)同样清空。

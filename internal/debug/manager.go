@@ -1525,10 +1525,10 @@ func envNamesOf(sshs []config.NamedSsh) []string {
 
 // sourceModuleOf 按本地字典里的 p_link(t_prog_link) 查作业实际属于哪个模块。
 func (c *Config) sourceModuleOf(prog string) (string, bool) {
-	for i := range c.SSHs {
-		if strings.EqualFold(c.SSHs[i].Name, c.envName) {
-			return dictlib.LookupModule(c.SSHs[i], prog)
-		}
+	// serve 启动时没有 --env，envName 是空的；只有一个环境时按它算，
+	// 否则 gp 的 t_prog 查询永远命中不了（envName 与 SSHs[i].Name 对不上）。
+	if e := c.ActiveEnvOf(); e != nil {
+		return dictlib.LookupModule(*e, prog)
 	}
 	return "", false
 }
@@ -1707,6 +1707,11 @@ type JobInfo struct {
 
 // ResolveJob 尽力解析作业:未配置 db 或连库失败/未命中时返回 note,不报错(启动时会再次解析/兜底)。
 func (m *Manager) ResolveJob(module, prog string) *JobInfo {
+	// GP 没有 gzzz_t(作业→实体程序)这层：作业就是程序，模块在本地字典的
+	// t_prog.module / t_prog_link(由 gal_file 同步而来)。这一条不连库、不碰 SSH。
+	if m.cfg.IsGPEnv() {
+		return m.resolveJobGP(module, prog)
+	}
 	out := &JobInfo{Prog: prog, Module: module}
 	if m.cfg.DB == nil {
 		out.Note = "config.json 未配置 debug.db,无法按 gzzz_t 解析实体程序;将按作业名直接启动"
@@ -1732,6 +1737,28 @@ func (m *Manager) ResolveJob(module, prog string) *JobInfo {
 		out.Module = mod
 	}
 	out.RunProg, out.LaunchRef, out.Extra = run, ref, extra
+	return out
+}
+
+// resolveJobGP 解析 GP 的"作业 → 模块"：只读本地字典（t_prog / t_prog_link），
+// 不连数据库、不发 SSH。GP 的作业就是程序本身，所以 RunProg 恒等于作业名。
+func (m *Manager) resolveJobGP(module, prog string) *JobInfo {
+	mod := strings.ToLower(strings.TrimSpace(module))
+	out := &JobInfo{Prog: prog, Module: mod, RunProg: prog}
+	if !reProgName.MatchString(prog) {
+		out.Note = "作业名不是标准标识符(字母开头、字母数字下划线)，跳过字典解析"
+		return out
+	}
+	if got, ok := m.cfg.sourceModuleOf(prog); ok && strings.TrimSpace(got) != "" {
+		out.Module = strings.ToLower(strings.TrimSpace(got))
+		out.Note = "模块来自本地字典(t_prog / t_prog_link)"
+		return out
+	}
+	if mod != "" {
+		out.Note = "本地字典里没有这条作业的模块记录，用你给的模块 " + mod
+		return out
+	}
+	out.Note = "本地字典里没有 " + prog + " 的模块记录：先跑 tg dict db sync --env <环境>，或用 --module 指定"
 	return out
 }
 

@@ -308,12 +308,15 @@ var debugLocateCmd = &cobra.Command{
 // debugResolveCmd 作业→实体程序/模块解析:GET /api/jobinfo?prog=&module=(不启动会话)
 var debugResolveCmd = &cobra.Command{
 	Use:   "resolve <作业编号>",
-	Short: "解析作业编号对应的实体程序/模块(gzzz_t;不启动会话)",
-	Long: `在不启动调试的情况下,查询该作业编号(gzzz_t)对应的实体程序与模块,
-用于启动前确认"这个作业会跑哪个程序/在哪个模块",再配合 tt debug source 读源码。
-未配置 debug.db 或解析失败时会给出 note,不会报错(实际启动仍会自动解析并兜底)。`,
-	Example: `  tt debug resolve bsft001_wf
-  tt debug resolve bsft001_wf -m asf`,
+	Short: "解析作业编号对应的模块/实体程序(不启动会话)",
+	Long: `在不启动调试的情况下,查询这个作业编号会跑哪个程序、在哪个模块,
+用于启动前确认"它会跑哪个程序/在哪个模块",再配合 tg debug source 读源码。
+
+TOP GP:作业就是程序,模块取自本地字典 t_prog / t_prog_link(由 gal_file 同步);
+查不到就先 tg dict db sync --env <环境>,或者用 --module 直接指定。
+解析不出来时给一句 note,不报错(实际启动仍会自动解析并兜底)。`,
+	Example: `  tg debug resolve cbmq100
+  tg debug resolve abmi600 --module cbm`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		q := url.Values{}
@@ -340,6 +343,20 @@ var debugResolveCmd = &cobra.Command{
 		}
 		j := r.Job
 		if j.RunProg != "" {
+			if strings.EqualFold(j.RunProg, j.Prog) {
+				// GP:作业就是程序,不必说"→ 实体程序"那句话
+				fmt.Printf("作业 %s", j.Prog)
+				if j.Module != "" {
+					fmt.Printf(" · 模块 %s", j.Module)
+				} else {
+					fmt.Print(" · 模块未解析")
+				}
+				if j.Note != "" {
+					fmt.Printf("(%s)", j.Note)
+				}
+				fmt.Println()
+				return nil
+			}
 			fmt.Printf("作业 %s → 实体程序 %s", j.Prog, j.RunProg)
 			if j.Module != "" {
 				fmt.Printf("(模块 %s)", j.Module)
