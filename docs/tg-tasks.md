@@ -46,7 +46,7 @@
 - ☐ `tt debug` 接 GP（起会话 / 停站 / 断点 / 步进）
 - ☐ 摘 T100 接线：`ents.go`、`db.go`、`dbsqldirect.go`、`srcmirror.go`、`api.go` 的 ENT 入口
 - ☐ 连带删 `tt debug ents` / `tt debug topent`
-- ☐ `tt session` 收成 GP 语义（现在的对象是 ENT/作业形态）
+- ☑ `tg session` 收成 GP 语义（2026-11-16）：去掉 `--ent` / `session ent` / `--fglserver`，只要环境；`ls`/`show` 的 JSON 不再带 `ent` 与三个 `topent*` 键；`session new` 的作用域从 `EnvEntReq` 降成 `Env`
 - ☐ 两套 PTY 二选一：把 `internal/gp/session.go` 降级成 `internal/debug` 的薄封装
 - ☐ 调试工作台前端在 GP 下验一遍
 - ☐ 真机测试后确认：会话已 `quit`、服务已 `stop`、无残留作业或行锁

@@ -42,7 +42,7 @@ TT/
 │  │  ├─ file/          tg file 命令组：只读 SFTP（$TOP / $CUST 两棵树，根是实例目录）与离线镜像
 │  │  ├─ interfacecmd/  tg interface 命令组：.42f + gae_file → 页面/字段/中文标签
 │  │  ├─ outline/       tt outline 命令：.4gl → 函数/UI 块树
-│  │  └─ session/       tt session 命令组：建/列/看/改 ENT/结束/收掉/透传/起作业
+│  │  └─ session/       tg session 命令组：建/列/看/结束/收掉/透传/起作业
 │  ├─ config/           统一配置层：位置解析、唯一写入口 Edit、原子写、打码、缓存清单
 │  ├─ dbconfig/         配置里“库”那一节的连接模型
 │  ├─ debug/            调试子系统：会话管理、断点存档、源码镜像 srccache、执行日志、企业快照

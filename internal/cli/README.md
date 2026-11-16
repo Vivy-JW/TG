@@ -11,7 +11,7 @@
 | `tt debug …` | [./debug](./debug/README.md) | 调试线 |
 | `tt dev …` | [./dev](./dev/README.md) | 设计器包线（cobra 树挂动词；参数解析权在 tdev 自己的解析器，见其 README） |
 | `tt dict …` | [./dict](./dict/README.md) | 字典线 |
-| `tt session …` | [./session](./session) | 会话：建 / 列 / 看 / 改 ENT / 结束本轮 / 收掉 / 透传 |
+| `tg session …` | [./session](./session) | 会话：建 / 列 / 看 / 结束本轮 / 收掉 / 透传 |
 | `tg interface …` | [./interfacecmd](./interfacecmd/README.md) | 前端画面线（`.42f` + `gae_file` 合成页面/字段/中文标签） |
 | `tt outline …` | [./outline](./outline/README.md) | 4GL 源码大纲（本地文件/镜像块树） |
 | `tt env / config / cache / serve / install / version` | 本包 | 各组共用 |
@@ -29,8 +29,8 @@ tt dev tzc    0 成功 / 2 包格式或用法错 / 3 校验失败 / 4 拒绝写�
 tt dev tzs    0 成功 / 1 引擎内部错 / 2 参数或环境错 / 4 设计器拒绝 / 5 传输或环境失败
               （没有 3；2 也包括"manifest 拉不到"）
 tt dict       0 成功（搜索无结果也是成功）/ 1 用法错 / 2 数据源错 / 3 缺表 / 4 精确 ID 不存在（NOT_FOUND）
-tt session    0 成功 / 1 运行失败（IO·网络·环境）/ 2 用法错 / 3 无会话
-              4 状态不符（会话没空 / 不是空闲 / 端口被占）/ 5 目标不存在 / 6 环境体检不过
+tg session    0 成功 / 1 运行失败（IO·网络·环境）/ 2 用法错
+              3 无会话（或名字/句柄不存在、歧义）/ 4 状态不符（会话没空 / 不是空闲 / 端口被占）
 
 
 tg interface  0 成功 / 1 表单不合法 / 2 用法或同名歧义 / 4 精确页面/字段不存在
@@ -41,7 +41,7 @@ tt outline    0 成功 / 2 用法或文件名歧义 / 4 文件不存在
 
 **包装脚本要按子命令辨认，别只看码**：`3` 在 `.tzc` 线是"校验失败"、在字典线是"缺表"、
 在 `.tzs` 线是"产物自查未通过"；`4` 在 `.tzc` 线是拒绝写入，
-在 dict/interface/outline 是精确目标不存在；`6` 在 `tt session` 是"环境体检不过"（权限不一致）。
+在 dict/interface/outline 是精确目标不存在。
 各线的细化含义在各自 README 里。
 
 ## 统一的错误出口
