@@ -61,25 +61,6 @@ export interface WSLogContent {
   responsePartial?: boolean
 }
 
-// 企业目录(ENT → 数据库账号)。
-//
-// 一个企业对应的是**库里的一个账号/schema**(gzou_t.gzou003),不是另一台库 ——
-// 库是环境级的,换环境才换库。account 为空或 "-" 表示这个企业在 gzou_t 里没配可用账号。
-export interface EntItem { ent: number; account: string; placeholder?: boolean }
-
-// GET /api/ents 的应答:除了清单,把"这份答案有多新"也原样带出(缓存可以旧,但旧不能藏着)。
-export interface EntsReply {
-  ok: boolean
-  env: string
-  account: string // 查 gzou_t 用的系统账号(恒为 ds,说明用)
-  ents: EntItem[]
-  source: string // live | snapshot | snapshot-stale
-  stale: boolean
-  fetchedAt: string
-  ageSeconds: number
-  ttlSeconds: number
-  notes?: string[]
-}
 // 接口日志查询条件(对齐 T100 原生页 awsq990 的 QBE):
 // startFrom = wsfa003(起始时间)下界,endTo = wsfa004(结束时间)上界;
 // result/origin/server 为等值过滤(wsfa006/wsfa013/wsfa018)
@@ -93,10 +74,6 @@ export interface WSLogQuery {
   onlyFail?: boolean
   // env：按哪个环境查（统一服务启动时可能没有"生效环境"，必须点名）。
   env?: string
-  // ent：这次查的是哪个企业（接口日志页下拉选的那个）。
-  // **wsfa_t 在系统账号 ds 下、不按企业分 schema** —— 它不改查询范围，
-  // 只用于：结果里回显"选的是哪个企业"、重放时作为那一轮的 TOPENT。
-  ent?: number
   page?: number
   startFrom?: string
   endTo?: string
@@ -527,15 +504,6 @@ export const api = {
   },
   wsLogContent: (rowid: string, env?: string) =>
     req<{ item: WSLogItem; content: WSLogContent }>(`${API_BASE}/wslogs/content?rowid=${encodeURIComponent(rowid)}${env ? `&env=${encodeURIComponent(env)}` : ''}`),
-  // 企业目录(ENT → 数据库账号):与 tt debug 的「企业→账号」同一条规则、同一张 gzou_t
-  // (固定用系统账号 ds 读),两边的缓存与快照也是同一份(后端的 entdir)。
-  // 接口日志页与「创建会话」的 ENT 下拉都用它 —— **不需要一条活会话**。
-  // 同步 ENT：连库读 gzou_t 并**写回 config.json**（设置页「ENT」页签的按钮）。
-  entsSync: (env: string) =>
-    req<{ ok: boolean; env: string; count: number; addedAccounts?: string[]; syncedAt: string }>(
-      `${API_BASE}/ents/sync`, { method: 'POST', body: JSON.stringify({ env }) }),
-  ents: (env: string, opt?: { refresh?: boolean }) =>
-    req<EntsReply>(`${API_BASE}/ents?env=${encodeURIComponent(env)}${opt?.refresh ? '&refresh=1' : ''}`),
   // 重放调试:request 非空 = 用界面里改过的入参(后端落临时文件后作为入参文件)。
   // sessionId = 本地已绑定的那条会话（要收掉的那条，可空）：服务端不自己找当前会话
   // （WP4b / Q4 / C8.2），池里多条又不带目标时回 409 + SESSION_AMBIGUOUS，不会随机收掉别人的会话。

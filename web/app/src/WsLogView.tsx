@@ -3,16 +3,16 @@
 // 此时列表收起为「状态 + 服务」两列给面板让位 —— 详情面板可拖拽分配宽度,也可主动关闭(✕ / Esc)。
 // 查询条件对齐 awsq990 主查询 QBE:服务名(wsfa001)+ 开始时间范围(wsfa003);仅失败为本工具扩展
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { Bug, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronsUpDown, ChevronUp, Copy, Fingerprint, RefreshCw, Undo2, X } from 'lucide-react'
+import { Bug, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronsUpDown, ChevronUp, Copy, Fingerprint, Undo2, X } from 'lucide-react'
 import { useStore } from './store'
 import { Button, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../shared/ui'
-import { Checkbox, DatePicker, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui-radix'
+import { Checkbox, DatePicker } from '../../shared/ui-radix'
 import type { WSLogItem } from './api'
 import { PayloadEditor } from './PayloadEditor'
 import { copyText } from './clipboard'
 import { useToast } from './toast'
 
-// 每个环境各记一份"这一页的输入"（查询条件/日期/企业/是否已查询）。
+// 每个环境各记一份"这一页的输入"（查询条件/日期/是否已查询）。
 // 与 store 里的 wsLogsByEnv（结果）配套：结果 + 输入都按环境分开，切回来才是原样。
 type WsLogViewState = {
   draft: { service: string; job: string; result: string; origin: string; server: string }
@@ -20,7 +20,6 @@ type WsLogViewState = {
   onlyFail: boolean
   from: string
   to: string
-  ent: number
   queried: boolean
 }
 const wsLogViewStateByEnv = new Map<string, WsLogViewState>()
@@ -207,29 +206,21 @@ export function WsLogView() {
   const [to, setTo] = useState(today)
 
   // 接口日志**不再依赖活会话**:查的是环境级库里的 wsfa_t(在系统账号 ds 下),
-  // 企业编号由上面的下拉选(清单本身来自 gzou_t,见 store.loadEnts)。
   // 环境取"这一页所属的环境"(路由写进 store 的 activeEnv),不是"当前会话的环境"。
   const activeEnv = useStore((s) => s.activeEnv)
-  const entsView = useStore((s) => s.entsByEnv[activeEnv])
-  const loadEnts = useStore((s) => s.loadEnts)
-  // 选中的企业(0 = 还没选)。它只决定"这次查的是哪个企业"(结果回显 + 重放用的 TOPENT),
-  // 不改 wsfa_t 的查询范围 —— 接口日志不按企业分 schema。
-  const [ent, setEnt] = useState(0)
-  const entRef = useRef(ent)
-  entRef.current = ent
   // 只有人点过「查询」之后,日期这类后续动作才会自己再发查询;
   // 首屏不发 —— "打开这一页就往人家的库上拨一次 SSH"不是看日志该有的副作用。
   const [queried, setQueried] = useState(false)
 
   // 切环境:**各存一份**,切走再切回原样还在(与多会话同一条原则)。
   // 结果那半份在 store(wsLogsByEnv,见 setActiveEnv),这半份是这一页自己的输入:
-  // 查询条件/日期/企业/是否已查询 —— 都按环境记在模块级 map 里。
+  // 查询条件/日期/是否已查询 —— 都按环境记在模块级 map 里。
   //
-  // 为什么不能共用:环境页 keep-alive,甲环境的企业编号在乙环境未必存在,
-  // 甲环境的"已查询"状态套到乙环境上就会出现"空列表却没有查询按钮提示"这类怪相。
+  // 为什么不能共用:环境页 keep-alive,甲环境的"已查询"状态套到乙环境上就会出现
+  // "空列表却没有查询按钮提示"这类怪相。
   const envRef = useRef(activeEnv)
-  const viewStateRef = useRef<WsLogViewState>({ draft, applied, onlyFail, from, to, ent, queried })
-  viewStateRef.current = { draft, applied, onlyFail, from, to, ent, queried }
+  const viewStateRef = useRef<WsLogViewState>({ draft, applied, onlyFail, from, to, queried })
+  viewStateRef.current = { draft, applied, onlyFail, from, to, queried }
   const suppressRequeryRef = useRef(false)
   useEffect(() => {
     if (envRef.current === activeEnv) return
@@ -240,43 +231,32 @@ export function WsLogView() {
     suppressRequeryRef.current = true
     if (saved) {
       setDraft(saved.draft); setApplied(saved.applied); setOnlyFail(saved.onlyFail)
-      setFrom(saved.from); setTo(saved.to); setEnt(saved.ent); setQueried(saved.queried)
+      setFrom(saved.from); setTo(saved.to); setQueried(saved.queried)
     } else {
       const d = today()
       const blank = { service: '', job: '', result: '', origin: '', server: '' }
       setDraft(blank); setApplied(blank); setOnlyFail(false)
-      setFrom(d); setTo(d); setEnt(0); setQueried(false)
+      setFrom(d); setTo(d); setQueried(false)
     }
     // 还原这一轮里 from/to 的变化不算"用户改日期",放掉抑制标记给下一次用。
     window.setTimeout(() => { suppressRequeryRef.current = false }, 0)
   }, [activeEnv])
 
-  useEffect(() => {
-    if (activeEnv) void loadEnts(activeEnv)
-  }, [activeEnv, loadEnts])
-
-  // 企业目录到了就默认选中第一个(常见情形下一个环境只有一两个启用企业)。
-  useEffect(() => {
-    const items = entsView?.items || []
-    if (!ent && items.length) setEnt(items[0].ent)
-  }, [entsView, ent])
-
   // 日期改了重查:只在已经查过一次之后(见 queried 的注释)。
-  // 切环境还原状态时会同时改 from/to/ent/queried —— 那一下**不该**触发重查
+  // 切环境还原状态时会同时改 from/to/queried —— 那一下**不该**触发重查
   // (那是"恢复上次的画面",不是"用户改了日期";重查等于白拨一次 SSH)。
   useEffect(() => {
     if (suppressRequeryRef.current) return
-    if (!queried || !entRef.current) return
-    void loadWsLogs({ ...appliedRef.current, onlyFail: onlyFailRef.current, page: 1, startFrom: from, endTo: to, ent: entRef.current })
+    if (!queried) return
+    void loadWsLogs({ ...appliedRef.current, onlyFail: onlyFailRef.current, page: 1, startFrom: from, endTo: to })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [from, to])
 
   // 提交查询:Enter / 点「查询」/ 点刷新走这里（把草稿变成已提交条件）。
   const doLoad = (p = 1) => {
-    if (!entRef.current) { toast.error('先选企业编号'); return }
     if (!queried) setQueried(true)
     setApplied(draft)
-    void loadWsLogs({ ...draft, onlyFail, page: p, startFrom: from, endTo: to, ent: entRef.current })
+    void loadWsLogs({ ...draft, onlyFail, page: p, startFrom: from, endTo: to })
   }
   // 翻页/勾「仅失败」**沿用已提交条件**，不读 draft。
   //
@@ -285,7 +265,7 @@ export function WsLogView() {
   // **另一个查询**的第 2 页，列表变 0 条 —— 看着像"翻页把数据翻没了"。
   // 草稿只在回车/刷新那一下生效，这条边界必须守住。
   const loadPage = (p: number) => {
-    void loadWsLogs({ ...appliedRef.current, onlyFail: onlyFailRef.current, page: p, startFrom: from, endTo: to, ent: entRef.current })
+    void loadWsLogs({ ...appliedRef.current, onlyFail: onlyFailRef.current, page: p, startFrom: from, endTo: to })
   }
   const onEnter = (e: React.KeyboardEvent) => { if (e.key === 'Enter') doLoad(1) }
 
@@ -294,14 +274,13 @@ export function WsLogView() {
   // 放宽到最近一年 —— 日志表通常按月清理,一年足够覆盖;仍然是按 wsfa003 倒序取前 200 条,
   // 走索引,不会因为范围大而变慢。
   const widenToLastYear = () => {
-    if (!entRef.current) { toast.error('先选企业编号'); return }
     const end = today()
     const d = new Date(); d.setDate(d.getDate() - 365)
     const start = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     suppressRequeryRef.current = true
     window.setTimeout(() => { suppressRequeryRef.current = false }, 0)
     setFrom(start); setTo(end); setQueried(true)
-    void loadWsLogs({ ...appliedRef.current, onlyFail: onlyFailRef.current, page: 1, startFrom: start, endTo: end, ent: entRef.current })
+    void loadWsLogs({ ...appliedRef.current, onlyFail: onlyFailRef.current, page: 1, startFrom: start, endTo: end })
   }
 
   // ---- 宽度分配:左右两栏按比例分(默认 1:1),之和恒等于容器宽度 ----
@@ -482,42 +461,19 @@ export function WsLogView() {
     : tab === 'response' ? (content?.response || '') : ''
 
   // （原先这里有一道"没有会话就不渲染整页"的门。已拆除:接口日志查的是环境级的 wsfa_t，
-  //   与有没有调试会话无关 —— 会话只在"重放"时用得上。见上面企业编号下拉的注释。）
+  //   与有没有调试会话无关 —— 会话只在"重放"时用得上。）
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       {/* 工具条分两行(条件多,挤一行看不清):
-            第一行 = 企业编号(下拉) + 查询 + 五个查询条件(服务名称/作业编号/服务端/发起端/处理结果);
+            第一行 = 查询 + 五个查询条件(服务名称/作业编号/服务端/发起端/处理结果);
             第二行 = 时间范围 + 仅失败 + 条数/翻页(右对齐)。
           每个条件都是「字段名 + 输入框」两件东西(见 QueryField),不是把字段名写进输入框里。
           下缘分割线与列表连成整体;窄了各自内部换行(flex-wrap)。
           两行之间留出间距(pt/pb),否则输入框与日期行贴在一起显得挤。 */}
       <div className="shrink-0 border-b border-border">
         <div className="flex flex-wrap items-center gap-2 px-2 pt-2 pb-1.5">
-          {/* 企业编号:清单来自 gzou_t(固定用系统账号 ds 查),下拉里带上 gzou003 的账号。
-              选完点「查询」才发请求 —— 不依赖会话,也不在开页时自己拂一次 SSH。 */}
-          <div className="flex items-center gap-1.5"
-            title="企业编号来自 gzou_t(gzoustus='Y' 的 gzou001),用系统账号 ds 查;后面是该企业在 gzou003 里的账号/schema">
-            <span className="shrink-0 text-xs text-muted-foreground">企业编号</span>
-            <Select value={ent ? String(ent) : undefined} onValueChange={(v) => setEnt(Number(v) || 0)}>
-              <SelectTrigger className="h-7 w-40 text-xs" aria-label="企业编号">
-                <SelectValue placeholder={entsView?.loading ? '读取中…' : (entsView?.err ? '读不到企业清单' : '选择企业')} />
-              </SelectTrigger>
-              <SelectContent>
-                {(entsView?.items || []).map((e) => (
-                  <SelectItem key={e.ent} value={String(e.ent)}>
-                    {e.ent}{e.account && e.account !== '-' ? ` · ${e.account}` : ' · 未配账号'}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <button onClick={() => void loadEnts(activeEnv, true)} disabled={!activeEnv || entsView?.loading}
-              title="重新读 gzou_t(固定用系统账号 ds)"
-              className="p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40">
-              <RefreshCw className={`h-3.5 w-3.5 ${entsView?.loading ? 'animate-spin' : ''}`} />
-            </button>
-          </div>
-          <Button size="sm" onClick={() => doLoad(1)} disabled={loading || !ent} title="按当前条件查询（回车同效）">
+          <Button size="sm" onClick={() => doLoad(1)} disabled={loading} title="按当前条件查询（回车同效）">
             {loading ? '查询中…' : '查询'}
           </Button>
           <QueryField
@@ -580,7 +536,7 @@ export function WsLogView() {
                 // 条件只取**已提交**的那份:输入框里的草稿要等回车才算数(见 loadPage 的说明)。
                 const on = v === true
                 setOnlyFail(on)
-                void loadWsLogs({ ...appliedRef.current, onlyFail: on, page: 1, startFrom: from, endTo: to, ent: entRef.current })
+                void loadWsLogs({ ...appliedRef.current, onlyFail: on, page: 1, startFrom: from, endTo: to })
               }} />
             <label htmlFor="wslog-onlyfail" className="cursor-pointer select-none">仅失败</label>
           </div>
@@ -676,22 +632,17 @@ export function WsLogView() {
               // 所以这里只在真的空列表上说话；有错就照实把错误说出来，并留一个重试出口
               // （原来错误只在右下角活 8 秒，之后界面上再也找不到这次失败的任何痕迹）。
               //
-              // 第一档是"还没查过":接口日志不再跟着会话自动拉,要人选企业后点「查询」。
+              // 第一档是"还没查过":接口日志不再跟着会话自动拉,要人点「查询」。
               !queried ? (
                 <div className="flex flex-col items-center gap-1.5 p-6 text-center text-xs text-muted-foreground">
-                  <span className="text-sm text-foreground">选企业编号，点「查询」</span>
+                  <span className="text-sm text-foreground">设好条件，点「查询」</span>
                   <span>接口日志查的是环境库里的 wsfa_t（系统账号 ds），不需要先建会话。</span>
-                  {entsView?.err && (
-                    <span className="max-w-2xl whitespace-pre-wrap text-red-600 dark:text-red-400">
-                      企业清单读取失败（gzou_t）：{entsView.err}
-                    </span>
-                  )}
                 </div>
               ) : err ? (
                 <div className="flex flex-col items-center gap-2 p-4 text-center text-xs">
                   <div className="text-red-600 dark:text-red-400">查询失败，没有拿到日志</div>
                   <div className="max-w-2xl whitespace-pre-wrap text-muted-foreground">{err}</div>
-                  <button onClick={() => void loadWsLogs({ ...appliedRef.current, onlyFail: onlyFailRef.current, page: 1, startFrom: from, endTo: to, ent: entRef.current })}
+                  <button onClick={() => void loadWsLogs({ ...appliedRef.current, onlyFail: onlyFailRef.current, page: 1, startFrom: from, endTo: to })}
                     className="rounded-ui border border-border px-2 py-1 text-muted-foreground hover:bg-accent hover:text-foreground">
                     重试
                   </button>
@@ -744,7 +695,7 @@ export function WsLogView() {
                   </button>
                 )}
                 <button
-                  onClick={() => void replayDebug(sel, reqDirty ? reqDraft : undefined, entRef.current || undefined)}
+                  onClick={() => void replayDebug(sel, reqDirty ? reqDraft : undefined)}
                   disabled={reqDirty && !!content?.requestPartial}
                   title={reqDirty && content?.requestPartial
                     ? '入参内容不完整(超过读取上限被截断,或未完整入库),不能基于它重放'

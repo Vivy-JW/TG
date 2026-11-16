@@ -87,7 +87,7 @@ interface SshItem {
   user: string
   password: string
   zone: string
-  // ENT 清单（只读）：由「ENT」页签的“从服务器刷新”写入配置，不提供手工维护。
+  // ENT 清单（只读）：旧版本由设置页连库抄下来写进配置；不再提供维护入口，这里只原样搬运。
   ents?: HostsEnt[]
   entsSyncedAt?: string
   // workspace 该环境的 .tzs 工作区（含 mta/ 的目录，绝对路径）。
@@ -506,7 +506,6 @@ export function SettingsView() {
   // 彩色段落 —— 出现/消失会顶动卡片高度,而这一页卡片多、表格多,串动尤其明显。
   const toast = useToast()
 
-  const [envTab, setEnvTab] = useState<'ssh' | 'db' | 'ents'>('ssh')
   // 读配置失败的原因（非空 = 这一页要显示失败态而不是"加载配置中…"）。
   const [loadErr, setLoadErr] = useState('')
   const [cfg, setCfg] = useState<HostsView | null>(null)
@@ -596,8 +595,6 @@ export function SettingsView() {
     keys.some((k) => dirtyRef.current[k] && sectionSnap(k) !== baselineRef.current[k])
 
   const [showPwd, setShowPwd] = useState(false)
-  // 「ENT」页签的同步状态（连库读 gzou_t 并写回配置；唯一会改动清单的入口）
-  const [entsBusy, setEntsBusy] = useState(false)
   // 数据库页操作状态。accProbe 只记"哪一行、什么状态"用于行内图标;
   // 具体文案走 toast(见 verifyAcct)。
   const [busy, setBusy] = useState<string>('')
@@ -808,32 +805,6 @@ export function SettingsView() {
     if (!account || !password) return
     patchDb(selSsh, { accounts: [...cur.db.accounts, { account, password }] })
     setAddAcct({ account: '', password: '' })
-  }
-  // syncEnts 是「ENT」页签唯一的写入口：连库读 gzou_t → 写回 config.json。
-  // 不允许手填：清单是“从库里抄下来的”，不是人凭记忆写的。
-  const syncEnts = async () => {
-    const s0 = sshs[selSsh]
-    if (!s0?.host) { toast.error('先填 SSH 主机'); return }
-    if (!(await flushHosts())) {
-      toast.error('环境还没保存成功', { description: '同步会重读配置；先把上面的错误处理掉再试' })
-      return
-    }
-    // flush 可能把服务器补全后的环境名写回 formsRef，用最新那份点名。
-    const saved = formsRef.current.sshs[selSsh] || s0
-    const name = sshName(saved)
-    setEntsBusy(true)
-    try {
-      const r = await api.entsSync(name)
-      await new Promise<void>((resolve) => { loadSettings(); setTimeout(resolve, 300) })
-      const extra = r.addedAccounts?.length
-        ? `；新增账号 ${r.addedAccounts.join('、')}（密码按惯例=账号名，请到「数据库」页签改成真实口令）`
-        : ''
-      toast.success(`已同步 ${r.count} 个企业${extra}`)
-    } catch (e: any) {
-      toast.error('同步 ENT 失败', { description: e?.message || String(e), duration: 0 })
-    } finally {
-      setEntsBusy(false)
-    }
   }
 
   const addSsh = () => { selectT100(sshs.length); setSshs([...sshs, blankSsh()]); markDirty('hosts') }

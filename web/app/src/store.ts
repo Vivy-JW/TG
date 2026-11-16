@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { api, API_BASE, type Event, type StopInfo, type Breakpoint, type Frame, type VarItem, type WSLogItem, type WSLogContent, type WSLogQuery, type EntItem, type InflightInfo, type SessionBrief } from './api'
+import { api, API_BASE, type Event, type StopInfo, type Breakpoint, type Frame, type VarItem, type WSLogItem, type WSLogContent, type WSLogQuery, type InflightInfo, type SessionBrief } from './api'
 import { THEME_KEY, applyDark, readStoredTheme, resolveDark, watchSystemTheme, type ThemeMode } from '../../shared/theme'
 // 统一消息出口(零依赖的那个文件,见 toastBus.ts 的说明:store 要能在裸 Node 里加载)
 import { toast } from './toastBus'
@@ -271,12 +271,6 @@ interface Store {
   // —— 2026-10-23 实测:测试区/正式区的接口日志都显示成鼎捷的(反之亦然)。
   // 当时先做的是"切环境就清空",但那是把用户刚查好的结果扔掉;正确做法是各存一份。
   wsLogsByEnv: Record<string, WsLogSnap>
-  // 企业目录(ENT → 数据库账号)按环境缓存。接口日志页与「创建会话」的 ENT 下拉
-  // 共用这一份 —— 两处各拉一次会让同一张 gzou_t 被问两遍(每次都可能拨 SSH)。
-  entsByEnv: Record<string, EntsView>
-  // loadEnts 拉一个环境的企业目录。force = 跳过客户端缓存(服务端那边还有一层
-  // 10 分钟缓存 + 快照,所以"刷新"不会每次都真的拨 SSH)。失败不抛错,写进 err。
-  loadEnts: (env: string, force?: boolean) => Promise<EntItem[]>
   // 源码
   sourceContent: string
   sourcePath: string
@@ -963,24 +957,6 @@ const wsLogFlatOf = (sn: WsLogSnap) => ({
   wsLogSel: sn.sel, wsLogContent: sn.content, wsLogTab: sn.tab, wsLogErr: sn.err,
 })
 
-// 企业目录(ENT → 账号)按环境的客户端缓存。
-//
-// 它只是“别同一页反复问”的便利层:真值在服务端(内存 + 快照 + gzou_t),
-// 新鲜度以服务端回的 source/stale 为准,这里记一个本地时间只用于过期判定。
-interface EntsView {
-  items: EntItem[]
-  loading: boolean
-  err: string
-  source: string // live | snapshot | snapshot-stale(来自服务端)
-  stale: boolean
-  fetchedAt: string
-  at: number // 本地拿到这份答案的时间(毫秒);0 = 没拿到过
-}
-const EMPTY_ENTS: EntsView = {
-  items: [], loading: false, err: '', source: '', stale: false, fetchedAt: '', at: 0,
-}
-const ENTS_TTL_MS = 5 * 60_000
-
 // 会话绑定的"代次":每次**权威地绑上一个会话**（launch / replayStart / 接管）自增。
 //
 // 为什么需要它：`syncFromSessions` 与 `adoptExisting` 都是异步的（先 api.list() 再 api.snapshot()），
@@ -1052,7 +1028,6 @@ export const useStore = create<Store>((set, get) => ({
   wsLogs: [], wsLogsLoading: false, wsLogsPage: 1, wsLogsHasMore: false,
   wsLogSel: null, wsLogContent: null, wsLogTab: 'info', wsLogErr: '',
   wsLogsByEnv: {},
-  entsByEnv: {},
 
   sourceContent: '', sourcePath: '', sourceDVM: '', sourceMissing: false, currentLine: 0, loadingSource: false, lineOffset: 0,
   tabs: [], activeTab: 'debug', revealReq: null,
@@ -1436,44 +1411,6 @@ export const useStore = create<Store>((set, get) => ({
     } catch {
       // 无源码(只有 42m 等):页签保留并标记,内容区给提示
       set((s2) => ({ tabs: s2.tabs.map((t) => t.key === key ? { ...t, loading: false, missing: true } : t) }))
-    }
-  },
-
-  // loadEnts 取一个环境的企业目录(ENT → 数据库账号)。接口日志页与建会话的 ENT 下拉共用。
-  //
-  // 不需要活会话:数据来自服务端的 gzou_t(固定用系统账号 ds 读),与当前有没有会话无关,
-  // 也不用先建一条。失败**不抛**:下拉需要一个“失败态 + 重试”的展示位,
-  // 而不是把整页炸掉 —— 错误写进 entsByEnv[env].err,调用方就地显示。
-  loadEnts: async (env, force) => {
-    const key = (env || get().activeEnv || '').trim()
-    if (!key) return []
-    const cur = get().entsByEnv[key]
-    // 客户端缓存只挡“同一页反复问”;真正的缓存与新鲜度在服务端(内存 + 快照,TTL 10 分钟)。
-    if (!force && cur && cur.items.length && Date.now() - cur.at < ENTS_TTL_MS) return cur.items
-    if (cur?.loading) return cur.items
-    set((s) => ({ entsByEnv: { ...s.entsByEnv, [key]: { ...(cur || EMPTY_ENTS), loading: true, err: '' } } }))
-    try {
-      const r = await api.ents(key, { refresh: !!force })
-      const items = (r.ents || [])
-        .map((e) => ({ ent: Number(e.ent) || 0, account: (e.account || '').trim(), placeholder: !!e.placeholder }))
-        .filter((e) => e.ent > 0)
-        .sort((a, b) => a.ent - b.ent)
-      set((s) => ({
-        entsByEnv: {
-          ...s.entsByEnv,
-          [key]: {
-            items, loading: false, err: '', source: r.source || '',
-            stale: !!r.stale, fetchedAt: r.fetchedAt || '', at: Date.now(),
-          },
-        },
-      }))
-      return items
-    } catch (e: any) {
-      const msg = e?.message || String(e)
-      set((s) => ({
-        entsByEnv: { ...s.entsByEnv, [key]: { ...(s.entsByEnv[key] || EMPTY_ENTS), items: [], loading: false, err: msg, at: 0 } },
-      }))
-      return []
     }
   },
 
@@ -2157,7 +2094,7 @@ export const useStore = create<Store>((set, get) => ({
   //
   // 环境清单来自共享端点 `/api/hosts`(与设置页同一份数据源,含口令,所以只在需要时拉)。
   // 失败与"一个都没配"是两件事:`envsErr` 非空时界面要说"读不到",不能显示成"还没有环境"
-  // (旧会话面板在这条上踩过一次,见 SessionPanel.tsx 的注释)。
+  // (旧的会话面板在这条上踩过一次;它已经删了,留下这句当教训)。
   loadEnvs: async () => {
     try {
       const c = await api.settings()
