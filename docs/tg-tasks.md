@@ -72,7 +72,7 @@
 
 ## 阶段 5 改名三批
 
-- ☑ ①对外（2026-11-13）：`Makefile` / `build_portable.bat` / `build_msi.bat` 出 `tg.exe`、`dist\tg-portable\`、`dist\TG-<ver>-x64.msi`；`installer/tt.wxs` → `installer/tg.wxs`（产品名/目录/注册表 `Software\TG`/开始菜单名/`install bdl` 全改）；`internal/update` 的 `Programs\TG`、备份目录 `.tg-update-prev`、临时前缀 `tg-update-`、UA `tg-update/`、状态与日志 `.tg-update.json|log`、技能戳 `.tg-skills.json` 同步。**MSI 未实跑**（本机没有 WiX v3，`D:\tt-build-tools\wix3` 不存在）
+- ☑ ①对外（2026-11-13）：`Makefile` / `build_portable.bat` / `build_msi.bat` 出 `tg.exe`、`dist\tg-portable\`、`dist\TG-<ver>-x64.msi`；`installer/tt.wxs` → `installer/tg.wxs`（产品名/目录/注册表 `Software\TG`/开始菜单名/`install bdl` 全改）；`internal/update` 的 `Programs\TG`、备份目录 `.tg-update-prev`、临时前缀 `tg-update-`、UA `tg-update/`、状态与日志 `.tg-update.json|log`、技能戳 `.tg-skills.json` 同步。MSI 已实跑（2026-11-16）：WiX v3.14.1 放在 `D:\tt-build-tools\wix3`（`build_msi.bat` 的默认 `WIX_BIN`），产出 `dist\TG-0.5.2-x64.msi`（19.9 MB）；`installer/tg.wxs` 的 `UpgradeCode` 已换成 TG 自己的 `B4E6D2A9-5C3F-4E18-9A7B-2D6F8C1E5A03`（原来沿用 TT 的，装 TG 会把机器上的 TT 当旧版本升级掉）。
 - ☑ ②数据与配置（2026-11-13）：`%APPDATA%\tt` → `%APPDATA%\tg`、`~/.tt` → `~/.tg`（字典/镜像兜底）、`.tt-serve.json|log` → `.tg-serve.json|log`、`TT_*` 环境变量全改 `TG_*`。**不做旧名兼容**（TG 没有已发版的旧脚本/旧数据要接）
 - ☑ ③代码内部（2026-11-13）：`module tt` → `module tg`，176 个 Go 文件的 import 全量重写、`-ldflags -X tg/internal/cli.Version` 同步；`go build ./...` 与 `go test ./internal/...` 通过（`internal/host` 仍因沙箱无 bash 恒红）
 

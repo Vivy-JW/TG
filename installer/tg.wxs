@@ -20,7 +20,7 @@
            Codepage="936"
            Version="$(var.Version)"
            Manufacturer="luyao"
-           UpgradeCode="7F3C1A64-9E4B-4C2D-9A18-2B6D5E0F7C31">
+           UpgradeCode="B4E6D2A9-5C3F-4E18-9A7B-2D6F8C1E5A03">
 
     <Package Id="*"
              InstallerVersion="500"
@@ -30,7 +30,9 @@
              Comments="用户级安装,不需要管理员权限" />
 
     <!-- 升级:装新版会先移除旧版。ProductCode 每次构建重新生成(Id="*"),
-         UpgradeCode 固定,两者配合才能正确识别"这是同一个产品的另一个版本"。 -->
+         UpgradeCode 固定,两者配合才能正确识别"这是同一个产品的另一个版本"。
+         UpgradeCode 必须是 TG 自己的:沿用 TT 的那一个会让 Windows 把 TG 当成
+         TT 的另一个版本,装 TG 时顺手把机器上的 TT 升级/卸掉。 -->
     <MajorUpgrade DowngradeErrorMessage="已安装更新版本的 TG,请先卸载它。" />
     <MediaTemplate EmbedCab="yes" />
 
