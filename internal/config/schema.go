@@ -217,7 +217,6 @@ func (h *Hosts) Normalize() {
 type DebugSettings struct {
 	LaunchArgs      string `json:"launchArgs,omitempty"`      // 作业启动参数默认模板，{prog} 替换为作业名（环境可覆盖）
 	WatchdogSeconds int    `json:"watchdogSeconds,omitempty"` // 停站停留超时默认（秒）；环境可覆盖
-	FGLServer       string `json:"fglserver,omitempty"`       // 留空使用 T100 按 SSH 来源 IP 自动设置
 	TermWidth       int    `json:"termWidth,omitempty"`
 	TermHeight      int    `json:"termHeight,omitempty"`
 	PrintElements   int    `json:"printElements,omitempty"`      // fgldb 单次 print 的数组元素上限；0=默认 1000

@@ -35,13 +35,13 @@ func TestLaunchCfgResolvesByName(t *testing.T) {
 	s := NewServer(cfg, nil, "")
 
 	// 不点名:用当前生效配置(与从前一致)
-	if got, err := s.launchCfg("", "", nil); err != nil || got != s.cfg {
+	if got, err := s.launchCfg("", ""); err != nil || got != s.cfg {
 		t.Fatalf("不点名应回当前配置: got=%v err=%v", got, err)
 	}
 	// 点名:换成该环境。
 	// 注:企业编号不再从环境里取(hosts.sshs[].topent 已移除)—— 所以这里只断言环境名
 	// 与连接换了;ENT 由调用方显式给(launchCfg 的 ent 参数 / --ent)。
-	got, err := s.launchCfg("测试1012", "", nil)
+	got, err := s.launchCfg("测试1012", "")
 	if err != nil {
 		t.Fatalf("点名存在的环境不该失败: %v", err)
 	}
@@ -55,11 +55,11 @@ func TestLaunchCfgResolvesByName(t *testing.T) {
 		t.Fatalf("点名后应连该环境的机器, got %q", got.SSH.Host)
 	}
 	// 区域覆盖仍可用
-	if z, err := s.launchCfg("测试1012", "35", nil); err != nil || z.Zone != "35" {
+	if z, err := s.launchCfg("测试1012", "35"); err != nil || z.Zone != "35" {
 		t.Fatalf("zone 覆盖应生效: zone=%q err=%v", z.Zone, err)
 	}
 	// 点错了:报错并列出可用环境名(绝不静默回落)
-	_, err = s.launchCfg("并不存在的环境", "", nil)
+	_, err = s.launchCfg("并不存在的环境", "")
 	if err == nil {
 		t.Fatal("点名不存在的环境必须报错(静默回落就是上错号)")
 	}
@@ -256,73 +256,12 @@ func waitStatus(base string, d time.Duration) error {
 	return lastErr
 }
 
-func fglPtr(v string) *string { return &v }
-
-// launchCfg 的单轮 FGLSERVER 覆盖:改的只该是**本轮**，内存里的配置一字不动。
-//
-// 这一条是实测事故的回填:以前"画面去哪"只能改全局 config.debug.fglserver，
-// 于是做一次 无头前端实验(填 本机IP:1300)就把调试的画面接线顶掉了 ——
-// 之后每次放行都不弹画面，而启动输出一个字都没提画面去了哪。
-func TestLaunchCfgFGLServerOverride(t *testing.T) {
-	pinned := "10.1.25.33:1300"
-	cfg := &Config{
-		SSH:       host.SSHConfig{Host: "top", Port: 22, User: "u"},
-		Zone:      "36",
-		FGLServer: pinned,
-		SSHs: []host.NamedSsh{
-			{Name: "正式区", SSHConfig: host.SSHConfig{Host: "h1", Port: 22, User: "u"}, Zone: "36"},
-		},
-	}
-	cfg.fillDefaults()
-	cfg.ApplyDefaultEnv()
-	s := NewServer(cfg, nil, "")
-
-	// 不给覆盖:连指针都不该换(省掉一次克隆)
-	if got, err := s.launchCfg("", "", nil); err != nil || got != s.cfg {
-		t.Fatalf("不给 FGLSERVER 覆盖时应直接回当前配置: got=%v err=%v", got, err)
-	}
-	// 给了覆盖:本轮用新值
-	got, err := s.launchCfg("", "", fglPtr("192.168.14.193:1000"))
-	if err != nil {
-		t.Fatalf("覆盖 FGLSERVER 不该失败: %v", err)
-	}
-	if got.FGLServer != "192.168.14.193:1000" {
-		t.Fatalf("本轮应用覆盖值, got %q", got.FGLServer)
-	}
-	// 覆盖**不能**留在内存配置里:它是"这一轮"的接线,不是新的默认值
-	if s.cfg.FGLServer != pinned {
-		t.Fatalf("覆盖泄漏进了服务配置: %q(应为 %q)", s.cfg.FGLServer, pinned)
-	}
-	// 空串是"本轮交回 T100 自动设置",不是"没给"
-	cleared, err := s.launchCfg("", "", fglPtr(""))
-	if err != nil {
-		t.Fatalf("清空 FGLSERVER 不该失败: %v", err)
-	}
-	if cleared.FGLServer != "" {
-		t.Fatalf("空串应清空本轮的 FGLSERVER, got %q", cleared.FGLServer)
-	}
-	if s.cfg.FGLServer != pinned {
-		t.Fatalf("清空同样不该改服务配置: %q", s.cfg.FGLServer)
-	}
-	// 与环境点名并存:两件事各归各的
-	both, err := s.launchCfg("正式区", "", fglPtr("1.2.3.4:1300"))
-	if err != nil {
-		t.Fatalf("点名环境 + 覆盖 FGLSERVER 不该失败: %v", err)
-	}
-	if both.EnvName() != "正式区" || both.FGLServer != "1.2.3.4:1300" {
-		t.Fatalf("环境与 FGLSERVER 应各自生效: env=%q fglserver=%q", both.EnvName(), both.FGLServer)
-	}
-}
-
-// ScreenTarget 在 TG 里恒为 GP 那一句：画面由 fgldb 接管，没有 FGLSERVER 这条线。
+// ScreenTarget 在 TG 里恒为 GP 那一句：画面由 fgldb 接管，界面走 GDC 直连。
 func TestScreenTargetSaysWhereTheScreenGoes(t *testing.T) {
-	auto := ScreenTarget("")
-	for _, want := range []string{"fgldb", "GP"} {
-		if !strings.Contains(auto, want) {
-			t.Errorf("画面去向里应出现 %q: %s", want, auto)
+	got := ScreenTarget()
+	for _, want := range []string{"fgldb", "GDC"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("画面去向里应出现 %q: %s", want, got)
 		}
-	}
-	if over := ScreenTarget("10.1.25.33:1300"); over != auto {
-		t.Errorf("GP 不认 FGLSERVER 覆盖，应仍是同一句: %q vs %q", over, auto)
 	}
 }

@@ -386,7 +386,7 @@ function hostsPatchOf(list: SshItem[]) {
  * debug 节 → 只带**这一页管得着**的键（目前只有停站看门狗）。
  *
  * 为什么现在敢只发一个键：后端 `putSection` 会把"本次没提交的键"从旧配置原样补回
- * （`debug.aiTakeover` / `query.limit` / `fglserver` / `persistBreakpoints` 都是这么保住的）。
+ * （`debug.aiTakeover` / `query.limit` / `persistBreakpoints` 都是这么保住的）。
  *
  * 老做法（把读到的整套值原样回传）有两个毛病，实测都踩到了：
  *   - **凭空写入**：配置里本来没有 `termWidth`，表单读到内置默认 200，保存一次就把它写死进
@@ -611,7 +611,7 @@ export function SettingsView() {
     api.settings().then((c) => {
       setCfg(c)
       setSshs(sshsFormOf(c))
-      // 只读这一页真的有的那个字段。其余 debug 键（aiTakeover / fglserver / persistBreakpoints…）
+      // 只读这一页真的有的那个字段。其余 debug 键（aiTakeover / persistBreakpoints…）
       // 界面没有控件，也就**不必读进来再回传** —— 服务端 putSection 会从旧配置原样补回。
       setDbg({ watchdogSeconds: c.debug?.watchdogSeconds || 0 })
       setDict({
@@ -1545,7 +1545,7 @@ export function SettingsView() {
           {section === 'debug' && (
             <>
               {/* 只剩看门狗一项。
-                  其余五项(启动参数模板 / FGLServer / print 上限 / 终端尺寸 / 断点持久化)
+                  其余四项(启动参数模板 / print 上限 / 终端尺寸 / 断点持久化)
                   已从界面移除:它们都有内置默认值(见 internal/config 的 FillDefaults:
                   BBDL…{prog} / 按 SSH 来源 IP / 1000 / 200×50 / 开启),现场几乎不需要改,
                   摆出来只会让人以为"必须调"。

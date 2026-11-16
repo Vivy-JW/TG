@@ -149,7 +149,6 @@ export interface HostsSsh {
 export interface HostsDebug {
   launchArgs?: string
   watchdogSeconds?: number
-  fglserver?: string
   termWidth?: number
   termHeight?: number
   printElements?: number

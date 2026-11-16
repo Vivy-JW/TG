@@ -898,21 +898,12 @@ func (m *Manager) cacheJob(key, mod, prog, launchRef, extra string) {
 // 报文文件被清理时用 CLOB 内容落到服务器临时文件再重放。
 // 会话复用规则与普通启动一致:同目标空闲宿主直接复用。
 // LaunchReplay 用日志报文重放调试。reqOverride 非空 = 界面里改过的入参(落临时文件后作为 reqPath)。
-// fglserver 非 nil = 本轮 FGLSERVER 覆盖(语义见 Server.launchCfg 与 ScreenTarget)。
 // name 是 `--name` 给的别名（Bug B：`wsdebug` 与 `debug start` 同样是**起会话**的命令，C3.5）：
 // 它原样交给 `prepareSession`，于是别名在会话登记那一刻成为服务端的事实（C5.3 的 `name` 键），
 // 从此参与寻址、当幂等键（Q23）。空 = 未命名，逐字等于今天的行为。
 // 返回的 warn 非空表示这次重放用的是入库的截断文本,结果可能不可信(见 WriteReplayFiles)。
-func (m *Manager) LaunchReplay(item *WSLogItem, content *WSLogContent, reqOverride string, fglserver *string, name string) (*Session, string, error) {
-	// 本轮启动用的配置快照:只有"单轮 FGLSERVER 覆盖"会改它。
-	// 直接改 m.cfg 会把一次重放的接线留在内存配置里 —— 下一轮(哪怕只是普通启动)
-	// 都还带着它,而画面去哪恰恰是静默的(见 ScreenTarget)。
+func (m *Manager) LaunchReplay(item *WSLogItem, content *WSLogContent, reqOverride string, name string) (*Session, string, error) {
 	cfg := m.cfg
-	if fglserver != nil {
-		cc := *m.cfg
-		cc.FGLServer = strings.TrimSpace(*fglserver)
-		cfg = &cc
-	}
 	job := strings.TrimSpace(item.Job)
 	if job == "" {
 		return nil, "", fmt.Errorf("该日志没有关联作业编号(wsfa012 为空),无法重放")

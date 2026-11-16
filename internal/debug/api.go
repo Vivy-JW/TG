@@ -602,12 +602,8 @@ func (s *Server) hLaunch(w http.ResponseWriter, r *http.Request) {
 		// `SESSION_AMBIGUOUS`。从前 CLI 只在本机校验这个标志、POST 里不带它，于是
 		// 同环境两条空闲会话时 `--session 恒一#1` 照样歧义 —— 标志在 --help 里写着却帮不上忙。
 		Session string `json:"session"`
-		// FGLServer 本轮 FGLSERVER 覆盖(指针:给了就是权威,空串 = 本轮强制交回 T100 自动设置)。
-		// 存在的理由是"画面去哪"只该由这一轮决定:以前只能改全局配置,
-		// 于是一次前端实验就把调试的画面接线顶掉了,而且静默(见 ScreenTarget)。
-		FGLServer *string `json:"fglserver"`
-		// Ent 是**这一轮**的企业编号(ENT)。从前没有这个字段:企业只能靠"起会话后
-		// tt debug topent"或者沿用登录 shell 的 $TOPENT,而后者是静默的 —— "忘了点名"
+		// Ent 是**这一轮**的企业编号(ENT)。从前只能靠"起会话后再设定"或者沿用登录
+		// shell 的 $TOPENT,而后者是静默的 —— "忘了点名"
 		// 与"点错了"表现完全一样(作业照跑,只是跑在另一家企业上)。现在它是必填:
 		// 空且目标会话也没有显式 override 时,`prepareSession` 会拒掉(见 requireExplicitEnt)。
 		Ent string `json:"ent"`
@@ -647,8 +643,8 @@ func (s *Server) hLaunch(w http.ResponseWriter, r *http.Request) {
 			req.SSH = env
 		}
 	}
-	// 按名换 SSH(环境)/ 覆盖区域/ 覆盖本轮 FGLSERVER:克隆配置,默认链路零影响
-	cfg, err := s.launchCfg(req.SSH, req.Zone, req.FGLServer)
+	// 按名换 SSH(环境)/ 覆盖区域:克隆配置,默认链路零影响
+	cfg, err := s.launchCfg(req.SSH, req.Zone)
 	if err != nil {
 		fail(w, 404, err)
 		return
@@ -812,10 +808,8 @@ func (s *Server) hSnapshot(w http.ResponseWriter, r *http.Request) {
 		"silentSeconds": sess.SilentSeconds(),
 		// 谁在驾驶 + 正在执行哪条命令(界面上的"AI 正在执行 continue(已 12s)")
 		"mode": sess.Mode(),
-		// 这一轮作业界面画到哪儿:机器可读的原始值 + 一句人话结论。
-		// 界面上没有它的时候,"放行后什么都没弹"只能靠人去翻配置猜(实测踩过)。
-		"fglserver":    sess.FGLServer(),
-		"screenTarget": ScreenTarget(sess.FGLServer()),
+		// 这一轮作业界面画到哪儿:一句人话结论(GP 恒为"由 fgldb 接管")。
+		"screenTarget": ScreenTarget(),
 		// product: 这一轮的产品别。GP 没有 ENT/区域/FGLSERVER 那几层,CLI 的身份行与提示按它分档。
 
 	}
@@ -856,18 +850,16 @@ func (s *Server) hQuit(w http.ResponseWriter, r *http.Request) {
 
 // ---------- 会话管理(单一常驻会话的切换/重启/结束) ----------
 
-// launchCfg 组装"这次启动要连哪个环境"的生效配置:ssh(环境名)/ zone 覆盖 + 单轮 FGLSERVER 覆盖。
+// launchCfg 组装"这次启动要连哪个环境"的生效配置:ssh(环境名)/ zone 覆盖。
 //
 // 按名点名是**权威**的:点到的环境不存在就报错列出可用名,绝不静默回落默认连接 ——
-// 同一台机器上有多个环境(同库不同企业)时,"静默回落"与"上错了号"在输出上完全
-// 无法区分(见 manager.prepareSession 的环境判据)。
+// 同一台机器上有多个环境时,"静默回落"与"连错了机器"在输出上完全无法区分
+// (见 manager.prepareSession 的环境判据)。
 //
-// fglserver 用**指针**而不是字符串:空串在 JSON 里与"这一轮没给"无法区分,而
-// "这一轮把画面交回 T100 自动设置"恰恰是最需要的那个动作(见 ScreenTarget)。
-// 覆盖只落在克隆出来的本轮配置上,s.cfg 一字不动 —— 否则一次前端实验的接线
+// 覆盖只落在克隆出来的本轮配置上,s.cfg 一字不动 —— 否则一次实验的覆盖
 // 会留在内存里,后面每一轮(哪怕只是普通启动)都还带着它。
-func (s *Server) launchCfg(sshName, zone string, fglserver *string) (*Config, error) {
-	if sshName == "" && zone == "" && fglserver == nil {
+func (s *Server) launchCfg(sshName, zone string) (*Config, error) {
+	if sshName == "" && zone == "" {
 		return s.cfg, nil
 	}
 	cfg := s.cfg
@@ -886,9 +878,6 @@ func (s *Server) launchCfg(sshName, zone string, fglserver *string) (*Config, er
 		cfg = c2
 	}
 	c2 := *cfg.CloneWithZone(zone)
-	if fglserver != nil {
-		c2.FGLServer = strings.TrimSpace(*fglserver)
-	}
 	return &c2, nil
 }
 
@@ -2270,8 +2259,6 @@ func (s *Server) hWSLogDebug(w http.ResponseWriter, r *http.Request) {
 		// **起会话**的命令（C3.5），所以别名在这条路上也要登记 —— 否则它起的会话只能用 ref
 		// 寻址、也不能当幂等键（C1.6 / Q23）。空 = 未命名，与今天逐字相同（键不出现）。
 		Name string `json:"name"`
-		// FGLServer 本轮 FGLSERVER 覆盖,语义同 hLaunch(指针:给空串 = 本轮交回 T100 自动设置)。
-		FGLServer *string `json:"fglserver"`
 		// Ent 是**这一轮**的企业编号(ENT),语义同 hLaunch：必填（或目标会话已有显式 override）。
 		Ent string `json:"ent"`
 	}
@@ -2285,9 +2272,7 @@ func (s *Server) hWSLogDebug(w http.ResponseWriter, r *http.Request) {
 	}
 	// 点名的环境同样权威:重放必须落在被点名的环境上,否则"重放出来的现象"与
 	// "这条日志来自哪个环境"对不上,查出来的结论会整个偏掉。
-	// 这里**不带** FGLSERVER 覆盖:那一个只影响"这一轮画面去哪",不是环境身份,
-	// 塞进 selectEnv 会把一次实验的接线留在内存配置里。
-	targetCfg, err := s.launchCfg(req.SSH, req.Zone, nil)
+	targetCfg, err := s.launchCfg(req.SSH, req.Zone)
 	if err != nil {
 		fail(w, 404, err)
 		return
@@ -2363,7 +2348,7 @@ func (s *Server) hWSLogDebug(w http.ResponseWriter, r *http.Request) {
 			s.mgr.RemoveAs(cur.ID, "switch")
 		}
 	}
-	sess, replayWarn, err := s.mgr.LaunchReplay(item, content, req.Request, req.FGLServer, name)
+	sess, replayWarn, err := s.mgr.LaunchReplay(item, content, req.Request, name)
 	if err != nil {
 		// WP6：与 hLaunch 同一条 —— 会话准备报出来的 F1（多会话 + 没点名要哪条宿主）
 		// 必须带 `code` 与候选清单，不许降级成一句散文。
@@ -2773,10 +2758,9 @@ func (s *Server) hSessionJob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req struct {
-		Prog      string  `json:"prog"`
-		Module    string  `json:"module"`
-		Ent       string  `json:"ent"`
-		FGLServer *string `json:"fglserver"`
+		Prog   string `json:"prog"`
+		Module string `json:"module"`
+		Ent    string `json:"ent"`
 	}
 	if !readBody(w, r, &req) {
 		return

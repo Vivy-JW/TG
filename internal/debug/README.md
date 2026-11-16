@@ -339,18 +339,12 @@ CLI 侧再补一段命令视角的下一步（`internal/cli/debug/sourcehint.go`
 并把三段配置（环境清单 / 调试设置 / 监听地址）读成一个配置对象。
 **T100 的路径不允许静态配置** —— 登录后按区域动态获取，失败即报错。
 
-**画面接线（FGLSERVER）只由单轮决定**：配置里的 `debug.fglserver` 是默认值，启动请求可按轮覆盖
-（`tg debug start --fglserver <ip:port>`；空串 = 本轮交回 T100 按 SSH 来源 IP 自动设置），
-覆盖不写回配置，也不改变会话复用判据。它是"界面去哪"的唯一开关，而失败是**静默**的 ——
-放行之后什么都不弹、启动段也不报错，所以每轮启动都在事件流与快照里报一句画面去向
-（`ScreenTarget`：端口 = 前端监听端口 - 6400）。
-
-**没接线就不只是"看不到画面"，是程序根本活不过 `main`**（A35，第四次真机三次复现）：
-自动接线而本机 7400/6400 上没有 GDC 在听时会话在 `main` 之后**立刻**
-`Fatal error -6300 Can not connect to GUI` 退出（`main:1553` 之后的守卫行一次都没停）。
-所以 `ScreenWarn` 必须在启动段就说这句话、并给出动作（起 GDC / `--fglserver`）；
-文案的唯一来源是 `ScreenWarnWith(fglserver, gdcPresent)` —— 探针结果由调用方给，
-因为 CLI 要在 `debug start` 那一刻也打同一句（见 [../cli/debug/README.md](../cli/debug/README.md) 的 A35 段）。
+**画面去向不由本包决定**：TG 只跑 TOP GP，作业由 `r.d2 <程序>` 起 fgldb，画面由 fgldb
+交给 GDC 直连 —— T100 那条 `export FGLSERVER=<ip:port>` + 本机 GDC 探针的线在 GP 里不存在，
+所以配置里没有 `fglserver`、启动请求也不收这个字段、快照里只回一句 `screenTarget`
+（`ScreenTarget()`：恒为「画面去向: 由 fgldb 接管（作业用 r.d2 起 fgldb，界面走 GDC 直连）」）。
+`tg debug start` / `tg session job` 都没有 `--fglserver` 参数；点了也没有任何效果，
+那种"参数收下但画面不动"的空动作比报错更坏（A35 的教训：接线失败本来是静默的）。
 
 ## 起作业的路径
 

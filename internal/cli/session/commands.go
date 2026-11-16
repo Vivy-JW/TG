@@ -217,7 +217,7 @@ func init() {
 			if rerr != nil {
 				return rerr
 			}
-			id, jerr := cl.StartJob(b.ID, prog, nsModule, "", "")
+			id, jerr := cl.StartJob(b.ID, prog, nsModule, "")
 			if jerr != nil {
 				return jerr
 			}

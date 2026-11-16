@@ -25,8 +25,8 @@ import (
 	"tg/internal/target"
 )
 
-// snapshotBaseKeys 是**新增身份七键之前**快照的恒定键集（21 个），逐字摘自本次改动前的
-// `hSnapshot`。它是 H2 那半条判据的靶子：这 21 个键一个都不许少。
+// snapshotBaseKeys 是**新增身份七键之前**快照的恒定键集（20 个），逐字摘自本次改动前的
+// `hSnapshot`。它是 H2 那半条判据的靶子：这 20 个键一个都不许少。
 //
 // `inflight` / `runningSince` / `waitingForUser` / `waitingKind` 也是既有键，
 // 但它们按状态出现（见 `snapshotOptionalKeys`），所以不在"恒定"这一列。
@@ -35,7 +35,7 @@ var snapshotBaseKeys = []string{
 	"started", "breakpoints", "holdingSeconds", "watchdogSeconds",
 	"topent", "topentSession", "topentShell", "replayResponse",
 	"silentSeconds", "mode",
-	"fglserver", "screenTarget",
+	"screenTarget",
 }
 
 // snapshotOptionalKeys 是**既有**的按状态出现的键（本次一个字都没动）。
@@ -112,11 +112,11 @@ func TestSnapshotCarriesIdentityKeysAndKeepsEveryOldKey(t *testing.T) {
 	for k := range raw {
 		got[k] = true
 	}
-	// 数量写死：21 旧恒定键 + 7 身份 = 28（另外 4 个按状态出现的键不在这一列，见
+	// 数量写死：20 旧恒定键 + 7 身份 = 27（另外 4 个按状态出现的键不在这一列，见
 	// `snapshotOptionalKeys`）。少了会由下面两向断言报出具体是哪个，这里再钉一次总数
 	// —— 免得"两张表都少写了同一个键"这种双错互相掩护。
-	if len(want) != 28 {
-		t.Fatalf("前置不成立：期望键集该是 21 旧 + 7 身份 = 28 个，表里凑出 %d 个", len(want))
+	if len(want) != 27 {
+		t.Fatalf("前置不成立：期望键集该是 20 旧 + 7 身份 = 27 个，表里凑出 %d 个", len(want))
 	}
 	for k := range want {
 		if !got[k] {
@@ -129,8 +129,8 @@ func TestSnapshotCarriesIdentityKeysAndKeepsEveryOldKey(t *testing.T) {
 				"    （新增键要走 C5.3 那一处：键集只有 `SessionBrief` 一份定义）", k, keysOf(raw))
 		}
 	}
-	if len(got) != 28 {
-		t.Errorf("快照该恰好有 29 个恒定键（21 旧 + 8 身份），实得 %d 个：%v", len(got), keysOf(raw))
+	if len(got) != 27 {
+		t.Errorf("快照该恰好有 27 个恒定键（20 旧 + 7 身份），实得 %d 个：%v", len(got), keysOf(raw))
 	}
 }
 

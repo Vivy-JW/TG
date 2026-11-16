@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"net"
 	"os"
 	"path"
 	"regexp"
@@ -587,86 +586,13 @@ func (s *Session) ZoneNow() string {
 	return s.cfg.Zone
 }
 
-// FGLServer 读**本轮**生效的 FGLSERVER 覆盖值(空 = 未覆盖,由 T100 按 SSH 来源 IP 自动设置)。
-//
-// 与 EnvNameNow 同理:会话跨轮次,SetRun 会把本轮的配置刷进来,所以它回答的是
-// "这一轮启动时导出的是什么",而不是会话创建那一刻的值。
-func (s *Session) FGLServer() string {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if s.cfg == nil {
-		return ""
-	}
-	return s.cfg.FGLServer
-}
-
 // ScreenTarget 用一句人话说明"这一轮作业界面会画到哪儿"。
 //
-// TG 只跑 TOP GP，画面由 fgldb 接管：没有 T100 的 FGLSERVER / 本机 GDC 那条线，
-// 也就没有"接线没接好、-6300 退出"这类告警可言。
-func ScreenTarget(fglserver string) string {
-	return "画面去向: 由 fgldb 接管（GP 没有 FGLSERVER 这条线）"
+// TG 只跑 TOP GP，画面由 fgldb 接管：作业用 r.d2 起 fgldb，界面由 fgldb 交给 GDC 直连，
+// 没有本机 GDC 接线这一层，也就没有"接线没接好、-6300 退出"这类告警可言。
+func ScreenTarget() string {
+	return "画面去向: 由 fgldb 接管（作业用 r.d2 起 fgldb，界面走 GDC 直连）"
 }
-
-// LocalGDCPresent 本机有没有 GDC 在听(TCP 连得上就算)。只连不发数据，两个端口各 200ms。
-//
-// 端口按 ScreenTarget 那条约定来：7400 是 GDC 的默认前端端口，6400 是它的控制端口。
-// 结果带 10 秒缓存：这条探测最多 400ms，而它的调用点之一是会话的输出解析循环
-// （退出那一枪），不能让 dial 卡住输出处理。
-func LocalGDCPresent() bool {
-	gdcProbeMu.Lock()
-	if time.Since(gdcProbeAt) < 10*time.Second {
-		v := gdcProbeVal
-		gdcProbeMu.Unlock()
-		return v
-	}
-	gdcProbeMu.Unlock()
-
-	found := gdcProbe()
-
-	gdcProbeMu.Lock()
-	gdcProbeAt, gdcProbeVal = time.Now(), found
-	gdcProbeMu.Unlock()
-	return found
-}
-
-// gdcProbe 是真实探针，测试里可替换（见 session_test.go 的 TestScreenWarn*）。
-var gdcProbe = dialGDC
-
-func dialGDC() bool {
-	for _, p := range []string{"7400", "6400"} {
-		c, err := net.DialTimeout("tcp", "127.0.0.1:"+p, 200*time.Millisecond)
-		if err == nil {
-			_ = c.Close()
-			return true
-		}
-	}
-	return false
-}
-
-var (
-	gdcProbeMu  sync.Mutex
-	gdcProbeAt  time.Time
-	gdcProbeVal bool
-)
-
-// ScreenWarn 在"本轮画面交回 T100 自动指"而**本机又没有 GDC 在听**时，给一句能照做的说明；
-// 其它情况返回空串（本轮有 FGLSERVER 覆盖时去向由调用方负责，dbgScreenVerify 会认账）。
-//
-// 为什么必须有这句（实测 2026-10-16）：用户报"debug 走两步自动退出了"。真因是本机没起
-// GDC —— 画面交回 T100 自动指 = T100 把画面发回 **SSH 来源 IP 的本机 GDC**，本机 7400/6400
-// 上没有监听者时，作业会在**第一次画界面**时直接退出（用户那条会话正好：`tbreak main`
-// 停在 MAIN 首条可执行语句 OPTIONS，一次单步走到初始化、要开窗口，当场退），而界面上只有
-// "程序已退出(作业窗口被关闭或正常结束)" —— 与"用户自己关了窗口"完全分不清。
-//
-// A35（第四次真机）把话说得更死：**没有接线的会话在 `main` 之后**立刻** `Fatal error -6300`
-// 退出，守卫行（`main` 之后那些行）来不及停**；接线就绪的会话则不会。所以这句既是"画面看不到"
-// 的解释，也是"断点怎么设都命不中"的解释 —— 必须给到能照做的动作（起 GDC / 用 --fglserver）。
-// ScreenWarn / ScreenWarnWith 在 TG 里恒为空串：GP 的画面由 fgldb 接管，
-// 没有 T100 的 FGLSERVER / 本机 GDC 那条线，也就没有"没接线会 -6300"这回事。
-func ScreenWarn(fglserver string) string { return "" }
-
-func ScreenWarnWith(fglserver string, gdcPresent bool) string { return "" }
 
 // screenExitTail 给"程序已退出"那句话补线索：GP 不需要。
 func (s *Session) screenExitTail() string { return "" }
@@ -928,23 +854,9 @@ func (s *Session) startRun(ctx context.Context, launchProg string) error {
 	log.Printf("[debug] 会话 %s 启动目录: %s (prog=%s module=%s)", s.ID, modDir, launchProg, s.Module)
 	setup := fmt.Sprintf("cd %s\r\nexport FGLSOURCEPATH=%s\r\n",
 		modDir, s.fglsourcePathOf(modDir))
-	if s.cfg.FGLServer != "" {
-		setup += "export FGLSERVER=" + s.cfg.FGLServer + "\r\n"
-	}
-	// 画面去哪必须**显式说出来**:接线错了的表现是"放行之后什么都不弹",与程序卡死
-	// 在界面上无法区分,而启动段本身不会报任何错(见 ScreenTarget 的注释)。
-	s.emitEvent(Event{Type: "log", Text: ScreenTarget(s.cfg.FGLServer)})
-	// 再把"这条去向能不能通"说出来。实测 2026-10-16:用户报"debug 走两步自动退出了",
-	// 真因是本机没起 GDC —— 画面交回 T100 自动指(默认本机 GDC)、而本机 7400/6400 上
-	// 没有监听者,作业第一次画界面就死了,界面上只有"程序已退出(作业窗口被关闭或正常结束)",
-	// 与"用户自己关了窗口"分不清。这一句把真因提前摆出来。
-	//
-	// 类型用 `log` + "⚠ " 前缀,而不是自定义一个 `warn`:前端的时间线只认 log/stop/command
-	// 这几种事件类型(见 web/app/src/store.ts 的 WS 分发),自造类型会被**静默丢掉**
-	// ——实测过一次,事件发了、界面上什么都没有。既有约定见 manager.go 的重放警告。
-	if w := ScreenWarn(s.cfg.FGLServer); w != "" {
-		s.emitEvent(Event{Type: "log", Text: "⚠ " + w})
-	}
+	// 画面去哪说一句:GP 由 fgldb 接管,没有本机 GDC 接线这一层，
+	// 也就没有"接线不对、放行之后什么都不弹"这类告警。
+	s.emitEvent(Event{Type: "log", Text: ScreenTarget()})
 	// TOPENT:会话内手动设置优先,其次配置企业(ENT);都没有则不导出,沿用选区登录默认
 	// (选区输出的是机器默认值如「TOPENT = 99」;作业运行/数据库连接都以 TOPENT 为准)
 	// 连接时(bootHost)已下发过一次,这里再下发是为了覆盖"会话开着时在设置页改了配置"的情况。

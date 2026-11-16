@@ -330,12 +330,11 @@ func stateOf(snap map[string]any) string {
 
 // LaunchReq 是"起一条会话并跑作业"的请求。
 type LaunchReq struct {
-	Env       string
-	Prog      string
-	Module    string
-	Name      string
-	Ent       string
-	FGLServer *string // nil = 本轮不给覆盖；指向空串 = 强制交回 T100
+	Env    string
+	Prog   string
+	Module string
+	Name   string
+	Ent    string
 }
 
 // Launch 建会话（可同时起作业），返回会话句柄。
@@ -352,9 +351,6 @@ func (c *Client) Launch(req LaunchReq) (string, error) {
 	}
 	if req.Ent != "" {
 		body["ent"] = req.Ent
-	}
-	if req.FGLServer != nil {
-		body["fglserver"] = *req.FGLServer
 	}
 	data, err := c.Do(http.MethodPost, "/api/sessions", body)
 	if err != nil {
@@ -554,12 +550,8 @@ func (f *Failure) WriteEnvelope(w io.Writer) error {
 //
 // 与 Launch 的分工：Launch 是"建会话（可顺带起作业）"；这条是"会话已经在了，只在它里面起作业"。
 // 返回的 sessionId 就是传进去的那一条（宿主不会被换掉）。
-func (c *Client) StartJob(id, prog, module, ent, fglserver string) (string, error) {
+func (c *Client) StartJob(id, prog, module, ent string) (string, error) {
 	body := map[string]any{"prog": prog}
-	if f := strings.TrimSpace(fglserver); f != "" {
-		// 画面接线：不给 = 作业按登录 shell 的 FGLSERVER 走（没配就可能起不来窗口）
-		body["fglserver"] = f
-	}
 	if m := strings.TrimSpace(module); m != "" {
 		body["module"] = m
 	}

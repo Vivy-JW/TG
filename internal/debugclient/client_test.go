@@ -198,8 +198,7 @@ func TestLifecycleEndpoints(t *testing.T) {
 	if err := c.Topent("s1", "99"); err != nil {
 		t.Fatal(err)
 	}
-	fgl := "10.0.0.1:1200"
-	sid, err := c.Launch(LaunchReq{Env: "主机109", Prog: "bsft001_wf", Module: "asf", Name: "录像A", Ent: "99", FGLServer: &fgl})
+	sid, err := c.Launch(LaunchReq{Env: "主机109", Prog: "bsft001_wf", Module: "asf", Name: "录像A", Ent: "99"})
 	if err != nil || sid != "s9" {
 		t.Fatalf("Launch = %q, %v", sid, err)
 	}
@@ -231,8 +230,8 @@ func TestLifecycleEndpoints(t *testing.T) {
 			t.Errorf("第 %d 次 = %s %s，要 %s %s", i, got[i].method, got[i].path, w.method, w.path)
 		}
 	}
-	// 请求体里几个关键字段：起会话必须带 ent / ssh / fglserver，放行必须是 continue。
-	if got[2].body["ent"] != "99" || got[2].body["ssh"] != "主机109" || got[2].body["fglserver"] != fgl {
+	// 请求体里几个关键字段：起会话必须带 ent / ssh，放行必须是 continue。
+	if got[2].body["ent"] != "99" || got[2].body["ssh"] != "主机109" {
 		t.Errorf("起会话请求体不对：%+v", got[2].body)
 	}
 	if got[4].body["action"] != "continue" {
@@ -282,7 +281,7 @@ func TestFailureWritesItsOwnEnvelope(t *testing.T) {
 	}
 }
 
-// TestStartJobEndpoint：`POST /sessions/{id}/job` 的路径与请求体（fglserver 可选）。
+// TestStartJobEndpoint：`POST /sessions/{id}/job` 的路径与请求体。
 func TestStartJobEndpoint(t *testing.T) {
 	var gotPath string
 	var gotBody map[string]any
@@ -293,14 +292,14 @@ func TestStartJobEndpoint(t *testing.T) {
 	}))
 	defer hs.Close()
 
-	id, err := New(hs.URL).StartJob("s1", "bsft001_wf", "asf", "99", "10.0.0.1:1200")
+	id, err := New(hs.URL).StartJob("s1", "bsft001_wf", "asf", "99")
 	if err != nil || id != "s1" {
 		t.Fatalf("StartJob = %q, %v", id, err)
 	}
 	if gotPath != "POST /api/sessions/s1/job" {
 		t.Fatalf("路径 = %q", gotPath)
 	}
-	if gotBody["prog"] != "bsft001_wf" || gotBody["module"] != "asf" || gotBody["ent"] != "99" || gotBody["fglserver"] != "10.0.0.1:1200" {
+	if gotBody["prog"] != "bsft001_wf" || gotBody["module"] != "asf" || gotBody["ent"] != "99" {
 		t.Fatalf("请求体 = %+v", gotBody)
 	}
 
@@ -309,7 +308,7 @@ func TestStartJobEndpoint(t *testing.T) {
 		_, _ = w.Write([]byte(`{"ok":true}`))
 	}))
 	defer hs2.Close()
-	if _, err := New(hs2.URL).StartJob("s1", "p", "", "", ""); err == nil {
+	if _, err := New(hs2.URL).StartJob("s1", "p", "", ""); err == nil {
 		t.Fatal("没回 sessionId 该报错")
 	}
 }

@@ -34,7 +34,6 @@ type Config struct {
 	Listen          string          `json:"listen"`          // HTTP 监听地址(统一配置的顶层 listen)
 	LaunchArgs      string          `json:"launchArgs"`      // 作业启动参数默认模板,{prog} 替换为作业名(ssh 可覆盖)
 	WatchdogSeconds int             `json:"watchdogSeconds"` // 停站停留超时默认(秒);ssh 可覆盖
-	FGLServer       string          `json:"fglserver"`       // 留空使用 T100 按 SSH 来源 IP 自动设置
 	TermWidth       int             `json:"termWidth"`
 	TermHeight      int             `json:"termHeight"`
 	PrintElements   int             `json:"printElements"`      // fgldb 单次 print 的数组元素上限;0=默认 1000
@@ -390,7 +389,6 @@ func debugSettingsOf(c *Config) config.DebugSettings {
 	return config.DebugSettings{
 		LaunchArgs:      c.LaunchArgs,
 		WatchdogSeconds: c.WatchdogSeconds,
-		FGLServer:       c.FGLServer,
 		TermWidth:       c.TermWidth,
 		TermHeight:      c.TermHeight,
 		PrintElements:   c.PrintElements,
@@ -413,7 +411,6 @@ func loadConfig(path string, requireEnv bool) (*Config, error) {
 		Listen:          root.Listen,
 		LaunchArgs:      root.Debug.LaunchArgs,
 		WatchdogSeconds: root.Debug.WatchdogSeconds,
-		FGLServer:       root.Debug.FGLServer,
 		TermWidth:       root.Debug.TermWidth,
 		TermHeight:      root.Debug.TermHeight,
 		PrintElements:   root.Debug.PrintElements,

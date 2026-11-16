@@ -67,10 +67,10 @@
   **允许的自动化只有 interrupt**，而且本工具**选择不自动中断**：程序常常正停在 GDC 界面等
   用户输入，自动 SIGINT 会把用户正在填的对话框直接取消。**绝不**自动 continue / run ——
   这三条都由 `bp_test.go` 钉住（桩只收到一次 POST，且没有任何 raw/continue/run 请求）。
-* **先接线再调试**（A35）：没有 GDC 接线的会话在 `main` 之后**立刻** `Fatal error -6300` 退出，
-  守卫行与断点都来不及停。`start`（以及 `wsdebug`）在拿到快照后**当场**把这句话打出来
-  （`wiring.go`：判据是快照里的 `fglserver`，那是本轮真正导出的那个值；文案唯一来源是内核的
-  `ScreenWarnWith`，本包不另抄一份）。`--json` 时这句走 stderr，stdout 仍是一份完整 JSON。
+* **画面去向由 fgldb 接管**（GP 口径）：TG 里作业由 `r.d2` 起 fgldb，画面走 GDC 直连，
+  T100 那条 `export FGLSERVER=…` 与本机 GDC 探针整条线不存在，所以 `start` / `wsdebug`
+  **没有** `--fglserver`，配置里也没有这个键，快照里只有一句 `screenTarget`
+  （恒为「画面去向: 由 fgldb 接管（作业用 r.d2 起 fgldb，界面走 GDC 直连）」）。
 
 已知边界（A32）：`ignore` 的**清零不受支持**（报文分不清"没设过"与"刚清零"）——
 要改成"不忽略"请 `bp del` + `bp add` 重建，这一点写在 `tg debug bp` 的帮助里。
@@ -92,8 +92,7 @@ go test ./internal/cli/debug -count=1
 `source` 失败时的可操作提示（`sourcehint_test.go`：命中/不命中两半）、
 断点面与两条现场纪律（`bp_test.go`：`bp list` 人读与 `--json` 都带命中计数、
 running 的 400 必须给 `interrupt` 指引（**反证**：改回裸错误 → 红）、
-"不重试 + 绝不自动 continue/run"（桩只收到一次 POST）、无 GDC 时 `start` 输出里有 `-6300`
-而本轮有 FGLSERVER 覆盖时不吵）。
+"不重试 + 绝不自动 continue/run"（桩只收到一次 POST）、`screenTarget` 恒定一句）。
 
 ## 细节去哪
 
