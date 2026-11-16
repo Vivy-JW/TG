@@ -174,7 +174,7 @@ func (c *Client) Do(method, path string, body any) ([]byte, error) {
 	req.Header.Set("X-Actor", c.Actor)
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("无法连接调试服务(%s): %w —— 请先运行 tg serve(或 tt debug serve)", c.Base, err)
+		return nil, fmt.Errorf("无法连接调试服务(%s): %w —— 请先运行 tg serve（或 tg debug serve）", c.Base, err)
 	}
 	defer resp.Body.Close()
 	data, err := io.ReadAll(resp.Body)
@@ -259,7 +259,7 @@ func (c *Client) Resolve(want string) (Brief, error) {
 	case 0:
 		return Brief{}, &Failure{Code: target.CodeNotFound,
 			Message: "没有这条会话: " + want,
-			Hint:    "tt debug status 可看全部会话，照抄 <ref> 那列重发",
+			Hint:    "tg session ls 可看全部会话，照抄 <ref> 那列重发",
 		}
 	case 1:
 		return hits[0], nil
@@ -414,7 +414,7 @@ func (c *Client) SwitchToIdle(env, ent, name string, timeout time.Duration) (str
 			return "", fmt.Errorf("切换失败：会话已断开（环境 %s）", env)
 		}
 		if time.Now().After(deadline) {
-			return out.SessionID, fmt.Errorf("切换会话超时（%s），用 tt debug status 看状态", timeout)
+			return out.SessionID, fmt.Errorf("切换会话超时（%s），用 tg session ls 看状态", timeout)
 		}
 		time.Sleep(time.Second)
 	}
@@ -470,7 +470,7 @@ func (c *Client) EnsureSession(env, ent, name string, timeout time.Duration) (st
 			return "", fmt.Errorf("会话登录失败（环境 %s）", env)
 		}
 		if time.Now().After(deadline) {
-			return out.SessionID, fmt.Errorf("等会话空闲超时（%s），用 tt debug status 看状态", timeout)
+			return out.SessionID, fmt.Errorf("等会话空闲超时（%s），用 tg session ls 看状态", timeout)
 		}
 		time.Sleep(time.Second)
 	}

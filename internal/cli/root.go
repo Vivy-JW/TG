@@ -56,7 +56,7 @@ var rootCmd = &cobra.Command{
   tg interface … 前端画面：.42f + gae_file（页面 / 字段 / 中文标签）
   tg outline …   4GL 源码大纲：函数 / UI 块与行范围
   tg debug …     作业调试（T100 的 gendbg 那一套；GP 的调试目前只在网页里）
-  tg session …   会话：建 / 列 / 看 / 改 / 收
+  tg session …   会话：建 / 列 / 看 / 结束 / 收掉 / 透传
   tg env / config / serve / install / update   环境、配置、本地服务、安装、自更新
 
 远程操作只读：file 没有 put/rm；镜像用 SFTP 逐个文件下载，不在服务器上留东西。

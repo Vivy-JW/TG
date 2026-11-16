@@ -103,7 +103,7 @@ func TestScopeOf(t *testing.T) {
 		"dict r.t":        EnvEnt, // 组级 EnvEnt 继承
 		"dict db ping":    Env,    // dict db 覆盖成 Env
 		"dict spill show": None,   // 本地文件，覆盖成 None
-		"session new":     EnvEntReq,
+		"session new":     Env,
 		"session job":     None,
 		"version":         None,
 	}

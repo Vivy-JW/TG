@@ -47,7 +47,11 @@ func (f *recFake) install(t *testing.T) {
 			_, _ = w.Write([]byte(`{"ok":true,"sessionId":"s1","session":"主机109#1"}`))
 
 		case strings.HasPrefix(r.URL.Path, "/api/sessions/s1") && r.Method == http.MethodGet:
-			_, _ = w.Write([]byte(`{"ok":true,"id":"s1","ref":"主机109#1","state":"stopped","stop":{"file":"a.4gl","line":812}}`))
+			// 快照仍按服务端契约带 T100 身份键（ent/topent*）：CLI 的 show 要在
+			// 投影层把它们滤掉，这里刻意给全，测试才有东西可滤。
+			_, _ = w.Write([]byte(`{"ok":true,"id":"s1","ref":"主机109#1","state":"stopped",` +
+				`"ent":"99","topent":"99","topentSession":"99","topentShell":"99",` +
+				`"stop":{"file":"a.4gl","line":812}}`))
 		case strings.HasPrefix(r.URL.Path, "/api/sessions/s9") && r.Method == http.MethodGet:
 			_, _ = w.Write([]byte(`{"ok":true,"id":"s9","ref":"主机109#2","state":"stopped"}`))
 
@@ -82,9 +86,9 @@ func (f *recFake) bodies() []map[string]any {
 
 // resetFlags 把命令级标志清回默认（同一个进程里反复 Execute 时必做）。
 func resetFlags() {
-	nsEnv, nsEnt, nsName, nsProg, nsModule = "", "", "", "", ""
-	lsEnv, lsSession, entValue = "", "", ""
-	lsAll, entClear = false, false
+	nsEnv, nsName, nsProg, nsModule = "", "", "", ""
+	lsEnv, lsSession = "", ""
+	lsAll = false
 }
 
 // runCmd 跑一次子命令，返回 stdout。
@@ -111,7 +115,7 @@ func TestSessionNewIdle(t *testing.T) {
 	f := &recFake{}
 	f.install(t)
 
-	out := runCmd(t, "new", "--env", "主机109", "--ent", "99", "--name", "A")
+	out := runCmd(t, "new", "--env", "主机109", "--name", "A")
 	if !strings.Contains(out, `"ref":"主机109#1"`) {
 		t.Fatalf("应回显落在哪条会话（ref）：%s", out)
 	}
@@ -119,8 +123,10 @@ func TestSessionNewIdle(t *testing.T) {
 	if len(got) < 1 || got[0] != "POST /api/sessions/switch" {
 		t.Fatalf("空闲会话该走 switch，实得 %v", got)
 	}
-	if b := f.bodies()[0]; b["ent"] != "99" || b["name"] != "A" || b["env"] != "主机109" {
+	if b := f.bodies()[0]; b["name"] != "A" || b["env"] != "主机109" {
 		t.Fatalf("switch 请求体缺字段：%+v", b)
+	} else if b["ent"] != nil {
+		t.Fatalf("GP 只认环境，不该再发 ent：%+v", b)
 	}
 }
 
@@ -129,24 +135,27 @@ func TestSessionNewWithProg(t *testing.T) {
 	f := &recFake{}
 	f.install(t)
 
-	runCmd(t, "new", "--env", "主机109", "--ent", "99", "--prog", "bsft001_wf", "-m", "asf")
+	runCmd(t, "new", "--env", "主机109", "--prog", "bsft001_wf", "-m", "asf")
 	got := f.snapshot()
 	if len(got) < 2 || got[0] != "POST /api/sessions" {
 		t.Fatalf("有作业时该先 POST /api/sessions，实得 %v", got)
 	}
-	if b := f.bodies()[0]; b["prog"] != "bsft001_wf" || b["ent"] != "99" || b["module"] != "asf" {
+	if b := f.bodies()[0]; b["prog"] != "bsft001_wf" || b["module"] != "asf" {
 		t.Fatalf("起会话请求体缺字段：%+v", b)
+	} else if b["ent"] != nil {
+		t.Fatalf("GP 只认环境，不该再发 ent：%+v", b)
 	}
 }
 
-// TestSessionNewRequiresEnvAndEnt：两个必填项缺一不可（ENT 决定账号与据点校验）。
-func TestSessionNewRequiresEnvAndEnt(t *testing.T) {
+// TestSessionNewRequiresEnv：只要环境（账号由服务端取 db.accounts[0]），缺了就报用法错；
+// `--ent` 已不是这条命令的参数，给了也应报错而不是静默忽略。
+func TestSessionNewRequiresEnv(t *testing.T) {
 	f := &recFake{}
 	f.install(t)
 
 	for _, args := range [][]string{
-		{"--ent", "99"},    // 缺 env
-		{"--env", "主机109"}, // 缺 ent
+		{},              // 缺 env
+		{"--ent", "99"}, // 没有 --ent 这个参数了
 	} {
 		resetFlags() // 同一进程里反复 Execute：先清掉上一次的标志值，否则"缺 env"测不出来
 		group.SetArgs(append([]string{"new"}, args...))
@@ -165,36 +174,42 @@ func TestSessionLsAndShow(t *testing.T) {
 	if !strings.Contains(out, `"ref":"主机109#1"`) {
 		t.Fatalf("ls 应列出会话：%s", out)
 	}
+	if strings.Contains(out, `"ent"`) {
+		t.Fatalf("ls 的 JSON 不该有 ent 键（GP 只认环境）：%s", out)
+	}
 
 	out = runCmd(t, "show", "--session", "A")
 	if !strings.Contains(out, `"line":812`) {
 		t.Fatalf("show 应给出停站现场：%s", out)
 	}
-
+	for _, k := range []string{`"ent"`, `"topent"`, `"topentSession"`, `"topentShell"`} {
+		if strings.Contains(out, k) {
+			t.Fatalf("show 的 JSON 不该有 T100 身份键 %s：%s", k, out)
+		}
+	}
 }
 
-// TestSessionEntQuitRm：三条动作分别打 topent / quit(DELETE) / close(POST)。
+// TestSessionQuitRm：两条动作分别打 quit(DELETE) / close(POST)。
 //
 // 特别钉住 rm：它必须走 `/close` 而不是 `DELETE` —— 后者是"结束本轮、会话保留"。
 // 两个动作混用的后果是"以为收掉了，其实还留着一个开着的会话"。
-func TestSessionEntQuitRm(t *testing.T) {
+func TestSessionQuitRm(t *testing.T) {
 	f := &recFake{}
 	f.install(t)
 
-	runCmd(t, "ent", "99", "--session", "A")
 	runCmd(t, "quit", "--session", "A")
 	runCmd(t, "rm", "--session", "A")
 
 	got := f.snapshot()
 	joined := strings.Join(got, " | ")
-	if !strings.Contains(joined, "POST /api/sessions/s1/topent") {
-		t.Errorf("ent 应打 topent：%s", joined)
-	}
 	if !strings.Contains(joined, "DELETE /api/sessions/s1") {
 		t.Errorf("quit 应打 DELETE /api/sessions/{id}（结束本轮、会话保留）：%s", joined)
 	}
 	if !strings.Contains(joined, "POST /api/sessions/s1/close") {
 		t.Errorf("rm 应打 POST /api/sessions/{id}/close（收掉会话）：%s", joined)
+	}
+	if strings.Contains(joined, "/topent") {
+		t.Errorf("GP 没有企业编号覆盖这条路，不该再打 topent：%s", joined)
 	}
 }
 
@@ -219,14 +234,15 @@ func TestSessionExecPassthrough(t *testing.T) {
 	}
 }
 
-// TestSessionJob：`session job` 打的是 `/sessions/{id}/job`，带 prog/module/ent。
+// TestSessionJob：`session job` 打的是 `/sessions/{id}/job`，带 prog/module。
 //
+// GP 没有企业编号，所以请求体里不该再出现 ent（服务端仍兼容，但 CLI 不传）。
 // 这条命令补的是"会话已经在了，只在它里面换作业跑"——与 `new --prog` 的分工见命令帮助。
 func TestSessionJob(t *testing.T) {
 	f := &recFake{}
 	f.install(t)
 
-	out := runCmd(t, "job", "--session", "A", "--prog", "bsft001_wf", "-m", "asf", "--ent", "99")
+	out := runCmd(t, "job", "--session", "A", "--prog", "bsft001_wf", "-m", "asf")
 	if !strings.Contains(out, `"ok":true`) || !strings.Contains(out, "bsft001_wf") {
 		t.Fatalf("输出不对：%s", out)
 	}
@@ -239,8 +255,11 @@ func TestSessionJob(t *testing.T) {
 	if hit == nil {
 		t.Fatalf("没有打到 /job：%v", f.snapshot())
 	}
-	if hit["prog"] != "bsft001_wf" || hit["module"] != "asf" || hit["ent"] != "99" {
+	if hit["prog"] != "bsft001_wf" || hit["module"] != "asf" {
 		t.Fatalf("请求体不对：%+v", hit)
+	}
+	if _, has := hit["ent"]; has {
+		t.Fatalf("GP 的 /job 请求体不该带 ent：%+v", hit)
 	}
 
 	// 缺 --prog：一个请求都不该发
@@ -334,7 +353,7 @@ func TestSessionArgsErrors(t *testing.T) {
 		{"show"},                   // 缺 --session
 		{"quit"},                   // 缺 --session
 		{"exec", "--session", "A"}, // 缺命令
-		{"new", "--ent", "99"},     // 缺 env
+		{"new"},                    // 缺 env
 	} {
 		resetFlags()
 		group.SetArgs(args)
@@ -349,7 +368,7 @@ func TestSessionArgsErrors(t *testing.T) {
 
 // TestSessionActionsRespectFormat：`--format table` 对动作类命令也要生效。
 //
-// 之前只有 ls/show/job 走了格式化出口，ent/quit/rm/exec 仍硬打 JSON ——
+// 之前只有 ls/show/job 走了格式化出口，quit/rm/exec 仍硬打 JSON ——
 // 全局开关被**静默忽略**，正是这套工具一直在灭的毛病。
 func TestSessionActionsRespectFormat(t *testing.T) {
 	f := &recFake{}
@@ -362,7 +381,6 @@ func TestSessionActionsRespectFormat(t *testing.T) {
 		args []string
 		want string
 	}{
-		{[]string{"ent", "99", "--session", "A"}, "企业编号：99"},
 		{[]string{"quit", "--session", "A"}, "已结束会话"},
 		{[]string{"rm", "--session", "A"}, "已收掉会话"},
 		{[]string{"exec", "--session", "A", "--", "break 812"}, "Breakpoint 1 at"},

@@ -21,7 +21,7 @@ var scopes = map[string]Scope{
 	"db probe": Env,
 	"db ping":  Env,
 	// ---- 建立连接 / 解析账号（<环境>@<企业>）----
-	"session new": EnvEntReq,
+	"session new": Env,
 	// debug start / debug wsdebug：GP 没有企业编号那层（账号取 db.accounts[0]），
 	// 起会话只认环境；`--ent` 还在但没有要求，给了才按 T100 的 TOPENT 语义落进会话。
 	"debug start":   Env,

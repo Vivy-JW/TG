@@ -1,8 +1,11 @@
 package session
 
-// `tt session` 的子命令：建 / 列 / 看 / 改 ENT / 结束本轮 / 收掉 / 透传。
+// `tg session` 的子命令：建 / 列 / 看 / 结束本轮 / 收掉 / 透传。
 //
 // 每一个都只做"参数 → 一次客户端调用 → 输出"，不含编排。命令层保持薄。
+//
+// 身份只有 **环境**（TOP GP 没有企业编号那层）：账号由服务端取 db.accounts[0]，
+// 所以这里没有任何 --ent / --fglserver 之类的 T100 参数。
 
 import (
 	"encoding/csv"
@@ -19,18 +22,12 @@ import (
 )
 
 var (
-	// new
-	nsEnv, nsEnt, nsName, nsProg, nsModule string
-	nsTimeout                              int
-	nsFGLServer                            string // --fglserver：本轮画面接线（会话 job 用）
+	// new / job
+	nsEnv, nsName, nsProg, nsModule string
+	nsTimeout                       int
 	// 定位
 	lsSession, lsEnv string
 	lsAll            bool
-	// 属性
-	entValue string
-	entClear bool
-	// 透传
-
 )
 
 func init() {
@@ -39,23 +36,19 @@ func init() {
 		Short: "建会话（可同时起作业）",
 		Long: `建一条会话。
 
-不给 --prog 建出来的是**空闲会话**（已登录、无作业）：之后可以 tt session exec / tt debug 操作它，
-也可以再用 tt debug start 在里面起作业。
+不给 --prog 建出来的是**空闲会话**（已登录、无作业）：之后可以 tg session exec / tg debug 操作它，
+也可以再用 tg debug start 在里面起作业。
 给了 --prog 则同时起作业并等到入口停站。
 
-ENT 必填：企业编号决定用哪个账号连库与据点校验，不再沿用登录 shell 的 $TOPENT。`,
+只要环境：TOP GP 的账号由服务端取 db.accounts[0]，没有企业编号要填。`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			env := strings.TrimSpace(nsEnv)
 			if env == "" {
 				env = strings.TrimSpace(common.Env) // --at 落到 common.Env；本命令自己的 --env 优先
 			}
-			ent := strings.TrimSpace(nsEnt)
 			if env == "" {
-				return failUsage("需要 --at <环境>@<企业> 或 --env <环境名>（tg env list 看全部）")
-			}
-			if ent == "" {
-				return failUsage("需要 --at <环境>@<企业> 或 --ent <企业编号>（决定用哪个账号连库；tt debug ents 可查）")
+				return failUsage("需要 --env <环境名> 或 --at <环境>（tg env list 看全部）")
 			}
 			cl, err := newClient()
 			if err != nil {
@@ -65,14 +58,14 @@ ENT 必填：企业编号决定用哪个账号连库与据点校验，不再沿�
 
 			if prog == "" {
 				// 空闲会话：走"切到该环境并命名"，服务端会建一条 idle 的宿主。
-				id, serr := cl.SwitchToIdle(env, ent, strings.TrimSpace(nsName), time.Duration(nsTimeout)*time.Second)
+				id, serr := cl.SwitchToIdle(env, "", strings.TrimSpace(nsName), time.Duration(nsTimeout)*time.Second)
 				if serr != nil {
 					return serr
 				}
 				return emitSession(cl, id)
 			}
 			// 有作业：建会话 + 起作业 + 等入口停站。
-			id, lerr := cl.Launch(launchReq(env, ent, prog))
+			id, lerr := cl.Launch(launchReq(env, prog))
 			if lerr != nil {
 				return lerr
 			}
@@ -112,10 +105,10 @@ ENT 必填：企业编号决定用哪个账号连库与据点校验，不再沿�
 					continue
 				}
 				out = append(out, briefMap(b))
-				rows = append(rows, []string{b.Ref, b.Name, b.Env, b.Ent, b.Prog, b.State, b.Epoch})
+				rows = append(rows, []string{b.Ref, b.Name, b.Env, b.Prog, b.State, b.Epoch})
 			}
 			payload := map[string]any{"ok": true, "sessions": out}
-			headers := []string{"REF", "名字", "环境", "ENT", "作业", "用途", "状态", "世代"}
+			headers := []string{"REF", "名字", "环境", "作业", "状态", "世代"}
 			switch common.OutputFormat() {
 			case output.FormatJSON:
 				return emit(payload)
@@ -152,43 +145,10 @@ ENT 必填：企业编号决定用哪个账号连库与据点校验，不再沿�
 			if serr != nil {
 				return serr
 			}
-			return emitFormatted(snap, func() {
+			return emitFormatted(gpSnapshot(snap), func() {
 				fmt.Printf("会话  : %s（%s）\n", b.Ref, b.Name)
-				fmt.Printf("环境  : %s / ENT %s\n", b.Env, b.Ent)
+				fmt.Printf("环境  : %s\n", b.Env)
 				fmt.Printf("作业  : %s（%s）\n", b.Prog, b.State)
-			})
-		},
-	}
-
-	entCmd := &cobra.Command{
-		Use:   "ent <企业编号>",
-		Short: "改会话的企业编号（仅空闲时可设）",
-		Args:  cobra.MaximumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			value := strings.TrimSpace(entValue)
-			if len(args) == 1 && value == "" {
-				value = strings.TrimSpace(args[0])
-			}
-			if entClear {
-				value = ""
-			}
-			cl, err := newClient()
-			if err != nil {
-				return err
-			}
-			b, rerr := resolve(cl, lsSession)
-			if rerr != nil {
-				return rerr
-			}
-			if terr := cl.Topent(b.ID, value); terr != nil {
-				return terr
-			}
-			return emitFormatted(map[string]any{"ok": true, "session": b.Ref, "ent": value}, func() {
-				if value == "" {
-					fmt.Printf("已清除会话 %s 的企业编号覆盖（回到环境默认）\n", b.Ref)
-				} else {
-					fmt.Printf("会话 %s 的企业编号：%s\n", b.Ref, value)
-				}
 			})
 		},
 	}
@@ -241,8 +201,8 @@ ENT 必填：企业编号决定用哪个账号连库与据点校验，不再沿�
 		Use:   "job --prog <作业>",
 		Short: "在这条会话里起一个作业（会话本来就空闲）",
 		Long: "在指定会话里起作业。\n\n" +
-			"与 `tt session new --prog` 的分工：那条是“建会话（顺带起作业）”；这条是“会话已经在了，\n" +
-			"只在它里面起作业”。典型用法是同一个宿主上换作业跑：`tt session quit` → `tt session job --prog …`。",
+			"与 `tg session new --prog` 的分工：那条是“建会话（顺带起作业）”；这条是“会话已经在了，\n" +
+			"只在它里面起作业”。典型用法是同一个宿主上换作业跑：`tg session quit` → `tg session job --prog …`。",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			prog := strings.TrimSpace(nsProg)
@@ -257,7 +217,7 @@ ENT 必填：企业编号决定用哪个账号连库与据点校验，不再沿�
 			if rerr != nil {
 				return rerr
 			}
-			id, jerr := cl.StartJob(b.ID, prog, nsModule, nsEnt, nsFGLServer)
+			id, jerr := cl.StartJob(b.ID, prog, nsModule, "", "")
 			if jerr != nil {
 				return jerr
 			}
@@ -269,18 +229,18 @@ ENT 必填：企业编号决定用哪个账号连库与据点校验，不再沿�
 
 	execCmd := &cobra.Command{
 		Use:   "exec -- \"<fgldb 命令>\"",
-		Short: "透传一条 fgldb 命令（等价 tt debug exec）",
+		Short: "透传一条 fgldb 命令（等价 tg debug exec）",
 		Long: `透传一条 fgldb 原生命令，原样返回输出。
 
-  tt session exec --session A -- "break 812"
-  tt session exec --session A -- "print g_qryparam.cond"
+  tg session exec --session A -- "break 812"
+  tg session exec --session A -- "print g_qryparam.cond"
 
--- 之后整段原样交给调试器，不再由 tt 解析。`,
+-- 之后整段原样交给调试器，不再由 tg 解析。`,
 		Args: cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			command := strings.TrimSpace(strings.Join(args, " "))
 			if command == "" {
-				return failUsage(`需要一条命令：tt session exec --session A -- "break 812"`)
+				return failUsage(`需要一条命令：tg session exec --session A -- "break 812"`)
 			}
 			cl, err := newClient()
 			if err != nil {
@@ -304,10 +264,9 @@ ENT 必填：企业编号决定用哪个账号连库与据点校验，不再沿�
 	}
 
 	newCmd.Flags().StringVar(&nsEnv, "env", "", "环境名（必填）")
-	newCmd.Flags().StringVar(&nsEnt, "ent", "", "企业编号（必填）")
 	newCmd.Flags().StringVar(&nsName, "name", "", "别名（跨轮追踪用它；1–64 字符，禁 / 与 #）")
 	newCmd.Flags().StringVar(&nsProg, "prog", "", "作业程序名（给了就同时起作业）")
-	newCmd.Flags().StringVarP(&nsModule, "module", "m", "", "T100 模块目录名（留空由作业名自动解析）")
+	newCmd.Flags().StringVarP(&nsModule, "module", "m", "", "模块名（留空按本地字典 t_prog/t_prog_link 解析，查不到才按程序前缀兜底）")
 	newCmd.Flags().IntVar(&nsTimeout, "timeout", 120, "等待空闲 / 入口停站的超时（秒）")
 
 	lsCmd.Flags().StringVar(&lsEnv, "env", "", "只看这个环境")
@@ -315,26 +274,20 @@ ENT 必填：企业编号决定用哪个账号连库与据点校验，不再沿�
 
 	showCmd.Flags().StringVar(&lsSession, "session", "", "目标会话（ref / 别名 / 句柄）")
 
-	entCmd.Flags().StringVar(&entValue, "value", "", "企业编号（也可用位置参数）")
-	entCmd.Flags().BoolVar(&entClear, "clear", false, "清除会话级覆盖（回到登录默认）")
-	entCmd.Flags().StringVar(&lsSession, "session", "", "目标会话（ref / 别名 / 句柄）")
-
 	quitCmd.Flags().StringVar(&lsSession, "session", "", "目标会话（ref / 别名 / 句柄）")
 	rmCmd.Flags().StringVar(&lsSession, "session", "", "目标会话（ref / 别名 / 句柄）")
 	jobCmd.Flags().StringVar(&lsSession, "session", "", "目标会话（ref / 别名 / 句柄）")
 	jobCmd.Flags().StringVar(&nsProg, "prog", "", "作业程序名（必填）")
-	jobCmd.Flags().StringVarP(&nsModule, "module", "m", "", "T100 模块目录名（留空用 asf）")
-	jobCmd.Flags().StringVar(&nsEnt, "ent", "", "企业编号（留空用会话自己的）")
-	jobCmd.Flags().StringVar(&nsFGLServer, "fglserver", "", "本轮画面接线（<ip>:<port>；留空按登录 shell 的 FGLSERVER 走）")
+	jobCmd.Flags().StringVarP(&nsModule, "module", "m", "", "模块名（留空按本地字典 t_prog/t_prog_link 解析，查不到才按程序前缀兜底）")
 	execCmd.Flags().StringVar(&lsSession, "session", "", "目标会话（ref / 别名 / 句柄）")
 
-	group.AddCommand(newCmd, jobCmd, lsCmd, showCmd, entCmd, quitCmd, rmCmd, execCmd)
+	group.AddCommand(newCmd, jobCmd, lsCmd, showCmd, quitCmd, rmCmd, execCmd)
 }
 
-// launchReq 组装"建会话 + 起作业"的请求（ENT 必填，模块可留空）。
-func launchReq(env, ent, prog string) debugclient.LaunchReq {
+// launchReq 组装"建会话 + 起作业"的请求（只要环境；模块可留空）。
+func launchReq(env, prog string) debugclient.LaunchReq {
 	return debugclient.LaunchReq{
-		Env: env, Ent: ent, Prog: prog,
+		Env: env, Prog: prog,
 		Module: strings.TrimSpace(nsModule),
 		Name:   strings.TrimSpace(nsName),
 	}

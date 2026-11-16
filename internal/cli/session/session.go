@@ -1,16 +1,16 @@
-// Package session 是 `tt session` 命令组：**会话是一级对象**的那套命令面。
+// Package session 是 `tg session` 命令组：**会话是一级对象**的那套命令面。
 //
-// # 它和 `tt debug` 的关系
+// # 它和 `tg debug` 的关系
 //
-// `tt debug` 是"调试器动词"（break/step/where/…），`tt session` 是"会话本身"
-// （建 / 列 / 看 / 改 / 收）。两者都直连同一个调试面（`internal/debugclient`），
+// `tg debug` 是"调试器动词"（break/step/where/…），`tg session` 是"会话本身"
+// （建 / 列 / 看 / 收）。两者都直连同一个调试面（`internal/debugclient`），
 // 也都用同一个地址体系（`ref` / `name` / 句柄）。
 //
-// # 为什么先只做这一批
+// # 身份只有环境
 //
-// 新命令面的完整版已只剩会话自身的动作，
-// 那几件要等服务端把"画面通道"提成一等资源（P4）。这一批只覆盖**已经能工作**的会话主体：
-// 建、列、看、改 ENT、结束本轮、收掉、透传。它们不依赖任何新端点。
+// TOP GP 没有企业编号那一层：账号由服务端取 db.accounts[0]，所以这里不提供
+// `--ent` / `--fglserver`，也没有 `session ent`。这一批覆盖会话主体：
+// 建、列、看、结束本轮、收掉、透传。它们不依赖任何新端点。
 package session
 
 import (
@@ -27,19 +27,20 @@ import (
 	"tg/internal/output"
 )
 
-// group 是 `tt session` 的命令组。
+// group 是 `tg session` 的命令组。
 var group = &cobra.Command{
 	Use:   "session",
-	Short: "会话：建 / 列 / 看 / 改 / 收（会话是一级对象）",
-	Long: `会话（session）是唯一底座：它持有身份（ref / name / n / epoch）与作业实例（环境 / ENT / 作业）。
+	Short: "会话：建 / 列 / 看 / 收（会话是一级对象）",
+	Long: `会话（session）是唯一底座：它持有身份（ref / name / n / epoch）与作业实例（环境 / 作业）。
 
-  tt session new   --env 主机109 --ent 99 --name A [--prog bsft001_wf]
-  tt session ls
-  tt session show  --session A
-  tt session ent 99 --session A
-  tt session quit  --session A     # 结束本轮，会话保留
-  tt session rm    --session A     # 收掉会话（断连接）
-  tt session exec  --session A -- "break 812"
+  tg session new   --env 22主机 --name A [--prog bsft001_wf]
+  tg session ls
+  tg session show  --session A
+  tg session quit  --session A     # 结束本轮，会话保留
+  tg session rm    --session A     # 收掉会话（断连接）
+  tg session exec  --session A -- "break 812"
+
+只要环境：TOP GP 的账号由服务端取 db.accounts[0]，没有企业编号要填。
 
 目标一律用 --session，接受 ref（环境#序号）、别名、句柄；不给则只有一条时才落位，
 多条会报歧义并列候选（绝不替你挑一条）。`,
@@ -54,7 +55,7 @@ var group = &cobra.Command{
 // init 让**标志/参数解析错**也按这条线的表退 2。
 //
 // cobra 默认把它当普通错误 → 根命令退 1，而这张表里 1 = 运行失败、2 = 用法错。
-// 少了它，`tt session ls --bogus` 会被脚本当成"运行失败"重试。
+// 少了它，`tg session ls --bogus` 会被脚本当成"运行失败"重试。
 func init() {
 	group.SetFlagErrorFunc(func(cmd *cobra.Command, err error) error {
 		return failUsage("%v", err)
@@ -92,7 +93,7 @@ var newClient = func() (*debugclient.Client, error) {
 	loc := config.LocationsAt(cfgPath)
 	dir := loc.DataDir()
 	if dir == "" {
-		return nil, failUsage("配置路径没解析出数据目录，先跑 tt config path 看看")
+		return nil, failUsage("配置路径没解析出数据目录，先跑 tg config path 看看")
 	}
 	return debugclient.New(debugclient.Discover(dir, "")), nil
 }
@@ -100,7 +101,7 @@ var newClient = func() (*debugclient.Client, error) {
 // resolve 把 --session 的取值解析成一条会话。
 func resolve(cl *debugclient.Client, want string) (debugclient.Brief, error) {
 	if strings.TrimSpace(want) == "" {
-		return debugclient.Brief{}, failUsage("需要 --session（别名 / 环境#序号 / 句柄）；先 tt session ls 看现有会话")
+		return debugclient.Brief{}, failUsage("需要 --session（别名 / 环境#序号 / 句柄）；先 tg session ls 看现有会话")
 	}
 	return cl.Resolve(want)
 }
@@ -111,13 +112,33 @@ func emit(v any) error {
 	return enc.Encode(v)
 }
 
-// briefMap 把一条会话摊成"输出里该有的那几个键"（身份七键 + 用途 + 作业状态）。
+// briefMap 把一条会话摊成"输出里该有的那几个键"（身份 + 作业状态）。
+//
+// 不含 `ent`：TG 只服务 TOP GP，会话身份只有环境；服务端快照里仍带 ent 是
+// 既有契约（Web 接口日志页还在读），但命令行输出不把它摆出来。
 func briefMap(b debugclient.Brief) map[string]any {
 	return map[string]any{
 		"id": b.ID, "ref": b.Ref, "display": b.Display, "name": b.Name,
-		"env": b.Env, "ent": b.Ent, "n": b.N, "epoch": b.Epoch,
+		"env": b.Env, "n": b.N, "epoch": b.Epoch,
 		"prog": b.Prog, "state": b.State,
 	}
+}
+
+// gpSnapshot 去掉服务端快照里的 T100 身份键（`ent` 与三个 `topent*`）。
+//
+// 为什么在 CLI 这层投影、而不是让服务端不返回：那几个键是 Web 接口日志页/调试
+// 工作台的既有契约（`internal/debug` 的 api_snapshot_test.go 钉着），删了是另一批事。
+// `tg session show` 是给人/脚本看的 GP 视图，T100 的企业编号在这里没有含义。
+func gpSnapshot(snap map[string]any) map[string]any {
+	out := make(map[string]any, len(snap))
+	for k, v := range snap {
+		switch k {
+		case "ent", "topent", "topentSession", "topentShell":
+			continue
+		}
+		out[k] = v
+	}
+	return out
 }
 
 // emitFormatted 按全局 `--format` 输出：JSON 默认；table/text/csv 走人读形态。
