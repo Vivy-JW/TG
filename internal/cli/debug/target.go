@@ -451,7 +451,7 @@ func dbgResolveSessionFlag() (*target.Session, error) {
 }
 
 // dbgRegisterSessionFlag 给一组命令挂上 `--session`（契约 1. 的命令角色表：
-// 会话级操作命令认它；`tt debug status` / `sql` / `wslogs` / `wsdebug` 不认它）。
+// 会话级操作命令认它；`tg debug status` / `sql` / `wslogs` / `wsdebug` 不认它）。
 func dbgRegisterSessionFlag(cmds ...*cobra.Command) {
 	for _, c := range cmds {
 		c.Flags().StringVar(&dbgSessionFlag, "session", "",
@@ -465,7 +465,7 @@ func dbgRegisterSessionFlag(cmds ...*cobra.Command) {
 //
 //  1. **取值纪律的校验**（非空、1–64 字符、只排除 `/` 与 `#`）在**发请求之前**判 ——
 //     不合法时连 POST 都不发（F19）；
-//  2. 合法就**随请求体送给服务端**（`debug start` 的 body["name"]、`tt debug wsdebug` 的
+//  2. 合法就**随请求体送给服务端**（`debug start` 的 body["name"]、`tg debug wsdebug` 的
 //     body["name"]，两条都是**起会话**的路）—— 别名从那一刻起是**服务端的一条事实**
 //     （`SessionBrief.name`，C5.3）：它参与寻址（`--session <别名>`）、当幂等键
 //     （Q23：空闲复用 / 忙碌报 `SESSION_TARGET_BUSY`）、随会话消失即释放（Q19）。

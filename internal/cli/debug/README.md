@@ -1,6 +1,6 @@
 # internal/cli/debug — 调试命令组
 
-`tt debug` 的命令面与后台服务控制。**命令本体都是 HTTP 客户端**：内核在
+`tg debug` 的命令面与后台服务控制。**命令本体都是 HTTP 客户端**：内核在
 [../../debug/README.md](../../debug/README.md)，本包只负责参数、寻址与输出。
 
 ## 寻址
@@ -40,14 +40,14 @@
 
 按作业名前缀推模块是**猜**（`axmt500_wf→axm` 对，`bsft001_wf→asf` 就错），所以不做。
 
-**`tt debug source` 失败要可排障**（缺陷 #2）：登录区源码目录是登录后回读的
+**`tg debug source` 失败要可排障**（缺陷 #2）：登录区源码目录是登录后回读的
 `$TOP/$ERP/$COM`，取不到时服务端错误已带三条可操作的路；客户端再补一段命令行视角的
 "怎么办"（`sourcehint.go`，写 stderr，不污染 stdout 的正文/JSON）。判据只认这一条已知失败，
 别的错误不套这套提示。
 
 ## 断点面与两条 running/接线纪律（A33 / A34 / A35）
 
-`tt debug bp` 是**结构化**的断点面，不是 `exec "info breakpoints"` 的复读机：
+`tg debug bp` 是**结构化**的断点面，不是 `exec "info breakpoints"` 的复读机：
 
 ```
 断点 3 个（会话 sOnly）
@@ -62,7 +62,7 @@
   `bpView` 保证，用的不是内核 `Breakpoint` 的 `omitempty`。
 * **running 时下断会被明确拒**（A34）：服务端回 `400 {"code":"USAGE","error":"程序运行中,
   禁止发送调试命令(仅允许中断)"}`。客户端**不重试、不静默**，错误里直接给下一步：
-  `tt debug interrupt`（这是 running 时**唯一**允许的命令）→ `tt debug wait --for stopped`
+  `tg debug interrupt`（这是 running 时**唯一**允许的命令）→ `tg debug wait --for stopped`
   → 再下断。判据只看那句报文原文，别的 400（位置不存在等）不套这套指引。
   **允许的自动化只有 interrupt**，而且本工具**选择不自动中断**：程序常常正停在 GDC 界面等
   用户输入，自动 SIGINT 会把用户正在填的对话框直接取消。**绝不**自动 continue / run ——
@@ -73,7 +73,7 @@
   `ScreenWarnWith`，本包不另抄一份）。`--json` 时这句走 stderr，stdout 仍是一份完整 JSON。
 
 已知边界（A32）：`ignore` 的**清零不受支持**（报文分不清"没设过"与"刚清零"）——
-要改成"不忽略"请 `bp del` + `bp add` 重建，这一点写在 `tt debug bp` 的帮助里。
+要改成"不忽略"请 `bp del` + `bp add` 重建，这一点写在 `tg debug bp` 的帮助里。
 
 ## 输出
 

@@ -4,7 +4,7 @@ package debug
 //
 // # 为什么要把判据抽出来
 //
-// `tt debug probe` 的现场是"真 SSH + 真 fgldb"，整条命令进不了单测 —— 于是它成了一条
+// `tg debug probe` 的现场是"真 SSH + 真 fgldb"，整条命令进不了单测 —— 于是它成了一条
 // **没人守的自检**，而它上一版的毛病正是这样长出来的：
 //
 //	默认作业 `bsft001_wf` 在 main 之后要开界面，画面没接线时当场 `Fatal error -6300` 退出

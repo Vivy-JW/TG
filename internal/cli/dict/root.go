@@ -37,7 +37,7 @@ var dbPath string
 var srcConfigPath string
 
 // dictEnt 本次查询显式指定的企业编号(--ent);空 = 不按企业解析账号。
-// 环境级 topent 已移除,所以这是企业编号的唯一来源之一(另一个是 tt debug --ent)。
+// 环境级 topent 已移除,所以这是企业编号的唯一来源之一(另一个是 tg debug --ent)。
 var dictEnt string
 
 // dictCompany --company:本次远程直查用哪个公司别(zta_file.zta02 / Oracle schema)。
@@ -70,7 +70,7 @@ func init() {
 		}
 		// 落在**命令组自己**身上（没给子命令，或给了一个不认识的）时不碰数据源：
 		// 这两种情况没人要查库，而 openQuerySource 在没配库的机器上会当场失败 ——
-		// 于是 `tt dict` 想看一份命令列表，却拿到一句"本地数据库文件未找到"，
+		// 于是 `tg dict` 想看一份命令列表，却拿到一句"本地数据库文件未找到"，
 		// 而 `tg dict nope` 连"你打错了命令"都说不出来，被那句挡在前面（实测 2026-09-25）。
 		// 判据用 `cmd == Group`：cobra 解析不到子命令时返回的就是组命令本身。
 		if cmd == Group {

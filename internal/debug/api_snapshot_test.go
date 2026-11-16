@@ -249,7 +249,7 @@ func TestSnapshotOptionalKeysAreUntouched(t *testing.T) {
 //	② `topentSession` 这个**既有键还在**（收口只删 CLI 那层取舍，不许顺手删服务端的键，H2）。
 func TestSnapshotEntIsItsOwnFactAndTopentSessionSurvives(t *testing.T) {
 	s, id := snapshotServerWith(t, "恒烁正式区", "apmt520", "汇率单")
-	// 起会话时给的 `--ent`（`tt debug start --ent 99` 落到 cfg.Topent 上）：
+	// 起会话时给的 `--ent`（`tg debug start --ent 99` 落到 cfg.Topent 上）：
 	// `ent` 与 `topentSession` 现在是同一个值。
 	s.mgr.sessions[id].cfg.Topent = "99"
 	if got := getSnapshot(t, s, id); got["ent"] != "99" || got["topentSession"] != "99" {

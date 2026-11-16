@@ -1,9 +1,9 @@
-# internal/cli/outline — `tt outline`
+# internal/cli/outline — `tg outline`
 
 把一个 `.4gl` 文件读成块树，供 Agent/人快速定位函数、UI 块和行范围。
 
 ```text
-tt outline <file.4gl> [--human] [--flat] [--kind ...] [--depth N|all] [--brief] [--dir <目录>] [--at <环境>]
+tg outline <file.4gl> [--human] [--flat] [--kind ...] [--depth N|all] [--brief] [--dir <目录>] [--at <环境>]
 ```
 
 **做**：读本地文件或源码镜像；输出块树/扁平索引。
@@ -97,7 +97,7 @@ go run . outline testdata/fgl-fixtures/input-on-key.4gl --depth 1
 
 **本层负责证明**：给定文件/镜像能找到唯一文件，并把解析器的块树按契约投影；
 **故意不覆盖**：4GL 词法与块边界本身（由 `internal/dev/fgl` 的 61 个夹具钉住），
-以及真实镜像拉取（属于 `tt file mirror` 和集成测试）。
+以及真实镜像拉取（属于 `tg file mirror` 和集成测试）。
 
 ## 细节去哪
 

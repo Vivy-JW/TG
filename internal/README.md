@@ -29,7 +29,7 @@ go list -f '{{.ImportPath}}|{{join .Imports " "}}' ./internal/... | grep 'tt/int
 | `target` | 会话寻址的目标层：层级定义、选择器解析、契约表、失败信封。全是纯函数——不发请求、不写盘 |
 | `form42f` | `.42f` 编译表单 → 字段表 + 页面布局。纯函数，零 IO |
 | `dict/db` | 本地 SQLite 字典查询 + `Source` 接口（GP 的 `t_*` 表） |
-| `dev/fgl` | 4GL 源码结构：分块、语义（`tt outline` 与 GP 的 4gl 共用）|
+| `dev/fgl` | 4GL 源码结构：分块、语义（`tg outline` 与 GP 的 4gl 共用）|
 | `testenv` | 本机测试环境的配置（`config.local.json` + 环境变量） |
 
 ### L1 · 文件与格式（4 个）
@@ -66,7 +66,7 @@ go list -f '{{.ImportPath}}|{{join .Imports " "}}' ./internal/... | grep 'tt/int
 | `web` | 统一本地服务的 HTTP 层：REST/WS 路由、嵌 SPA、设置页后端；`gpapi.go` 是 `/api/gp/*`（meta/env/test/site/mirror/sync/会话）；`jobs` 是统一的 job 注册表 |
 | `cli/file` | 服务器文件命令组：只读看/取文件 + 离线镜像管理 |
 | `cli/interfacecmd` | `tg interface`：42f + `gae_file` 标签 → 画面 |
-| `cli/outline` | `tt outline`：4GL → 块树 |
+| `cli/outline` | `tg outline`：4GL → 块树 |
 
 ### L4–L7 · 命令层（8 个）
 
@@ -74,11 +74,11 @@ go list -f '{{.ImportPath}}|{{join .Imports " "}}' ./internal/... | grep 'tt/int
 |---|---|
 | `cli/at` | `--at` 文法、作用域表、`--at-list` |
 | `debugclient` | 调试面 REST 的**唯一客户端** |
-| `cli/dict` | `tt dict` 命令组：表 / 程序 / 消息 / 开窗（r.q）+ 字典库运维 |
-| `cli/site` | 顶层 `tt site`：营运据点（azp_file）清单与单查；`cli/dict` 里另有表/程序/消息/开窗与字典同步 |
-| `cli/db` | `tt db`：本机 ping / 服务器 probe / 只读 SQL |
-| `cli/session` | `tt session` 命令组 |
-| `cli/debug` | `tt debug` 命令组 |
+| `cli/dict` | `tg dict` 命令组：表 / 程序 / 消息 / 开窗（r.q）+ 字典库运维 |
+| `cli/site` | 顶层 `tg site`：营运据点（azp_file）清单与单查；`cli/dict` 里另有表/程序/消息/开窗与字典同步 |
+| `cli/db` | `tg db`：本机 ping / 服务器 probe / 只读 SQL |
+| `cli/session` | `tg session` 命令组 |
+| `cli/debug` | `tg debug` 命令组 |
 | `cli` | 根命令 + 全局开关 + 自身管理命令（env / config / cache / serve / install / update / version） |
 
 ## 二、三条硬规矩

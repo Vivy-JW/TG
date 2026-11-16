@@ -4,7 +4,7 @@ package debug
 //
 // # 这里钉什么
 //
-//  1. **Bug A**：`tt debug start x --session <选择器>` 落上的那一条必须**随请求体送到服务端**
+//  1. **Bug A**：`tg debug start x --session <选择器>` 落上的那一条必须**随请求体送到服务端**
 //     （`body["session"]` = 服务端原始句柄，C5.4）。从前这一步只在本机"落位校验"、
 //     一个字节都不送，于是服务端仍按"环境+名字"收窄候选 —— 同环境两条空闲会话时
 //     `--session 恒一#1` 本地校验通过、POST 却不带目标，服务端照旧报
@@ -14,7 +14,7 @@ package debug
 //     去组装本轮配置，点名恒一#1 却把这一轮落到另一个环境上。
 //  3. **H2：空值不送**。没打 `--session` / `--name` 时，请求体与今天**逐字相同**
 //     （那几个键根本不出现）—— 这是"新增字段不许改变旧行为"的机器判据。
-//  4. **Bug B**：`tt debug wsdebug --help` 里看得见 `--name`，且它的取值纪律与
+//  4. **Bug B**：`tg debug wsdebug --help` 里看得见 `--name`，且它的取值纪律与
 //     `debug start` **同一份**（同一份 `dbgValidateNameFlag`）；非法别名在**发请求之前**
 //     被拒（C2.8：一个字节都不发），退出码按 F19 退 2。
 //
@@ -193,7 +193,7 @@ func TestCharStartWithoutSessionKeepsRequestBody(t *testing.T) {
 func TestCharWsdebugNameFlagIsVisibleInHelp(t *testing.T) {
 	f := debugWsdebugCmd.Flags().Lookup("name")
 	if f == nil {
-		t.Fatal("`tt debug wsdebug` 上没有 --name —— 它是起会话的命令（C3.5），\n" +
+		t.Fatal("`tg debug wsdebug` 上没有 --name —— 它是起会话的命令（C3.5），\n" +
 			"    没有这个标志它起的会话只能用 ref 寻址、也不能当幂等键")
 	}
 	if !strings.Contains(f.Usage, "别名") {
@@ -212,10 +212,10 @@ func TestCharWsdebugNameFlagIsVisibleInHelp(t *testing.T) {
 		t.Fatalf("渲染 wsdebug 的帮助失败：%v", err)
 	}
 	if !strings.Contains(b.String(), "--name") {
-		t.Errorf("`tt debug wsdebug --help` 里看不到 --name：\n%s", b.String())
+		t.Errorf("`tg debug wsdebug --help` 里看不到 --name：\n%s", b.String())
 	}
 	if debugWsdebugCmd.Flags().Lookup("session") != nil {
-		t.Error("`tt debug wsdebug` 不该认 --session（C1.3：它的目标不是某一条会话）")
+		t.Error("`tg debug wsdebug` 不该认 --session（C1.3：它的目标不是某一条会话）")
 	}
 }
 

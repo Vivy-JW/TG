@@ -1,7 +1,7 @@
 # internal/debug — 调试内核
 
 T100 作业调试的核心：经 SSH 驱动服务器上的 4GL 调试协议，管理会话，对外提供 HTTP 面。
-命令行的 `tt debug …` 只是它的**薄客户端**（见 [../cli/debug/README.md](../cli/debug/README.md)）。
+命令行的 `tg debug …` 只是它的**薄客户端**（见 [../cli/debug/README.md](../cli/debug/README.md)）。
 
 ## 协议
 
@@ -26,7 +26,7 @@ T100 作业调试的核心：经 SSH 驱动服务器上的 4GL 调试协议，�
 
 | 端点 | 语义 | 池里已有同环境的会话时 |
 |---|---|---|
-| `POST /api/sessions/switch` | "**连到这个环境**"（`tt debug env`） | 复用那一条；名字不同且它空闲 → **收掉旧的按新名重建** |
+| `POST /api/sessions/switch` | "**连到这个环境**"（`tg debug env`） | 复用那一条；名字不同且它空闲 → **收掉旧的按新名重建** |
 | `POST /api/sessions/new` | "**再给我一条**"（环境页的「创建会话」） | **一条都不动**；同名（同环境）则原样返回它（幂等），否则新建 |
 
 多会话（几个 Agent 同时用、同一环境并发调试）只能用第二条 —— 用 `switch` 建第二条会把
@@ -34,7 +34,7 @@ T100 作业调试的核心：经 SSH 驱动服务器上的 4GL 调试协议，�
 
 ### 会话身份：`id` / `ref` / `display` / `n` / `name` / `epoch`
 
-会话列表（`GET /api/sessions`，也就是 `tt debug status` 的第二份文档）里每个元素是
+会话列表（`GET /api/sessions`，也就是 `tg debug status` 的第二份文档）里每个元素是
 `SessionBrief`。它的键集是契约定死的一份：**十一个恒定键**（`id` / `ref` / `display` /
 `name` / `env` / `ent` / `n` / `kind` / `prog` / `state` / `epoch`）加一批按 `omitempty`
 出现的快照键 —— 恒定键**取不到就给空串/零值，不省键**。
@@ -60,7 +60,7 @@ T100 作业调试的核心：经 SSH 驱动服务器上的 4GL 调试协议，�
 任何时钟比较。换代的三个时机：
 
 1. **会话建立**（登记时发第一代）；
-2. **同一宿主跑新一轮**（`SetRun`：`tt debug start` 复用空闲宿主 / 按日志重放复用宿主）；
+2. **同一宿主跑新一轮**（`SetRun`：`tg debug start` 复用空闲宿主 / 按日志重放复用宿主）；
 3. **会话重启/重新登录**（`/api/sessions/{id}/restart`：旧会话收掉、新会话登上来）。
 
 调用方把上一次拿到的 `session.epoch` 原样带回来，与服务端当前值不等就是上一代 →
@@ -140,7 +140,7 @@ T100 作业调试的核心：经 SSH 驱动服务器上的 4GL 调试协议，�
 
 **为什么不是 `condition <n> <expr>`**（A20 的原映射）——主机109 真机实测
 （`../.agents/plan/L1-结果-2026-10-18.md` §5.1）：
-`tt debug exec "condition 1 g_current_sw = 1"` → `Undefined command: "condition". Try "help".`，
+`tg debug exec "condition 1 g_current_sw = 1"` → `Undefined command: "condition". Try "help".`，
 `help` 的命令表里也没有它；本地 `libfglvm` 里 `condition` 的**唯一**命中是 DAP 的 JSON 字段名。
 ⇒ 内核是 GDB 的**子集**，条件只能写在 break 指令里。
 
@@ -241,7 +241,7 @@ Num Type           Disp Enb Address    What
 | 状态 | `GET …/breakpoints` 的行为 | 响应里的标记 |
 |---|---|---|
 | `stopped` | **先** `syncBreakpoints()`（用内核当下的 `already hit N time(s)` / `ignore next N hits` 覆盖账本）**再**返回 | `fresh: true`，不带 `note` |
-| `running` | **一个字节都不发**（A34：运行期任何调试命令都被 400 拒，只允许 interrupt） | `fresh: false` + `note`（含"可能不是最新"与"先 `tt debug interrupt`"） |
+| `running` | **一个字节都不发**（A34：运行期任何调试命令都被 400 拒，只允许 interrupt） | `fresh: false` + `note`（含"可能不是最新"与"先 `tg debug interrupt`"） |
 | `idle` / `loading` / `exit` | 同上（没停站现场，发不出去） | `fresh: false` + `note` |
 | 停站但内核读不回来（格式不认识/被拒） | 账本**保持原样**（不拿空表覆盖），如实说不新鲜 | `fresh: false` + `note`（带错误原文） |
 
@@ -294,16 +294,16 @@ add / del / enable 之后 hits 仍与内核一致。两条反证各钉一次：�
 （同台机器的另一支作业，`asf_bsft001_wf.4gl`）—— 同一套"前三字母"规则立刻给出错答案。
 唯一能回答的是 42r 目录，所以答案只能来自登录后的解析。
 
-## 登录区源码目录未知（`tt debug source`，缺陷 #2）
+## 登录区源码目录未知（`tg debug source`，缺陷 #2）
 
 `ReadSourceStandalone` 的白名单根目录是 `Config.ModuleRootsActual()` =
 **登录后回读**的 `$TOP/$ERP/$COM`（`$ERP/<模块>/4gl` 与 `$COM/{lib,sub,qry}/42m`）。
 静态配置里没有、也不许有 T100 路径，所以取不到时**不回退默认目录**
 （那会把"读错机器上的文件"伪装成成功），而是由 `sourceRootsUnknownErr` 把三件事说清：
 
-1. 怎么让它有值：`tt debug start <作业> --env <环境名>`（会话登录后把 `$TOP/$ERP/$COM` 写进该环境 Runtime）；
+1. 怎么让它有值：`tg debug start <作业> --env <环境名>`（会话登录后把 `$TOP/$ERP/$COM` 写进该环境 Runtime）；
 2. Runtime 是**进程内**状态：换环境/区域后要在同一个 serve 实例里重新落一次（start 或 switch）；
-3. 已经有值却仍报：`tt debug env` 看该环境到底有没有 TOP/ERP/COM（有值⇒问的是另一个环境段；没值⇒选区后没回读到）。
+3. 已经有值却仍报：`tg debug env` 看该环境到底有没有 TOP/ERP/COM（有值⇒问的是另一个环境段；没值⇒选区后没回读到）。
 
 CLI 侧再补一段命令视角的下一步（`internal/cli/debug/sourcehint.go`，stdout 不污染）。
 
@@ -340,7 +340,7 @@ CLI 侧再补一段命令视角的下一步（`internal/cli/debug/sourcehint.go`
 **T100 的路径不允许静态配置** —— 登录后按区域动态获取，失败即报错。
 
 **画面接线（FGLSERVER）只由单轮决定**：配置里的 `debug.fglserver` 是默认值，启动请求可按轮覆盖
-（`tt debug start --fglserver <ip:port>`；空串 = 本轮交回 T100 按 SSH 来源 IP 自动设置），
+（`tg debug start --fglserver <ip:port>`；空串 = 本轮交回 T100 按 SSH 来源 IP 自动设置），
 覆盖不写回配置，也不改变会话复用判据。它是"界面去哪"的唯一开关，而失败是**静默**的 ——
 放行之后什么都不弹、启动段也不报错，所以每轮启动都在事件流与快照里报一句画面去向
 （`ScreenTarget`：端口 = 前端监听端口 - 6400）。

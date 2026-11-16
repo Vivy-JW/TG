@@ -109,7 +109,7 @@ func TestWriteGateRejectsWithActionableMessage(t *testing.T) {
 	if resp2.StatusCode != http.StatusForbidden {
 		t.Fatalf("纯人工模式下 AI 的写操作应 403,实际 %d", resp2.StatusCode)
 	}
-	if msg := respError(t, resp2); !strings.Contains(msg, "tt debug mode collab") {
+	if msg := respError(t, resp2); !strings.Contains(msg, "tg debug mode collab") {
 		t.Fatalf("拒绝文案应让 AI 能自救(给出接管命令),实际 %q", msg)
 	}
 }

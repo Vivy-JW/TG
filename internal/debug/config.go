@@ -43,7 +43,7 @@ type Config struct {
 	// （AI 可写：能启动作业、下断点、步进、求值）。
 	//
 	// 它只是**省掉一次切换**，不再是唯一的入口：AI 也可以对已有会话用
-	// `tt debug mode collab` 自行接管（hMode 两个方向都放行）。默认 false ——
+	// `tg debug mode collab` 自行接管（hMode 两个方向都放行）。默认 false ——
 	// 没打开时新建会话仍以纯人工起步，人是默认驾驶者。
 	AITakeover bool   `json:"aiTakeover"`
 	DataDir    string `json:"-"` // 数据目录(断点持久化等);serve 注入,空=禁用
@@ -211,7 +211,7 @@ func (c *Config) TopentInt() int {
 
 // EntAccount 按企业编号取该环境 ENT 清单里的账号（纯配置，不联网）。
 //
-// 这是"企业→账号"在**配置层**的唯一实现：CLI 的 tt db sql 与 Web 的 /api/dbsql
+// 这是"企业→账号"在**配置层**的唯一实现：CLI 的 tg db sql 与 Web 的 /api/dbsql
 // 都从这里取，两条路落到同一个 schema。清单没同步就报“没同步”，绝不猜一个账号
 // —— 猜错的账号查出来是 0 行，而那看起来和“数据不存在”一模一样。
 func (c *Config) EntAccount(ent int) (string, error) {

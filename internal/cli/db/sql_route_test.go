@@ -1,7 +1,7 @@
 package db
 
 // --route 的契约：取值校验（离线可测）、信封里 route 落到头部、以及
-// “隐藏的 tt debug sql 转发不许悄悄改路线”。
+// “隐藏的 tg debug sql 转发不许悄悄改路线”。
 
 import (
 	"bytes"
@@ -74,7 +74,7 @@ func TestWriteSQLResultReportsDirectRoute(t *testing.T) {
 }
 
 func TestWriteSQLResultKeepsServerRouteForOldCallers(t *testing.T) {
-	// tt debug sql 的转发不带 Route：仍按方言推成 server-sqlplus，输出一个字节不变。
+	// tg debug sql 的转发不带 Route：仍按方言推成 server-sqlplus，输出一个字节不变。
 	res := testResult()
 	res.Route = ""
 	var b bytes.Buffer

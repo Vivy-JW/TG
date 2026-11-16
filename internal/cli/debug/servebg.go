@@ -10,11 +10,11 @@ package debug
 //
 // 两个服务是同一套机制的两个实例,只差三样东西(见 ServeSpec):
 //
-//	tt debug serve   独立调试服务,调试 API 直接在根(/api/…)
+//	tg debug serve   独立调试服务,调试 API 直接在根(/api/…)
 //	tg serve         统一服务(工作台+设置页),调试面挂在 /debug/api/…
 //
 // 所以状态文件里要记 APIBase:控制端命令照着它拼地址,不必知道对面是哪个服务。
-// 漏了它,`tt debug status` 就会拿 /api/status 去问一个挂在 /debug/api/ 的服务,
+// 漏了它,`tg debug status` 就会拿 /api/status 去问一个挂在 /debug/api/ 的服务,
 // 表现是 404「未知接口」—— 看着像服务没起来,其实只是问错了地方。
 //
 // 状态文件的格式、探活方式、停止逻辑只有这一份:两个服务都走
@@ -50,8 +50,8 @@ var (
 
 // ServeSpec 描述一次服务运行 —— 两个服务只差这几项文案与参数。
 type ServeSpec struct {
-	Prefix   string   // 提示语前缀,如 "[tt debug]"
-	StopHint string   // 停止方式,如 "tt debug serve --stop"
+	Prefix   string   // 提示语前缀,如 "[tg debug]"
+	StopHint string   // 停止方式,如 "tg debug serve --stop"
 	Args     []string // 后台子进程重放的子命令(如 ["debug","serve"]);StartBackground 会补 --foreground 与 --config
 	APIBase  string   // 调试 API 前缀,记进状态文件供控制端寻址(见上)
 }
@@ -330,8 +330,8 @@ func debugServeForeground(cfg *debug.Config, cfgPath string) error {
 	srv := debug.NewServer(cfg, common.WebFrontend(), cfgPath)
 
 	return RunForeground(cfgPath, ServeSpec{
-		Prefix:   "[tt debug]",
-		StopHint: "tt debug serve --stop",
+		Prefix:   "[tg debug]",
+		StopHint: "tg debug serve --stop",
 		APIBase:  APIBaseAtRoot,
 	}, func(ctx context.Context, onReady func(addr string)) error {
 
@@ -340,7 +340,7 @@ func debugServeForeground(cfg *debug.Config, cfgPath string) error {
 			return err
 		}
 		if addr != requested {
-			fmt.Printf("[tt debug] 端口 %s 被占用,自动改用 %s\n", requested, addr)
+			fmt.Printf("[tg debug] 端口 %s 被占用,自动改用 %s\n", requested, addr)
 		}
 		onReady(addr)
 		return srv.Serve(ctx, ln)
@@ -354,8 +354,8 @@ func debugServeBackground(cfgPath string) error {
 		args = append(args, "--listen", dbgListen)
 	}
 	_, err := StartBackground(cfgPath, ServeSpec{
-		Prefix:   "[tt debug]",
-		StopHint: "tt debug serve --stop",
+		Prefix:   "[tg debug]",
+		StopHint: "tg debug serve --stop",
 		APIBase:  APIBaseAtRoot,
 		Args:     args,
 	})

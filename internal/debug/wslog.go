@@ -201,7 +201,7 @@ func wslogWhere(f WSLogFilter) (string, error) {
 // 报文里的企业只是行上的一个属性(与 gzou_t/gzzz_t 同一类)。所以这里没有"选哪个账号"
 // 这回事,也就没有"回退"可言:压根不存在第二个候选。
 //
-// 对照:只读 SQL(tt debug sql)查的是**按企业分 schema 的业务表**,那边必须由 TOPENT
+// 对照:只读 SQL(tg debug sql)查的是**按企业分 schema 的业务表**,那边必须由 TOPENT
 // 解析账号(见 dbsql.go 的 entAccount)。两者不一样,别把规矩搬错方向。
 const wsSysAccount = dbconfig.SystemAccount
 

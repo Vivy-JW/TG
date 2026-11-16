@@ -42,7 +42,7 @@ var debugProbeCmd = &cobra.Command{
 			return err
 		}
 		// **环境必须点名**(--env):hosts 里已经没有"默认环境"可回落了,
-		// 不点名就没有该连哪台机器可言。与 tt debug start 走同一条解析(见 dbgTargetEnv)。
+		// 不点名就没有该连哪台机器可言。与 tg debug start 走同一条解析(见 dbgTargetEnv)。
 		if envName := dbgTargetEnv(); envName != "" {
 			if sel := cfg.CloneEnv(envName); sel != nil {
 				cfg = sel
@@ -194,25 +194,25 @@ var debugProbeCmd = &cobra.Command{
 // 端口被占用时自动顺延到下一个空闲端口,并把真实地址写入状态文件供 debugctl 自动发现。
 var debugServeCmd = &cobra.Command{
 	Use:   "serve",
-	Short: "后台常驻调试服务(tt debug start/exec/status 等控制命令自动发现的守护进程)",
-	Long: `后台常驻调试服务 —— tt debug 各条控制命令(start/exec/status/quit/wait/…)自动发现的守护进程。
+	Short: "后台常驻调试服务(tg debug start/exec/status 等控制命令自动发现的守护进程)",
+	Long: `后台常驻调试服务 —— tg debug 各条控制命令(start/exec/status/quit/wait/…)自动发现的守护进程。
 
 它与 tg serve 是同一个服务的两种装法,服务端能力完全相同:
-  · tt debug serve  只服务调试面:工作台 API 直接在根的 /api/… 下;
+  · tg debug serve  只服务调试面:工作台 API 直接在根的 /api/… 下;
   · tg serve        统一服务:调试工作台 /debug/ + 统一设置页,调试面在 /debug/api/… 下。
 两者默认都后台常驻、都写同一份状态文件(.tg-serve.json),控制端命令据此自动寻址
-(各自的前缀也记在里面),所以 tt debug start/exec/status 对着哪个跑着的实例都能用。
+(各自的前缀也记在里面),所以 tg debug start/exec/status 对着哪个跑着的实例都能用。
 同一个配置目录下只能起一个 —— 两条件会争同一份状态文件。
 
 默认后台运行(单实例):命令打印服务地址与 pid 后立即返回,当前会话可继续输入其它命令;
 已有一个实例在跑时打印它的地址后直接返回。
-停止用 tt debug serve --stop;前台运行(日志直出终端)用 --foreground。
+停止用 tg debug serve --stop;前台运行(日志直出终端)用 --foreground。
 监听地址取 config.json 顶层 listen(兼容旧结构的 debug.listen;默认 127.0.0.1:28670,不常用端口);
 端口被占用时自动顺延到下一个空闲端口并打印真实地址。`,
-	Example: `  tt debug serve                  # 后台启动(单实例),打印地址后返回
-  tt debug serve --stop          # 停止后台实例
-  tt debug serve --foreground    # 前台运行,日志直出终端
-  tt debug serve --listen 127.0.0.1:9123`,
+	Example: `  tg debug serve                  # 后台启动(单实例),打印地址后返回
+  tg debug serve --stop          # 停止后台实例
+  tg debug serve --foreground    # 前台运行,日志直出终端
+  tg debug serve --listen 127.0.0.1:9123`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if dbgServeStop {
 			return debugServeStop()

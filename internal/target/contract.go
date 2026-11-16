@@ -22,7 +22,7 @@
 //   - 不发请求、不写盘、不读环境变量（`DefaultActor` 取的是注入进来的 getenv）；
 //   - 不认识 `--json` / 表格输出：信封是**数据**，`internal/output` 负责渲染；
 //     失败转成 `*output.Error`（契约 C4.1）由 WP4 的接线做；
-//   - 人话候选块只给**候选行**（C5.14）；F1 那句"请指明其一，例如：tt debug … --session X"
+//   - 人话候选块只给**候选行**（C5.14）；F1 那句"请指明其一，例如：tg debug … --session X"
 //     要原始命令行，由 CLI 自己拼。
 package target
 
@@ -174,7 +174,7 @@ const (
 )
 
 // FlagOnWrongCommandExit 是 F16/F17 的退出码（C2.8b / C2.8c / Q18）：
-// `tt debug` 组**不补** `FlagErrorFunc`，所以"标志挂错了命令"走 cobra 老路径 →
+// `tg debug` 组**不补** `FlagErrorFunc`，所以"标志挂错了命令"走 cobra 老路径 →
 // 根命令兜底 1，与今天 `--bogus` 完全一致。信封里仍然是 `code: USAGE`。
 const FlagOnWrongCommandExit = ExitRunFailed
 
@@ -319,9 +319,9 @@ var InvalidForms = []InvalidForm{
 		Code: CodeUsage, Exit: 2, Candidates: false},
 	{Key: "F15", Write: "--session 的环境与序号都对，但句柄是上一代（epoch 过期）",
 		Code: CodeStale, Exit: 3, Candidates: true},
-	{Key: "F16", Write: "--session 挂到不接受它的命令上（tt debug status --session X / tt debug sql --session X）",
+	{Key: "F16", Write: "--session 挂到不接受它的命令上（tg debug status --session X / tg debug sql --session X）",
 		Code: CodeUsage, Exit: FlagOnWrongCommandExit, Candidates: false},
-	{Key: "F17", Write: "--name 挂到非建会话命令上（tt debug exec … --name X）",
+	{Key: "F17", Write: "--name 挂到非建会话命令上（tg debug exec … --name X）",
 		Code: CodeUsage, Exit: FlagOnWrongCommandExit, Candidates: false},
 	{Key: "F18", Write: `--name 汇率单 与已存在的别名撞车`,
 		Code: CodeNameTaken, Exit: 2, Candidates: true},

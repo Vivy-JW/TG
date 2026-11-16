@@ -69,7 +69,7 @@ nil 才放行。**挂在 `Query` 这唯一一个执行口上**（`ServerVersion`
   # 期望：无 "ERROR: permission denied"
 
   # 补上本批改动之后，现成的判据是（它走的就是 ds，且不写库）：
-  tt db ping --at <环境名>            # 期望仍打印 连接正常；若实例拒绝只读，这里会响亮失败
+  tg db ping --at <环境名>            # 期望仍打印 连接正常；若实例拒绝只读，这里会响亮失败
   ```
 
 **挡不住的（不粉饰）**：自治事务 / 函数副作用（`safesql` 的包注释同款）；
@@ -107,7 +107,7 @@ go test ./internal/erpdb -count=1
 属 L4，要真 Oracle 或金仓。**库侧那两层因此也没有离线判据**：金仓的那一行是连接参数
 （要建池才生效）、Oracle 的那条是事务（要真库才拒绝写）。它们的判据是真机那两条命令
 （见上面「两层只读防线」末尾），以及 `internal/debug` 不 import 本包那条静态检查
-（`TestDebugPathDoesNotImportErpdb`：`tt debug sql` 走 SSH + sqlplus/ksql，
+（`TestDebugPathDoesNotImportErpdb`：`tg debug sql` 走 SSH + sqlplus/ksql，
 与本包的改动**没有交集**）。
 
 **没有第二处文本闸门了**：本包从前那份前缀匹配已经删掉，`internal/safesql` 是全仓

@@ -1,11 +1,11 @@
 package debug
 
-// A33 / A34 的命令面（`tt debug bp`）：两条现场纪律 + 一条接线提示。
+// A33 / A34 的命令面（`tg debug bp`）：两条现场纪律 + 一条接线提示。
 //
 //	A33 —— 命中计数是内核给的**唯一**命中判据（`Address` 恒 0，不能当判据），
 //	       所以 `bp list` 必须把它打出来：内核给了却不显示，等于让人猜。
 //	A34 —— running 时下断被服务端 **400** 明确拒绝（"程序运行中,禁止发送调试命令(仅允许中断)"）。
-//	       收到它**不重试、不静默**，要给能照做的指引：先 `tt debug interrupt`，停下后再下断。
+//	       收到它**不重试、不静默**，要给能照做的指引：先 `tg debug interrupt`，停下后再下断。
 //	       允许的自动化**只有 interrupt**，绝不自动 continue / run —— 本工具选择"只给指引、
 //	       不自动中断"（人在界面上打字时，自动 SIGINT 会把他的对话框取消），并在这里钉住。
 //	A35 —— 没有 GDC 接线的会话在 `main` 之后**立刻** `Fatal error -6300` 退出，
@@ -194,7 +194,7 @@ func TestBPRunningRejectTellsInterrupt(t *testing.T) {
 		t.Errorf("错误里要保留服务端原文（现场据此判断是状态问题而不是参数问题）：%s", msg)
 	}
 	if !strings.Contains(msg, "interrupt") {
-		t.Fatalf("错误里必须给可执行指引「先 tt debug interrupt，停下后再下断」（A34 冻结行为）：%s", msg)
+		t.Fatalf("错误里必须给可执行指引「先 tg debug interrupt，停下后再下断」（A34 冻结行为）：%s", msg)
 	}
 
 	if n := s.count("POST"); n > 1 {
@@ -222,6 +222,6 @@ func TestBPListRunningRejectTellsInterrupt(t *testing.T) {
 		t.Fatal("running 时查断点被拒，该报错")
 	}
 	if !strings.Contains(err.Error(), "interrupt") {
-		t.Fatalf("错误里必须给「先 tt debug interrupt」这条指引：%v", err)
+		t.Fatalf("错误里必须给「先 tg debug interrupt」这条指引：%v", err)
 	}
 }

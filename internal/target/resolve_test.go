@@ -101,8 +101,8 @@ func TestResolveF2NoSession(t *testing.T) {
 	empty := Pool{Environments: []string{"恒烁正式区", "测试1012"}}
 	_, f := Resolve(empty, Request{})
 	assertFailure(t, f, "F2", CodeNoSession, ExitNoSession, false)
-	if !strings.Contains(f.Message, "没有 SSH 会话") || !strings.Contains(f.Message, "tt debug start") {
-		t.Errorf("F2 的文案 = %q，形状是「没有 SSH 会话：先运行 tt debug start <作业> --env <环境> 起一条」", f.Message)
+	if !strings.Contains(f.Message, "没有 SSH 会话") || !strings.Contains(f.Message, "tg debug start") {
+		t.Errorf("F2 的文案 = %q，形状是「没有 SSH 会话：先运行 tg debug start <作业> --env <环境> 起一条」", f.Message)
 	}
 
 	sel := mustSelector(t, "汇率单")
@@ -148,8 +148,8 @@ func TestResolveF5AliasNotFound(t *testing.T) {
 	if f.Candidates[0].Name != "汇率单" {
 		t.Errorf("F5 的候选该是那条有名字的（汇率单），实得 %q", f.Candidates[0].Name)
 	}
-	if !strings.Contains(f.Hint, "tt debug status") {
-		t.Errorf("F5 该提示「去掉 --session 可看全部（tt debug status）」，实得 hint = %q", f.Hint)
+	if !strings.Contains(f.Hint, "tg debug status") {
+		t.Errorf("F5 该提示「去掉 --session 可看全部（tg debug status）」，实得 hint = %q", f.Hint)
 	}
 }
 
@@ -277,7 +277,7 @@ func TestResolveF15StaleEpoch(t *testing.T) {
 	_, f := Resolve(p, Request{Selector: &sel, Epoch: "k1"})
 	assertFailure(t, f, "F15", CodeStale, ExitNoSession, true)
 	if !strings.Contains(f.Message, "当前是第 k2 代") || !strings.Contains(f.Message, "你手上的是第 k1 代") {
-		t.Errorf("F15 的文案 = %q，形状是「这条 SSH 会话已失效（<ref> 当前是第 <E> 代，你手上的是第 <E-1> 代）；重新 tt debug status 取一次」",
+		t.Errorf("F15 的文案 = %q，形状是「这条 SSH 会话已失效（<ref> 当前是第 <E> 代，你手上的是第 <E-1> 代）；重新 tg debug status 取一次」",
 			f.Message)
 	}
 	if len(f.Candidates) != 1 || f.Candidates[0].Ref != "恒烁正式区#1" {
@@ -323,8 +323,8 @@ func TestResolveNameIdempotency(t *testing.T) {
 		if !strings.Contains(f.Message, "不能复用") || !strings.Contains(f.Message, "汇率单") {
 			t.Errorf("F20 的文案 = %q，形状是「别名 \"汇率单\" 指向的会话 <ref> 当前是 <状态>，不能复用」", f.Message)
 		}
-		if !strings.Contains(f.Hint, "tt debug stop") {
-			t.Errorf("F20 该提示「换一个别名，或先停掉那条会话（tt debug stop）」，实得 %q", f.Hint)
+		if !strings.Contains(f.Hint, "tg debug stop") {
+			t.Errorf("F20 该提示「换一个别名，或先停掉那条会话（tg debug stop）」，实得 %q", f.Hint)
 		}
 	}
 
@@ -343,7 +343,7 @@ func TestResolveNameIdempotency(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 // TestFailureFlagNotAcceptedIsTheOldPath 钉住 F16 / F17 与 C2.8b / C2.8c / Q18：
-// 这两条走 cobra 老路径 → **退 1**（`tt debug` 组不补 FlagErrorFunc），
+// 这两条走 cobra 老路径 → **退 1**（`tg debug` 组不补 FlagErrorFunc），
 // 但信封里仍然是 `code: USAGE`（Agent 读码，不读数字，Q15）。
 func TestFailureFlagNotAcceptedIsTheOldPath(t *testing.T) {
 	f16 := FailureFlagNotAccepted(FlagSession)
@@ -351,8 +351,8 @@ func TestFailureFlagNotAcceptedIsTheOldPath(t *testing.T) {
 	if !strings.Contains(f16.Message, "-session") {
 		t.Errorf("F16 的文案 = %q，形状是「flag provided but not defined: -session」", f16.Message)
 	}
-	if !strings.Contains(f16.Hint, "tt debug status") {
-		t.Errorf("F16 该提示「该命令不接受 --session（要列全部会话用 tt debug status）」，实得 %q", f16.Hint)
+	if !strings.Contains(f16.Hint, "tg debug status") {
+		t.Errorf("F16 该提示「该命令不接受 --session（要列全部会话用 tg debug status）」，实得 %q", f16.Hint)
 	}
 	f17 := FailureFlagNotAccepted(FlagName)
 	assertFailure(t, f17, "F17", CodeUsage, FlagOnWrongCommandExit, false)

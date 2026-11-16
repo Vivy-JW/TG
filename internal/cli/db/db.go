@@ -61,7 +61,7 @@ GP 一个库一个登录账号，没有 T100 的 ENT 企业清单。
 
 // loadCfg 读配置并切到本次点名的环境（--at/--env 已落到 common.Env）。
 //
-// 与 tt debug 的读法一致：CloneEnv 把该环境的 SSH/Zone/DB 装进运行时字段，
+// 与 tg debug 的读法一致：CloneEnv 把该环境的 SSH/Zone/DB 装进运行时字段，
 // 但不 ApplyDefaultEnv —— 那次合并会把“没点名就落首条”的老行为带回来。
 func loadCfg() (*debug.Config, string, error) {
 	env := strings.TrimSpace(common.Env)

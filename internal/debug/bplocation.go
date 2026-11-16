@@ -101,7 +101,7 @@ func (c BPLocContext) ResolveLocation(loc string) (string, string) {
 		// A15：事实不足就说取不到，并给出**可操作**的拿法。
 		return loc, fmt.Sprintf("位置 %q 的模块前缀 %q 没法核对：本会话还没拿到登录后的模块"+
 			"（它是按 <作业>.42r 在各模块 42r 目录里自动解析出来的，取不到就不猜）。"+
-			"三步任选：① tt debug exec \"info breakpoints\" 看真实文件名；② tt debug stop 看停站位置的 file 字段；"+
+			"三步任选：① tg debug exec \"info breakpoints\" 看真实文件名；② tg debug stop 看停站位置的 file 字段；"+
 			"③ 直接 break <行号>（当前文件），或 break <函数名> 让 fgldb 自己定位", raw, prefix)
 	}
 	if strings.EqualFold(prefix, want) {

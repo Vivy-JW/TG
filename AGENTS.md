@@ -35,13 +35,13 @@ TT/
 │  ├─ cli/              cobra 命令树装配处：各能力线 + 共用命令；唯一的接线处
 │  │  ├─ at/            --at 文法、作用域与 --at-list 契约
 │  │  ├─ common/        命令组间共享上下文（全局开关、MetaProvider、WebFS；叶子包防成环）
-│  │  ├─ db/            tt db 命令组（sql 只读 SQL / ping 本机连库 / probe 服务器连库）
+│  │  ├─ db/            tg db 命令组（sql 只读 SQL / ping 本机连库 / probe 服务器连库）
 │  │  ├─ debug/         调试命令组门面（fgldb 那条线）
 
 │  │  ├─ dict/          字典命令组：表/字段/校验/开窗/消息/参数/ACC 查询
 │  │  ├─ file/          tg file 命令组：只读 SFTP（$TOP / $CUST 两棵树，根是实例目录）与离线镜像
 │  │  ├─ interfacecmd/  tg interface 命令组：.42f + gae_file → 页面/字段/中文标签
-│  │  ├─ outline/       tt outline 命令：.4gl → 函数/UI 块树
+│  │  ├─ outline/       tg outline 命令：.4gl → 函数/UI 块树
 │  │  └─ session/       tg session 命令组：建/列/看/结束/收掉/透传/起作业
 │  ├─ config/           统一配置层：位置解析、唯一写入口 Edit、原子写、打码、缓存清单
 │  ├─ dbconfig/         配置里“库”那一节的连接模型
@@ -55,7 +55,7 @@ TT/
 │  │  └─ server/        Web 字典接口
 │  ├─ dev/              设计器包管线删剩的两个包（2026-11-11 删了 fence/verify/store/tzs/split/
 │  │                     tapfile/tglfile/model/pkgfile/synth，形状库随 tzs 一起没了）
-│  │  ├─ fgl/           FGL 语法/块/大纲处理（tt outline 在用，GP 的 4gl 也吃它）
+│  │  ├─ fgl/           FGL 语法/块/大纲处理（tg outline 在用，GP 的 4gl 也吃它）
 │  │  └─ testutil/      语料根与遍历（CorpusRoot/CorpusFiles，测试夹具）
 │  ├─ entdir/           企业目录（ENT→账号）快照、指纹、新鲜期（debug 与 dict 共用）
 │  ├─ envmove/          环境改名的落点迁移（字典库/快照/镜像）与失败回滚（CLI 与 Web 共用）

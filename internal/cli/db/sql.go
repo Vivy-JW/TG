@@ -1,6 +1,6 @@
 package db
 
-// tt db sql —— 只读 SQL（业务数据）。从 tt debug sql 抽出来，并且**不再依赖 serve**。
+// tg db sql —— 只读 SQL（业务数据）。从 tg debug sql 抽出来，并且**不再依赖 serve**。
 //
 // 两条执行路线（--route）：默认从本机直连该企业的库；直连建不起来才回退
 // 本机 → SSH → 服务器 sqlplus/ksql。同一条语句可以 `--batch` 一次跑多条：
@@ -25,7 +25,7 @@ import (
 	"tg/internal/safesql"
 )
 
-// `tt db sql` 的三条执行路线（--route）。
+// `tg db sql` 的三条执行路线（--route）。
 const (
 	// SQLRouteAuto 直连优先，建连失败回退服务器 sqlplus（默认）。
 	SQLRouteAuto = "auto"
@@ -42,8 +42,8 @@ func sqlRouteValid(route string) bool {
 
 // normalizeSQLRoute 空路线一律按 server。
 //
-// 这条归一化是**兼容闸门**：`tt db sql` 自己的默认值是 auto，而隐藏的
-// `tt debug sql` 转发不带路线 —— 它必须继续走服务器 sqlplus，否则一个只改默认值的
+// 这条归一化是**兼容闸门**：`tg db sql` 自己的默认值是 auto，而隐藏的
+// `tg debug sql` 转发不带路线 —— 它必须继续走服务器 sqlplus，否则一个只改默认值的
 // 重构就会把旧命令的执行方式（以及取值渲染）悄悄换掉。
 func normalizeSQLRoute(route string) string {
 	if route == "" {
@@ -142,7 +142,7 @@ grep -v '^# ' 切下去就是一个标准 CSV（逗号/引号/换行按 RFC4180 
 				return QueryBatch(batch, 0, timeout, route)
 			}
 			if sqlText == "" {
-				return fmt.Errorf(`需要一条查询语句（见 tt db sql --help），或用 --file / --batch 指定语句来源`)
+				return fmt.Errorf(`需要一条查询语句（见 tg db sql --help），或用 --file / --batch 指定语句来源`)
 			}
 			return QueryOnce(sqlText, 0, timeout, route)
 		},
@@ -180,9 +180,9 @@ func prepareTarget(ent int, route string) (*debug.Config, error) {
 	return cfg, nil
 }
 
-// QueryOnce 执行一次只读 SQL 并渲染（tt db sql 与旧的 tt debug sql 转发共用）。
+// QueryOnce 执行一次只读 SQL 并渲染（tg db sql 与旧的 tg debug sql 转发共用）。
 //
-// route 为空按 server 处理：旧调用方（tt debug sql）走的还是服务器 sqlplus 那一条，
+// route 为空按 server 处理：旧调用方（tg debug sql）走的还是服务器 sqlplus 那一条，
 // 不能让一个隐藏的兼容命令悄悄换掉执行方式与取值格式。
 func QueryOnce(sqlText string, ent, timeout int, route string) error {
 	route = normalizeSQLRoute(route)
@@ -225,7 +225,7 @@ func printSQLResult(res *debug.DBQueryResult) error {
 // writeSQLResult 把一次只读查询写成三种形态之一（w 可换成 buffer 做测试）。
 func writeSQLResult(w io.Writer, res *debug.DBQueryResult) error {
 	route := res.Route
-	if route == "" { // 老调用方（tt debug sql 的转发、旧测试）不带 Route：沿用按方言推
+	if route == "" { // 老调用方（tg debug sql 的转发、旧测试）不带 Route：沿用按方言推
 		route = serverRoute(res.Dialect)
 	}
 	src := res.AccountSource

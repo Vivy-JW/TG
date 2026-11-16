@@ -23,9 +23,9 @@ var CacheSubdirs = []string{
 	"srccache",  // 调试时的源码镜像,只活一轮调试
 	"execlog",   // 调试执行的大输出落盘副本
 	"debug-bps", // 断点存档
-	"spill",     // 查询被截断时落盘的完整结果(见 tt dict 的返回上限)
+	"spill",     // 查询被截断时落盘的完整结果(见 tg dict 的返回上限)
 	"update",    // tt 自身的更新：下载的安装包与最近一次检查结果(删了只是下次重下)
-	"runtime",   // 登录后回读的 TOP/ERP/COM（tt file 用；30 分钟新鲜期，可 --refresh 重探）
+	"runtime",   // 登录后回读的 TOP/ERP/COM（tg file 用；30 分钟新鲜期，可 --refresh 重探）
 }
 
 // CacheDir 数据目录下的缓存子目录。name 必须在 CacheSubdirs 清单里，
@@ -57,7 +57,7 @@ type CacheDirStatus struct {
 	Files  int    `json:"files"`
 }
 
-// CacheStatus 缓存目录的整体状态(设置页与 tt cache 共用的载荷)。
+// CacheStatus 缓存目录的整体状态(设置页与 tg cache 共用的载荷)。
 type CacheStatus struct {
 	// Dir 配置目录本身 —— 缓存是它下面的子目录,这个路径回答了"东西在哪"。
 	Dir   string           `json:"dir"`
@@ -72,7 +72,7 @@ type CacheStatus struct {
 //
 // **刻意不"启动就全清"**:spill 里那些文件的用途正是"刚才那条查询的完整结果,
 // 想看全量去读它"—— 启动即清会把上一条命令刚告诉用户的那份删掉。
-// 按年龄删既控住了增长,又不动手上的东西;真想立刻清空用 tt cache clear。
+// 按年龄删既控住了增长,又不动手上的东西;真想立刻清空用 tg cache clear。
 const CacheMaxAge = 7 * 24 * time.Hour
 
 // CacheStatusOf 汇总缓存占用。dataDir 为空(定位不到配置目录)时返回零值 + 空 Dir。

@@ -1,6 +1,6 @@
 package debug
 
-// debug 命令行控制端:薄封装,直连 tt debug serve 的 REST。
+// debug 命令行控制端:薄封装,直连 tg debug serve 的 REST。
 // 标准 fgldb 命令用 exec 透传(原样返回输出),这里只封装 serve 没有的生命周期动作:
 // SSH 连接 + 指定程序启动调试(start)、接口日志获取(wslogs)、按日志重放调试(wsdebug)。
 
@@ -153,11 +153,11 @@ func dbgWaitStopped(id string, timeout time.Duration) (map[string]any, error) {
 // dbgTargetEnv 这次启动要连哪个环境。
 //
 // 两条来源,命令自己的 --env 优先:
-//   - `tt debug start x --env 恒烁正式区`(写在子命令上,语义最明确);
+//   - `tg debug start x --env 恒烁正式区`(写在子命令上,语义最明确);
 //   - `tt --env 恒烁正式区 debug start x`(根命令的持久开关,别处能用,这里也认)。
 //
 // 从前这里**只看 --ssh**,而 --env 是根命令的开关、debug 组里没人读 —— 于是
-// `tt debug start … --env X` 既不报错也不生效,方向永远取服务端当前环境。同机多环境
+// `tg debug start … --env X` 既不报错也不生效,方向永远取服务端当前环境。同机多环境
 // (同库不同企业)时那是"上错号"而不是"报错",所有按企业编号取数的查询返回 0 行,
 // 看起来和"配置缺失"一模一样(实测踩过,结论会完全反向)。
 func dbgTargetEnv() string {
@@ -189,7 +189,7 @@ type dbgSnapView struct {
 	Topent   string `json:"topent"`
 	TopentCf string `json:"topentCfg"`
 	TopentSh string `json:"topentShell"`
-	// TopentSession 是**本会话显式给的企业编号**（`tt debug start --ent` / 面板输入；
+	// TopentSession 是**本会话显式给的企业编号**（`tg debug start --ent` / 面板输入；
 	// 服务端的 `topentSession` 键，见 `Session.TopentSession`）。
 	//
 	// 它**只是**快照里既有的一栏，有它自己的含义 —— **不是** `ent` 的备胎：
@@ -317,8 +317,8 @@ func dbgVerifyEnv(want string, snap *dbgSnapView) bool {
 		return true
 	}
 	fmt.Fprintf(os.Stderr, "⚠ --env %s 未生效:实际会话环境是 %s\n", want, orPlain(snap.Env))
-	fmt.Fprintf(os.Stderr, "  自己核一下:tt debug env            (列出环境与当前会话)\n")
-	fmt.Fprintf(os.Stderr, "              tt debug start %s --env <环境名>   (点名必须与环境清单里的名字一致)\n", snap.Prog)
+	fmt.Fprintf(os.Stderr, "  自己核一下:tg debug env            (列出环境与当前会话)\n")
+	fmt.Fprintf(os.Stderr, "              tg debug start %s --env <环境名>   (点名必须与环境清单里的名字一致)\n", snap.Prog)
 	return false
 }
 
@@ -327,7 +327,7 @@ var debugStartCmd = &cobra.Command{
 	Use:   "start <作业编号>",
 	Short: "连接 SSH 并对指定程序启动调试,等到入口停站",
 	Long: `封装"连服务器 + fglrun -d 启动作业 + 等入口停站"全流程。
-之后用 tt debug exec 透传 fgldb 标准命令调试(参考 Genero 调试命令文档)。
+之后用 tg debug exec 透传 fgldb 标准命令调试(参考 Genero 调试命令文档)。
 
 --env <环境名> 指定这次连哪个环境(等价 --ssh);不给则用服务端当前环境。
 点名了环境而实际没生效时会**明确告警**——同一台机器上可以有多个环境指向同一个库
@@ -572,7 +572,7 @@ func buildCmdList(args []string, fileData []byte, filePath string) ([]string, er
 		cmds = append(cmds, fromFile...)
 	}
 	if len(cmds) == 0 {
-		return nil, fmt.Errorf("需要至少一条命令(见 tt debug exec --help),或用 --file 指定命令文件")
+		return nil, fmt.Errorf("需要至少一条命令(见 tg debug exec --help),或用 --file 指定命令文件")
 	}
 	if len(cmds) > maxBatchCmds {
 		return nil, fmt.Errorf("一次最多 %d 条命令(本次 %d 条)", maxBatchCmds, len(cmds))
@@ -603,10 +603,10 @@ func batchAbortReason(cmd string, softTimeout bool, state string) (bool, string)
 	case "stopped":
 		return false, ""
 	case "running":
-		return true, "它是放行类命令,程序正在运行;用 tt debug wait --for stopped 等它停下来" +
-			"(或 tt debug why 看它在等用户还是空转),停下后再取后面的值"
+		return true, "它是放行类命令,程序正在运行;用 tg debug wait --for stopped 等它停下来" +
+			"(或 tg debug why 看它在等用户还是空转),停下后再取后面的值"
 	case "":
-		return true, "它是放行类命令,但没能确认程序停在哪(快照没读到);先 tt debug stop 看清现场再继续"
+		return true, "它是放行类命令,但没能确认程序停在哪(快照没读到);先 tg debug stop 看清现场再继续"
 	}
 	return true, "它是放行类命令,而程序已离开调试器(当前 " + state + ");先确认现场再继续"
 }
@@ -687,8 +687,8 @@ func dbgRawOnce(id, cmd string) (*rawOut, error) {
 
 func printStillRunning(r *rawOut) {
 	fmt.Printf("— 仍在运行(%s,已静默 %.0fs):命令未取消,也未发 SIGINT\n", r.State, r.Silent)
-	fmt.Println("  接着可以: tt debug wait --for stopped --timeout 300   (等它停下来)")
-	fmt.Println("            tt debug why                              (看它在等用户还是空转)")
+	fmt.Println("  接着可以: tg debug wait --for stopped --timeout 300   (等它停下来)")
+	fmt.Println("            tg debug why                              (看它在等用户还是空转)")
 }
 
 // dbgExecOne 单条命令:输出与批量出现之前**逐字一致**(不带头部行),向后兼容
@@ -761,20 +761,20 @@ var debugExecCmd = &cobra.Command{
 	Use:          "exec \"<命令>\" [更多命令...]",
 	Short:        "透传 fgldb 标准调试命令(print/break/next/where/info/...),可一次多条",
 	Long: `透传 Genero 调试器标准命令,输出为 fgldb 原生文本:
-  tt debug exec "break 123"        下断点
-  tt debug exec "continue"         继续运行,阻塞到下次停站
-  tt debug exec "print ls_sql"     求值变量/表达式
-  tt debug exec "info breakpoints" 查看断点
-  tt debug exec "where"            调用栈
+  tg debug exec "break 123"        下断点
+  tg debug exec "continue"         继续运行,阻塞到下次停站
+  tg debug exec "print ls_sql"     求值变量/表达式
+  tg debug exec "info breakpoints" 查看断点
+  tg debug exec "where"            调用栈
 命令清单见 Genero 文档 Debugger commands(break/continue/print/where/info/watch/...)。
 
 一次给多条就是批量,省掉每条一次进程启动(实测单次调用约 50ms,取十几个值就是秒级的差别):
-  tt debug exec "print g_req_param" "print g_status" "info locals"
-  tt debug exec --file cmds.txt     # 一行一条;空行与 # 开头跳过
+  tg debug exec "print g_req_param" "print g_status" "info locals"
+  tg debug exec --file cmds.txt     # 一行一条;空行与 # 开头跳过
 
 批量逐条标注 [i/N] 与命令原文。放行类命令(continue/next/step/until/finish/run)执行后
 会读一次现场:程序**停住了**就接着往下跑 —— 所以"走一步、立刻取一批值"一次调用就能做完:
-  tt debug exec "next" "print g_qryparam.cond" "print arr.getLength()"
+  tg debug exec "next" "print g_qryparam.cond" "print arr.getLength()"
 没停住(还在跑/已退出/没读到)才中止,剩余标为未执行 —— 后面的命令不该落在一个没确认过的
 现场上。普通错误(print 一个不存在的变量)不中止,后面照跑。
 
@@ -886,8 +886,8 @@ var debugWaitCmd = &cobra.Command{
 	Short: "阻塞等待会话事件(停站/退出/掉线/看门狗),或等到超时",
 	Long: `等到会话出现指定事件才返回,替代"隔几秒查一次"的轮询。
 
-  tt debug wait --for stopped --timeout 300   # 等程序停到断点上(用户在 GDC 操作后)
-  tt debug wait --for exit,dead               # 等程序结束或掉线
+  tg debug wait --for stopped --timeout 300   # 等程序停到断点上(用户在 GDC 操作后)
+  tg debug wait --for exit,dead               # 等程序结束或掉线
 
 超时**不是错误**:到点返回 timedOut 并给出当前状态(退出码 0),便于脚本分支。`,
 	Args: cobra.NoArgs,
@@ -929,7 +929,7 @@ var debugWaitCmd = &cobra.Command{
 		if r.TimedOut {
 			fmt.Printf("超时:状态仍为 %s", r.State)
 			if r.State == "running" {
-				fmt.Printf("(已静默 %.0fs —— 可能在界面上等用户;可 tt debug why 确认)", r.Silent)
+				fmt.Printf("(已静默 %.0fs —— 可能在界面上等用户;可 tg debug why 确认)", r.Silent)
 			}
 			fmt.Println()
 			return nil
@@ -952,13 +952,13 @@ var debugModeCmd = &cobra.Command{
 	Short: "查看或切换会话模式:纯人工(solo) / 协作(collab,AI 主导)",
 	Long: `不带参数 = 查看当前模式;带参数 = 切换。
 
-  tt debug mode            # 查看模式、状态与正在执行的命令
-  tt debug mode collab     # 请求切到协作模式
+  tg debug mode            # 查看模式、状态与正在执行的命令
+  tg debug mode collab     # 请求切到协作模式
 
 模式决定"谁能写":纯人工只有人能操作(AI 只能读),协作只有 AI 能操作(人只读,
 要下断点/执行命令请在对话里委托给 AI)。
 
-**两个方向都放行,人与 AI 都能切**:AI 可以用「tt debug mode collab」自行接管一个
+**两个方向都放行,人与 AI 都能切**:AI 可以用「tg debug mode collab」自行接管一个
 纯人工会话(不必等用户在界面上点「交给 AI」),人在界面上的「接管」也随时能收回 ——
 人始终有最终控制权。`,
 	Args: cobra.MaximumNArgs(1),
@@ -1038,10 +1038,10 @@ var debugStatusCmd = &cobra.Command{
 // 旧文案写「结束指定调试会话(作业窗口随之关闭)」—— 那是**错的**，实测（2026-10-29）
 // 跑完 quit 之后会话仍在列表里，`state=idle`：作业确实结束了，但 SSH 连接 / PTY /
 // 服务器 shell 全部保留，供下一轮免重登复用。用户以为收干净了，实际占着一套连接，
-// 现场“这台机器挂了十几条 ssh”多半就是这么来的。真正断连是 `tt session rm`。
+// 现场“这台机器挂了十几条 ssh”多半就是这么来的。真正断连是 `tg session rm`。
 var debugQuitCmd = &cobra.Command{
 	Use:   "quit",
-	Short: "结束本轮运行（作业关闭、会话保留可直接再启动）；要断开连接用 tt session rm",
+	Short: "结束本轮运行（作业关闭、会话保留可直接再启动）；要断开连接用 tg session rm",
 	Long: `结束本条会话的本轮运行：给 fgldb 发 quit、作业窗口关闭、事务放开。
 
 **会话本身保留（state=idle）** —— SSH 连接、登录态、服务器 shell 都还在，下一轮
@@ -1049,7 +1049,7 @@ var debugQuitCmd = &cobra.Command{
 
 要真正断开连接（开会话积累太多 ssh 时）：
 
-  tt session rm --session <ref>
+  tg session rm --session <ref>
 
 停站持锁时的两条出路：等看门狗自动放行（默认 1800 秒），或直接 quit 立即放行。`,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -1217,7 +1217,7 @@ func applySets(req string, sets []string) (string, error) {
 	var root map[string]any
 	if err := json.Unmarshal([]byte(req), &root); err != nil {
 		return "", fmt.Errorf("入参报文不是 JSON(--set 只改 JSON;这条报文多半是 XML)。"+
-			"用 tt debug wslogs --show <rowid> --save-request req.txt 导出原文,改完再 --request-file req.txt: %w", err)
+			"用 tg debug wslogs --show <rowid> --save-request req.txt 导出原文,改完再 --request-file req.txt: %w", err)
 	}
 	for _, s := range sets {
 		k, v, ok := strings.Cut(s, "=")
@@ -1348,7 +1348,7 @@ func showWSLog(rowid string, asJSON bool, reqSave string) error {
 		if err := os.WriteFile(reqSave, []byte(r.Content.Request), 0o644); err != nil {
 			return fmt.Errorf("写入 %s 失败: %w", reqSave, err)
 		}
-		fmt.Printf("\n请求原文已存到 %s(改完用: tt debug wsdebug %s --request-file %s)\n", reqSave, rowid, reqSave)
+		fmt.Printf("\n请求原文已存到 %s(改完用: tg debug wsdebug %s --request-file %s)\n", reqSave, rowid, reqSave)
 	}
 	// "完不完整"直接判给人看:记录大小(wsfa016)与存文长度一致 = 完整。
 	// 以前只写一句"不完整",没说判据,也没说这条到底是哪种情况 —— 实测有人据此
@@ -1413,7 +1413,7 @@ var debugWsdebugCmd = &cobra.Command{
 	Use:          "wsdebug <rowid>",
 	Short:        "按接口日志的报文参数启动重放调试,等到入口停站",
 	Long: `取出该日志的请求/响应报文,解析出作业与启动参数,自动重放该次调用并停在入口。
-rowid 从 tt debug wslogs 输出中取。
+rowid 从 tg debug wslogs 输出中取。
 
 **要改入参再重放**(界面上那套能力,命令行同样有):
   --set 路径=值         按点路径改一个字段,可重复。路径形如
@@ -1422,8 +1422,8 @@ rowid 从 tt debug wslogs 输出中取。
   --request-file 文件   整份替换入参报文(想大改就先把原文存下来改完再送)
 
 例:
-  tt debug wsdebug <rowid> --set digi-body.std_data.parameter.production_item_no=
-  tt debug wsdebug <rowid> --request-file my_req.json
+  tg debug wsdebug <rowid> --set digi-body.std_data.parameter.production_item_no=
+  tg debug wsdebug <rowid> --request-file my_req.json
 
 **重放能不能跑进业务逻辑,取决于会话的 TOPENT(企业编号)。** 成功启动后输出里会打印
 实际生效值;若它不是纯数字,多半是把据点码填进了企业编号的位置 —— 那样框架的前置

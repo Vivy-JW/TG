@@ -55,4 +55,4 @@ go test ./internal/cli/dict -count=1
 
 - 查询命令的用法与逐条说明 → [`skills/tt-dict/SKILL.md`](../../skills/tt-dict/SKILL.md)
 - 输出的形状（信封里为什么有那么多字段） → [../output/README.md](../output/README.md)
-- 结果的落盘与翻页 → [./db/README.md](./db/README.md) 与 `tt dict spill`
+- 结果的落盘与翻页 → [./db/README.md](./db/README.md) 与 `tg dict spill`

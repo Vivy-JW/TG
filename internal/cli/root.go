@@ -132,7 +132,7 @@ func Execute(web fs.FS) {
 	common.WebFS = web
 	common.Version = Version
 
-	// 旧命令名兼容：tt tdebug … 等价 tt debug …
+	// 旧命令名兼容：tt tdebug … 等价 tg debug …
 	if len(os.Args) > 1 {
 		if target, ok := legacyAliases[os.Args[1]]; ok {
 			os.Args[1] = target
@@ -143,7 +143,7 @@ func Execute(web fs.FS) {
 	os.Args = file.NormalizeFindArgs(os.Args)
 
 	// --at-list：cobra 解析之前就处理掉（ValidateArgs 比 pre-run 早，
-	// 而 tt debug start --at-list 本来就不带作业名）。
+	// 而 tg debug start --at-list 本来就不带作业名）。
 	//
 	// 它比 flag 解析还早，所以 --config 得在这里先认一遍 —— 否则
 	// `tg dict r.t --at-list --config D:\...\config.json` 列的是默认配置里的环境，
@@ -217,12 +217,12 @@ func scanConfigFlag(args []string) string {
 // 根命令只问"你报过了吗" —— 不必为了一个记号把 internal/cli/dev 的类型导出。
 type alreadyReported interface{ AlreadyReported() bool }
 
-// jsonErrorWriter 由"自己知道失败信封长什么样"的错误实现（`tt debug` 的会话寻址失败
+// jsonErrorWriter 由"自己知道失败信封长什么样"的错误实现（`tg debug` 的会话寻址失败
 // 就是这一类：它的信封里除了 output.Error 那五键还要带 `candidates`，见契约 5.2 / C5.11）。
 //
 // 为什么不把 candidates 塞进 internal/output.Error：那是全仓共用的形状，给它加一个
 // "只有会话寻址才用得上"的键，等于让每个命令组成员都以为自己该填它。这里用一个
-// 只被 `tt debug` 实现的小接口把差异留在它自己包里，根命令只问"你会不会自己打"。
+// 只被 `tg debug` 实现的小接口把差异留在它自己包里，根命令只问"你会不会自己打"。
 type jsonErrorWriter interface{ WriteEnvelope(w io.Writer) error }
 
 // reportError 打一次错误。

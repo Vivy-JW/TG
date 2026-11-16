@@ -23,7 +23,7 @@ import (
 )
 
 // EntMapping 一个企业编号 → 账号。定义在 internal/entdir:
-// tt dict 的客户端直连路径也解析同一张 gzou_t,两边的映射必须是同一个形状。
+// tg dict 的客户端直连路径也解析同一张 gzou_t,两边的映射必须是同一个形状。
 type EntMapping = entdir.Mapping
 
 // DBProbeResult 单账号连接探查结果

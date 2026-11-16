@@ -227,7 +227,7 @@ func rejectNone(cmd *cobra.Command) error {
 	path := pathOf(cmd)
 	switch {
 	case strings.HasPrefix(path, "session"):
-		return fmt.Errorf("%s 不接受 --at：会话身份来自 --session（tt session ls --json 可看全部）；\n"+
+		return fmt.Errorf("%s 不接受 --at：会话身份来自 --session（tg session ls --json 可看全部）；\n"+
 			"环境/企业跟着会话走，不用单独给", cmd.CommandPath())
 	default:
 		return fmt.Errorf("%s 不接受 --at：它不连接环境/企业（要操作会话或查库，换一条命令）", cmd.CommandPath())

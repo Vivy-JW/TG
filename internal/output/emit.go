@@ -29,7 +29,7 @@ type Options struct {
 	Rows    [][]string
 }
 
-// Emit 唯一的输出出口。w 注入,所以能像 tt debug sql 的 writeSQLResult 那样直接单测 ——
+// Emit 唯一的输出出口。w 注入,所以能像 tg debug sql 的 writeSQLResult 那样直接单测 ——
 // 这是本仓库唯一可行的输出测试手法(见 emit_test.go)。
 func Emit(w io.Writer, opt Options) error {
 	switch opt.Format {
@@ -44,7 +44,7 @@ func Emit(w io.Writer, opt Options) error {
 
 // envelope --json 的顶层形状:成功标志 + 环境信息(平铺)+ 载荷。
 //
-// 平铺而不是塞进嵌套的 meta:tt debug sql 的 DBQueryResult 就是平的,且被 web 前端
+// 平铺而不是塞进嵌套的 meta:tg debug sql 的 DBQueryResult 就是平的,且被 web 前端
 // 消费 —— 改成嵌套是白改一遍。`ok` 与 tt dev 既有的 {"ok":false,...} 对齐,
 // 让只读 JSON、不看退出码的消费者也能判成败。
 type envelope struct {

@@ -57,7 +57,7 @@ func envNamed() (*config.NamedSsh, error) {
 	name := strings.TrimSpace(common.Env)
 	if name == "" {
 		return nil, usage("标签默认从 gae_file 取，需要点名环境：--at <环境>（或 --labels off 只看结构）").
-			WithHint("不知道有哪些环境：tt interface --at-list")
+			WithHint("不知道有哪些环境：tg interface --at-list")
 	}
 	cfgPath, err := common.ResolveConfig(false)
 	if err != nil {

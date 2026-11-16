@@ -1,7 +1,7 @@
 // Package envmove 把「环境改名」里按名字落盘的东西一起搬走。
 //
 // 环境名是跨文件的持久键：dict/<环境>.db、ents/<环境>.json、srccache/<环境>/、
-// execlog/<环境>/、mirror.dir/<环境>/（tt file mirror 的源码镜像）。只改 config.json 里的 name，
+// execlog/<环境>/、mirror.dir/<环境>/（tg file mirror 的源码镜像）。只改 config.json 里的 name，
 // 这些目录就变成孤儿；查询随后报「本地库不存在」，而它与「数据不存在」在输出上
 // 无法区分。所以改名必须是一次迁移：
 //
@@ -40,7 +40,7 @@ type pair struct{ kind, from, to string }
 //   - dict：环境 dictDir > 顶层 dict.dir > <数据目录>/dict（config.DictDBDirForEnv）；
 //   - ents / srccache：envdir.EnvSeg；
 //   - mirror：环境自己的 mirrorDir 是绝对路径、与名字无关，跳过；
-//     否则把顶层 mirror.dir/<旧名> 一起搬到 <新名>（`tt file mirror` 的源码镜像）。
+//     否则把顶层 mirror.dir/<旧名> 一起搬到 <新名>（`tg file mirror` 的源码镜像）。
 //
 // 源不存在就跳过（没同步过字典、没查过企业、没调试过都很正常）；
 // 目标已存在则整体失败 —— 覆盖一份别人的库比报错危险得多。

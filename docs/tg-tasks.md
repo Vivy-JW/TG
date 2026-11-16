@@ -28,7 +28,7 @@
 - ☑ 远程 `internal/dict/live` 整篇重写为 GP SQL，删 `acc.go`（270 行 T100 ACC）
 - ☑ 删掉并行实现 `internal/dict/gpdb/`
 - ☑ 路由：GP 环境不经 `entdir`；本地走 `gp.DictPath()`，远程直连用 `accounts[0]`
-- ☑ `tt dict db sync` 的 GP 分支（进度打 stderr，JSON 整包）
+- ☑ `tg dict db sync` 的 GP 分支（进度打 stderr，JSON 整包）
 - ☑ 类别名 GP 码表（`db.CategoryName`）
 - ☑ 语言码映射 `db.LangCode`（zh_TW→0、zh_CN→2）
 - ☑ 「表格总数」按表去重（`COUNT(DISTINCT zr02)`，224 → 159）
@@ -43,7 +43,7 @@
 
 ## 阶段 2 调试面
 
-- ☐ `tt debug` 接 GP（起会话 / 停站 / 断点 / 步进）
+- ☐ `tg debug` 接 GP（起会话 / 停站 / 断点 / 步进）
 - ☐ 摘 T100 接线：`ents.go`、`db.go`、`dbsqldirect.go`、`srcmirror.go`、`api.go` 的 ENT 入口
 - ☐ 连带删 `tt debug ents` / `tt debug topent`
 - ☑ `tg session` 收成 GP 语义（2026-11-16）：去掉 `--ent` / `session ent` / `--fglserver`，只要环境；`ls`/`show` 的 JSON 不再带 `ent` 与三个 `topent*` 键；`session new` 的作用域从 `EnvEntReq` 降成 `Env`
@@ -57,7 +57,7 @@
 - ☑ 删 `engine/` + `designer-src/`（1264 文件 ≈17 MB），删前打了 zip 到仓库外（2026-11-12，commit 见 handoff 第 35 条）
 - ☑ 确认 `engine/designer/` 28 个厂商 DLL（10.5 MB）不进 TG 发行包（engine 整个删了，`build_portable.bat` 的 staging 段也删了）
 - ☑ `tg interface`（3 条）：标签改查 gae_file，`.42s` 路径已删（2026-11-12）
-- ☑ `tt outline` 换 GP 目录结构：不换结构，改成"本地文件 > `--dir` > 镜像 > 直读服务器"（与 `tg interface` 同源，2026-11-12）
+- ☑ `tg outline` 换 GP 目录结构：不换结构，改成"本地文件 > `--dir` > 镜像 > 直读服务器"（与 `tg interface` 同源，2026-11-12）
 - ☑ `tg file mirror` 改 GP 口径：两棵树 + 4gl/42f/inc，不做 profile（2026-11-12，见 handoff 第 39 条）
 - ☑ `tg db sql` 去掉"强制 `环境@企业`"：身份只有环境，账号取 `accounts[0]`，裸表名落在账号的 schema（信封的 schema 字段）
 - ☐ 从命令层摘掉 `target` / `entdir`

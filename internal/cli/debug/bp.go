@@ -1,6 +1,6 @@
 package debug
 
-// 断点面：`tt debug bp list / add / del`。
+// 断点面：`tg debug bp list / add / del`。
 //
 // # 为什么单开一个命令（A34）
 //
@@ -13,7 +13,7 @@ package debug
 //
 // 程序 `running` 时下断/查断，服务端直接 `400 {"code":"USAGE","error":"程序运行中,
 // 禁止发送调试命令(仅允许中断)"}`。收到它**不重试、不静默**，而是给能照做的指引：
-// 先 `tt debug interrupt`（这是 running 时唯一允许的命令），停下后再下断。
+// 先 `tg debug interrupt`（这是 running 时唯一允许的命令），停下后再下断。
 //
 // 允许的自动化**只有 interrupt**。本工具选择**不自动中断**（`withRunningHint` 只给话）：
 // 程序常常正停在 GDC 界面等用户输入，自动 SIGINT 会把用户正在填的对话框直接取消；
@@ -66,8 +66,8 @@ func withRunningHint(err error) error {
 	if !strings.Contains(err.Error(), runningRejectMark) {
 		return err
 	}
-	return fmt.Errorf("%w\n→ 先停站再下断：`tt debug interrupt`（程序运行中**只允许中断**），"+
-		"等它停下（`tt debug wait --for stopped`）之后重新发这条命令。\n"+
+	return fmt.Errorf("%w\n→ 先停站再下断：`tg debug interrupt`（程序运行中**只允许中断**），"+
+		"等它停下（`tg debug wait --for stopped`）之后重新发这条命令。\n"+
 		"  本工具不会自动重试这条命令，也**绝不**自动 continue / run —— 自动发 SIGINT 会把"+
 		"用户正在填的 GDC 对话框直接取消，所以那一步留给人。", err)
 }
@@ -86,7 +86,7 @@ func bpList(id string) ([]bpView, error) {
 func bpListFresh(id string) ([]bpView, bool, string, error) {
 	path := dbgSessionURL(id, "/breakpoints")
 	if path == "" {
-		return nil, false, "", fmt.Errorf("没有可用的会话句柄（先 tt debug start 或 tt debug status 看看有没有会话）")
+		return nil, false, "", fmt.Errorf("没有可用的会话句柄（先 tg debug start 或 tg debug status 看看有没有会话）")
 	}
 	data, err := dbgAPI("GET", path, nil)
 	if err != nil {
@@ -120,7 +120,7 @@ func bpListFresh(id string) ([]bpView, bool, string, error) {
 func bpAdd(id string, o debug.BreakpointOpts) error {
 	path := dbgSessionURL(id, "/breakpoints")
 	if path == "" {
-		return fmt.Errorf("没有可用的会话句柄（先 tt debug start 或 tt debug status 看看有没有会话）")
+		return fmt.Errorf("没有可用的会话句柄（先 tg debug start 或 tg debug status 看看有没有会话）")
 	}
 	body := map[string]any{"location": o.Location}
 	if o.Cond != "" {
@@ -163,7 +163,7 @@ func bpAdd(id string, o debug.BreakpointOpts) error {
 func bpDel(id string, num int) error {
 	path := dbgSessionURL(id, "/breakpoints/"+strconv.Itoa(num))
 	if path == "" {
-		return fmt.Errorf("没有可用的会话句柄（先 tt debug start 或 tt debug status 看看有没有会话）")
+		return fmt.Errorf("没有可用的会话句柄（先 tg debug start 或 tg debug status 看看有没有会话）")
 	}
 	if _, err := dbgAPI("DELETE", path, nil); err != nil {
 		return withRunningHint(err)
@@ -245,20 +245,20 @@ func printBPList(id string, bps []bpView) {
 var debugBPCmd = &cobra.Command{
 	Use:   "bp",
 	Short: "断点面：list（带命中计数）/ add / del",
-	Long: `断点面。与 ` + "`tt debug exec \"info breakpoints\"`" + ` 的区别是**结构化**：
+	Long: `断点面。与 ` + "`tg debug exec \"info breakpoints\"`" + ` 的区别是**结构化**：
 命中计数、条件、忽略次数都读成字段，不再让人对着 fgldb 原文猜。
 
-  tt debug bp list                 列表（每条都带「命中 N 次」）
-  tt debug bp list --json          同上，含 hits 字段（没命中的是 0，不是缺键）
-  tt debug bp add axm_axmt500_wf.4gl:4130
-  tt debug bp add 4130 --cond "1=1" --ignore 2
-  tt debug bp add g_current_row --kind watch
-  tt debug bp del 3
+  tg debug bp list                 列表（每条都带「命中 N 次」）
+  tg debug bp list --json          同上，含 hits 字段（没命中的是 0，不是缺键）
+  tg debug bp add axm_axmt500_wf.4gl:4130
+  tg debug bp add 4130 --cond "1=1" --ignore 2
+  tg debug bp add g_current_row --kind watch
+  tg debug bp del 3
 
 两条现场纪律（契约 A33 / A34）：
   · **命中计数才是判据**：` + "`Address`" + ` 恒 0x00000000（命中与否都是 0），别拿它判"装没装上"；
   · **下断要在停站态**：程序 running 时服务端直接 400「程序运行中,禁止发送调试命令(仅允许中断)」。
-    这时先 ` + "`tt debug interrupt`" + `（running 时唯一允许的命令），停下后再下断。
+    这时先 ` + "`tg debug interrupt`" + `（running 时唯一允许的命令），停下后再下断。
 
 已知边界（契约 A32）：` + "`ignore`" + ` 的**清零不受支持**（报文分不清"没设过"与"刚清零"）——
 要改成"不忽略"请**删除后重建**（` + "`bp del` + `bp add`" + `），不要指望清零。`,
@@ -326,7 +326,7 @@ var debugBPDelCmd = &cobra.Command{
 		}
 		num, err := strconv.Atoi(strings.TrimSpace(args[0]))
 		if err != nil || num <= 0 {
-			return fmt.Errorf("断点编号得是正整数（实得 %q）；编号见 tt debug bp list", args[0])
+			return fmt.Errorf("断点编号得是正整数（实得 %q）；编号见 tg debug bp list", args[0])
 		}
 		return bpDel(id, num)
 	},
@@ -344,7 +344,7 @@ func init() {
 	Group.AddCommand(debugBPCmd)
 }
 
-// 命令行开关（`tt debug bp add`）。
+// 命令行开关（`tg debug bp add`）。
 var (
 	bpCondFlag   string
 	bpIgnoreFlag int

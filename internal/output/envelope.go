@@ -45,7 +45,7 @@ type Meta struct {
 	TotalRows int `json:"totalRows"`
 	Returned  int `json:"returned"`
 	// Offset 是这一页从第几条开始（从 0 数）—— 只有翻页读落盘结果时才非零
-	// （tt dict spill show）。它让"这是第 N–M 条"这件事在**信封里**就有答案，
+	// （tg dict spill show）。它让"这是第 N–M 条"这件事在**信封里**就有答案，
 	// 不必让调用方自己数返回数组。omitempty：既有命令的输出一个字节不变。
 	Offset        int    `json:"offset,omitempty"`
 	Truncated     bool   `json:"truncated,omitempty"`
@@ -66,7 +66,7 @@ type Meta struct {
 
 // headerLines 把 Meta 渲染成 `# ` 前缀的注释行(CSV 模式的自描述头)。
 //
-// 每行都是"非空才拼",整行无值就不出现 —— 与 tt debug sql 的头部同一条规矩。
+// 每行都是"非空才拼",整行无值就不出现 —— 与 tg debug sql 的头部同一条规矩。
 func (m Meta) headerLines() []string {
 	var out []string
 	if m.Detail != "" {

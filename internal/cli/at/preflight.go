@@ -3,7 +3,7 @@ package at
 // --at-list 在 **cobra 解析之前** 处理。
 //
 // 为什么不能放在 PersistentPreRunE 里：cobra 的顺序是 ValidateArgs → PersistentPreRunE，
-// 而 `tt debug start --at-list` 本来就不该带作业名 —— 放到 pre-run 会被"缺参数"拦住。
+// 而 `tg debug start --at-list` 本来就不该带作业名 —— 放到 pre-run 会被"缺参数"拦住。
 // 所以在 Execute 开头扫一遍 argv：只要出现 --at-list，就定位命令、打印契约、退出 0。
 
 import (

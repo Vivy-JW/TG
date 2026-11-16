@@ -8,7 +8,7 @@ import (
 
 // TestWithoutGlobalEnv 钉住台账 D27 的判据：
 //
-// `tt debug source --env <环境>` 在真机上报 `dial tcp :0` —— 因为 `source` 读的是**本机 serve**
+// `tg debug source --env <环境>` 在真机上报 `dial tcp :0` —— 因为 `source` 读的是**本机 serve**
 // （源码目录由 serve 连的环境决定），而全局 `--env` 会把 API 基址解析带偏。
 // 修法是"临时摘掉全局 --env"，所以这个摘/还原必须成对、且不能伪造"本来给过"。
 func TestWithoutGlobalEnv(t *testing.T) {

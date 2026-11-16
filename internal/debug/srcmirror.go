@@ -11,7 +11,7 @@ package debug
 //
 // 它**只活一轮调试**:每轮启动前清空**本会话**的镜像。服务器上的源码是会改的,
 // 留着上一轮的文件只会让 AI 拿着过期代码推理 —— 宁可贵一点重拉。
-// 权威性始终在 tt debug source(每次真读服务器)那一侧。
+// 权威性始终在 tg debug source(每次真读服务器)那一侧。
 //
 // # 目标作用域（WP5 / T5.1，缺陷 X）
 //
@@ -229,7 +229,7 @@ func clearMirror(dataDir string) {
 // ---------- 会话外读取连接复用 ----------
 
 // srcConn 会话外读取共用的连接。
-// 以前每次 tt debug source 都 host.Dial 一次:连着读十几段源码就是十几次完整 SSH 握手。
+// 以前每次 tg debug source 都 host.Dial 一次:连着读十几段源码就是十几次完整 SSH 握手。
 type srcConn struct {
 	conn *host.SSHConn
 	cl   *sftp.Client

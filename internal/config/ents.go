@@ -8,7 +8,7 @@ package config
 //
 // 同时把清单里的账号补进 `db.accounts`（缺的才补，密码优先用已有条目、否则按
 // T100 惯例 账号=密码）：这样“账号清单”仍然是口令唯一的编辑入口，
-// ents 里的 password 只是同步那一刻的副本（`tt config show` 会打码）。
+// ents 里的 password 只是同步那一刻的副本（`tg config show` 会打码）。
 
 import (
 	"fmt"

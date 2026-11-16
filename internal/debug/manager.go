@@ -81,7 +81,7 @@ type Manager struct {
 	LocalJobLookup func(envName, job string) (JobResolve, bool)
 
 	// 会话外源码读取共用的连接(见 srcmirror.go):
-	// 每次 tt debug source/grep 重新握手太贵,按 SSH 目标缓存一条长连接。
+	// 每次 tg debug source/grep 重新握手太贵,按 SSH 目标缓存一条长连接。
 	//
 	// 按 key 分开存（缺陷 Z / T5.3）:从前只有一条 + 一把全局锁,
 	// 换目标即换连接 ⇒ 两个环境不可能同时在读源码。
@@ -671,7 +671,7 @@ func requireExplicitEnt(cfg *Config, prev *Session) error {
 		}
 	}
 	f := target.NewFailure(target.CodeUsage,
-		"必须显式指定企业编号(ENT)：tt debug start <作业> --ent <企业编号>。"+
+		"必须显式指定企业编号(ENT)：tg debug start <作业> --ent <企业编号>。"+
 			"若这条环境已有空闲会话，也可先 tt debug topent <编号> 再启动。"+
 			"**不再**沿用登录 shell 的 $TOPENT —— 那会让「忘了点名」与「点错了」长得一样，"+
 			"而 ENT 决定用哪个账号连库、以及据点校验过不过。")
@@ -703,7 +703,7 @@ func (m *Manager) namedHost(id string) (*Session, error) {
 		// 就能落到一条真的存在的会话上，比一句"不存在"有用。
 		f := target.NewFailure(target.CodeNotFound,
 			"点名的 SSH 会话 %s 不存在；不会退而落到池里的其它会话（那就成了替你挑一条）", id)
-		f.Hint = "先运行 tt debug status 看现有会话，照抄 <ref> 那一列重发 --session"
+		f.Hint = "先运行 tg debug status 看现有会话，照抄 <ref> 那一列重发 --session"
 		f.NewScenario = true // `--session` 是本次新放开的写法：这个失败今天无从发生
 		f.Candidates = sessionsToCandidates(m.Snapshot())
 		return nil, f

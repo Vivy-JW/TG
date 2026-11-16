@@ -1,7 +1,7 @@
 package db
 
-// tt db probe —— 从**服务器**连一次库（SSH + sqlplus/ksql），验证该企业的账号。
-// 原 tt debug db：它读 gzou_t 映射并真连一次；现在映射来自配置的 ENT 清单（不联网解析）。
+// tg db probe —— 从**服务器**连一次库（SSH + sqlplus/ksql），验证该企业的账号。
+// 原 tg debug db：它读 gzou_t 映射并真连一次；现在映射来自配置的 ENT 清单（不联网解析）。
 
 import (
 	"fmt"
@@ -34,7 +34,7 @@ func newProbeCmd() *cobra.Command {
 	return cmd
 }
 
-// ProbeOnce 服务器侧连接体检（tt db probe 与旧的 tt debug db 转发共用）。
+// ProbeOnce 服务器侧连接体检（tg db probe 与旧的 tg debug db 转发共用）。
 func ProbeOnce(ent int) error {
 	cfg, _, err := loadCfg()
 	if err != nil {

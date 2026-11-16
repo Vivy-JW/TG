@@ -83,12 +83,12 @@ func PrintContract(w io.Writer, cmd *cobra.Command) (int, error) {
 		if scope == EnvFilter {
 			c.Notes = append(c.Notes,
 				"本命令是会话寻址：--at 只用来收窄“在哪个环境里找会话”",
-				"指名会话用 --session（tt session ls --json 是它的下拉）；要断言企业用 --session <环境>/<企业>")
+				"指名会话用 --session（tg session ls --json 是它的下拉）；要断言企业用 --session <环境>/<企业>")
 		}
 		values, err := envValues()
 		if err != nil {
 			c.Complete = false
-			c.Failed = append(c.Failed, contractFailure{Reason: "config", Error: err.Error(), Action: "检查配置文件：tt config path"})
+			c.Failed = append(c.Failed, contractFailure{Reason: "config", Error: err.Error(), Action: "检查配置文件：tg config path"})
 			exit = 3
 			break
 		}
@@ -252,7 +252,7 @@ func fillEntValues(c *contract) int {
 	envs, _, err := LoadEnvs()
 	if err != nil {
 		c.Complete = false
-		c.Failed = append(c.Failed, contractFailure{Reason: "config", Error: err.Error(), Action: "检查配置文件：tt config path"})
+		c.Failed = append(c.Failed, contractFailure{Reason: "config", Error: err.Error(), Action: "检查配置文件：tg config path"})
 		return 3
 	}
 	staleSeen := false
@@ -338,9 +338,9 @@ func noneMessage(cmd *cobra.Command) string {
 	path := pathOf(cmd)
 	switch {
 	case path == "":
-		return "--at 是给具体命令用的：先选命令，再加 --at-list（例如 tt debug start --at-list）。"
+		return "--at 是给具体命令用的：先选命令，再加 --at-list（例如 tg debug start --at-list）。"
 	case strings.HasPrefix(path, "session"):
-		return "本命令不接受 --at：会话身份来自 --session（tt session ls --json 可看全部）；\n" +
+		return "本命令不接受 --at：会话身份来自 --session（tg session ls --json 可看全部）；\n" +
 			"环境与企业跟着会话走，不用单独给。"
 	default:
 		return "本命令没有目标参数（不需要环境/企业）。"

@@ -7,7 +7,7 @@ import "testing"
 //
 // 回归的正是 WS 服务程序那一类:wssp*/awsp* 不在 gzzz_t 里(实测 wssp% 命中 0 条),
 // 按作业名解析实体程序必定落空 → RunProg 为空。以前只看 RunProg,于是所有
-// `tt debug wsdebug <rowid>` 重放的会话入口都没有文件名。
+// `tg debug wsdebug <rowid>` 重放的会话入口都没有文件名。
 func TestEntryStopInfoFile(t *testing.T) {
 	cases := []struct {
 		name                        string

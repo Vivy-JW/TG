@@ -159,13 +159,13 @@ func (s *Server) mustTarget(w http.ResponseWriter, r *http.Request, targetID, wh
 // 为什么需要它（真机踩到的，两次、同一形状）：**要新建一条会话的端点**在池子空时撞上
 // `mustTarget` 的 `NO_SESSION`，而池空恰恰是它们最正常的起点 ——
 //   - 「连到该环境」= 创建一条会话（Web 上那个按钮就叫「创建会话」，命令行是
-//     `tt debug env <环境>`）：报 `NO_SESSION` 等于让"先建会话、再设 ENT、再调试"
+//     `tg debug env <环境>`）：报 `NO_SESSION` 等于让"先建会话、再设 ENT、再调试"
 //     这条正确流程在**第一步**就断；
-//   - 按接口日志重放（`hWSLogDebug` / `tt debug wsdebug`）= 用它自己建的那条会话重跑一遍
+//   - 按接口日志重放（`hWSLogDebug` / `tg debug wsdebug`）= 用它自己建的那条会话重跑一遍
 //     （`LaunchReplay` → `prepareSession`）：报 `NO_SESSION` 等于让人先去"起个作业"
 //     凑一条会话，而重放**不需要**一条既有会话。
 //
-// 两处的错误提示都把人往"先运行 tt debug start"引，顺序被彻底反过来。
+// 两处的错误提示都把人往"先运行 tg debug start"引，顺序被彻底反过来。
 //
 // 边界一字不让:
 //   - **点名了**（targetID 非空）→ 交给 `mustTarget`：点名的不存在就是 `SESSION_NOT_FOUND`；
@@ -235,7 +235,7 @@ func failTarget(w http.ResponseWriter, reason resolveReasons, cands []target.Can
 	case targetEmptyPool:
 		writeJSON(w, http.StatusConflict, failureEnvelope{
 			OK: false, Code: target.CodeNoSession,
-			Error: what + "：没有 SSH 会话 —— 先运行 tt debug start <作业> --env <环境> 起一条",
+			Error: what + "：没有 SSH 会话 —— 先运行 tg debug start <作业> --env <环境> 起一条",
 		})
 	default:
 		writeJSON(w, http.StatusConflict, failureEnvelope{

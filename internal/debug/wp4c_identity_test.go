@@ -177,7 +177,7 @@ func TestIdentityAliasReleasedWhenSessionGone(t *testing.T) {
 		if err := m.checkNameFree(alias); err != nil {
 			t.Fatalf("已断开的会话不许再占着别名（Q19：判据是池子里还有没有它），实得：%v", err)
 		}
-		// 判据二：清扫之后，`tt debug status` 里不再有它的 ref —— 别名必须可复用。
+		// 判据二：清扫之后，`tg debug status` 里不再有它的 ref —— 别名必须可复用。
 		m.SweepExited()
 		if got := len(m.Snapshot()); got != 0 {
 			t.Fatalf("清扫后池里该一条都没有，实得 %d 条", got)

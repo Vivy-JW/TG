@@ -426,7 +426,7 @@ func TestWaitMatch(t *testing.T) {
 
 // 入口停站只发 `state(stopped)`、**不发 `stopped` 事件**(见 startRun)。
 // /wait --for stopped 必须认它 —— 这是真机验证时抓到的回归:
-// tt debug start 改用 /wait 之后会一直等到超时,而会话其实早就停在入口了。
+// tg debug start 改用 /wait 之后会一直等到超时,而会话其实早就停在入口了。
 func TestWaitMatchRecognizesEntryStop(t *testing.T) {
 	want := map[string]bool{"stopped": true, "exit": true}
 	if !waitMatch(Event{Type: "state", State: string(StateStopped)}, want) {

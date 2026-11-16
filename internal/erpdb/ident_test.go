@@ -203,8 +203,8 @@ func TestCheckReadOnlySQLRejectsWritesAndMultipleStatements(t *testing.T) {
 // 普通的只读查询不许被误杀 —— 误杀的代价是"字典查不出东西"，而它与"数据不存在"
 // 在输出上一模一样（`internal/safesql` 的包注释专门警告过这种静默退化）。
 //
-// 样例覆盖本包**真实**的两个调用面：`SelectAllSQL` 给 `tt dict db sync` 的
-// `SELECT * FROM <user>.<table>`，以及 `tt dict … --ent` 那条
+// 样例覆盖本包**真实**的两个调用面：`SelectAllSQL` 给 `tg dict db sync` 的
+// `SELECT * FROM <user>.<table>`，以及 `tg dict … --ent` 那条
 // `SELECT gzou001, gzou003 FROM gzou_t …`（`internal/cli/dict/entacct.go`）。
 func TestCheckReadOnlySQLAllowsReadOnlySelects(t *testing.T) {
 	good := []string{
@@ -322,16 +322,16 @@ func firstToken(s string) string {
 	return s
 }
 
-// TestDebugPathDoesNotImportErpdb 钉住"本批改动**一个字都动不到 `tt debug sql`**"。
+// TestDebugPathDoesNotImportErpdb 钉住"本批改动**一个字都动不到 `tg debug sql`**"。
 //
-// `tt debug sql`（→ `POST /api/dbsql` → `internal/debug/dbsql.go` 的 `RunReadonlyQuery`）
+// `tg debug sql`（→ `POST /api/dbsql` → `internal/debug/dbsql.go` 的 `RunReadonlyQuery`）
 // 走的是**经 SSH 用服务器侧 sqlplus / ksql 的 stdin 脚本**那条路，库侧只读**已经在脚本里**
 // （`oraReadonlyScript` 的 `SET TRANSACTION READ ONLY`、`kbReadonlyScript` 的
 // `SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY`）。它**不 import 本包**，
 // 所以本批给 `erpdb` 加的那两层（金仓连接参数 / Oracle 包事务）与它没有交集。
 //
 // 这条测试把上面那句散文变成断言：**`internal/debug` 里出现 `tt/internal/erpdb` 就是红的**。
-// 有人哪天把 `tt debug sql` 改成走客户端直连，这条会当场提醒他：那条通道的只读防线
+// 有人哪天把 `tg debug sql` 改成走客户端直连，这条会当场提醒他：那条通道的只读防线
 // 与超时/限行/错误文案**全都不一样**，不能顺手换。
 //
 // 反面判据在下面：扫描必须真的扫到文件，否则这条等于空转。
@@ -355,7 +355,7 @@ func TestDebugPathDoesNotImportErpdb(t *testing.T) {
 			continue
 		}
 		rel, _ := filepath.Rel(root, f)
-		t.Errorf("%s 引用了 %s —— `tt debug sql` 走的是 SSH + sqlplus/ksql 那条路，"+
+		t.Errorf("%s 引用了 %s —— `tg debug sql` 走的是 SSH + sqlplus/ksql 那条路，"+
 			"它的库侧只读、超时、限行与错误文案都住在 internal/debug 自己的 dbsql.go 里。\n"+
 			"    换成客户端直连等于把那条通道的防线整套换掉，不能顺手做（要做得单独一批）。",
 			filepath.ToSlash(rel), mod)

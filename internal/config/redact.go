@@ -10,8 +10,8 @@ import (
 // 用**键名**判断而不是结构体标签:未知节的未知键也要一起打码
 // (设置页可以写进任意键,靠标签一定会漏)。
 //
-// 为什么这件事要抽到这里:`tt config show` 早就打码了,但 `tt config get`、
-// `tt dict db list --json`、`GET /api/hosts` 三处仍然原样吐明文 —— 同一份配置
+// 为什么这件事要抽到这里:`tg config show` 早就打码了,但 `tg config get`、
+// `tg dict db list --json`、`GET /api/hosts` 三处仍然原样吐明文 —— 同一份配置
 // 三处三种口径。规则只有一份实现,各处调它。
 
 // IsSecretKey 键名是否表示口令。
@@ -24,7 +24,7 @@ func IsSecretKey(k string) bool {
 }
 
 // SecretPath 点分路径是否**指向**口令(任一段是口令键即为真)。
-// 用于 `tt config get hosts.sshs.0.db.accounts.0.password` 这种直接点名取值。
+// 用于 `tg config get hosts.sshs.0.db.accounts.0.password` 这种直接点名取值。
 func SecretPath(path string) bool {
 	for _, seg := range strings.Split(path, ".") {
 		if IsSecretKey(seg) {

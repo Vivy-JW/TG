@@ -114,7 +114,7 @@ func Run(ctx context.Context, opt Options, onProgress func(string)) (*Stats, err
 		return nil, err
 	}
 
-	// meta 供 tt dict db status / 数据字典页显示"什么时候同步的"。
+	// meta 供 tg dict db status / 数据字典页显示"什么时候同步的"。
 	setMeta := func(k, v string) {
 		_, _ = dst.Exec(`INSERT OR REPLACE INTO meta(key,value) VALUES(?,?)`, k, v)
 	}

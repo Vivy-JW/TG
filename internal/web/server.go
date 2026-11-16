@@ -739,7 +739,7 @@ func diffEnvs(oldList, newList []envEntry) (renames []envRename, removed []strin
 // 表单里都没有对应的输入控件，而 PUT 是整节替换，所以不做这一步就会"打开设置页点一次
 // 保存，手工配的东西静默消失"。节级按"旧节有、新节没有"整键搬；环境级按环境名对齐。
 //
-// 权衡：这样也就无法通过配置页删掉它们 —— 想删就手改 config.json，或 `tt config` 改。
+// 权衡：这样也就无法通过配置页删掉它们 —— 想删就手改 config.json，或 `tg config` 改。
 // 宁可"删不掉"也不要"保存一次就静默丢配置"。
 func preserveUngovernedFields(oldRoot, newSec map[string]any) {
 	oldHosts, _ := oldRoot["hosts"].(map[string]any)
@@ -1023,7 +1023,7 @@ func decodeBody(r *http.Request, v any) error {
 // "打开设置页点一次保存，那个字段静默消失"。实测踩过两次：`debug.aiTakeover` 与
 // `query.limit`（两个都在 schema 里、都有代码读，而前端表单里没有）。
 //
-// 代价：这些字段也就**没法从配置页删掉**（想删就手改 config.json 或 `tt config`）——
+// 代价：这些字段也就**没法从配置页删掉**（想删就手改 config.json 或 `tg config`）——
 // 与 preserveUngovernedFields 同一笔权衡：宁可"删不掉"，不要"保存一次就静默丢配置"。
 func putSection(root map[string]any, key string, v any) error {
 	sec, err := structToSection(v)

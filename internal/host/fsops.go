@@ -2,11 +2,11 @@ package host
 
 // 远程文件的**只读**原语：列目录、看属性、读内容。
 //
-// 这是 `tt file` 的底座，也是“围栏”的第一层：本文件刻意只出现读操作
+// 这是 `tg file` 的底座，也是“围栏”的第一层：本文件刻意只出现读操作
 // （ReadDir/Lstat/Open/Read/ReadAt），**没有任何 Create/Remove/Rename/Mkdir/
-// Chmod**。`tt file` 的源码守卫测试会盯住这一点（见 internal/cli/file/guard_test.go）。
+// Chmod**。`tg file` 的源码守卫测试会盯住这一点（见 internal/cli/file/guard_test.go）。
 //
-// 为什么不用 shell：见 docs 里 `tt file` 的设计 —— 服务器侧不起进程，
+// 为什么不用 shell：见 docs 里 `tg file` 的设计 —— 服务器侧不起进程，
 // 只走 SFTP；命令语义（ls/grep/find/head…）在客户端实现。
 
 import (

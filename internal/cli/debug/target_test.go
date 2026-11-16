@@ -62,31 +62,31 @@ func TestCharTargetFlagPlacement(t *testing.T) {
 
 	for _, c := range acceptSession {
 		if !byName[c] {
-			t.Errorf("断言表里的 `tt debug %s` 不在命令树上 —— 命令改名了就把这张表一起改", c)
+			t.Errorf("断言表里的 `tg debug %s` 不在命令树上 —— 命令改名了就把这张表一起改", c)
 			continue
 		}
 		if !hasFlag(c, "session") {
-			t.Errorf("`tt debug %s` 该认 --session（契约 1. 的命令角色表：它是会话级操作）", c)
+			t.Errorf("`tg debug %s` 该认 --session（契约 1. 的命令角色表：它是会话级操作）", c)
 		}
 	}
 	for _, c := range rejectSession {
 		if !byName[c] {
-			t.Errorf("断言表里的 `tt debug %s` 不在命令树上 —— 命令改名了就把这张表一起改", c)
+			t.Errorf("断言表里的 `tg debug %s` 不在命令树上 —— 命令改名了就把这张表一起改", c)
 			continue
 		}
 		if hasFlag(c, "session") {
-			t.Errorf("`tt debug %s` **不该**认 --session（C1.2/C1.3/C1.5：它的目标不是某一条会话）——\n"+
+			t.Errorf("`tg debug %s` **不该**认 --session（C1.2/C1.3/C1.5：它的目标不是某一条会话）——\n"+
 				"    挂上去会让 F16 那条「标志挂错命令」的自纠提示落空。", c)
 		}
 	}
 	for _, c := range acceptName {
 		if !hasFlag(c, "name") {
-			t.Errorf("`tt debug %s` 该认 --name（C3.5：只在起会话的命令上有意义）", c)
+			t.Errorf("`tg debug %s` 该认 --name（C3.5：只在起会话的命令上有意义）", c)
 		}
 	}
 	for _, c := range rejectName {
 		if hasFlag(c, "name") {
-			t.Errorf("`tt debug %s` 不该认 --name（F17：挂到非建会话命令上必须是「unknown flag」老路径）", c)
+			t.Errorf("`tg debug %s` 不该认 --name（F17：挂到非建会话命令上必须是「unknown flag」老路径）", c)
 		}
 	}
 
@@ -99,7 +99,7 @@ func TestCharTargetFlagPlacement(t *testing.T) {
 				continue
 			}
 			if f.Usage == "" {
-				t.Errorf("`tt debug %s --%s` 的 help 文案是空的 —— 取值纪律要在 --help 里看得见", c.Name(), flag)
+				t.Errorf("`tg debug %s --%s` 的 help 文案是空的 —— 取值纪律要在 --help 里看得见", c.Name(), flag)
 			}
 		}
 	}

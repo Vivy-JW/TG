@@ -32,7 +32,7 @@ const (
 	//
 	// 与只读 SQL 的映射缓存(sqlEntCacheTTL)共用同一个值:两条命令必须对外表现出同一份
 	// 新鲜度,否则 agent 会拿到两条互相矛盾的时间线(一边说企业 99 在,一边说不在)。
-	// 唯一实现在 internal/entdir —— tt dict 的客户端直连路径也读同一份快照。
+	// 唯一实现在 internal/entdir —— tg dict 的客户端直连路径也读同一份快照。
 	EntSnapshotTTL = entdir.TTL
 
 	entSnapshotVer = entdir.Version
@@ -78,7 +78,7 @@ type EntListing struct {
 }
 
 // EntSnapshot 落盘的企业目录快照(<DataDir>/ents/<环境段>.json)。
-// 定义在 internal/entdir:tt dict 的客户端直连路径读写同一个文件,两边必须是同一份格式。
+// 定义在 internal/entdir:tg dict 的客户端直连路径读写同一个文件,两边必须是同一份格式。
 type EntSnapshot = entdir.Snapshot
 
 // EntCatalog 企业目录。零值不可用,用 NewEntCatalog 构造。
@@ -106,7 +106,7 @@ func NewEntCatalog(dataDir string) *EntCatalog {
 // ---- 纯函数(不碰 SSH / 磁盘,便于单测) ----
 
 // entFingerprint 环境指纹:换机器 / 换区域 / 换库 = 换了另一份 gzou_t,快照立即失效。
-// 算法在 internal/entdir(tt dict 用同一份,两个路径必须对同一环境算出同一个指纹)。
+// 算法在 internal/entdir(tg dict 用同一份,两个路径必须对同一环境算出同一个指纹)。
 func entFingerprint(cfg *Config) string {
 	ident := "none"
 	if cfg.DB != nil {
@@ -146,7 +146,7 @@ type EntListOpt struct {
 	Cached bool
 	// Offline 禁止现查:与 Cached 的区别是**没有快照也只是查不到**(返回 nil,不报错)。
 	//
-	// 给"顺手补一行环境信息"这类调用方用:`tt debug start` 的「生效身份」要顺带说出
+	// 给"顺手补一行环境信息"这类调用方用:`tg debug start` 的「生效身份」要顺带说出
 	// 企业编号对应哪个账号,但那只是输出里的说明,不值得为它拨一次 SSH(慢时 40 秒),
 	// 更不该因为它没查到就把启动判成失败。要权威答案请用 tt debug ents。
 	Offline bool
@@ -174,7 +174,7 @@ func (c *EntCatalog) list(conn *host.SSHConn, d *dbRun, cfg *Config, opt EntList
 		return l, err
 	}
 	// --ent N = "只看这一个"。找不到 / 没配账号就**报错**,而且复用 pickEntAccount,
-	// 让文案与 tt debug sql 完全一致 —— 同一件事两条命令说两样话,最容易被当成两个问题。
+	// 让文案与 tg debug sql 完全一致 —— 同一件事两条命令说两样话,最容易被当成两个问题。
 	acct, err := pickEntAccount(l.Ents, opt.Ent)
 	if err != nil {
 		return nil, err

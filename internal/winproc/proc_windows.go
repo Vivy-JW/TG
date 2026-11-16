@@ -40,8 +40,8 @@ var (
 //
 // 为什么需要它（用户实测：点界面上的一个按钮就弹出一大堆终端窗口/标签页）：
 // `tg serve` 起后台子进程走的是 winproc.SpawnDetached（DETACHED_PROCESS）——
-// **没有控制台**。而它内部用 runSelf/runSelfOut 起的是一串控制台程序（`tt debug start`、
-// `tt debug exec`、`tt debug quit`…）：父进程没有控制台时，Windows 会给**每一个**子进程
+// **没有控制台**。而它内部用 runSelf/runSelfOut 起的是一串控制台程序（`tg debug start`、
+// `tg debug exec`、`tg debug quit`…）：父进程没有控制台时，Windows 会给**每一个**子进程
 // **新分配一个控制台**，于是每起一个子进程就多一个窗口（Windows Terminal 下是多一个标签页）。
 //
 // 父进程**已经有**控制台时不加这个标志：那时子进程照旧继承同一个控制台 ——

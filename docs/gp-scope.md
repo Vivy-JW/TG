@@ -28,7 +28,7 @@
 
 1. **GP 用得上吗？** 用不上就是 T100 领域层——不管它写得多好。
 2. **它是 Genero 的规范，还是 T100 的约定？** 前者（4GL 语法、`.42f` 格式、fgldb 提示符）GP 一定用；后者（企业 ENT、`.tzc`）GP 一定不用。混着的那几个包就是 §5 的手术；`zta_file` 之类的**表**则进 §4.D 的换表，不删包。
-3. **谁 import 它？** 光看名字会骗人：`dict/live` 名字在 T100 字典包下，实际是"直连 ERP 库执行一条只读 SQL"，GP 的 `tt dict prog --links` 与 `tt dict msg` 正在用它（`internal/cli/dict/prog.go`、`internal/dict/live`）。
+3. **谁 import 它？** 光看名字会骗人：`dict/live` 名字在 T100 字典包下，实际是"直连 ERP 库执行一条只读 SQL"，GP 的 `tg dict prog --links` 与 `tg dict msg` 正在用它（`internal/cli/dict/prog.go`、`internal/dict/live`）。
 
 ## 2. 底座（留，只改名）
 
@@ -43,7 +43,7 @@
 | `output` | 473 | 唯一输出出口（JSON/CSV/表格） |
 | `erpdb` | 447 | Oracle / 金仓直连，GP 是 Oracle，长期要 |
 | `winproc` | 389 | 起脱离进程、判活、杀 |
-| `safesql` | 359 | 只读 SQL 白名单。GP 的 `tt dict` 查询同样走它 |
+| `safesql` | 359 | 只读 SQL 白名单。GP 的 `tg dict` 查询同样走它 |
 | `pathinstall` | 263 | 用户 PATH 增删 |
 | `envmove` | 243 | 环境改名计划 / 回滚（GP 环境改名也在用） |
 | `dbconfig` | 240 | 连接字段类型，纯类型 |
@@ -70,12 +70,12 @@ m.Handle("/api/gp/", s.opt.GP)                                    // GP
 |---|---|---|---|
 | `debug` | 13265 | fgldb 调试子系统的**内核**：会话/断点/停站/执行日志/源码镜像 + HTTP & WS 服务 | 机制是 Genero 的，**接线是 T100 的**（见 §5.1） |
 | `cli/interfacecmd` | 1001 | `tg interface`：`.42f` + `gae_file` → 画面 | GP 的编译表单同族，但命名/标签约定要核 |
-| `cli/outline` | 610 | `tt outline`：4GL → 块树 | 纯语法，GP 直接可用 |
+| `cli/outline` | 610 | `tg outline`：4GL → 块树 | 纯语法，GP 直接可用 |
 | `form42f` | 630 | `.42f` → 字段表 + 布局 | 纯函数，零 IO |
 | `debugclient` | 581 | 调试面 REST 的唯一客户端 | 跟着 §5.1 的结论走 |
 | `screen` | 292 | `.42f` 布局 + `Labels` 接口 → 前端画面模型 | 纯函数；标签由调用方给（`gae_file`） |
 | ~~`str42s`~~ | ~~141~~ | ~~`.42s` → 中文标签~~ | **已于 2026-11-12 删除**：TG 不用 `.42s`，画面文字改查 `gae_file`（`t_ui_text`） |
-| `dev/fgl` | 2242 | 4GL 源码分块与语义 | 已留下（2026-11-11 删 `dev/` 其余包时保留），`tt outline` 与 GP 的 4gl 共用 |
+| `dev/fgl` | 2242 | 4GL 源码分块与语义 | 已留下（2026-11-11 删 `dev/` 其余包时保留），`tg outline` 与 GP 的 4gl 共用 |
 
 两条判断依据：
 
@@ -88,11 +88,11 @@ m.Handle("/api/gp/", s.opt.GP)                                    // GP
 
 | 包 / 目录 | 行数 | 是什么 |
 |---|---|---|
-| `cli/debug` | 4547 | `tt debug`：T100 作业调试器的命令行面（停站、断点、接口日志重放） |
+| `cli/debug` | 4547 | `tg debug`：T100 作业调试器的命令行面（停站、断点、接口日志重放） |
 | ~~`dev`（`fence`/`model`/`pkgfile`/`split`/`store`/`synth`/`verify`/`tzs`/`tapfile`/`tglfile`）~~ | 12895 | `.tzc`/`.tzs` 设计器包的读写、围栏、合成、闸门 —— **已于 2026-11-11 删除**（只留 `fgl`、`testutil`） |
 | ~~`cli/dev`（`tzc`/`tzs`/`common`）~~ | 5015 | `tt dev tzc` / `tt dev tzs` 命令面 —— **已于 2026-11-11 删除**，`tt dev` 组不复存在 |
 | `designer` | 327 | 从设计器 `sites.xml` 导入环境站点 |
-| `cli/session` | 494 | `tt session`：ENT 会话的建/列/看/改/收 |
+| `cli/session` | 494 | `tg session`：ENT 会话的建/列/看/改/收 |
 | `cli/at` | 788 | `--at <环境>[@<企业>]` 文法与作用域表 |
 | `entdir` | 157 | 企业(ENT) → 账号(`gzou_t`) 的映射、快照、新鲜期 |
 | `target` | 1865 | 会话寻址：选择器文法、落位、契约信封 |
@@ -206,7 +206,7 @@ GP **没有 ENT**（`cli/gp/register.go` 的包注释明写"GP 没有 T100 的 E
 
 ### 阶段 1（并行）：GP 自给自足
 
-TT 的 GP 面现在只有"环境 / 镜像 / 字典 / 调试会话"四件事，**且全在 Web API 上**。命令行只有 `tt gp table|link|msg` 三条查询（**2026-11-11 已改**：`tt gp` 删除，改为 `tt dict r.t` / `tt dict prog --links` / `tt dict msg`，据点清单用 `tt site`）。这个阶段把 GP 侧该有的补上，T100 代码一行不动。
+TT 的 GP 面现在只有"环境 / 镜像 / 字典 / 调试会话"四件事，**且全在 Web API 上**。命令行只有 `tt gp table|link|msg` 三条查询（**2026-11-11 已改**：`tt gp` 删除，改为 `tg dict r.t` / `tg dict prog --links` / `tg dict msg`，据点清单用 `tg site`）。这个阶段把 GP 侧该有的补上，T100 代码一行不动。
 
 ### 阶段 2（替换）：共享件去 T100 化
 
@@ -224,15 +224,15 @@ TT 的 GP 面现在只有"环境 / 镜像 / 字典 / 调试会话"四件事，**
 | 单测 | `go test ./...` | 沙箱里有 4 个包恒红，见 §8；真机应为绿 |
 | 前端 | `cd web && npm run check:app` | 只在改前端时 |
 | T100 自检 | ~~`./tg.exe dev tzc selftest`（31 项）~~ | 已随 `tt dev` 删除消失（2026-11-11） |
-| GP 全链路 | 配环境 → 测连通 → 同步字典 → 拉镜像 → 起 fgldb → 跑一条 `tt dict r.t` | **手工**，没有自动化；这条是"TG 还能用"的唯一判据 |
+| GP 全链路 | 配环境 → 测连通 → 同步字典 → 拉镜像 → 起 fgldb → 跑一条 `tg dict r.t` | **手工**，没有自动化；这条是"TG 还能用"的唯一判据 |
 
 ## 7. 今天实测出来的缺口（不是设计缺失，是没接线）
 
 这八条都有代码证据，改起来都不大，但会决定用户第一次打开 TG 的印象。
 
-1. **`tt debug` 完全不认 GP 环境。** `internal/cli/debug` 全包搜不到一处 `Product` 判断。对着 GP 环境跑 `tt debug`，它会按 T100 的路径去解析作业、企业、源码镜像——报错大概是"找不到作业"，而不是"这是 GP 环境"。
-2. **GP 调试没有命令行面。** 只有 `/api/gp/session/{new,list,exec,close}`；~~`tt gp` 只有 `table|link|msg`~~（已删，现为 `tt dict …`）。也就是说：**GP 版的"调试"今天只有 Web 能做，命令行做不了**。而 TT 的定位是 CLI-first。
-3. ~~**`tt file mirror` 是 T100 专用。**~~ —— **2026-11-12 已改**：`tg file mirror` 不再走 T100 的 zone/`erp|com`/`tar.gz`/profile，改为 `internal/mirror`（两棵树 `$TOP`+`$CUST`、白名单 `*/4gl/*.4gl` + `*/42f/*` + `*.inc`、SFTP 逐文件 + mtime 增量、`--full` 剪枝、`manifest.json` 记规模与 kinds）。实测规模：4gl 6,971 个 / 376.5 MB、42f 6,771 个 / 57.0 MB、inc 24 个 / 0.3 MB，合计 **433.8 MB / 13,766 个**，首拉约 10–12 分钟。**没有按 profile 拆**：一个镜像目录要装齐所有读者的并集（`tg outline` 读 4gl、`tg interface` 读 42f、`grep/cat` 读 inc），拆开只会让某条命令找不到文件；42s 在 GP 恒为 0（标签已改由 `gae_file` → `t_ui_text` 提供）。网页 `/api/gp/mirror` 与命令行同源。
+1. **`tg debug` 完全不认 GP 环境。** `internal/cli/debug` 全包搜不到一处 `Product` 判断。对着 GP 环境跑 `tg debug`，它会按 T100 的路径去解析作业、企业、源码镜像——报错大概是"找不到作业"，而不是"这是 GP 环境"。
+2. **GP 调试没有命令行面。** 只有 `/api/gp/session/{new,list,exec,close}`；~~`tt gp` 只有 `table|link|msg`~~（已删，现为 `tg dict …`）。也就是说：**GP 版的"调试"今天只有 Web 能做，命令行做不了**。而 TT 的定位是 CLI-first。
+3. ~~**`tg file mirror` 是 T100 专用。**~~ —— **2026-11-12 已改**：`tg file mirror` 不再走 T100 的 zone/`erp|com`/`tar.gz`/profile，改为 `internal/mirror`（两棵树 `$TOP`+`$CUST`、白名单 `*/4gl/*.4gl` + `*/42f/*` + `*.inc`、SFTP 逐文件 + mtime 增量、`--full` 剪枝、`manifest.json` 记规模与 kinds）。实测规模：4gl 6,971 个 / 376.5 MB、42f 6,771 个 / 57.0 MB、inc 24 个 / 0.3 MB，合计 **433.8 MB / 13,766 个**，首拉约 10–12 分钟。**没有按 profile 拆**：一个镜像目录要装齐所有读者的并集（`tg outline` 读 4gl、`tg interface` 读 42f、`grep/cat` 读 inc），拆开只会让某条命令找不到文件；42s 在 GP 恒为 0（标签已改由 `gae_file` → `t_ui_text` 提供）。网页 `/api/gp/mirror` 与命令行同源。
 4. **前端有两个端点不存在（GP 页的"查询数据源"其实是三处断线）。**
    - `web/app/src/gpEnvs.ts:40` 的 `gpPickDir` POST `/api/gp/pickdir` → 后端只有 `POST /api/pickdir`（`internal/web/server.go:161` 挂的 `internal/web/pickdir.go`，本机回环、返回 `{ok,path,canceled}`）。返回 404，函数吞掉异常返回空串，**表现是"选目录按钮没反应"**。T100 侧 `web/app/src/api.ts:487` 调的正是 `/api/pickdir`，改一行 URL 就对齐。
    - `web/app/src/GpSettings.tsx:576` 的 `setSource` POST `/api/gp/settings` → `gp.Service.ServeHTTP` 的 switch 里没有这一个，**表现是"改查询源报错"**。T100 的对应实现是共享端点 `PUT /api/hosts` 的 `query.source` 节（`SettingsView.tsx:748`；`api.ts:194` 的 `HostsPatch`）。
@@ -241,7 +241,7 @@ TT 的 GP 面现在只有"环境 / 镜像 / 字典 / 调试会话"四件事，**
    **pickdir 已修**（改调 `/api/pickdir`，前端 `tsc --noEmit` 与 `check:app` 全绿，dist 已重建）。`/api/gp/settings` 与 `querySource` 两处按 **Q6 = a** 处理：控件先**不渲染**（`GpSettings.tsx` 顶部的 `SHOW_QUERY_SOURCE = false`，代码保留），等 §4.D 字典改造落地后连同后端一起接通——现在渲染它只会给用户一个点了报错的死控件。
 5. **`skills/` 没有 GP 技能。** 分发的 4 个技能全是 T100 的；GP 那套（`gp-erp-architecture`/`-debug`/`-read`）现在只在本机 `.agents/skills` 之外。用户装完 TG，Agent 拿到的是 T100 文档——这是**对外发版前必须换的**。
 6. **`internal/README.md` 的包地图里没有 `internal/gp`。** 55 个包的清单从 `cli/at` 到 `cli` 都有，唯独这个 2067 行、带 9 个端点的子系统没登记（整份文档里 `gp` 出现 0 次）。
-7. **GP 字典只有三条命令，本地库与 Oracle 的口径还不一致。** ~~`tt gp` 只有 `table|link|msg`~~（2026-11-11 已改为 `tt dict`）；~~本地库已同步七张表~~ → **2026-11-13 现状**：本地库 10 张数据表（`t_table`/`t_column`/`t_index`/`t_constraint`/`t_module`/`t_prog`/`t_prog_table`/`t_prog_link`/`t_msg`/`t_ui_text`）+ `meta`，实测 2,962 张表 / 60,870 字段 / 6,465 支程序 / 118,420 条程序用表 / 17,810 条链接 / 42,031 条消息 / 427,553 条画面文字，同步 1 分 48 秒、68.7 MB；`db.Source` 的 20 个方法已全部接上（逐方法接线见 [gp-dict-wiring.md](gp-dict-wiring.md)）。~~实测还暴露三处不一致~~ → **三处已修**（`068b19f`/`14413d9`/`92d6a95`/`2110c95`）：①同步固定按 `ds`、直查按营运据点；②`t_table` 记 `zta07` 种类，61 张同义词只登记不建列；③`t_prog_link` 照常填（17,810 行）。
+7. **GP 字典只有三条命令，本地库与 Oracle 的口径还不一致。** ~~`tt gp` 只有 `table|link|msg`~~（2026-11-11 已改为 `tg dict`）；~~本地库已同步七张表~~ → **2026-11-13 现状**：本地库 10 张数据表（`t_table`/`t_column`/`t_index`/`t_constraint`/`t_module`/`t_prog`/`t_prog_table`/`t_prog_link`/`t_msg`/`t_ui_text`）+ `meta`，实测 2,962 张表 / 60,870 字段 / 6,465 支程序 / 118,420 条程序用表 / 17,810 条链接 / 42,031 条消息 / 427,553 条画面文字，同步 1 分 48 秒、68.7 MB；`db.Source` 的 20 个方法已全部接上（逐方法接线见 [gp-dict-wiring.md](gp-dict-wiring.md)）。~~实测还暴露三处不一致~~ → **三处已修**（`068b19f`/`14413d9`/`92d6a95`/`2110c95`）：①同步固定按 `ds`、直查按营运据点；②`t_table` 记 `zta07` 种类，61 张同义词只登记不建列；③`t_prog_link` 照常填（17,810 行）。
 8. **`GET /api/gp/meta` 明文回吐口令。** 实测响应体里带环境的**明文 SSH 口令**与库账号的**明文口令**（形如 `"password":"<明文>"`，本文档不记录其值）——前端只用到 `hasPassword: true`，根本不需要明文。虽然服务只听 127.0.0.1，但本机任何进程/浏览器页面都能读到；`hMeta` 应改成只回 `hasPassword`。这是**对外发版前必须扫掉**的一条。
 
 ## 8. 沙箱跑不出来的测试（别误判成代码坏了）

@@ -111,7 +111,7 @@ const (
 )
 
 // debugContractFlagOnWrongCommandExit 是 F16/F17 的退出码（契约 C2.8b / C2.8c / Q18）：
-// `tt debug` 组**不补** `FlagErrorFunc`，所以"标志挂错了命令"走 cobra 老路径 → 根命令兜底 1。
+// `tg debug` 组**不补** `FlagErrorFunc`，所以"标志挂错了命令"走 cobra 老路径 → 根命令兜底 1。
 // 信封里仍然是 `code: USAGE`。
 const debugContractFlagOnWrongCommandExit = target.FlagOnWrongCommandExit
 

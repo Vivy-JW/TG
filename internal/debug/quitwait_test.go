@@ -9,7 +9,7 @@ import (
 // 收口的"执行者 / 等待者"协议：后来者必须**等这一次收口做完**，而不是立刻回 OK。
 //
 // 事故背景（用户 2026-10-16 报"点了没反应"）：前一条命令（另一个进程的
-// `tt debug quit`）与另一条命令的 quit 撞在一起，后来者拿到"ok"就往下走，
+// `tg debug quit`）与另一条命令的 quit 撞在一起，后来者拿到"ok"就往下走，
 // 紧跟着的 `debug topent` 撞上"仅会话空闲(idle)时可设置 TOPENT(当前 运行中)"，
 // 整条操作静默失败 —— 界面上只看到"点了没反应"。
 func TestBeginQuitSharesOneTeardown(t *testing.T) {

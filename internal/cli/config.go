@@ -74,7 +74,7 @@ debug / query / mirror / dict / sync / tdev 是各命令组自己的设置。
 		Long: `按点分路径读一个值。
 
 口令默认打码（路径点到 password/passwd/pwd，或值里嵌着这些键），要看原样加 --raw ——
-与 tt config show 同一套规则、同一个实现。
+与 tg config show 同一套规则、同一个实现。
 配置里有明文口令，而这条命令的输出很容易被贴进日志或对话里。`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -387,7 +387,7 @@ func setPath(root map[string]any, path string, value any) error {
 }
 
 // parseValue 把命令行里的值按 JSON 解析；解析不了就当纯字符串。
-// 这样 `tt config set debug.termWidth 200` 写进去的是数字而不是字符串 "200"。
+// 这样 `tg config set debug.termWidth 200` 写进去的是数字而不是字符串 "200"。
 func parseValue(raw string) any {
 	var v any
 	if err := json.Unmarshal([]byte(raw), &v); err == nil {

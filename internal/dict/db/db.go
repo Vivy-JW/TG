@@ -203,7 +203,7 @@ func (d *DB) QueryTableList(lang, keyword string) ([]TableListItem, error) {
 }
 
 // TableRowCounts 返回给定表中"本地库里存在"那些的行数(不存在的表不出现在结果里,
-// 也不会报错)。用于 `tt dict db status` 检查本地库对各数据族的覆盖情况。
+// 也不会报错)。用于 `tg dict db status` 检查本地库对各数据族的覆盖情况。
 func (d *DB) TableRowCounts(names []string) (map[string]int64, error) {
 	out := make(map[string]int64, len(names))
 	for _, n := range names {

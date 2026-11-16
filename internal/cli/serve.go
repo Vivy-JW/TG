@@ -29,7 +29,7 @@ import (
 //
 // 默认后台常驻（单实例）：把自身以 --foreground 重新拉起来后立即返回，终端不被占住；
 // 前台运行（看实时日志）用 --foreground，停止用 --stop。运行状态写在与调试服务同一份
-// 状态文件里（.tg-serve.json），所以 `tt debug status/start/exec` 对着哪个实例都能用。
+// 状态文件里（.tg-serve.json），所以 `tg debug status/start/exec` 对着哪个实例都能用。
 func newServeCmd() *cobra.Command {
 	var (
 		listen     string
@@ -53,7 +53,7 @@ func newServeCmd() *cobra.Command {
 端口默认取配置里的 listen（缺省 127.0.0.1:28670），被占用时自动向后顺延。
 
 默认后台常驻（单实例）：打印实际地址后立即返回，终端可以接着敲别的命令 ——
-` + "`tt debug start/exec/status`" + ` 等控制命令会自动找到它。已在运行时打印它的地址后返回。
+` + "`tg debug start/exec/status`" + ` 等控制命令会自动找到它。已在运行时打印它的地址后返回。
 
   --foreground  前台运行，日志直出终端（Ctrl+C 停止）
   --stop        停止后台实例
@@ -113,7 +113,7 @@ func newServeCmd() *cobra.Command {
 			cfg.DataDir = dir
 
 			// 调试服务内嵌 SPA（统一前端构建产物）。统一服务只把 /debug/api/ 转给它、
-			// 页面由 internal/web 提供；这份 FS 是为了 `tt debug serve` 单独跑时也能出页面。
+			// 页面由 internal/web 提供；这份 FS 是为了 `tg debug serve` 单独跑时也能出页面。
 			debugSrv := debug.NewServer(cfg, common.WebFrontend(), path)
 
 			// 库目录**不在这里注入**：dictserver 每次访问时按配置算（顶层 dict.dir，

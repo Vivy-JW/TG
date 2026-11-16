@@ -17,8 +17,8 @@ tg env list
 2. 找到程序编号。作业编号是用户在客户端看到的功能入口，而程序编号是作业的实现代码。一个作业可能调用多个程序，而一个程序也可能被多个作业复用。作业不等于程序，一个程序也可能被多个作业复用。在处理问题时，我们要优先判断用户说的是作业还是程序。用户大概率讲的是作业，我们需要借助 `tg dict prog <程序编号>` 来找到对应的程序，才能确定去看哪一份源代码。
 
 ```bash
-tt dict prog <程序编号> --evn <环境>
-tt dict prog --kw <业务词> --env <环境>
+tg dict prog <程序编号> --evn <环境>
+tg dict prog --kw <业务词> --env <环境>
 ```
 
 3. 优先从本地环境读取代码，如果用户指定环境没有代码镜像可以从本地的其他环境镜像获取代码，代码总体差异不会太大，本地没有镜像，不要帮用户通过 `mirror` 命令去下载代码，时间会很长，彻底没有办法时才尝试从远程获取代码，优先提醒用户拉取环境代码镜像。
@@ -50,7 +50,7 @@ FUNCTION inp_key  [2-7]
 
 ## 获取和阅读程序画面
 
-通过程序编号（同上，不是作业编号哦）在本地或远程中找到对应同样编号的`.42f`文件（一份xml组件树）和`.42s`文件（语言档），然后借助`tt interface`可以通过这两份文件合成组件树，借助其提供的一些列API，可以帮助Agent快速理解画面结构
+通过程序编号（同上，不是作业编号哦）在本地或远程中找到对应同样编号的`.42f`文件（一份xml组件树）和`.42s`文件（语言档），然后借助`tg interface`可以通过这两份文件合成组件树，借助其提供的一些列API，可以帮助Agent快速理解画面结构
 
 合成画面的命令：
  ```bash
@@ -84,7 +84,7 @@ tg dict r.t capp115_tmp --at <环境>@<企业>
 
 ## 系统分类码 / 应用分类码 / 参数编号：GP 没有这套
 
-T100 的三套"编号字典"在 GP 库里**一张表都没有**（`gzca_t` 系、`gzaa/gzac/gzad/gzzz/oocq/oocql` 系、`gzsz_t/gzszl_t/gzsy_t/ooac_t` 系全是 `ORA-00942`），所以 TG 不再提供 `tt dict scc` / `acc` / `sysp` / `docp` 四条命令。
+T100 的三套"编号字典"在 GP 库里**一张表都没有**（`gzca_t` 系、`gzaa/gzac/gzad/gzzz/oocq/oocql` 系、`gzsz_t/gzszl_t/gzsy_t/ooac_t` 系全是 `ORA-00942`），所以 TG 不再提供 `tg dict scc` / `acc` / `sysp` / `docp` 四条命令。
 
 对应的 T100 概念，读 GP 代码时要换成这些线索：
 
@@ -92,7 +92,7 @@ T100 的三套"编号字典"在 GP 库里**一张表都没有**（`gzca_t` 系�
 - **没有"参数编号"**：GP 的参数就是各模块**参数档里的列** —— `aaa_file`（账套参数档）、`aaz_file`（总账会计系统参数档 128 列）、`apz_file`（应付账款）、`aza_file`（整体管理系统参数档 148 列）、`azm_file`（会计期间参数）… 表说明含"参数"的一共 77 张。想知道某一列是什么意思，直接查字段说明：
 
 ```bash
-tt dict r.t aaz_file --fields --at <环境>@<ds>
+tg dict r.t aaz_file --fields --at <环境>@<ds>
 ```
 
 - **没有单据性质绑定**：T100 的"单据别参数绑一堆单据性质"这层在 GP 不存在。
@@ -111,8 +111,8 @@ CALL cl_err()
 查询系统消息、错误消息的命令：
 
 ```bash
-tt dict msg asf-00150 --at <环境>@<企业>
-tt dict msg --at <环境>@<企业> -- -3101
+tg dict msg asf-00150 --at <环境>@<企业>
+tg dict msg --at <环境>@<企业> -- -3101
 ```
 
 ## 开窗和校验带值
@@ -138,11 +138,11 @@ END CASE
 
 查询开窗对应的SQL等信息的命令：
 ```bash
-tt dict r.q q_sfajwfdocno_01_wf --at <环境>@<企业>
-tt dict r.q --kw sfajwfdocno --at <环境>@<企业>
+tg dict r.q q_sfajwfdocno_01_wf --at <环境>@<企业>
+tg dict r.q --kw sfajwfdocno --at <环境>@<企业>
 ```
 
-过栏位的判断也是可以复用的，特征是 `v_xx`。（这一层 GP 侧没有 `tt dict r.v`；`v_*` 封装的 SQL 直接在源码里看，或按它过滤的表/字段用 `tt dict r.t` 反查。）
+过栏位的判断也是可以复用的，特征是 `v_xx`。（这一层 GP 侧没有 `tg dict r.v`；`v_*` 封装的 SQL 直接在源码里看，或按它过滤的表/字段用 `tg dict r.t` 反查。）
 
 ```
 AFTER FIELD wfapwf023

@@ -3,7 +3,7 @@ package target
 // 层级校验（Q7 / Q8 / 契约第 7 节、以及 `tt-target-levels.md` 的组默认 + 例外）。
 //
 // 两条纪律在这条测试里变成判据：
-//   - Q7：**L4 不作寻址层** —— 认路只做 L0–L3（`tt debug` 的组默认 L4 夹到 L3）；
+//   - Q7：**L4 不作寻址层** —— 认路只做 L0–L3（`tg debug` 的组默认 L4 夹到 L3）；
 //   - Q8：登记表只有"组默认 + 具名例外"，**清单从命令树派生**，不许写成 180 条全清单。
 
 import (
@@ -188,7 +188,7 @@ func TestCheckLayerMismatch(t *testing.T) {
 
 	f := CheckLayer(r, "debug exec", Provided{Env: "恒烁正式区"})
 	if f == nil {
-		t.Fatal("`tt debug exec` 要一条 SSH 会话（L3），只给到环境（L1）该报错")
+		t.Fatal("`tg debug exec` 要一条 SSH 会话（L3），只给到环境（L1）该报错")
 	}
 	if f.Code != CodeUsage || f.Exit != ExitUsage {
 		t.Errorf("层级不足的码该是 %s / 退 %d（4.1.1 里没有第二个可用的码），实得 %s / 退 %d",
@@ -220,7 +220,7 @@ func TestCheckLayerMismatch(t *testing.T) {
 	// L2 的命令只给到 L1 也要报（缺的是企业编号）。
 	f2 := CheckLayer(r, "debug sql", Provided{Env: "E"})
 	if f2 == nil || !strings.Contains(f2.Message, "L2") {
-		t.Errorf("`tt debug sql`（L2）只给到环境该报缺 L2，实得 %v", f2)
+		t.Errorf("`tg debug sql`（L2）只给到环境该报缺 L2，实得 %v", f2)
 	} else if !strings.Contains(f2.Hint, "--ent") {
 		t.Errorf("缺 L2 时的修复建议该点名 --ent，实得 hint = %q", f2.Hint)
 	}

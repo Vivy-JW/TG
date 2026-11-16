@@ -62,7 +62,7 @@ var dbListCmd = &cobra.Command{
 				return emit(rows, nil, nil)
 			}
 			// 账号清单里带明文口令,而这条命令的输出很容易被贴进日志或对话。
-			// 打码规则与 tt config show/get 同一份实现(internal/config/redact.go)。
+			// 打码规则与 tg config show/get 同一份实现(internal/config/redact.go)。
 			return emit(config.RedactValue(rows), nil, nil)
 		}
 		if len(rows) == 0 {

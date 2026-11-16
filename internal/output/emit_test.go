@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-// splitHeader 把输出切成 `# ` 注释行与主体 —— 与 tt debug sql 的
+// splitHeader 把输出切成 `# ` 注释行与主体 —— 与 tg debug sql 的
 // TestWriteSQLResult 同一套判据:注释**只能出现在主体之前**。
 func splitHeader(t *testing.T, out string) (comments []string, body []string) {
 	t.Helper()
@@ -176,7 +176,7 @@ func TestEmitNoResultSet(t *testing.T) {
 func TestWriteError(t *testing.T) {
 	var buf bytes.Buffer
 	err := Errorf(CodeTableMissing, ExitMissing, "本地库没有该族数据").
-		WithHint("先 tt dict db sync --env <环境>").WithMeta(sampleMeta())
+		WithHint("先 tg dict db sync --env <环境>").WithMeta(sampleMeta())
 	if e := WriteError(&buf, err); e != nil {
 		t.Fatalf("WriteError: %v", e)
 	}
@@ -190,7 +190,7 @@ func TestWriteError(t *testing.T) {
 	if got["ok"] != false || got["code"] != CodeTableMissing || got["exitCode"] != float64(ExitMissing) {
 		t.Errorf("错误信封不符: %#v", got)
 	}
-	if got["hint"] != "先 tt dict db sync --env <环境>" {
+	if got["hint"] != "先 tg dict db sync --env <环境>" {
 		t.Errorf("hint 应单独给出: %#v", got["hint"])
 	}
 	if got["env"] != "主机正式区" {

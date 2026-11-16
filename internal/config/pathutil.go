@@ -78,7 +78,7 @@ func FileStatusOf(configured, defaultTarget string) FileStatus {
 // 未配置返回空串(落点交给 Locations.SyncTarget 的缺省规则)。
 //
 // 存在的理由:同一条配置,CLI 与 web 曾经各解析各的 —— 设置页改了 sync.target 之后
-// `tt dict db sync` 仍然写旧位置,两个本地库悄悄分叉,而"tt dict db status"看到的
+// `tg dict db sync` 仍然写旧位置,两个本地库悄悄分叉,而"tg dict db status"看到的
 // 又是另一个。目标路径只该有一个答案。
 func SyncTargetFor(root *Root) string {
 	if root == nil {

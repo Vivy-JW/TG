@@ -51,7 +51,7 @@ func RenameHost(path, from, to string) (bool, error) {
 	err := Edit(path, func(root map[string]any) error {
 		names := hostNames(root)
 		if !containsName(names, from) {
-			return fmt.Errorf("没有名为 %q 的环境（用 tt env list 看全部）", from)
+			return fmt.Errorf("没有名为 %q 的环境（用 tg env list 看全部）", from)
 		}
 		if containsName(names, to) {
 			return fmt.Errorf("环境 %q 已存在，不能改名成它", to)

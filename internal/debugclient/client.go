@@ -8,7 +8,7 @@
 //   - CLI 子进程里的 `runSelf(cmd, "debug", …)` —— 完全绕开 HTTP，改为**起子进程**。
 //
 // 第二条是这套代码里最后一块跨域耦合：别的命令想"收口会话 / 点名环境 / 设 ENT / 起作业"，
-// 只能把 `tt debug` 当命令再跑一遍。代价是每次一个进程、参数只能用 argv 表达、错误码
+// 只能把 `tg debug` 当命令再跑一遍。代价是每次一个进程、参数只能用 argv 表达、错误码
 // 得从子进程的退出码里猜 —— 于是"编排"只能活在 CLI 层，永远沉不到内核里。
 //
 // 本包把这件事收成一份：**谁要调调试面，都用它**。cli/debug 与其他调用方都依赖它，
@@ -325,7 +325,7 @@ func stateOf(snap map[string]any) string {
 }
 
 // ---------------------------------------------------------------------------
-// 生命周期动作：与 `tt debug` 用的是同一批端点
+// 生命周期动作：与 `tg debug` 用的是同一批端点
 // ---------------------------------------------------------------------------
 
 // LaunchReq 是"起一条会话并跑作业"的请求。
@@ -375,7 +375,7 @@ func (c *Client) Launch(req LaunchReq) (string, error) {
 // SwitchToIdle 切到某个环境并**等到空闲**（创建会话那条路）。
 //
 // 服务端是异步登录的（应答里 state=loading），所以这里要轮询到 idle —— 与
-// `tt debug env` 的等待语义一致，只是不再走子进程。
+// `tg debug env` 的等待语义一致，只是不再走子进程。
 func (c *Client) SwitchToIdle(env, ent, name string, timeout time.Duration) (string, error) {
 	body := map[string]any{"env": env}
 	if ent != "" {

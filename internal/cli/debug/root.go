@@ -1,6 +1,6 @@
 package debug
 
-// tt debug 命令组的共享件:输出开关与配置位置提示。
+// tg debug 命令组的共享件:输出开关与配置位置提示。
 //
 // 合并前本文件还有一整段配置文件位置解析(toolsHome/userConfigDir/userConfigPath/
 // isPortable/legacyConfigPaths/looksLikeOwnConfig/migrateLegacyConfig/defaultConfigPath/

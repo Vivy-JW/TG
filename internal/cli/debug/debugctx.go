@@ -2,7 +2,7 @@ package debug
 
 // debug 信息通道命令(AI 视角的"看"层):原生命令行负责操作(fgldb 透传),
 // 这里只补 fgldb 给不了的信息——可复取现场快照、读服务器源码(白名单)、事件日志、
-// 函数定位、作业→实体程序解析、远程中断。均依赖 tt debug serve 的 REST。
+// 函数定位、作业→实体程序解析、远程中断。均依赖 tg debug serve 的 REST。
 
 import (
 	"encoding/json"
@@ -33,8 +33,8 @@ var debugStopCmd = &cobra.Command{
 	Long: `返回当前调试会话的完整现场快照(与原生命令的瞬态输出不同,可反复取用):
 会话状态(state)、停站文件:行/函数/原因、断点列表、TOPENT、运行时长等。
 --json 输出原始快照(默认),文本模式给摘要。无会话时给出引导。`,
-	Example: `  tt debug stop
-  tt debug stop --json`,
+	Example: `  tg debug stop
+  tg debug stop --json`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		id, err := dbgSessionID()
 		if err != nil {
@@ -80,7 +80,7 @@ var debugStopCmd = &cobra.Command{
 			fmt.Printf("TOPENT override: %s\n", s.Topent)
 		}
 		if s.State != "stopped" && s.State != "" {
-			fmt.Println("(未停站;可用 tt debug start/exec 或先观察会话状态)")
+			fmt.Println("(未停站;可用 tg debug start/exec 或先观察会话状态)")
 		}
 		// 重放调试跑完后,程序自己写出的响应原文 —— 以前只能"停在收尾断点再 continue
 		// 到 exit"从 stdout 里抓。放在这里是因为它属于"看一眼当前现场"的一部分。
@@ -107,7 +107,7 @@ func numField(v any) int {
 // withoutGlobalEnv 临时摘掉全局 `--env`（root 的持久化开关），返回恢复函数与「原本有没有给」。
 //
 // 给 `source` 用：它读的是**本机 serve**（源码目录由 serve 连的环境决定），而全局 `--env`
-// 会把 API 基址解析带偏 —— 真机 `tt debug source --env 主机109` 报 `dial tcp :0`（D27）。
+// 会把 API 基址解析带偏 —— 真机 `tg debug source --env 主机109` 报 `dial tcp :0`（D27）。
 func withoutGlobalEnv() (restore func(), had bool) {
 	old := common.Env
 	if strings.TrimSpace(old) == "" {
@@ -220,8 +220,8 @@ var debugLogsCmd = &cobra.Command{
 	Long: `查看 serve 保留的最近会话事件(环形缓冲,最多保留 4000 条结构化事件):
 state(状态变化)、stopped(停站位置)、log(运行日志)、dead(连接断开)、watchdog。
 适合回答"刚才 continue 之后发生了什么/程序为什么跑了"。`,
-	Example: `  tt debug logs
-  tt debug logs --tail 50`,
+	Example: `  tg debug logs
+  tg debug logs --tail 50`,
 	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		tail := dbgLogsTail

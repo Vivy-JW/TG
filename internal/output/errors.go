@@ -52,7 +52,7 @@ const (
 	CodeUpdateNetwork  = "UPDATE_NETWORK"  // 出网失败（代理、限流、超时）
 	CodeUpdateApply    = "UPDATE_APPLY"    // 落地动作失败（覆盖不进去、msiexec 失败、计划读不出）
 
-	// tt file 那条线（只读服务器文件）。本机落盘失败与远端读取失败分开，
+	// tg file 那条线（只读服务器文件）。本机落盘失败与远端读取失败分开，
 	// 免得把「磁盘满了」报成「服务器连不上」。
 	CodeLocalIO = "LOCAL_IO" // 本地写失败（get -o）
 )

@@ -213,7 +213,7 @@ func (h *Hosts) Normalize() {
 // DebugSettings 调试工具自有设置（原 TDebug 的 debug 节，减去 sshs）。
 //
 // **刻意没有 ActiveEnv(调试默认环境)**:与 hosts 去掉默认环境同理 —— 调试连错环境
-// 等于在别人的库上跑作业。环境一律由 `tt debug start --env <名>` 或界面点名。
+// 等于在别人的库上跑作业。环境一律由 `tg debug start --env <名>` 或界面点名。
 type DebugSettings struct {
 	LaunchArgs      string `json:"launchArgs,omitempty"`      // 作业启动参数默认模板，{prog} 替换为作业名（环境可覆盖）
 	WatchdogSeconds int    `json:"watchdogSeconds,omitempty"` // 停站停留超时默认（秒）；环境可覆盖
@@ -224,7 +224,7 @@ type DebugSettings struct {
 	PersistBPs      *bool  `json:"persistBreakpoints,omitempty"` // 断点持久化开关（nil 视为 true）
 	// AITakeover 默认起步模式：true 时新建调试会话直接以协作模式起（AI 可写：启动作业/下断点/步进/求值）。
 	// 默认 false —— 新建会话以纯人工起步，人是默认驾驶者；但 AI 可对已有会话自行
-	// `tt debug mode collab` 接管，这个开关只是省掉那一次切换。
+	// `tg debug mode collab` 接管，这个开关只是省掉那一次切换。
 	AITakeover bool `json:"aiTakeover,omitempty"`
 }
 
@@ -254,7 +254,7 @@ func (d *DebugSettings) FillDefaults() {
 // 而 `Session.startWatchdog` 的门是 `<= 0` —— 于是 -1 = 关掉看门狗，而配置表面上
 // 一直存在这个键。现场一旦写错，症状是“停站了再也没人管”，却没有任何地方提示。
 //
-// 统一在这里出问题列表，`tt config validate` 与设置页保存都调它，不各写一套。
+// 统一在这里出问题列表，`tg config validate` 与设置页保存都调它，不各写一套。
 func WatchdogProblems(r *Root) []string {
 	if r == nil {
 		return nil
@@ -304,7 +304,7 @@ type QuerySettings struct {
 	// Limit 查询结果默认**返回**多少条(0 = 不限;未配置 = DefaultQueryLimit)。
 	//
 	// 它不是"显示上限"而是**返回上限**,文本/CSV/JSON 一视同仁 —— 否则换个输出格式
-	// 就换了契约,而一次宽查询足以把 agent 的上下文打爆(实测 `tt dict msg --type 1
+	// 就换了契约,而一次宽查询足以把 agent 的上下文打爆(实测 `tg dict msg --type 1
 	// --status Y` 是 9.3 MB / 28005 条)。命令行的 --limit 覆盖本次调用。
 	//
 	// 截断时结果不会丢:完整的那份落盘,信封里给 totalRows 与 localPath。

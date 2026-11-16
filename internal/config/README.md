@@ -14,7 +14,7 @@ tt 访问的一切自有外部资源（缓存、服务状态、本地字典库�
 
 **没有旧位置兜底，也不做自动迁移。** 旧版的各种落点（`%APPDATA%\T100\tt`、tdebug/tdict、
 exe 或当前目录的 `config.json`）一律不读 —— 数据统一在 `%APPDATA%\tg`，不向后兼容。
-`tt config validate` 会对 `schemaVersion` 低于当前的配置给出提示（不再自动迁移）。
+`tg config validate` 会对 `schemaVersion` 低于当前的配置给出提示（不再自动迁移）。
 
 **显式指定的路径就是答案。** `--config` / `TG_CONFIG` 指向一个还不存在的文件时，**不**悄悄
 改用默认落点 —— 否则便携版会把配置写进用户目录，测试脚本也会落在别处。

@@ -359,7 +359,7 @@ type Session struct {
 
 	// mode 谁在驾驶:ModeSolo(纯人工,默认) | ModeCollab(协作,AI 主导)。
 	// 由发起方决定,之后人与 AI 都能切(界面上的接管/交给 AI 按钮,或 AI 的
-	// `tt debug mode`),两个方向都放行 —— 不做逐命令协商。
+	// `tg debug mode`),两个方向都放行 —— 不做逐命令协商。
 	mode string
 
 	// ---- 会话身份（契约 C5.3 / Q22 的纯新增四键里的三个：n / name / epoch）----
@@ -465,7 +465,7 @@ func (s *Session) Name() string {
 // 语义（本批定稿，写在这里就不必再去翻文档）：**"这条会话这一代宿主 / 这一轮运行"的令牌**。
 // 它由 nextSessionEpoch 发一个**全进程唯一**的 base36 值，换代的三个时机是：
 //  1. 会话建立（Manager 登记时）→ 第一代；
-//  2. **同一宿主跑新一轮**（SetRun：`tt debug start` 复用空闲宿主 / 按日志重放复用宿主）→ 换代；
+//  2. **同一宿主跑新一轮**（SetRun：`tg debug start` 复用空闲宿主 / 按日志重放复用宿主）→ 换代；
 //  3. **会话重启/重新登录**（`/api/sessions/{id}/restart`：旧会话收掉、新会话登上来）→ 新世代。
 //
 // 调用方（F15）把上一次拿到的这个值原样带回来；与服务端当前值不等就是"手上那份是上一代"，
@@ -853,7 +853,7 @@ func (s *Session) bootHost(ctx context.Context) error {
 		return err
 	}
 	s.markShellReady()
-	// 2.5 连接即下发**用户显式给的企业编号**(tt debug start --ent / 界面面板输入)。
+	// 2.5 连接即下发**用户显式给的企业编号**(tg debug start --ent / 界面面板输入)。
 	//
 	// 环境配置里已经**没有**企业编号了(hosts.sshs[].topent 已移除)——所以这里不再有
 	// "环境默认企业"可下发。空值就什么都不做:**保留登录 shell 自己的 $TOPENT**
@@ -1118,7 +1118,7 @@ func (s *Session) TopentOverride() string {
 	return s.topentOverride
 }
 
-// TopentSession 本会话的 TOPENT(用户显式给的那个:tt debug start --ent / 界面面板)。
+// TopentSession 本会话的 TOPENT(用户显式给的那个:tg debug start --ent / 界面面板)。
 //
 // **不再是"配置级"值**:环境配置里的企业编号已移除(hosts.sshs[].topent),所以这个值
 // 只有两个来源 —— 启动时显式给,或会话内用 SetTopent 改。空 = 用户没给,
@@ -1790,7 +1790,7 @@ func (s *Session) execOpt(kind, cmd string, mode int, timeout time.Duration, o e
 			// 对着 usage 反复改参数(真机上有人这么绕过两回)
 			if st == StateIdle || st == StateExit {
 				return nil, fmt.Errorf("这轮调试已经结束(会话 %s),没有可发命令的停站现场;"+
-					"请重新 tt debug wsdebug <rowid> 或 tt debug start <作业> 起一轮", st)
+					"请重新 tg debug wsdebug <rowid> 或 tg debug start <作业> 起一轮", st)
 			}
 			return nil, fmt.Errorf("当前状态 %s 不可发送命令", st)
 		}
@@ -2313,8 +2313,8 @@ func (s *Session) BreakpointsNow() (bps []Breakpoint, fresh bool, note string) {
 		// 这条路径上会话本来就在停站态，所以不劝人 interrupt，而是给"看原文"的下一步。
 		return s.Breakpoints(), false, fmt.Sprintf(
 			"账本未能从内核回灌(%v) —— 下面这份**可能不是最新**(命中次数可能落后于内核);"+
-				"先用 tt debug exec %q 看内核原文(解析不了会带「行格式不认识」并保留原文),"+
-				"再 tt debug bp list", err, "info breakpoints")
+				"先用 tg debug exec %q 看内核原文(解析不了会带「行格式不认识」并保留原文),"+
+				"再 tg debug bp list", err, "info breakpoints")
 	}
 	return s.Breakpoints(), true, ""
 }
@@ -2323,11 +2323,11 @@ func (s *Session) BreakpointsNow() (bps []Breakpoint, fresh bool, note string) {
 func bpListStaleNote(st State) string {
 	if st == StateRunning {
 		return "程序运行中,读不到内核断点表 —— 下面这份是账本,**可能不是最新**(命中次数可能落后于内核)。" +
-			"先 tt debug interrupt 停下,再 tt debug bp list 就是内核当下的计数" +
+			"先 tg debug interrupt 停下,再 tg debug bp list 就是内核当下的计数" +
 			"(运行期 fgldb 只受理中断)"
 	}
 	return fmt.Sprintf("会话当前状态 %s,读不到内核断点表 —— 下面这份是账本,**可能不是最新**"+
-		"(命中次数可能落后于内核);等它停下(或先 tt debug interrupt)再 tt debug bp list", st)
+		"(命中次数可能落后于内核);等它停下(或先 tg debug interrupt)再 tg debug bp list", st)
 }
 
 // Print 求值表达式
@@ -3268,11 +3268,11 @@ func (s *Session) inheritMirrorState() {
 
 // mirrorStopFile 把停站文件的源码落进本地镜像。
 //
-// 这是"缓存调试过程中经历过的文件"那一半:只靠 tt debug source 的话,镜像里只有
+// 这是"缓存调试过程中经历过的文件"那一半:只靠 tg debug source 的话,镜像里只有
 // 显式读过的文件;程序停过的文件才是完整的一份经历记录。
 //
 // 异步且尽力而为:绝不能给停站加一次 SFTP 往返(连续 next 时那是逐步的延迟),
-// 失败也只是少一份副本 —— 要看的文件随时可以 tt debug source 显式读。
+// 失败也只是少一份副本 —— 要看的文件随时可以 tg debug source 显式读。
 func (s *Session) mirrorStopFile(stop *StopInfo) {
 	if stop == nil || stop.File == "" || s.cfg == nil || s.cfg.DataDir == "" {
 		return
@@ -3353,7 +3353,7 @@ func (s *Session) fireWatchdog(attempt int) {
 		// 两次都不成：把话说到能照着做为止 —— 这时候锁还在，人必须亲自处理。
 		s.emitEvent(Event{Type: "watchdog-failed",
 			Text: fmt.Sprintf("看门狗自动继续连续两次失败(%v)：程序仍停在断点并持锁。"+
-				"请人工处理：tt debug quit（立刻放锁）或 tt session rm（断开连接）", err)})
+				"请人工处理：tg debug quit（立刻放锁）或 tg session rm（断开连接）", err)})
 		return
 	} else {
 		s.emitEvent(Event{Type: "watchdog-failed",

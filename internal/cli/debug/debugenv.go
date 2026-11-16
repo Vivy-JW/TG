@@ -1,13 +1,13 @@
 package debug
 
 // debug 环境/TOPENT 切换命令:
-//   tt debug env           列出全部已配置环境与当前生效项(基于 /api/hosts + /api/sessions)
-//   tt debug env <名称>     切换当前环境到该环境(重连会话,等会话回 idle)
+//   tg debug env           列出全部已配置环境与当前生效项(基于 /api/hosts + /api/sessions)
+//   tg debug env <名称>     切换当前环境到该环境(重连会话,等会话回 idle)
 //   tt debug topent        显示当前会话的 TOPENT override 与配置级默认
 //   tt debug topent <值>    设置会话级 TOPENT override(仅 idle;立即下发到会话)
 //   tt debug topent --clear 清除会话级 TOPENT override(回退配置默认)
 //
-// 与 debugctl 其它命令一致:均经 tt debug serve 的 REST 接口执行。
+// 与 debugctl 其它命令一致:均经 tg debug serve 的 REST 接口执行。
 
 import (
 	"encoding/json"
@@ -78,10 +78,10 @@ var debugEnvCmd = &cobra.Command{
 
 当前环境只存在于运行时(不写 config.json):选环境 = 连会话,服务重启后回到列表首条。
 
-需要 tt debug serve 在运行;控制端命令会自动发现其地址。`,
-	Example: `  tt debug env                 # 列出环境与当前会话
-  tt debug env 示例测试区       # 切换当前环境到该环境(等会话回空闲)
-  tt debug env --json          # 环境清单 JSON 输出`,
+需要 tg debug serve 在运行;控制端命令会自动发现其地址。`,
+	Example: `  tg debug env                 # 列出环境与当前会话
+  tg debug env 示例测试区       # 切换当前环境到该环境(等会话回空闲)
+  tg debug env --json          # 环境清单 JSON 输出`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 1 {
@@ -174,7 +174,7 @@ func dbgEnvList() error {
 	if curEnv != "" {
 		fmt.Printf("当前会话: %s (%s)\n", curEnv, dbgStateLabel(curState))
 	} else {
-		fmt.Println("当前会话: 未连接(用 tt debug env <环境名> 连接,或 tt debug start 启动调试)")
+		fmt.Println("当前会话: 未连接(用 tg debug env <环境名> 连接,或 tg debug start 启动调试)")
 	}
 	if len(s.SSHs) == 0 {
 		fmt.Println("环境: 未配置 sshs")
@@ -210,7 +210,7 @@ func dbgEnvSwitch(name string) error {
 		}
 	}
 	if !found {
-		return fmt.Errorf("环境 %q 不存在(可先运行 tt debug env 查看已配置环境)", name)
+		return fmt.Errorf("环境 %q 不存在(可先运行 tg debug env 查看已配置环境)", name)
 	}
 	// 目标不是当前会话环境、且会话不在空闲时,切换会结束当前调试——先提示(Web 端同样要求确认)
 	cur := dbgAmbientSession()
@@ -275,7 +275,7 @@ func dbgEnvSwitch(name string) error {
 				}
 			}
 			if time.Now().After(deadline) {
-				return fmt.Errorf("切换会话超时(%ds),请用 tt debug status 查看状态", dbgEnvTimeout)
+				return fmt.Errorf("切换会话超时(%ds),请用 tg debug status 查看状态", dbgEnvTimeout)
 			}
 			time.Sleep(1 * time.Second)
 		}

@@ -255,7 +255,7 @@ func TestNewScenarioClassification(t *testing.T) {
 		{"F2 池里 0 条会话", failureNoSession(), ExitRunFailed},
 		{"该环境下没有会话（池里有别的环境）", failureNoSessionInScope("恒烁正式区", two), ExitNoSession},
 		{"F16/F17 标志挂到不接受它的命令上", FailureFlagNotAccepted(FlagSession), ExitRunFailed},
-		{"层数不够（少给必填参数）", failureLayerMismatch("tt debug exec", Layer3, Layer1), ExitRunFailed},
+		{"层数不够（少给必填参数）", failureLayerMismatch("tg debug exec", Layer3, Layer1), ExitRunFailed},
 	}
 	for _, c := range cases {
 		if c.fail == nil {

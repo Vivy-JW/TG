@@ -711,7 +711,7 @@ func TestContractInvalidFormsServerSideEnvelopes(t *testing.T) {
 // 生产里**已经没有端点产出这一档**：要一条**既有**会话的两条端点（切环境 / 按日志重放）
 // 都改成了冷启动（它们本来就是**创建**会话的命令，池空是最正常的起点 —— 判据见
 // `session_named_host_test.go` 的两条 `ColdStartIsNotNoSession`）。F2 这一档仍活在 CLI
-// 目标层（`internal/target` 的 `failureNoSession`：`tt debug exec --session …` 那类
+// 目标层（`internal/target` 的 `failureNoSession`：`tg debug exec --session …` 那类
 // "必须有既有会话"的命令），判据在那个包的 `resolve_test`。
 //
 // 那为什么还在这里钉它：`failTarget` 里 `targetEmptyPool` 那一支仍在（`resolveTarget` 的
@@ -739,7 +739,7 @@ func TestContractNoSessionEnvelopeIsStillPinned(t *testing.T) {
 	}
 	// 文案要能照做：池空时人/Agent 能看懂下一步是什么。
 	msg, _ := raw["error"].(string)
-	for _, wantText := range []string{"按接口日志重放", "没有 SSH 会话", "tt debug start"} {
+	for _, wantText := range []string{"按接口日志重放", "没有 SSH 会话", "tg debug start"} {
 		if !strings.Contains(msg, wantText) {
 			t.Errorf("文案里该有 %q（哪个端点 + 现状 + 下一步），实得 %q", wantText, msg)
 		}
@@ -866,7 +866,7 @@ func TestContractFlagConflictsIsNotYetEnforced(t *testing.T) {
 // （C2.4 / C2.5 / F19 / Q17）：**非空、去空白后 1–64 字符、只排除 `/` 与 `#`**，
 // 其余（中文、空格、标点）按原样允许。
 //
-// **WP4a 之后这条不再跳过**：`--name` 已在 `tt debug start` 上注册（B20 反面），
+// **WP4a 之后这条不再跳过**：`--name` 已在 `tg debug start` 上注册（B20 反面），
 // 而取值纪律的实现与逐条判据在 `internal/target`（`ValidateAlias` 与它的
 // `TestValidateAliasRules` / `TestAliasLengthCountsRunesNotBytes`）。
 // 本包能做的、也只有意义的一件事是：核对本包引用的那份常量与契约逐字一致 ——
@@ -953,7 +953,7 @@ func keysOfTags(m map[string]string) []string {
 // 三段，缺一不可 —— 它把"服务端产出的世代号"与"目标层的失效判定"接在一起：
 //
 //	① 服务端真的产 `epoch`（C5.3），且**第一次**拿到它之后手上就有一个世代号；
-//	② 同一条会话**复用宿主跑新一轮**（`SetRun`，也就是 `tt debug start` 复用空闲宿主那条路）
+//	② 同一条会话**复用宿主跑新一轮**（`SetRun`，也就是 `tg debug start` 复用空闲宿主那条路）
 //	   ⇒ 世代**换新**（本次定稿的语义见 nextSessionEpoch：建立 / 复用宿主 / 重启三处换代）；
 //	③ 拿①那个旧世代号去落位 ⇒ 目标层报 `SESSION_STALE`、退 3、带当前代那一条候选（F15 / C5.11）。
 //
@@ -1335,7 +1335,7 @@ func TestContractHTTPFailureCodeIsLanded(t *testing.T) {
 
 // TestContractStatusStaysTwoDocuments 钉住 C1.5b / Q21 里**今天就不许动**的那一半：
 //
-// `tt debug status` 默认输出 JSON（今天就是），而且是**两个** JSON 文档
+// `tg debug status` 默认输出 JSON（今天就是），而且是**两个** JSON 文档
 // （`GET /api/status` 与 `GET /api/sessions` 各一行），**不合并成一个信封**。
 // 契约只在每个 session 元素上按 C5.8 换成 5.1 的 `session` 对象（纯新增四个键）。
 //
@@ -1356,7 +1356,7 @@ func TestContractStatusStaysTwoDocuments(t *testing.T) {
 		t.Fatalf("/api/status 该回一个 JSON 文档：%v", err)
 	}
 	// 今天这个文档是**服务级状态**（server/ssh/zone/listen/watchdog…），**没有** ok 键。
-	// C1.5b 管的是 `tt debug status` 命令默认打 JSON 这件事，两个文档的形状它一个字都没改
+	// C1.5b 管的是 `tg debug status` 命令默认打 JSON 这件事，两个文档的形状它一个字都没改
 	// （契约原话：行数、两个文档的顺序、以及 ok 键的有无都不动）。
 	// 所以这里断言的是"它在、且是个有内容的 JSON 对象"，不是"它有 ok 键"。
 	if len(st) == 0 {

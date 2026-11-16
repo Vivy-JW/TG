@@ -27,7 +27,7 @@ type LocalStatus struct {
 }
 
 // Summary 一行式摘要,如 "表字典 ✓ · 校验带值 ✗ · 分类码 ✗ …";all 为 true 时返回
-// "全部已同步"。供 tt dict --help / 各命令 --help 的「本地数据」提示复用。
+// "全部已同步"。供 tg dict --help / 各命令 --help 的「本地数据」提示复用。
 func (s *LocalStatus) Summary(keys ...string) string {
 	fams := s.Families
 	if len(keys) > 0 {
@@ -43,7 +43,7 @@ func (s *LocalStatus) Summary(keys ...string) string {
 		}
 	}
 	if !s.Exists {
-		return "本地库不存在(先 tt dict db sync --env <环境>)"
+		return "本地库不存在(先 tg dict db sync --env <环境>)"
 	}
 	parts := make([]string, 0, len(fams))
 	all := true
@@ -61,7 +61,7 @@ func (s *LocalStatus) Summary(keys ...string) string {
 		}
 		return strings.Join(parts, " · ")
 	}
-	return strings.Join(parts, " · ") + " → 补齐: tt dict db sync --env <环境>"
+	return strings.Join(parts, " · ") + " → 补齐: tg dict db sync --env <环境>"
 }
 
 // InspectLocal 只读检查本地库对各数据族的覆盖情况(表是否存在 + 行数)。

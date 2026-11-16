@@ -243,7 +243,7 @@ func TestEntCatalog_DegradeRules(t *testing.T) {
 	}
 
 	// ⑦ Offline 且没有快照 → (nil, nil):只是查不到,不报错也不连网。
-	// 给"顺手补一行环境信息"的调用方用(tt debug start 的生效身份),别为它拨 SSH。
+	// 给"顺手补一行环境信息"的调用方用(tg debug start 的生效身份),别为它拨 SSH。
 	cat6 := NewEntCatalog(t.TempDir())
 	cat6.fetch = noSSH(t)
 	l6, err := cat6.list(nil, nil, testCfg(""), EntListOpt{Offline: true})
@@ -320,7 +320,7 @@ func TestParseEntLine_EmptyAccountIsKept(t *testing.T) {
 	}
 }
 
-// --ent N = 只看这一个:收窄到一条;找不到 / 没配账号就报错(文案与 tt debug sql 一致);
+// --ent N = 只看这一个:收窄到一条;找不到 / 没配账号就报错(文案与 tg debug sql 一致);
 // 而且**不许把缓存里的清单裁掉** —— 缓存那份是共享的,就地裁剪会让下一次不带 --ent 的
 // 调用也只见一个企业。
 func TestEntCatalog_EntFilter(t *testing.T) {

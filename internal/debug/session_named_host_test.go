@@ -321,7 +321,7 @@ func TestLaunchWithoutSessionStillReportsAmbiguity(t *testing.T) {
 
 // TestSessionSwitchColdStartIsNotNoSession：**池空 + 没点名 = 创建会话**，不是 `NO_SESSION`。
 //
-// 真机踩到的正是这一条：`tt debug env <环境>`（Web 上叫「创建会话」）在会话池为空时
+// 真机踩到的正是这一条：`tg debug env <环境>`（Web 上叫「创建会话」）在会话池为空时
 // 直接报 `NO_SESSION`，于是"先建会话 → 再设 ENT → 再调试"这条正确流程**第一步**就断了，
 // 用户只能先"起个作业"去凑一条会话，顺序完全反了。
 //
@@ -369,11 +369,11 @@ func TestSessionSwitchColdStartStillRejectsNamedMissing(t *testing.T) {
 // TestWSLogDebugColdStartIsNotNoSession：「调试此调用」（池空 + 没点名）= **自己造那一条**，
 // 不是 `NO_SESSION`。
 //
-// 真机踩到的（界面「接口日志」页 → 点「调试此调用」，命令行是 `tt debug wsdebug <rowid>`）：
+// 真机踩到的（界面「接口日志」页 → 点「调试此调用」，命令行是 `tg debug wsdebug <rowid>`）：
 // 一台还没有任何会话的机器上，点下去当场报
-// `查询失败 按接口日志重放：没有 SSH 会话 —— 先运行 tt debug start <作业> --env <环境> 起一条`。
+// `查询失败 按接口日志重放：没有 SSH 会话 —— 先运行 tg debug start <作业> --env <环境> 起一条`。
 // 而重放干的就是**创建**一条会话来重跑日志（`LaunchReplay` → `prepareSession`）：
-// 它要的那一条本来就该由它自己建（与「创建会话」`tt debug env <环境>` 同一个理由，
+// 它要的那一条本来就该由它自己建（与「创建会话」`tg debug env <环境>` 同一个理由，
 // 见上面那条 `TestSessionSwitchColdStartIsNotNoSession`）。
 //
 // 判据同上：不钉状态码（越过闸门后它会真去拨号，测试的拨号桩必然失败 → 500），

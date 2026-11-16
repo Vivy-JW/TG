@@ -1,4 +1,4 @@
-// Package outline 实现 tt outline：把一个 4GL 文件读成块树。
+// Package outline 实现 tg outline：把一个 4GL 文件读成块树。
 //
 // 它只做本地文件/镜像读取，不拨 SSH，也不调用设计器。解析器在
 // internal/dev/fgl（ParseOutline），本包只负责数据源选择、投影和输出。
@@ -34,7 +34,7 @@ type options struct {
 	brief bool
 }
 
-// Register 把 tt outline 挂到根命令。
+// Register 把 tg outline 挂到根命令。
 func Register(root *cobra.Command) { root.AddCommand(newCmd()) }
 
 func newCmd() *cobra.Command {

@@ -143,7 +143,7 @@ func failureAmbiguousOmitted(hits []Session) *Failure {
 // 老写法（没打 `--session`/`--name`）维持 1；真用了新写法才按 4.1.1 退 3（4.1.1 的 F2 行）。
 func failureNoSession() *Failure {
 	return newFailure(CodeNoSession,
-		"没有 SSH 会话：先运行 tt debug start <作业> --env <环境> 起一条")
+		"没有 SSH 会话：先运行 tg debug start <作业> --env <环境> 起一条")
 }
 
 // failureNoSessionInScope 是"池里有会话，但这个环境里一条都没有"：
@@ -153,7 +153,7 @@ func failureNoSession() *Failure {
 // `--env`，它取列表第一条（可能是**另一个环境**的会话）并看起来成功。没有旧行为要保护。
 func failureNoSessionInScope(env string, all []Session) *Failure {
 	f := newScenarioFailure(CodeNotFound, "环境 %q 下没有 SSH 会话", env)
-	f.Hint = fmt.Sprintf("先运行 tt debug start <作业> --env %s 起一条", env)
+	f.Hint = fmt.Sprintf("先运行 tg debug start <作业> --env %s 起一条", env)
 	f.Candidates = candidatesOf(all)
 	return f
 }
@@ -162,7 +162,7 @@ func failureNoSessionInScope(env string, all []Session) *Failure {
 // **新场景**：别名寻址要 `--session <别名>`（B19/B20）→ 无条件走 4.1.1（退 3）。
 func failureAliasNotFound(alias string, named []Session) *Failure {
 	f := newScenarioFailure(CodeNotFound, "没有别名为 %q 的 SSH 会话", alias)
-	f.Hint = "去掉 --session 可看全部（tt debug status）"
+	f.Hint = "去掉 --session 可看全部（tg debug status）"
 	f.Candidates = candidatesOf(named)
 	return f
 }
@@ -200,7 +200,7 @@ func failureEntNotFound(env, ent string, inEnv []Session) *Failure {
 // **新场景**（`#序号` 只可能写在 `--session` 里）→ 退 3。
 func failureSeqOutOfRange(scope string, m, n int, inEnv []Session) *Failure {
 	f := newScenarioFailure(CodeNotFound, "%s 只有 %d 条 SSH 会话，没有 %s%d", scope, m, SeqSep, n)
-	f.Hint = fmt.Sprintf("先运行 tt debug status 看该环境下现有 %d 条", m)
+	f.Hint = fmt.Sprintf("先运行 tg debug status 看该环境下现有 %d 条", m)
 	f.Candidates = candidatesOf(inEnv)
 	return f
 }
@@ -241,7 +241,7 @@ func failureSessionEntConflict(sel string, actual, fromFlag string) *Failure {
 // **新场景**：今天没有"代"这个概念（B31），这个失败今天无从发生 → 无条件退 3。
 func failureStale(s Session, wantEpoch string) *Failure {
 	f := newScenarioFailure(CodeStale,
-		"这条 SSH 会话已失效（%s 当前是第 %s 代，你手上的是第 %s 代）；重新 tt debug status 取一次",
+		"这条 SSH 会话已失效（%s 当前是第 %s 代，你手上的是第 %s 代）；重新 tg debug status 取一次",
 		s.CanonicalRef(), s.Epoch, wantEpoch)
 	f.Candidates = candidatesOf([]Session{s})
 	return f
@@ -253,7 +253,7 @@ func failureStale(s Session, wantEpoch string) *Failure {
 
 // FailureFlagNotAccepted 造 F16 / F17 的失败：`--session` / `--name` 挂到了不接受它的命令上。
 //
-// 退出码是**老路径那一档**（1）：`tt debug` 组不补 `FlagErrorFunc`（Q18），
+// 退出码是**老路径那一档**（1）：`tg debug` 组不补 `FlagErrorFunc`（Q18），
 // cobra 拦下之后由根命令兜底 —— 与今天 `--bogus` 完全一致。
 // 信封里仍然是 `code: USAGE`：Agent 读 `code`，不读数字（Q15 / C2.8c）。
 //
@@ -265,11 +265,11 @@ func FailureFlagNotAccepted(flag string) *Failure {
 	switch flag {
 	case FlagName:
 		f.Message = fmt.Sprintf("unknown flag: %s", FlagName)
-		f.Hint = "--name 只在起会话的命令上有意义（tt debug start / tt debug wsdebug / tt debug start / tt debug exec）"
+		f.Hint = "--name 只在起会话的命令上有意义（tg debug start / tg debug wsdebug / tg debug start / tg debug exec）"
 	default:
 		// cobra 对未注册标志的原话是单横线的名字（`flag provided but not defined: -session`）。
 		f.Message = "flag provided but not defined: -" + strings.TrimLeft(flag, "-")
-		f.Hint = "该命令不接受 --session（要列全部会话用 tt debug status）"
+		f.Hint = "该命令不接受 --session（要列全部会话用 tg debug status）"
 	}
 	return f
 }
@@ -307,7 +307,7 @@ func failureAliasInvalid() *Failure {
 func FailureTargetBusy(name string, occupant Session) *Failure {
 	f := newScenarioFailure(CodeTargetBusy, "别名 %q 指向的会话 %s 当前是 %s，不能复用",
 		name, occupant.CanonicalRef(), StateLabel(occupant.State))
-	f.Hint = "换一个别名，或先停掉那条会话（tt debug stop）"
+	f.Hint = "换一个别名，或先停掉那条会话（tg debug stop）"
 	f.Candidates = candidatesOf([]Session{occupant})
 	return f
 }
@@ -347,7 +347,7 @@ func failureLayerMismatch(cmdPath string, need, have Layer) *Failure {
 	case Layer2:
 		f.Hint = "加 --env <环境> 与 --ent <企业编号>"
 	case Layer3:
-		f.Hint = "加 --session <选择器>，或先起一条会话（tt debug start <作业> --env <环境>）"
+		f.Hint = "加 --session <选择器>，或先起一条会话（tg debug start <作业> --env <环境>）"
 	default:
 		f.Hint = "加 --env <环境>"
 	}

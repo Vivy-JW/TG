@@ -6,7 +6,7 @@ import "strings"
 //
 // 两条纪律写死在代码里：
 //
-//  1. **Q7：L4 不作寻址层**。矩阵里 `tt debug` 那组的"基准是 L4"（"会话 + 一轮运行"），
+//  1. **Q7：L4 不作寻址层**。矩阵里 `tg debug` 那组的"基准是 L4"（"会话 + 一轮运行"），
 //     但"哪条会话"这件事到 L3 就说清了 —— 所以**登记表的组默认直接写 L3（寻址层）**：
 //     L4 是**状态语义**（这一组大体在什么状态下干活），寻址层是 **L3**（Q7），两者不是一回事。
 //
@@ -134,7 +134,7 @@ func cloneLayerMap(m map[string]Layer) map[string]Layer {
 // 例外总条数不是矩阵「例外条数」一列的和：矩阵那份是**逐条判据**（含状态语义），
 // 这里是**认路登记表**（只留改变寻址要求的）。
 var layerExceptions = map[string]Layer{
-	// ---- tt debug（7 条例外：5 L1 + 2 L2） ----
+	// ---- tg debug（7 条例外：5 L1 + 2 L2） ----
 	//
 	// 组默认是 L3（Q7 的寻址层），所以组内 12 条 `: L3`（start / wsdebug / stop / exec /
 	// interrupt / quit / mode / status / env / topent / serve / logs）**一条都不登** ——
@@ -149,13 +149,13 @@ var layerExceptions = map[string]Layer{
 	"debug sql":     Layer2, // 只读 SQL，按环境 + 企业编号取库账号
 	"debug db":      Layer2, // 探 ENT→账号映射并用该账号连一次库
 
-	// ---- tt dict（4 条例外） ----
+	// ---- tg dict（4 条例外） ----
 	"dict db discover": Layer1, // 登录 SSH 探库要素
 	"dict mirror pull": Layer1, // 隐藏转发：SFTP 增量下载该环境镜像
 	"dict mirror path": Layer1, // 隐藏转发：该环境镜像目录（与环境绑定）
 	"dict db sync":     Layer2, // 账号由企业编号决定
 
-	// ---- tt file（1 条例外） ----
+	// ---- tg file（1 条例外） ----
 	"file mirror dir": Layer0, // 设的是全局镜像根目录，与环境无关
 
 	// ---- tt dev tzs（3 条待定，W1） ----

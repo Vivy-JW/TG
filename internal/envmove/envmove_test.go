@@ -164,7 +164,7 @@ func TestPlanUsesEnvDictDir(t *testing.T) {
 	}
 }
 
-// `tt file mirror` 的镜像根按环境名分目录，改名时要一起搬；环境自己指定 mirrorDir 时跳过。
+// `tg file mirror` 的镜像根按环境名分目录，改名时要一起搬；环境自己指定 mirrorDir 时跳过。
 func TestPlanMovesMirrorUnderRoot(t *testing.T) {
 	dir := t.TempDir()
 	mirrorRoot := filepath.Join(dir, "mirrors")

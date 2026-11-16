@@ -2,7 +2,7 @@ package dict
 
 // 客户端直连路径的企业账号解析(ENT → gzou_t → 账号)。
 //
-// 与 tt debug 同一套规则、同一张 gzou_t 表、同一个快照文件(internal/entdir),
+// 与 tg debug 同一套规则、同一张 gzou_t 表、同一个快照文件(internal/entdir),
 // 区别只在传输方式:debug 在 T100 服务器侧跑 sqlplus/ksql,这里从**客户端直连**库。
 // 两条路径必须对一个环境给出同一个账号 —— 否则同一张字典表会被两个 schema 读到,
 // 而结果里没有任何信号(那正是"查错了地方被当成没有数据"的根因)。
@@ -131,7 +131,7 @@ func snapshotMappings(path, fingerprint string) []entdir.Mapping {
 // 这里拿的是两列原始值,空值在 Go 里判 —— 于是这条 SQL 是纯标准 SELECT,
 // 金仓与 Oracle 一个字都不用改。
 func fetchEntMappings(cc *dbconfig.Connection) ([]entdir.Mapping, error) {
-	// 查 gzou_t 固定用系统账号 **ds**（与 tt debug 服务器侧那条完全相同）:
+	// 查 gzou_t 固定用系统账号 **ds**（与 tg debug 服务器侧那条完全相同）:
 	// gzou_t 是跨企业共享的系统表，归属由 T100 安装惯例决定；账号清单首项是
 	// “人把哪个账号写在了前面”，两者恰好相同不等于同一条规则（见 dbconfig.SystemAccount）。
 	lookup := *cc
@@ -178,7 +178,7 @@ func fetchEntMappings(cc *dbconfig.Connection) ([]entdir.Mapping, error) {
 	return maps, nil
 }
 
-// entAccountOf 取某企业的账号;没配账号时给出与 tt debug sql 完全一致的措辞
+// entAccountOf 取某企业的账号;没配账号时给出与 tg debug sql 完全一致的措辞
 // (同一件事两条命令说两样话,最容易被当成两个问题)。
 func entAccountOf(maps []entdir.Mapping, ent int) (string, error) {
 	for _, m := range maps {

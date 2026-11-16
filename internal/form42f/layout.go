@@ -1,12 +1,12 @@
 package form42f
 
-// 本文件在字段表之上补一层“页面/控件布局”，供 tt interface 合成前端画面。
+// 本文件在字段表之上补一层“页面/控件布局”，供 tg interface 合成前端画面。
 //
 // ParseForm42F 仍只负责字段表；ParseLayout 额外回答两个问题：
 //   - 字段属于哪个 <Page>；
 //   - 字段的中文标签引用是哪个 lbl_*（字段自己的 text，或同页同容器的独立 <Label>）。
 //
-// 为什么不改 ParseForm42F 的输出：tt interface / tzs 都依赖它，
+// 为什么不改 ParseForm42F 的输出：tg interface / tzs 都依赖它，
 // 页面归属只是 interface 的消费需求，不能顺手改变已有命令的 JSON。
 
 import (
