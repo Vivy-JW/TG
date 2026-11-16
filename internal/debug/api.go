@@ -61,7 +61,7 @@ type Server struct {
 //
 // web 是**本应用 SPA 的根**（即 web/dist 的内容），不是模块根的嵌入 FS ——
 // 合并前两套前端各占 dist 下的一个子目录，剥离那一层得由调用方做；合并后只剩一套 SPA、
-// 直接产出在 dist 根，调用方（tg serve / tt debug serve）传 common.WebFrontend() 即可。
+// 直接产出在 dist 根，调用方（tg serve / tg debug serve）传 common.WebFrontend() 即可。
 // 这里只确认 index.html 在；不在就当没前端，回落成纯 API + 引导页。
 func NewServer(cfg *Config, web fs.FS, cfgPath string) *Server {
 	// 先把默认环境(hosts.activeEnv,可被 debug.activeEnv 覆盖)的连接与启动参数
@@ -94,7 +94,7 @@ func (s *Server) Run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("[tt debug] 服务已启动  前端+API: http://%s\n", addr)
+	fmt.Printf("[tg debug] 服务已启动  前端+API: http://%s\n", addr)
 	return s.Serve(ctx, ln)
 }
 
@@ -194,8 +194,8 @@ func (s *Server) ListenAddr() string {
 //
 // 注意:统一的 /api/health、/api/hosts、/api/dbprobe、/api/dbaccverify、/api/conntest、
 // /api/config/meta 由 tt/internal/web 在顶层持有。本面挂在 /debug/ 前缀下,与它们不在
-// 同一个 mux 上,故不会重复注册;hHostsGet 是给**独立运行**(tt debug serve)时的
-// tt debug env 用的,挂到前缀下时即 /debug/api/hosts,不参与统一服务的路由。
+// 同一个 mux 上,故不会重复注册;hHostsGet 是给**独立运行**(tg debug serve)时的
+// tg debug env 用的,挂到前缀下时即 /debug/api/hosts,不参与统一服务的路由。
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	s.routes(mux)
@@ -251,7 +251,7 @@ func (s *Server) routes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/dbsql", s.hDBSQL)
 	mux.HandleFunc("GET /api/wslogs/content", s.hWSLogContent)
 	mux.HandleFunc("POST /api/wslogs/debug", s.hWSLogDebug)
-	// 环境清单(只读):独立运行时 tt debug env 读它。统一服务下环境页改的是
+	// 环境清单(只读):独立运行时 tg debug env 读它。统一服务下环境页改的是
 	// 顶层 /api/hosts(tt/internal/web),这里那份只在 /debug/ 前缀下可达,互不干扰。
 	mux.HandleFunc("GET /api/hosts", s.hHostsGet)
 	mux.HandleFunc("GET /api/ws", s.hWS)
@@ -402,7 +402,7 @@ func writeDeniedMsg(mode, actor string) string {
 			"需要自己动手请点界面上的「接管」。"
 	}
 	if actor == "ai" {
-		return "纯人工模式:AI 不可操作。可先执行「tt debug mode collab」接管(人在界面上点「接管」可随时收回)。"
+		return "纯人工模式:AI 不可操作。可先执行「tg debug mode collab」接管(人在界面上点「接管」可随时收回)。"
 	}
 	return "当前模式不允许该操作"
 }
@@ -541,7 +541,7 @@ func (s *Server) hEvents(w http.ResponseWriter, r *http.Request) {
 
 // hShutdown 优雅停止服务:POST /api/shutdown {}。
 // 效果等同 Ctrl+C —— ctx 取消 → http 收口 + mgr.CloseAll 收掉会话与 SSH 连接。
-// 停服务的主要路径是 `tg serve --stop` / `tt debug serve --stop`(按 pid 杀进程);
+// 停服务的主要路径是 `tg serve --stop` / `tg debug serve --stop`(按 pid 杀进程);
 // 这个端点留给"说得上话但拿不到 pid"的调用方(曾经是桌面外壳的关窗动作)。
 // 要求 JSON 请求体(与全站一致):浏览器跨站发不出这个 Content-Type(会先被预检挡下),
 // 所以只有本机同源调用方能用,不额外加鉴权。
@@ -879,7 +879,7 @@ func (s *Server) launchCfg(sshName, zone string, fglserver *string) (*Config, er
 				names = append(names, e.Name)
 			}
 			if len(names) == 0 {
-				return nil, fmt.Errorf("环境 %q 不存在(配置里没有任何环境,运行 tt env list 查看)", sshName)
+				return nil, fmt.Errorf("环境 %q 不存在(配置里没有任何环境,运行 tg env list 查看)", sshName)
 			}
 			return nil, fmt.Errorf("环境 %q 不存在;可用环境: %s", sshName, strings.Join(names, "、"))
 		}
@@ -1123,7 +1123,7 @@ func (s *Server) hSessionSwitch(w http.ResponseWriter, r *http.Request) {
 	//
 	// 走**冷启动档**（mustTargetOrEmpty）而不是 mustTarget：池子空、也没点名时，
 	// 这里没有"要收掉的那一条"，但下面有"要新建的那一条" —— 那正是「创建会话」。
-	// 从前这一处用的是 mustTarget，于是 `tt debug env <环境>` 在会话池为空时**必失败**：
+	// 从前这一处用的是 mustTarget，于是 `tg debug env <环境>` 在会话池为空时**必失败**：
 	// 用户只能先"起个作业"来凑一条会话，顺序被彻底反过来（真机踩到过）。
 	cur, ok := s.mustTargetOrEmpty(w, r, req.Session, "切换会话")
 	if !ok {
@@ -1167,7 +1167,7 @@ func (s *Server) hSessionSwitch(w http.ResponseWriter, r *http.Request) {
 			default:
 				if cur.State() != StateIdle {
 					fail(w, 409, fmt.Errorf("这个环境里已有一条叫 %q 的会话，且它不在空闲（%s）；"+
-						"先 tt debug quit --session %s，或换一个 --name", cur.Name(), cur.State(), cur.Name()))
+						"先 tg debug quit --session %s，或换一个 --name", cur.Name(), cur.State(), cur.Name()))
 					return
 				}
 				s.mgr.emit(Event{Type: "log", SessionID: cur.ID,
@@ -1235,7 +1235,7 @@ func (s *Server) hSessionCreate(w http.ResponseWriter, r *http.Request) {
 	}
 	env := strings.TrimSpace(req.Env)
 	if env == "" {
-		fail(w, 400, fmt.Errorf("需要 env：新会话落在哪个环境（tt env list 可看全部）"))
+		fail(w, 400, fmt.Errorf("需要 env：新会话落在哪个环境（tg env list 可看全部）"))
 		return
 	}
 
@@ -1532,7 +1532,7 @@ func (s *Server) hRaw(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 200, map[string]any{
 			"ok": true, "lines": []string{cmd},
 			"state": string(sess.State()), "started": sess.Started(),
-			"hint": "程序已放行,用 tt debug wait --for stopped 等它停下来",
+			"hint": "程序已放行,用 tg debug wait --for stopped 等它停下来",
 		})
 		return
 	}
@@ -1558,11 +1558,11 @@ func (s *Server) hRaw(w http.ResponseWriter, r *http.Request) {
 			"ok": true, "lines": []string{cmd},
 			"state": string(sess.State()), "started": sess.Started(),
 			"hint": "入口停站没有调用栈,step/next 会先 tbreak main 把程序放起来;" +
-				"用 tt debug wait --for stopped 等它停到 MAIN",
+				"用 tg debug wait --for stopped 等它停到 MAIN",
 		}
 		if !completed && st == nil {
 			resp["softTimeout"] = true
-			resp["hint"] = "程序已放行但还没停站;用 tt debug wait --for stopped 等它停下来"
+			resp["hint"] = "程序已放行但还没停站;用 tg debug wait --for stopped 等它停下来"
 		} else if st != nil {
 			resp["stop"] = st
 		}
@@ -1632,8 +1632,8 @@ func (s *Server) hRaw(w http.ResponseWriter, r *http.Request) {
 		resp["state"] = string(sess.State())
 		resp["silentSeconds"] = sess.SilentSeconds()
 		resp["hint"] = "程序仍在运行:命令没有被取消,也没有发 SIGINT。" +
-			"用 tt debug wait 等停站(或 POST /api/sessions/{id}/wait)," +
-			"用 tt debug why 判断它在等用户还是在空转"
+			"用 tg debug wait 等停站(或 POST /api/sessions/{id}/wait)," +
+			"用 tg debug why 判断它在等用户还是在空转"
 	}
 	writeJSON(w, 200, resp)
 }
@@ -1746,7 +1746,7 @@ func (s *Server) hWait(w http.ResponseWriter, r *http.Request) {
 // waitMatch 事件是否命中等待条件。
 // **注意**:stopped / exit / idle 在事件流里也可能是 `state` 事件的取值,不是独立类型 ——
 // 尤其**入口停站只发 `state(stopped)`,不发 `stopped` 事件**(见 startRun),
-// 不做这个映射就会漏掉它,tt debug start 会一直等到超时。
+// 不做这个映射就会漏掉它,tg debug start 会一直等到超时。
 func waitMatch(ev Event, want map[string]bool) bool {
 	if want[ev.Type] {
 		return true
@@ -2311,14 +2311,14 @@ func (s *Server) hWSLogDebug(w http.ResponseWriter, r *http.Request) {
 	//
 	// **走冷启动档**（与 `hSessionSwitch` 同一条规矩、同一个理由）：重放干的是**创建**一条
 	// 新会话（`LaunchReplay` → `prepareSession`），会话池空恰恰是它最正常的起点。
-	// 从前这一处用 mustTarget，于是界面上点「调试此调用」（或 `tt debug wsdebug <rowid>`）
-	// 在一台还没有任何会话的机器上**必失败**：409 + `NO_SESSION`「先运行 tt debug start
+	// 从前这一处用 mustTarget，于是界面上点「调试此调用」（或 `tg debug wsdebug <rowid>`）
+	// 在一台还没有任何会话的机器上**必失败**：409 + `NO_SESSION`「先运行 tg debug start
 	// <作业> 起一条」—— 可它自己就是造会话的命令，那条提示等于让人先绕一圈去凑一条，
 	// 而重放要的那一条由它自己建才对。
 	//
 	// 契约 2.4 的 F2（`NO_SESSION`）因此**不再由这两条端点产出**（切环境与按日志重放都是
 	// 造会话的命令）。这一档仍活在 CLI 目标层（`internal/target` 的 `failureNoSession`：
-	// `tt debug exec --session …` 那类"必须有既有会话"的命令），判据在那个包的 resolve_test，
+	// `tg debug exec --session …` 那类"必须有既有会话"的命令），判据在那个包的 resolve_test，
 	// 信封形状由 `TestContractNoSessionEnvelopeIsStillPinned` 钉住。
 	// **冷启动档只放松"池空"**：点名了不存在的会话仍是 `SESSION_NOT_FOUND`、多条仍报歧义。
 	cur, ok := s.mustTargetOrEmpty(w, r, req.Session, "按接口日志重放")
@@ -2424,7 +2424,7 @@ func (s *Server) wslogTopent(sess *Session) string {
 // 从前 `ent <= 0` 会回落 `Manager.Current()` 的 TOPENT（B11 的第五处），于是"查哪个企业"
 // 取决于池子里随机哪条会话 —— 查错 schema 的结果是 0 行，而 0 行会被读成
 // "这条业务数据不存在"（`Session.TopentIntForDB` 的注释里写着这是最危险的错误结论）。
-// 现在这个值只能由调用方显式给：`tt debug sql --ent`，CLI 侧按它会落位的那条会话填
+// 现在这个值只能由调用方显式给：`tg debug sql --ent`，CLI 侧按它会落位的那条会话填
 // （`internal/cli/debug` 的 dbgSQLTopentForRun），单会话行为因此一字不变。
 //
 // 归因用 Type=log(不是 ai_action —— 那个的语义是"AI 做了写操作",只读不该占用它),
@@ -2444,7 +2444,7 @@ func (s *Server) hDBSQL(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 400, failureEnvelope{
 			OK: false, Code: output.CodeUsage,
 			Error: "ent 必填(要查哪个企业编号):tg db sql --at <环境> " +
-				"（旧 tt debug sql 才会从会话补；新命令请显式点名）",
+				"（旧 tg debug sql 才会从会话补；新命令请显式点名）",
 		})
 		return
 	}
@@ -2533,7 +2533,7 @@ func execLogName(cmd string) string {
 
 // ---------- 设置 / 环境清单 ----------
 
-// hHostsGet 返回环境清单。独立运行(tt debug serve)时给 tt debug env 读,
+// hHostsGet 返回环境清单。独立运行(tg debug serve)时给 tg debug env 读,
 // 字段与统一服务的顶层 GET /api/hosts 一致(那边由 tt/internal/web 实现)。
 //
 // 合并前这条读的是 /api/settings,它吐的是整个 debug 配置节 —— 那时节既装
@@ -2722,8 +2722,8 @@ func (s *Server) hStatic(w http.ResponseWriter, r *http.Request) {
 	if s.webSub == nil {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		fmt.Fprint(w, `<!doctype html><html lang="zh"><meta charset="utf-8">
-<title>tt debug debug</title><body style="font-family:system-ui;padding:40px;line-height:1.8">
-<h2>tt debug server 已运行</h2>
+<title>tg debug debug</title><body style="font-family:system-ui;padding:40px;line-height:1.8">
+<h2>tg debug server 已运行</h2>
 <p>前端尚未构建。请在 web/ 目录执行 <code>npm install &amp;&amp; npm run build</code> 后重启服务。</p>
 <p>API 已可用:<code>/api/status</code>、<code>/api/ws</code>、<code>/api/sessions</code> …</p></body>`)
 		return
@@ -2813,6 +2813,28 @@ func (s *Server) hSessionJob(w http.ResponseWriter, r *http.Request) {
 	// 模式由**发起方**决定（与 hLaunch / hSessionSwitch 同一条规矩）：漏了它，业主授权时
 	// 新起的这一轮默认 collab，人在界面上的动作会被自己的闸门拒掉，而且是静默的。
 	ns.SetMode(launchModeFor(r))
+	// 真正去驱动这一轮：`LaunchWith` 只负责"把这一轮的参数落到会话上"，登录 + 起 fgldb 由
+	// 调用方发起（见 manager.prepareSession 末尾那句"由调用方驱动 Launch"）。
+	// 从前这里少了这一段，`tg session job` 回了 202 却什么都不跑：会话停在 idle、
+	// 世代号跳了一位，用户看到的是"起作业成功但界面上没东西"。
+	//
+	// 用 WithoutCancel：handler 返回后 `r.Context()` 立刻取消，直接传它会把这轮启动
+	// 掐死在拨号之前（hLaunch 里那段即传 r.Context()，同源的隐患另说）。
+	launchCtx := context.WithoutCancel(r.Context())
+	go func() {
+		if err := ns.Launch(launchCtx); err != nil {
+			log.Printf("[debug] 会话 %s 起作业 %s 失败: %v", ns.ID, req.Prog, err)
+			s.mgr.emit(Event{Type: "log", SessionID: ns.ID, Text: "起作业失败: " + err.Error()})
+			if ns.Booted() {
+				if ns.State() == StateExit {
+					s.mgr.Remove(ns.ID)
+				}
+			} else {
+				ns.ForceExit()
+				s.mgr.Remove(ns.ID)
+			}
+		}
+	}()
 	s.emitAction(r, ns, "session.job", fmt.Sprintf("在会话里起作业 %s", req.Prog))
 	writeJSON(w, http.StatusAccepted, map[string]any{
 		"ok": true, "sessionId": ns.ID, "session": refOf(ns.EnvName(), ns.Seq()),
