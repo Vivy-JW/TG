@@ -47,7 +47,7 @@ func newEnvCmd() *cobra.Command {
 	})
 
 	// env rename：环境名是跨文件的持久引用，改名必须是一次迁移，不是一个字段赋值
-	// （dict/<环境>.db、ents/<环境>.json、srccache/<环境>/ 都拿它当键）。
+	// （dict/<环境>.db、srccache/<环境>/、mirror/<环境>/ 都拿它当键）。
 	cmd.AddCommand(&cobra.Command{
 		Use:   "rename <旧环境名> <新环境名>",
 		Short: "改环境名，并把按名字落盘的字典库/源码镜像一起迁移",
@@ -55,7 +55,7 @@ func newEnvCmd() *cobra.Command {
 
   dict/<旧名>.db       本地字典库（改完不用重新同步；尊重 dict.dir / 环境 dictDir）
   dict/<旧名>.db.bak   同步留下的上一版备份
-  ents/<旧名>.json     企业目录快照
+  ents/<旧名>/         旧版 TT 留下的企业目录快照（有就一起搬，TG 不再写它）
   srccache/<旧名>/     调试源码镜像
   execlog/<旧名>/      调试跑过命令的大输出副本
   mirror.dir/<旧名>/   tg file mirror 的源码镜像（环境自配 mirrorDir 时不动）
@@ -131,7 +131,7 @@ func runEnvList(cmd *cobra.Command) error {
 	}
 
 	w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
-	// 「企业」这一列已去掉:企业编号不再存配置(每次 --ent 给),列在这里只会误导。
+	// 「企业」这一列已去掉:TG 没有企业编号这一层,列在这里只会误导。
 	fmt.Fprintln(w, "名称\tSSH\t区域\t数据库")
 	for _, v := range envViews(&h) {
 		ssh := fmt.Sprintf("%s@%s:%d", v.User, v.Host, v.Port)
@@ -179,7 +179,7 @@ func runEnvShow(cmd *cobra.Command, name string) error {
 	cmd.Printf("SSH       %s@%s:%d\n", e.User, e.Host, e.Port)
 	cmd.Printf("口令      %s\n", mask(e.Password))
 	cmd.Printf("区域      %s\n", orDash(e.Zone))
-	// 「企业」一行已去掉:企业编号不再存在环境配置里(每次 --ent 给)。
+	// 「企业」一行已去掉:TG 没有企业编号这一层。
 	if e.LaunchArgs != "" {
 		cmd.Printf("启动参数  %s\n", e.LaunchArgs)
 	}

@@ -2,7 +2,7 @@ package db
 
 // tg db sql —— 只读 SQL（业务数据）。从 tg debug sql 抽出来，并且**不再依赖 serve**。
 //
-// 两条执行路线（--route）：默认从本机直连该企业的库；直连建不起来才回退
+// 两条执行路线（--route）：默认从本机直连该环境的库；直连建不起来才回退
 // 本机 → SSH → 服务器 sqlplus/ksql。同一条语句可以 `--batch` 一次跑多条：
 // 一次建连、一个进程，把每条都要付的固定成本摊成一次。
 //
@@ -75,7 +75,7 @@ func newSQLCmd() *cobra.Command {
 
 # 执行路线（--route）
 
-  auto    直连优先：从本机直连该企业的库；建不起来（网络/隧道/登录）才回退服务器
+  auto    直连优先：从本机直连该环境的库；建不起来（网络/隧道/登录）才回退服务器
           sqlplus。默认。回退不是静默的：信封 route=server-sqlplus，notes 里写明原因。
   direct  只走客户端直连。建不起来就报 DB_UNREACHABLE，不回退（要确定"本机通不通"时用）。
   server  只走服务器 sqlplus/ksql（旧行为；每条 SQL 一次进程冷启动，实测约 +1.0s）。
