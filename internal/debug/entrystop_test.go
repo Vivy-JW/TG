@@ -71,6 +71,29 @@ func TestEntryStopInfoFile(t *testing.T) {
 	}
 }
 
+// TestEntryStopInfoFileGPProgHasNoPipePrefix GP 上 Prog 是裸作业名（模块由 t_prog_link 解析），
+// 而 fgldb 的 DVM 源名是 <模块>_<作业>.4gl。入口停站照抄裸名会让前端按 stop.file 下的断点
+// 被 fgldb 回 `No source file named abmi600.4gl.`（真机实测），所以这里必须补前缀；
+// 已经带前缀的（旧 T100 的 gzzz_t 结果）不能重复补。
+func TestEntryStopInfoFileGPProgHasNoPipePrefix(t *testing.T) {
+	cases := []struct {
+		name                              string
+		module, prog, runProg, cust, want string
+	}{
+		{name: "裸作业名补模块前缀", module: "cbm", prog: "abmi600", want: "cbm_abmi600.4gl"},
+		{name: "已有前缀不重复补", module: "cbm", prog: "cbm_abmi600", want: "cbm_abmi600.4gl"},
+		{name: "客制目录优先", module: "abm", prog: "abmi600", cust: "cbm", want: "cbm_abmi600.4gl"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			s := &Session{cfg: &Config{Product: "gp"}, Module: c.module, Prog: c.prog, RunProg: c.runProg, custModule: c.cust}
+			if got := s.entryStopInfo().File; got != c.want {
+				t.Fatalf("File = %q,期望 %q", got, c.want)
+			}
+		})
+	}
+}
+
 // TestEntryStopInfoFileResolves 合成的文件名必须能被源码查找器解析到真实路径上。
 // 只看 File 字段不够 —— 名字对不上候选路径的话,前端照样空白,只是错得更隐蔽。
 func TestEntryStopInfoFileResolves(t *testing.T) {

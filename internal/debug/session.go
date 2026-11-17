@@ -1034,10 +1034,26 @@ func (s *Session) entryStopInfo() *StopInfo {
 	if mod == "" || !reProgName.MatchString(mod) || prog == "" {
 		return si
 	}
-	// GP 的 prog 自带模块前缀（csf_csfi300_icd），再拼一次会变成 csf_csf_csfi300_icd.4gl ——
-	// 停站文件的镜像与源码定位都会因此落空。已经带前缀就不再加。
-	if (s.cfg != nil && strings.EqualFold(s.cfg.Product, "gp")) ||
-		strings.HasPrefix(strings.ToLower(prog), strings.ToLower(mod)+"_") {
+	// prog 有时自带模块前缀（T100 的 gzzz_t 会给 csf_csfi300_icd），再拼一次会变成
+	// csf_csf_csfi300_icd.4gl —— 停站文件的镜像与源码定位都会因此落空。已经带前缀就不再加。
+	//
+	// GP 上 Prog 是**裸作业名**（模块由 t_prog_link 解析出来，见 gpModuleOf），
+	// 而 fgldb 的 DVM 源名是 <模块>_<作业>.4gl（实测 abmi600 的源文件叫 cbm_abmi600.4gl）。
+	// 所以 GP 也不能照抄裸名：不带前缀就补上，否则前端按 stop.file 下的断点
+	// （`break abmi600.4gl:行`）会被 fgldb 回 `No source file named abmi600.4gl.`。
+	if s.cfg != nil && strings.EqualFold(s.cfg.Product, "gp") {
+		pre := s.custModule
+		if pre == "" {
+			pre = mod
+		}
+		name := prog
+		if !strings.HasPrefix(strings.ToLower(prog), strings.ToLower(pre)+"_") {
+			name = pre + "_" + prog
+		}
+		si.File = name + ".4gl"
+		return si
+	}
+	if strings.HasPrefix(strings.ToLower(prog), strings.ToLower(mod)+"_") {
 		si.File = prog + ".4gl"
 		return si
 	}

@@ -33,24 +33,24 @@
 - ☑ 语言码映射 `db.LangCode`（zh_TW→0、zh_CN→2）
 - ☑ 「表格总数」按表去重（`COUNT(DISTINCT zr02)`，224 → 159）
 - ☑ 测试按 GP 语义重写（`dict/db`、`dict/live`、`cli/dict` 全绿）
-- ☐ 删剩下六族 T100 SQL（`check/scc/win/param/acc/spec`）与其 DTO
-- ☐ `Source` 接口瘦身（30 个方法 → 只留有 GP 数据的十来条）
-- ☐ `internal/dict/live/README.md` 与包注释去 T100 表述
-- ☐ 更新 `docs/gp-dict-wiring.md` 的 ✅/⬜ 标记与 `docs/gp-scope.md` §4.D
+- ☑ 删剩下六族 T100 SQL（`check/scc/win/param/acc/spec`）与其 DTO（2026-11-11~13：`check`/`scc`/`param`/`acc`/`spec` 连命令带方法一起删；`win` 是 r.q，GP 有 `gab_file`/`gac_file`，改造成 GP 版留着）
+- ☑ `Source` 接口瘦身（2026-11-13 起 30 → 17；2026-11-17 再并两条 —— `QueryMsgLangs`→`QueryMsgs`、`QueryProgJobs`→`QueryProgInfo.Jobs`。现在 `internal/dict/db/source.go` 正好 15 个 `Query*`，没有空壳方法）
+- ☑ `internal/dict/live/README.md` 与包注释去 T100 表述（2026-11-13 重写；全文已无 `T100`/`dz*`/`gz*`/`ENT`/`企业` 字样）
+- ☑ 更新 `docs/gp-dict-wiring.md` 的 ✅/⬜ 标记与 `docs/gp-scope.md` §4.D（2026-11-13：wiring 表 15 ✅ / 0 空壳，§4.D 标「已落地」）
 - ☑ 提交字典层改动（`a75acb3`）
 - ☑ 清理 `tmp\gp-probe.json`（含明文口令）、`tmp\gpdict`、`tmp\tg.exe`
 - ☑ TG 起自己的运行实例（`run\`，独立端口），不再借用 TT 的 28670
 
 ## 阶段 2 调试面
 
-- ☐ `tg debug` 接 GP（起会话 / 停站 / 断点 / 步进）
-- ☐ 摘 T100 接线：`ents.go`、`db.go`、`dbsqldirect.go`、`srcmirror.go`、`api.go` 的 ENT 入口
+- ☑ `tg debug` 接 GP（2026-11-16~17 真机实测：`tg session job --prog abmi600` → `stopped`、`module=cbm`、`stop.file=abmi600.4gl`、`reason=entry`；断点/步进/变量与网页调试台同走 `/api/sessions/*`）
+- ☑ 摘 T100 接线（2026-11-17 `24b2c45`）：`ents.go`/`ent_required_test.go` 删除、`dbsqldirect.go` 已不存在、`db.go` 去掉 `entdir` 与 `ProbeDB(ent)`、`srcmirror.go` 改纯 `$TOP/$CUST`、`api.go` 的 ENT 入口与 `/api/ents*` 一起删
 - ☑ 连带删 `tt debug ents` / `tt debug topent`（2026-11-16 `c0e3974` 删 `--fglserver`，2026-11-17 `24b2c45` 把 ENT 管线整条删掉：`--ent`、`/api/ents*`、`cfg.Topent`、`requireExplicitEnt`、快照 `ent`/`topent*`）
 - ☑ `tg session` 收成 GP 语义（2026-11-16）：去掉 `--ent` / `session ent` / `--fglserver`，只要环境；`ls`/`show` 的 JSON 不再带 `ent` 与三个 `topent*` 键；`session new` 的作用域从 `EnvEntReq` 降成 `Env`
 - ☑ 两套 PTY 二选一（2026-11-17）：**决定删，不做薄封装** —— 删掉 `internal/gpsession` 与 `/api/gp/session/{new,list,exec,close}`（前端/CLI/文档 0 调用方，能力是 `internal/debug` 的子集）；三条真机经验并进 `internal/debug/gp.go` 的 `bootGP`/`startRunGP`，并把两处盲等改成「先等 shell 提示符、等不到再兜底睡」
 - ☑ 删设置页「发现环境 — 从 T100 设计器导入」（2026-11-17）：`internal/designer` 整包、`GET /api/discover/envs`、`api.discoverEnvs` 与前端弹窗/状态一起删；GP 没有设计器站点，那份 `sites.xml` 还带明文 SSH 口令
-- ☐ 调试工作台前端在 GP 下验一遍
-- ☐ 真机测试后确认：会话已 `quit`、服务已 `stop`、无残留作业或行锁
+- ☑ 调试工作台前端在 GP 下验一遍（2026-11-17 真浏览器 CDP 驱动无头 Edge 实测）：界面「作业编号 abmi600」→ 建会话 → 自动跳调试页并停在入口（`module=cbm`、`stop.reason=entry`）；「继续 (F5)」→ `state=running`、步过按钮正确置灰；点编辑器**行号栏**下断点 → `cbm_abmi600.4gl:785` 进断点表、「继续」停在 785（`reason=breakpoint`、`func=main()`）；右栏变量监视/断点/调用栈渲染正常、源码区显示 `topcust/cbm/4gl/abmi600.4gl`；「结束调试」可收掉会话。顺带查出并修掉两个真 bug：① 左树判空只看 `envs`（`loadEnvs` 里 T100 时代的 `product==='gp'` 过滤让 `envs` 恒空），明明有环境却显示「还没有环境。」——改按 `envs+gpEnvs` 判空；② 入口停站的 `stop.file` 在 GP 上是裸作业名（`abmi600.4gl`），按它下断点会被 fgldb 拒（`No source file named abmi600.4gl.`），改成 `<模块>_<作业>.4gl`（`internal/debug/session.go` 的 `entryStopInfo`，带 `TestEntryStopInfoFileGPProgHasNoPipePrefix`）。
+- ☑ 真机测试后确认（2026-11-17）：`tg session ls` 空表、`fgldb` 进程 0 个、28680 上只有一个 `tg serve`（pid 27128），没有残留作业
 
 ## 阶段 3 删 T100 领域层
 
@@ -61,14 +61,14 @@
 - ☑ `tg outline` 换 GP 目录结构：不换结构，改成"本地文件 > `--dir` > 镜像 > 直读服务器"（与 `tg interface` 同源，2026-11-12）
 - ☑ `tg file mirror` 改 GP 口径：两棵树 + 4gl/42f/inc，不做 profile（2026-11-12，见 handoff 第 39 条）
 - ☑ `tg db sql` 去掉"强制 `环境@企业`"：身份只有环境，账号取 `accounts[0]`，裸表名落在账号的 schema（信封的 schema 字段）
-- ☐ 从命令层摘掉 `target` / `entdir`
+- ☑ 从命令层摘掉 `target` / `entdir`（2026-11-17 `800554e`）：`internal/entdir` 整包删除、`ents` 缓存目录从清单移除；`target` **有意保留** —— 它已不含 ENT，只剩寻址文法与信封契约（`internal/debug`、`debugclient`、`cli/debug` 在用）
 - ☑ `skills/` 换成 GP 版（`tt-dev-tzc` 已删，`tt-erp-*` 已改名 `tg-erp-*`，commit a42a1a2）
 
 ## 阶段 4 安全与发版
 
-- ☐ `GET /api/gp/meta` 别回明文口令（前端只要 `hasPassword`）
-- ☐ 前端 `dist` 重编 + exe 重打
-- ☐ `build_portable.bat` / `tt.wxs` 改 TG 名称、图标、产品名
+- ☑ `GET /api/gp/meta` 回明文口令 —— **决定保留**（只监听 127.0.0.1；`run\config.json` 本身就必须存明文，设置页要能编辑口令并回显；TT 侧同样明文）
+- ☑ 前端 `dist` 重编 + exe 重打（多轮；2026-11-17 最新产物 `web/dist/assets/index-*.js` ≈4.04 MB，exe `0.5.2-2026-11-17h`）
+- ☑ `build_portable.bat` / `installer/tg.wxs` 改 TG 名称、产品名（2026-11-13 `1685d08`；MSI 2026-11-16 实跑产出 `dist\TG-0.5.2-x64.msi`，UpgradeCode 换成 TG 自己的）
 - ☐ 版本号与 CHANGELOG
 
 ## 阶段 5 改名三批
@@ -79,11 +79,11 @@
 
 ## 阶段 6 验证与发布
 
-- ☐ 全量 `go test ./...`（沙箱外；现有 3 红是沙箱限制）
-- ☐ 真环境端到端：sync → `dict prog/table/msg` → 调试会话
+- ☑ 全量 `go test ./...`（2026-11-17：装上 Git for Windows 补出 bash 之后全绿，exit 0 —— 原先那 3 红确是环境缺件）
+- ☑ 真环境端到端（2026-11-17，22主机/TOPTEST）：`tg dict db sync --env 22主机` 1m45s 写入 68.7 MB（表 2,962 / 字段 60,870 / 关系 118,420 / 消息 42,031 / 画面文字 427,553 / 程序链接 17,810）→ `tg dict r.t ima_file`、`tg dict prog abmi600`、`tg dict msg -263` 均 `ok:true` → `tg session job --prog abmi600` 真机停在入口
 - ☐ 打 tag、README、发 release
 
 ## 待决策
 
 - ☑ 阶段 2 起手方式（2026-11-17）：先接 GP 跑通（`internal/debug` 直接拥有 GP 路径），两套 PTY 的残留随后删掉，不保留第二条路
-- ☐ 把 `.agents/skills/` 挂进 DSH 技能目录，让工作区规范能自动触发
+- ☑ 把 `.agents/skills/` 挂进 DSH 技能目录，让工作区规范能自动触发（已生效：会话可用技能里有 `tg-pj-add-cli`/`tg-pj-git`/`tg-pj-plan`/`tg-pj-test`）

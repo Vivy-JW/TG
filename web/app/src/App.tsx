@@ -259,7 +259,12 @@ export function App() {
   if (mainRoute.kind === 'session') lastSessionRef.current = { id: mainRoute.id, tab: mainRoute.tab }
 
   const envShown = lastEnvRef.current
-  const envBrief = envShown ? (envs.find((e) => e.name === envShown.name) || { name: envShown.name }) : null
+  // 环境名 → 主机地址：TG 只有 TOP GP，一份清单就够（gpEnvs 与 envs 是同一批环境的两套投影）。
+  const envBrief = envShown
+    ? (envs.find((e) => e.name === envShown.name)
+      || (gpEnvs.find((e) => e.name === envShown.name) as { name: string; host?: string } | undefined)
+      || { name: envShown.name })
+    : null
   const sessionShown = lastSessionRef.current
   const sessionItem = sessionShown ? sessions.find((s) => s.id === sessionShown.id) || null : null
 

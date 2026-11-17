@@ -153,7 +153,7 @@ export function Sidebar({
       {/* 区块标题:环境 + 三个小动作(搜索 / 刷新 / 去设置里加环境) */}
       <div className="mt-3 flex h-8 shrink-0 items-center gap-0.5 px-3.5">
         <span className="flex-1 text-[12px] text-muted-foreground">
-          环境{total > 0 && <span className="ml-1 text-[11px] opacity-70">{envs.length}</span>}
+          环境{(envs.length + gpEnvs.length) > 0 && <span className="ml-1 text-[11px] opacity-70">{envs.length + gpEnvs.length}</span>}
         </span>
         <SidebarIcon icon={Search} label="搜索环境 / 会话" active={filterOpen}
           onClick={() => { setFilterOpen((v) => !v); if (filterOpen) setQ('') }} />
@@ -190,7 +190,7 @@ export function Sidebar({
           </div>
         ) : !envsLoaded ? (
           <div className="p-2 text-xs text-muted-foreground">正在读取环境…</div>
-        ) : envs.length === 0 ? (
+        ) : envs.length + gpEnvs.length === 0 ? (
           <div className="space-y-2 p-2 text-xs text-muted-foreground">
             <div>还没有环境。</div>
             <button onClick={onAddEnv}
@@ -198,7 +198,7 @@ export function Sidebar({
               去设置 → 站点管理里添加
             </button>
           </div>
-        ) : shown.length === 0 ? (
+        ) : shown.length + shownGp.length === 0 ? (
           <div className="p-2 text-xs text-muted-foreground">没有匹配的环境或会话。</div>
         ) : (
           shown.map(({ env, hits }) => {
