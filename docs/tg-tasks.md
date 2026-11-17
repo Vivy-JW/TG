@@ -47,7 +47,7 @@
 - ☐ 摘 T100 接线：`ents.go`、`db.go`、`dbsqldirect.go`、`srcmirror.go`、`api.go` 的 ENT 入口
 - ☑ 连带删 `tt debug ents` / `tt debug topent`（2026-11-16 `c0e3974` 删 `--fglserver`，2026-11-17 `24b2c45` 把 ENT 管线整条删掉：`--ent`、`/api/ents*`、`cfg.Topent`、`requireExplicitEnt`、快照 `ent`/`topent*`）
 - ☑ `tg session` 收成 GP 语义（2026-11-16）：去掉 `--ent` / `session ent` / `--fglserver`，只要环境；`ls`/`show` 的 JSON 不再带 `ent` 与三个 `topent*` 键；`session new` 的作用域从 `EnvEntReq` 降成 `Env`
-- ☐ 两套 PTY 二选一：把 `internal/gp/session.go` 降级成 `internal/debug` 的薄封装
+- ☑ 两套 PTY 二选一（2026-11-17）：**决定删，不做薄封装** —— 删掉 `internal/gpsession` 与 `/api/gp/session/{new,list,exec,close}`（前端/CLI/文档 0 调用方，能力是 `internal/debug` 的子集）；三条真机经验并进 `internal/debug/gp.go` 的 `bootGP`/`startRunGP`，并把两处盲等改成「先等 shell 提示符、等不到再兜底睡」
 - ☑ 删设置页「发现环境 — 从 T100 设计器导入」（2026-11-17）：`internal/designer` 整包、`GET /api/discover/envs`、`api.discoverEnvs` 与前端弹窗/状态一起删；GP 没有设计器站点，那份 `sites.xml` 还带明文 SSH 口令
 - ☐ 调试工作台前端在 GP 下验一遍
 - ☐ 真机测试后确认：会话已 `quit`、服务已 `stop`、无残留作业或行锁
@@ -85,5 +85,5 @@
 
 ## 待决策
 
-- ☐ 阶段 2 起手方式：先接 GP 跑通（两套 PTY 并存一阵），还是先合并成一套再接线
+- ☑ 阶段 2 起手方式（2026-11-17）：先接 GP 跑通（`internal/debug` 直接拥有 GP 路径），两套 PTY 的残留随后删掉，不保留第二条路
 - ☐ 把 `.agents/skills/` 挂进 DSH 技能目录，让工作区规范能自动触发

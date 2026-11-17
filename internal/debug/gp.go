@@ -20,6 +20,7 @@ import (
 	"time"
 
 	dictlib "tg/internal/dict"
+	"tg/internal/host"
 )
 
 // gpReMenu 登录器问实例的那一行。
@@ -77,7 +78,13 @@ func (s *Session) bootGP(ctx context.Context) error {
 		num = ""
 	}
 	s.pty.Write(num + "\r")
-	time.Sleep(4 * time.Second)
+	// 等 shell 提示符再往下走，而不是盲等固定秒数。旧 internal/gpsession 里记过一笔
+	// 实测：上一条命令的输出还在刷的时候写进去，开头字符会被吃掉（`r.d2
+	// csf_csfi300_icd` 变成 `sfi300 _icd`）。等不到提示符（老服务器提示符形状不同）
+	// 再退回盲等，别把本来能用的机器卡死。
+	if err := s.waitRegexp(host.ReShellPrompt, 20*time.Second, "GP shell 提示符"); err != nil {
+		time.Sleep(4 * time.Second)
+	}
 	s.markShellReady()
 	s.mu.Lock()
 	s.booted = true
@@ -178,7 +185,9 @@ func (s *Session) startRunGP(ctx context.Context, launchProg string) error {
 	setup := fmt.Sprintf("cd $TOP/%s/4gl || cd $CUST/%s/4gl\r\n", mod, mod)
 	s.emitEvent(Event{Type: "log", Text: "GP: 进模块目录 " + mod})
 	s.pty.Write(setup)
-	time.Sleep(2 * time.Second)
+	if err := s.waitRegexp(host.ReShellPrompt, 10*time.Second, "GP shell 提示符(进目录后)"); err != nil {
+		time.Sleep(2 * time.Second)
+	}
 
 	// 先确认模块目录里真有这个程序。否则 r.d2 只会在 shell 里报错，
 	// 而这里会一直等 (fgldb) 90 秒；p_link 选错模块时用户看到的就是“卡住”。

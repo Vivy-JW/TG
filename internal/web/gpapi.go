@@ -9,8 +9,11 @@ package web
 //	源码镜像     internal/mirror（Pull + manifest）
 //	字典同步     internal/dict（SyncEnv → dbsync.Run → SyncGP）
 //	营运据点     internal/dict（ListSites / LookupSite）
-//	调试会话     internal/gpsession（Manager）
 //	后台任务     internal/web/jobs（Registry）
+//
+// 调试会话不在这里：GP 的会话就是 internal/debug 的会话（/api/sessions/*）。
+// 曾经另起的 internal/gpsession 与 /api/gp/session/* 是同一件事的第二份实现，
+// 没有任何调用方，已于 2026-11-17 删除。
 //
 // 原来这些混在 internal/gp 一个包里（943 行），第③④步拆分后只剩这一层薄面。
 
@@ -33,7 +36,6 @@ import (
 	"tg/internal/dict/live"
 	"tg/internal/envmove"
 	_ "tg/internal/erpdb" // 注册 sql 驱动 "oracle"（go-ora）
-	"tg/internal/gpsession"
 	"tg/internal/host"
 	"tg/internal/mirror"
 	"tg/internal/web/jobs"
@@ -53,12 +55,11 @@ type GPAPI struct {
 	// 与 T100 的 /api/hosts 保存路径同一机制；否则改完 GP 环境，调试服务仍拿旧清单（实测 404）。
 	reload func() error
 
-	sess *gpsession.Manager
 }
 
 // NewGPAPI 建一个 GP 处理器。cfgPath 是 config.json 的路径（与统一服务同一份）。
 func NewGPAPI(cfgPath string) *GPAPI {
-	return &GPAPI{cfgPath: cfgPath, jobs: jobs.New(), sess: gpsession.NewManager()}
+	return &GPAPI{cfgPath: cfgPath, jobs: jobs.New()}
 }
 
 // SetReloader 注入配置写入后的重载回调。应在开始服务前调用。
@@ -84,14 +85,6 @@ func (s *GPAPI) serve(w http.ResponseWriter, r *http.Request) {
 		s.hMeta(w, r)
 	case r.Method == http.MethodPost && r.URL.Path == "/api/gp/env":
 		s.hEnv(w, r)
-	case r.Method == http.MethodPost && r.URL.Path == "/api/gp/session/new":
-		s.hSessionNew(w, r)
-	case r.Method == http.MethodGet && r.URL.Path == "/api/gp/session/list":
-		s.hSessionList(w, r)
-	case r.Method == http.MethodPost && r.URL.Path == "/api/gp/session/exec":
-		s.hSessionExec(w, r)
-	case r.Method == http.MethodPost && r.URL.Path == "/api/gp/session/close":
-		s.hSessionClose(w, r)
 	case r.Method == http.MethodPost && r.URL.Path == "/api/gp/sync":
 		s.hSync(w, r)
 	case r.Method == http.MethodPost && r.URL.Path == "/api/gp/site":
@@ -652,80 +645,3 @@ func (s *GPAPI) runSync(env config.NamedSsh) {
 	})
 }
 
-// ---------------------------------------------------------------- 会话
-
-// hSessionNew 建一条会话：POST {env, prog}。
-func (s *GPAPI) hSessionNew(w http.ResponseWriter, r *http.Request) {
-	var body struct {
-		Env  string `json:"env"`
-		Prog string `json:"prog"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		writeJSON(w, 400, map[string]any{"ok": false, "error": "请求体不是 JSON"})
-		return
-	}
-	if body.Prog == "" {
-		writeJSON(w, 400, map[string]any{"ok": false, "error": "程序编号必填"})
-		return
-	}
-	env, err := s.findEnv(body.Env)
-	if err != nil {
-		writeJSON(w, 404, map[string]any{"ok": false, "error": err.Error()})
-		return
-	}
-	sess, err := s.sess.New(*env, body.Prog)
-	if sess != nil {
-		s.sess.Add(sess)
-	}
-	if err != nil {
-		if sess != nil {
-			writeJSON(w, 200, map[string]any{"ok": false, "error": err.Error(), "session": sess})
-			return
-		}
-		writeJSON(w, 500, map[string]any{"ok": false, "error": err.Error()})
-		return
-	}
-	writeJSON(w, 200, map[string]any{"ok": true, "session": sess})
-}
-
-func (s *GPAPI) hSessionList(w http.ResponseWriter, _ *http.Request) {
-	writeJSON(w, 200, map[string]any{"ok": true, "sessions": s.sess.List()})
-}
-
-// hSessionExec 执行一条 fgldb 命令：POST {id, cmd}。
-func (s *GPAPI) hSessionExec(w http.ResponseWriter, r *http.Request) {
-	var body struct {
-		ID  string `json:"id"`
-		Cmd string `json:"cmd"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		writeJSON(w, 400, map[string]any{"ok": false, "error": "请求体不是 JSON"})
-		return
-	}
-	sess := s.sess.ByID(body.ID)
-	if sess == nil {
-		writeJSON(w, 404, map[string]any{"ok": false, "error": "会话不存在或已关闭"})
-		return
-	}
-	out, err := sess.Exec(body.Cmd, 30*time.Second)
-	res := map[string]any{"ok": err == nil, "output": out, "file": sess.File, "line": sess.Line}
-	if err != nil {
-		res["error"] = err.Error()
-	}
-	writeJSON(w, 200, res)
-}
-
-func (s *GPAPI) hSessionClose(w http.ResponseWriter, r *http.Request) {
-	var body struct {
-		ID string `json:"id"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		writeJSON(w, 400, map[string]any{"ok": false, "error": "请求体不是 JSON"})
-		return
-	}
-	if !s.sess.Close(body.ID) {
-		writeJSON(w, 404, map[string]any{"ok": false, "error": "会话不存在"})
-		return
-	}
-	writeJSON(w, 200, map[string]any{"ok": true})
-}

@@ -80,7 +80,7 @@ m.Handle("/api/gp/", s.opt.GP)                                    // GP
 两条判断依据：
 
 - **`.42f` / `.42s` 是 Genero 编译产物，不是 T100 私有格式。** GP 每个模块下有 `42f/`，T100 有 `42f/`，解析器是同一套。这条决定了 `form42f`/`screen`/`cli/interfacecmd` 属于语言层；`str42s` 已于 2026-11-12 删除（TG 不用 `.42s`）。
-- **fgldb 是 Genero 调试器**，提示符 `(fgldb) ` 是 Genero 的，不是鼎捷的（`internal/gp/session.go:27` 的 `const fgldbPrompt`）。所以"调试"这件事本身属于 Genero 层。
+- **fgldb 是 Genero 调试器**，提示符 `(fgldb) ` 是 Genero 的，不是鼎捷的（原先那份简化 PTY `internal/gpsession` 的 `const fgldbPrompt`，已于 2026-11-17 删除）。所以"调试"这件事本身属于 Genero 层。
 
 ## 4. T100 领域层（最终删）
 
@@ -164,7 +164,7 @@ m.Handle("/api/gp/", s.opt.GP)                                    // GP
 | `internal/debug/srcmirror.go` | `entdir` | 改成纯 GP 路径（`$TOP/$CUST` 镜像），去掉企业段 |
 | `internal/debug/api.go` 的企业/作业入口 | `target` 的 ENT 形态 | 摘掉 `环境/99`、`@企业` 那一支（见 §5.3） |
 
-**同时要处理的重复**：`internal/gp/session.go` 与 `internal/debug` 的两套 PTY 不能长期并存。阶段 2 二选一——要么把 `internal/gp/session.go` 降级成 `debug` 的薄封装（推荐，前端/WS/断点只有一条路），要么明确它只服务 `/api/gp/session` 的"快速 exec"，不再长大。
+**两套 PTY 的重复：已解决（2026-11-17，`d0f7366` 那一批）** —— **只留 `internal/debug` 一条路**。`internal/gp/session.go`（后来搬成 `internal/gpsession`）是 Web 的简化 PTY，只服务 `/api/gp/session/{new,list,exec,close}`；查下来这四个接口**前端 0 处、CLI 0 个命令、文档与技能 0 处**调用（网页调试台走的是 `/api/sessions/*`），而且它的能力是 `internal/debug` 的真子集（没有断点/步进/停站状态机）。所以没有走"降级成薄封装"那条：整包删除，同时把它的三条真机经验（按实例名选菜单、`r.d2` 要去模块前缀、写命令前先等提示符空闲否则吞字符）并进 `internal/debug/gp.go` 的 `bootGP`/`startRunGP`（后者两处盲等改成了"先等 shell 提示符、等不到再兜底睡"）。
 
 **连带删除（阶段 3）**：`cli/debug`（4547 行，T100 作业调试命令面）、`debugclient`（581 行，`cli/debug` 与 `cli/session` 共用的 REST 客户端）。GP 要命令行面的话，在 `cli/gp` 里新写，不复用这两个。
 
@@ -231,7 +231,7 @@ TT 的 GP 面现在只有"环境 / 镜像 / 字典 / 调试会话"四件事，**
 这八条都有代码证据，改起来都不大，但会决定用户第一次打开 TG 的印象。
 
 1. **`tg debug` 完全不认 GP 环境。** `internal/cli/debug` 全包搜不到一处 `Product` 判断。对着 GP 环境跑 `tg debug`，它会按 T100 的路径去解析作业、企业、源码镜像——报错大概是"找不到作业"，而不是"这是 GP 环境"。
-2. **GP 调试没有命令行面。** 只有 `/api/gp/session/{new,list,exec,close}`；~~`tt gp` 只有 `table|link|msg`~~（已删，现为 `tg dict …`）。也就是说：**GP 版的"调试"今天只有 Web 能做，命令行做不了**。而 TT 的定位是 CLI-first。
+2. ~~**GP 调试没有命令行面。** 只有 `/api/gp/session/{new,list,exec,close}`~~ —— **已过时**：`/api/gp/session/*` 已删，命令行面是 `tg session new/job/exec` 与 `tg debug start/exec/bp/wait/stop/status`，网页调试台与 CLI 走同一条 `/api/sessions/*`（`internal/debug`）。
 3. ~~**`tg file mirror` 是 T100 专用。**~~ —— **2026-11-12 已改**：`tg file mirror` 不再走 T100 的 zone/`erp|com`/`tar.gz`/profile，改为 `internal/mirror`（两棵树 `$TOP`+`$CUST`、白名单 `*/4gl/*.4gl` + `*/42f/*` + `*.inc`、SFTP 逐文件 + mtime 增量、`--full` 剪枝、`manifest.json` 记规模与 kinds）。实测规模：4gl 6,971 个 / 376.5 MB、42f 6,771 个 / 57.0 MB、inc 24 个 / 0.3 MB，合计 **433.8 MB / 13,766 个**，首拉约 10–12 分钟。**没有按 profile 拆**：一个镜像目录要装齐所有读者的并集（`tg outline` 读 4gl、`tg interface` 读 42f、`grep/cat` 读 inc），拆开只会让某条命令找不到文件；42s 在 GP 恒为 0（标签已改由 `gae_file` → `t_ui_text` 提供）。网页 `/api/gp/mirror` 与命令行同源。
 4. **前端有两个端点不存在（GP 页的"查询数据源"其实是三处断线）。**
    - `web/app/src/gpEnvs.ts:40` 的 `gpPickDir` POST `/api/gp/pickdir` → 后端只有 `POST /api/pickdir`（`internal/web/server.go:161` 挂的 `internal/web/pickdir.go`，本机回环、返回 `{ok,path,canceled}`）。返回 404，函数吞掉异常返回空串，**表现是"选目录按钮没反应"**。T100 侧 `web/app/src/api.ts:487` 调的正是 `/api/pickdir`，改一行 URL 就对齐。
