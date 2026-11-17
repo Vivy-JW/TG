@@ -7,7 +7,7 @@ import (
 )
 
 // buildProgDB 建一个只含"程序 / 程序用表 / 表档"三张表的临时库，
-// 列与 tt gp sync 产出的 t_* 同构（全 TEXT，与本地镜像一致）。
+// 列与 tg dict db sync 产出的 t_* 同构（全 TEXT，与本地镜像一致）。
 func buildProgDB(t *testing.T) *DB {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "prog.db")

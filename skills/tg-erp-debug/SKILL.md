@@ -23,7 +23,7 @@ tg debug status
 2. 连环境、起作业、等入口停站：
 
 ```bash
-tg debug start <作业编号> --at <环境>@<企业> --name <别名> --timeout 120
+tg debug start <作业编号> --at <环境>@<据点编号> --name <别名> --timeout 120
 tg session ls
 ```
 
@@ -106,17 +106,17 @@ tg debug wslogs --service <服务名> --fail --at <环境>
 2. 按这条日志重放，停在入口（企业必填，且必须是日志所在的那个环境）：
 
 ```bash
-tg debug wsdebug <rowid> --at <环境>@<企业> --name <别名>
+tg debug wsdebug <rowid> --at <环境>@<据点编号> --name <别名>
 ```
 
 要改入参再重放，启动时直接给（`--set` 可重复，值为空即清空）：
 
 ```bash
-tg debug wsdebug <rowid> --at <环境>@<企业> \
+tg debug wsdebug <rowid> --at <环境>@<据点编号> \
   --set digi-body.std_data.parameter.production_item_no=<新值>
 
 # 或整份替换（用上面 --save-request 存下来的文件改完再送）
-tg debug wsdebug <rowid> --at <环境>@<企业> --request-file req.json
+tg debug wsdebug <rowid> --at <环境>@<据点编号> --request-file req.json
 ```
 
 3. 记下 `ref`，按基本流程下断点、放行：
@@ -127,11 +127,9 @@ tg debug bp add <函数名> --session <ref>
 tg debug exec "continue" --session <ref> --wait 300
 ```
 
-4. 程序直接退出/断点不命中：先看 `wsdebug` 输出里的 TOPENT 是不是纯数字（把据点码填进企业编号会跑不到业务逻辑）；不对就改：
-
-```bash
-tt debug topent <企业> --session <ref>
-```
+4. 程序直接退出/断点不命中：先看会话落在哪个**模块**（`tg session show --session <ref>` 的 `module`）——
+   GP 里作业→模块靠 `t_prog_link` 推出来，推错就会跑到别的 4GL 上；也可以用 `tg debug resolve <作业>` 单独确认。
+   若模块对但跑到空数据，先确认 `--at <环境>@<据点编号>` 里的据点是不是要查的那套库（`tg site list` 看编号）。
 
 5. 结束同基本流程：
 

@@ -926,7 +926,6 @@ func (m *Manager) Current() *Session {
 //   - `ref`    规范 id `环境#序号`，**生命周期内恒定不变**（C2.0 / C5.4）——身份，不是快照；
 //   - `display` 人读形态 `环境/作业#序号`，作业段是快照，会随 `SetRun` 漂（C5.4）；
 //   - `name`   别名，空串 = 未命名（C2.5b）；
-//   - `ent`    **当前**生效的企业编号，会随 `tt debug topent` 变（C2.5c）——快照，不是地址；
 //   - `n`      序号：同一环境下的第 N 条（C2.2 / Q24）——身份，建立时分配、之后不变；
 //   - `epoch`  世代号（C5.3 / F15）——见 `Session.Epoch` 的语义。
 type SessionBrief struct {

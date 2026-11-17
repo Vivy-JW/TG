@@ -7,7 +7,7 @@ import (
 )
 
 // buildTableDB 建一个只含 GP 表字典四张表（t_table 表档 / t_column 字段 /
-// t_index 索引 / t_constraint 约束）的临时库，列与 tt gp sync 产出的同构。
+// t_index 索引 / t_constraint 约束）的临时库，列与 tg dict db sync 产出的同构。
 func buildTableDB(t *testing.T) *DB {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "tables.db")

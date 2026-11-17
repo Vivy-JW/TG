@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// buildMsgDB 建一个只含消息档 t_msg 的临时库（tt gp sync 从 ze_file 落的那种）。
+// buildMsgDB 建一个只含消息档 t_msg 的临时库（tg dict db sync 从 ze_file 落的那种）。
 // 数据挑的是能把条件区分开的例子：
 //
 //	-263 / -26300  两个编号，钉住"编号默认精确"（-263 不能把 -26300 带出来）

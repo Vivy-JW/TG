@@ -75,9 +75,9 @@ VALUES (gr_qry[li_i].check,gr_qry[li_i].pmdsdocno,gr_qry[li_i].pmdtseq,gr_qry[li
 
 从字典中查询表和字段的中文含义的命令：
 ```bash
-tg dict r.t --brief "capp115_tmp,pmds_t,pmdt_t,apba_t" --at <环境>@<企业>
-tg dict r.t apba_t --at <环境>@<企业>
-tg dict r.t capp115_tmp --at <环境>@<企业>
+tg dict r.t --brief "capp115_tmp,pmds_t,pmdt_t,apba_t" --at <环境>@<据点编号>
+tg dict r.t apba_t --at <环境>@<据点编号>
+tg dict r.t capp115_tmp --at <环境>@<据点编号>
 ```
 
 > Tips: 需要配置环境的命令都可以通过`--at-list`命令查看可以使用哪些环境
@@ -111,8 +111,8 @@ CALL cl_err()
 查询系统消息、错误消息的命令：
 
 ```bash
-tg dict msg asf-00150 --at <环境>@<企业>
-tg dict msg --at <环境>@<企业> -- -3101
+tg dict msg asf-00150 --at <环境>@<据点编号>
+tg dict msg --at <环境>@<据点编号> -- -3101
 ```
 
 ## 开窗和校验带值
@@ -138,8 +138,8 @@ END CASE
 
 查询开窗对应的SQL等信息的命令：
 ```bash
-tg dict r.q q_sfajwfdocno_01_wf --at <环境>@<企业>
-tg dict r.q --kw sfajwfdocno --at <环境>@<企业>
+tg dict r.q q_sfajwfdocno_01_wf --at <环境>@<据点编号>
+tg dict r.q --kw sfajwfdocno --at <环境>@<据点编号>
 ```
 
 过栏位的判断也是可以复用的，特征是 `v_xx`。（这一层 GP 侧没有 `tg dict r.v`；`v_*` 封装的 SQL 直接在源码里看，或按它过滤的表/字段用 `tg dict r.t` 反查。）
