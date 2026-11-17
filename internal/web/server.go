@@ -28,7 +28,6 @@ import (
 
 	"tg/internal/config"
 	"tg/internal/dbconfig"
-	"tg/internal/designer"
 	"tg/internal/envmove"
 	"tg/internal/erpdb"
 	"tg/internal/host"
@@ -147,8 +146,6 @@ func (s *Server) routes() {
 	m.HandleFunc("GET /api/health", s.hHealth)
 	m.HandleFunc("GET /api/hosts", s.hHostsGet)
 	m.HandleFunc("PUT /api/hosts", s.hHostsPut)
-	// 从 T100 设计器的站点清单里发现环境(只读那份加密文件,让用户勾选导入)。
-	m.HandleFunc("GET /api/discover/envs", s.hDiscoverEnvs)
 	m.HandleFunc("POST /api/dbprobe", s.hDBProbe)
 	m.HandleFunc("POST /api/dbaccverify", s.hDBAccVerify)
 	m.HandleFunc("POST /api/conntest", s.hConnTest)
@@ -802,17 +799,6 @@ var ungovernedEnvKeys = []string{"launchArgs", "watchdogSeconds"}
 
 // ungovernedDBKeys 配置页表单没有输入控件的 **db 级**子键，保存时需从旧配置补回。
 var ungovernedDBKeys = []string{"viaSsh"}
-
-// hDiscoverEnvs 扫描本机的 T100 设计器站点清单,把里面的站点读成候选环境。
-//
-// **只读**:解密设计器的 sites.xml 属于跨应用读凭据(里面有明文 SSH 口令),
-// 所以这里只读不写 —— 绝不回写设计器的文件(见 internal/designer 的包注释)。
-//
-// 响应里的 reason 是"为什么没读到/读到几条"的自然语言说明,与 envs 一同展示:
-// "这台机器没装设计器"是个正常结论,不该走错误弹窗那条路。
-func (s *Server) hDiscoverEnvs(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, http.StatusOK, designer.Discover())
-}
 
 // hDBProbe 「从服务器获取」：登录 SSH 后探测库连接要素，结果仅作回填参考。
 func (s *Server) hDBProbe(w http.ResponseWriter, r *http.Request) {

@@ -94,8 +94,6 @@ var skipLedger = []skipSite{
 	// 「发现环境」对真实设计器文件的冒烟检查:它**必须**在没装设计器的机器上跳过,
 	// 而那个跳过正是它的价值所在 —— 有设计器的机器(开发机)会真的拿 .NET 生成的密文
 	// 解一遍,没有的机器不假红。所以这两条不影响「全绿」这个结论。
-	{file: "internal/designer/sites_local_test.go", msg: "没有 APPDATA,跳过本机真实文件检查", layer: layEnv, why: "非 Windows / 环境异常时没有 %APPDATA%，定位不到设计器目录；合成密文的用例仍然全跑"},
-	{file: "internal/designer/sites_local_test.go", msg: "这台机器没有设计器站点清单,跳过", layer: layEnv, why: "未安装 T100 设计器或从未保存过站点。**不影响「全绿」这个结论**：参数是否正确由合成密文的往返用例保证，这条只是拿真实 .NET 密文再验一次（装了设计器的机器上必跑）"},
 	{file: "internal/testkit/corpus.go", msg: "没有真实语料：设 TDEV_CORPUS 或 TTZS_CORPUS 指到一份，或准备 %s", layer: layL3, why: "需真实语料：开关 TDEV_CORPUS / TTZS_CORPUS"},
 	{file: "internal/testkit/corpus.go", msg: "%s 下没有 %s", layer: layL3Missing, why: "语料在，但里面没有该扩展名的文件"},
 	// ---- WP2（会话寻址重构）的契约测试：等 WP3/WP4/WP4c 把冻结契约落地 ----

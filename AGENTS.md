@@ -45,9 +45,8 @@ TT/
 │  │  └─ session/       tg session 命令组：建/列/看/结束/收掉/透传/起作业
 │  ├─ config/           统一配置层：位置解析、唯一写入口 Edit、原子写、打码、缓存清单
 │  ├─ dbconfig/         配置里“库”那一节的连接模型
-│  ├─ debug/            调试子系统：会话管理、断点存档、源码镜像 srccache、执行日志、企业快照
+│  ├─ debug/            调试子系统：会话管理、断点存档、源码镜像 srccache、执行日志
 │  ├─ debugclient/      调试面 REST 唯一客户端（cli/debug 与 cli/session 共用；码/候选/信封）
-│  ├─ designer/         从设计器 sites.xml 只读导入环境站点
 │  ├─ dict/             字典子系统
 │  │  ├─ db/            本地 SQLite 查询与 ACC 元模型/值查询
 │  │  ├─ dbsync/        表与数据族同步（含 ACC 定义族）
@@ -57,8 +56,7 @@ TT/
 │  │                     tapfile/tglfile/model/pkgfile/synth，形状库随 tzs 一起没了）
 │  │  ├─ fgl/           FGL 语法/块/大纲处理（tg outline 在用，GP 的 4gl 也吃它）
 │  │  └─ testutil/      语料根与遍历（CorpusRoot/CorpusFiles，测试夹具）
-│  ├─ entdir/           企业目录（ENT→账号）快照、指纹、新鲜期（debug 与 dict 共用）
-│  ├─ envmove/          环境改名的落点迁移（字典库/快照/镜像）与失败回滚（CLI 与 Web 共用）
+│  ├─ envmove/          环境改名的落点迁移（字典库/镜像）与失败回滚（CLI 与 Web 共用）
 │  ├─ erpdb/            客户端直连库封装（Oracle / 金仓，一个接口两个实现）
 │  ├─ form42f/          .42f 编译表单解析：字段表 + 页面布局（纯函数，零 IO）
 │  ├─ host/             唯一 SSH/远程服务器能力层（连接、登录、服务器侧只读探测）
@@ -72,7 +70,7 @@ TT/
 │  ├─ target/           调试目标解析与候选信封
 │  ├─ testenv/          本机测试环境解析（config.local.json + 环境变量，不带 testing）
 │  ├─ testkit/          测试助手（stdout 捕获、吞输出、跳过台账、单源检查）
-│  ├─ update/           tt 自身更新：查新版/下载校验/交棒给脱离进程（不自动更新）
+│  ├─ update/           tg 自身更新：查新版/下载校验/交棒给脱离进程（不自动更新）
 │  ├─ web/              统一 Web 服务端：REST + WebSocket，嵌入 SPA，挂载调试/字典子系统
 │  └─ winproc/          起/判/杀不随本进程死的子进程（Windows）
 │

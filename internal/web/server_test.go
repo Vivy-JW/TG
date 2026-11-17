@@ -13,7 +13,6 @@ import (
 	"testing/fstest"
 
 	"tg/internal/config"
-	"tg/internal/designer"
 )
 
 // newTestServer 造一个只带共享 API 的服务（不接子系统），指向临时配置。
@@ -566,34 +565,6 @@ func TestHostsPutWorkspaceGoverned(t *testing.T) {
 	}
 	if env["launchArgs"] != "BBDL1 {prog}" {
 		t.Errorf("表单不管的 launchArgs 该被保留，得到 %v", env["launchArgs"])
-	}
-}
-
-// GET /api/discover/envs 走通,且**没装设计器时是一份正常响应**(不是 5xx)。
-//
-// 这条的重点是响应形状:前端据此渲染弹窗 —— 所以字段必须稳定,
-// 且 reason 要能表达"没找到"这种正常结论。
-func TestDiscoverEnvsEndpoint(t *testing.T) {
-	s, _ := newTestServer(t, seededConfig)
-
-	// 不碰用户真实的设计器目录:指向一个不存在的路径。
-	t.Setenv(designer.EnvOverride, filepath.Join(t.TempDir(), "没有这个文件.xml"))
-
-	rec, out := doJSON(t, s, http.MethodGet, "/api/discover/envs", nil)
-	if rec.Code != http.StatusOK {
-		t.Fatalf("HTTP %d(没装设计器是正常情况,不该当错误)", rec.Code)
-	}
-	if _, has := out["envs"]; !has {
-		t.Error("响应里应当有 envs(哪怕是空数组)")
-	}
-	if _, has := out["found"]; !has {
-		t.Error("响应里应当有 found")
-	}
-	if out["found"] != false {
-		t.Errorf("文件不存在时 found 应为 false,得到 %v", out["found"])
-	}
-	if r, _ := out["reason"].(string); r == "" {
-		t.Error("应当给出 reason,否则用户看到空列表不知道是'没装'还是'读坏了'")
 	}
 }
 

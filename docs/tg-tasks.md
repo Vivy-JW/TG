@@ -48,6 +48,7 @@
 - ☑ 连带删 `tt debug ents` / `tt debug topent`（2026-11-16 `c0e3974` 删 `--fglserver`，2026-11-17 `24b2c45` 把 ENT 管线整条删掉：`--ent`、`/api/ents*`、`cfg.Topent`、`requireExplicitEnt`、快照 `ent`/`topent*`）
 - ☑ `tg session` 收成 GP 语义（2026-11-16）：去掉 `--ent` / `session ent` / `--fglserver`，只要环境；`ls`/`show` 的 JSON 不再带 `ent` 与三个 `topent*` 键；`session new` 的作用域从 `EnvEntReq` 降成 `Env`
 - ☐ 两套 PTY 二选一：把 `internal/gp/session.go` 降级成 `internal/debug` 的薄封装
+- ☑ 删设置页「发现环境 — 从 T100 设计器导入」（2026-11-17）：`internal/designer` 整包、`GET /api/discover/envs`、`api.discoverEnvs` 与前端弹窗/状态一起删；GP 没有设计器站点，那份 `sites.xml` 还带明文 SSH 口令
 - ☐ 调试工作台前端在 GP 下验一遍
 - ☐ 真机测试后确认：会话已 `quit`、服务已 `stop`、无残留作业或行锁
 

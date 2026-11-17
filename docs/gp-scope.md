@@ -91,10 +91,10 @@ m.Handle("/api/gp/", s.opt.GP)                                    // GP
 | `cli/debug` | 4547 | `tg debug`：T100 作业调试器的命令行面（停站、断点、接口日志重放） |
 | ~~`dev`（`fence`/`model`/`pkgfile`/`split`/`store`/`synth`/`verify`/`tzs`/`tapfile`/`tglfile`）~~ | 12895 | `.tzc`/`.tzs` 设计器包的读写、围栏、合成、闸门 —— **已于 2026-11-11 删除**（只留 `fgl`、`testutil`） |
 | ~~`cli/dev`（`tzc`/`tzs`/`common`）~~ | 5015 | `tt dev tzc` / `tt dev tzs` 命令面 —— **已于 2026-11-11 删除**，`tt dev` 组不复存在 |
-| `designer` | 327 | 从设计器 `sites.xml` 导入环境站点 |
-| `cli/session` | 494 | `tg session`：ENT 会话的建/列/看/改/收 |
-| `cli/at` | 788 | `--at <环境>[@<企业>]` 文法与作用域表 |
-| `entdir` | 157 | 企业(ENT) → 账号(`gzou_t`) 的映射、快照、新鲜期 |
+| ~~`designer`~~ | 327 | 从设计器 `sites.xml` 导入环境站点 —— **已于 2026-11-17 删除**（`internal/designer` 整包 + `GET /api/discover/envs` + 设置页「发现环境」弹窗；GP 没有设计器站点，那份文件还带明文 SSH 口令） |
+| `cli/session` | 494 | `tg session`：会话的建/列/看/收/透传 |
+| `cli/at` | 788 | `--at <环境>[@<据点编号>]` 文法与作用域表 |
+| ~~`entdir`~~ | 157 | 企业(ENT) → 账号(`gzou_t`) 的映射、快照、新鲜期 —— **已于 2026-11-17 删除**（ENT 管线整体退役，目录命名搬到 `internal/config/pathseg.go`） |
 | `target` | 1865 | 会话寻址：选择器文法、落位、契约信封 |
 
 ### 4.B 资产树（不是 Go 代码，但占比最大）

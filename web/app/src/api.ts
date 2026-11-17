@@ -138,25 +138,6 @@ export interface HostsView {
   sync: { target?: string }
   version: string
 }
-// 从 T100 设计器站点清单里发现的一条候选环境(字段见 internal/designer/sites.go)。
-//
-// 注意 zone 是**登录区域**(设计器的 Area),不是区域服务器——设计器那个 `Zone`
-// 元素是服务名,单独在 serviceName 里带出来供参考。
-export interface DiscoveredEnv {
-  name: string
-  uid?: string
-  folder?: string
-  protocol?: string
-  host: string
-  port: number
-  user: string
-  password: string
-  zone?: string
-  workspace?: string
-  serviceName?: string
-  // skipped 非空 = 这条不能导入,附原因(如协议不是 ssh)。仍然列出来,免得用户困惑于"少了一条"。
-  skipped?: string
-}
 
 // PUT /api/hosts 的请求体:只带要改的节,省略的节后端保持原样 ——
 // 设置页的各张卡片各改各的节时不会用陈旧快照把对方刚改好的节覆盖掉。
@@ -365,10 +346,6 @@ export const api = {
   settings: () => req<HostsView>('/api/hosts'),
   // 保存:只发要改的节(见 HostsPatch),后端把 400 的中文 error 原样回给界面
   saveSettings: (cfg: HostsPatch) => req<HostsView>('/api/hosts', { method: 'PUT', body: JSON.stringify(cfg) }),
-  // 发现环境:扫描本机的 T100 设计器站点清单(只读那份加密文件),返回候选环境让用户勾选。
-  // found=false 且 reason 非空 = "没装设计器/没存过站点",那是正常结论而不是错误。
-  discoverEnvs: () =>
-    req<{ sitesFile: string; found: boolean; envs: DiscoveredEnv[]; reason?: string }>('/api/discover/envs'),
   // 自动获取数据库连接要素(SSH 上服务器探测「从服务器获取」;note 说明未获取到的原因)
   probeDB: (body: { host: string; port: number; user: string; password: string; zone: string; type: string }) =>
     req<{ type: string; tns?: string; port?: number; database?: string; sqlplus?: string; oracleHome?: string; twoTask?: string; host?: string; service?: string; note?: string }>('/api/dbprobe', { method: 'POST', body: JSON.stringify(body) }),

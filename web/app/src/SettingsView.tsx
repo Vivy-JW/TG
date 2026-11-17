@@ -26,7 +26,6 @@ import {
 } from 'lucide-react'
 import {
   api, type ConfigMeta, type ConfigStatus,
-  type DiscoveredEnv,
   type HostsDb, type HostsPatch, type HostsSsh, type HostsView, 
   type UpdateState,
 } from './api'
@@ -36,8 +35,6 @@ import {
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-  Checkbox,
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
   Progress,
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
   Tabs, TabsContent, TabsList, TabsTrigger,
@@ -800,69 +797,6 @@ export function SettingsView() {
   const addSsh = () => { selectT100(sshs.length); setSshs([...sshs, blankSsh()]); markDirty('hosts') }
 
   /**
-   * 发现环境:扫描本机的 T100 设计器站点清单,让用户勾选导入。
-   *
-   * 为什么走这条路:TT 的环境配置在设计上就是**模仿设计器的站台管理**做的 ——
-   * 主机/端口/账号/口令/登录区域/工作区这些字段两边同义,而初次装 TT 的机器上
-   * 大概率已经装了设计器且存过站点。所以与其让用户对着设计器逐字段手抄,不如直接读。
-   *
-   * 只读:解的是设计器那份加密文件,我们**不写回**它(见 internal/designer 的包注释)。
-   */
-  const [disc, setDisc] = useState<{
-    open: boolean
-    loading: boolean
-    reason: string
-    sitesFile: string
-    envs: DiscoveredEnv[]
-    picked: Record<string, boolean>
-  }>({ open: false, loading: false, reason: '', sitesFile: '', envs: [], picked: {} })
-
-  // 候选行的稳定键:uid 优先(设计器保证唯一),没有就退回名字+下标 —— 同名站点也可能存在。
-  const discKey = (e: DiscoveredEnv, i: number) => e.uid || `${e.name}#${i}`
-
-  const openDiscover = () => {
-    setDisc({ open: true, loading: true, reason: '', sitesFile: '', envs: [], picked: {} })
-    api.discoverEnvs().then((r) => {
-      // 默认勾选规则:**已存在的名字不勾**,其余可用的一条都勾上。
-      // 同名仍然列出来并可手动勾(用户要的可能是"导入一份副本"),只是不替用户决定覆盖。
-      const existing = new Set(sshs.map((x) => sshName(x)))
-      const picked: Record<string, boolean> = {}
-      ;(r.envs || []).forEach((e, i) => {
-        picked[discKey(e, i)] = !e.skipped && !existing.has(e.name)
-      })
-      setDisc({ open: true, loading: false, reason: r.reason || '', sitesFile: r.sitesFile || '', envs: r.envs || [], picked })
-    }).catch((e: any) => {
-      setDisc((d) => ({ ...d, loading: false, reason: e?.message || String(e) }))
-    })
-  }
-
-  const confirmDiscover = () => {
-    const add: SshItem[] = []
-    disc.envs.forEach((e, i) => {
-      if (e.skipped || !disc.picked[discKey(e, i)]) return
-      // 复用设置页的表单形状(SshItem),而不是直接塞 config.NamedSsh ——
-      // 这样导入进来的环境和手填的走**同一条**保存路径(hostsPatchOf),不会有两套转换。
-      add.push({
-        ...blankSsh(),
-        name: e.name,
-        host: e.host,
-        port: e.port || 22,
-        user: e.user,
-        password: e.password,
-        zone: e.zone || '',
-        workspace: e.workspace || '',
-        // db 保持 blankSsh 的默认(空库):设计器的站点清单里没有数据库配置,
-        // 用户导入后要在「数据库」页签自己补 —— 弹窗里也写明了这一点。
-      })
-    })
-    setDisc((d) => ({ ...d, open: false }))
-    if (add.length === 0) return
-    selectT100(sshs.length) // 选中第一条新导入的,让用户直接接着填数据库
-    setSshs([...sshs, ...add])
-    markDirty('hosts')
-  }
-
-  /**
    * 复制当前环境。
    *
    * 用途是"同一套库、换一台服务器":SSH 四元组与库连接整份抄过来,改个地址就能用,
@@ -1098,8 +1032,6 @@ export function SettingsView() {
   }
   const cur = sshs[selSsh]
   const curDb = cur?.db
-  // 设计器清单里有、TT 里也有的名字 —— 用于在「发现环境」弹窗里标注"已存在"。
-  const existingNames = new Set(sshs.map((x) => sshName(x)))
   // isCurDefault 已删除:没有"默认环境"可判了(见上面 setDefaultEnv 的说明)。
   // 渲染期现算的 anyDirty 已在上面算过（它同时给"刷新确认"那条 effect 用），这里不再重复
 
@@ -1696,80 +1628,6 @@ export function SettingsView() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* 发现环境:扫描本机 T100 设计器的站点清单,勾选导入。
-          用 Dialog 而不是 AlertDialog —— 这里装的是可交互内容(勾选列表),
-          点遮罩/按 Esc 就该关掉,那是 Dialog 的语义(AlertDialog 会强制用户先做选择)。 */}
-      <Dialog open={disc.open} onOpenChange={(o) => setDisc((d) => ({ ...d, open: o }))}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>发现环境 — 从 T100 设计器导入</DialogTitle>
-            <DialogDescription>
-              读取本机设计器的站点清单(只读,不会改动设计器的配置),勾选后加入环境清单。
-              {"\n"}设计器里没有数据库配置,导入完成后请在「数据库」页签补上。
-            </DialogDescription>
-          </DialogHeader>
-
-          {disc.loading ? (
-            <div className="flex items-center gap-2 py-6 text-muted-foreground">
-              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-              正在扫描设计器的站点清单…
-            </div>
-          ) : disc.envs.length === 0 ? (
-            // 没扫到不是错误:把原因原样说给用户,并把查过的路径也列出来(便于自查)
-            <div className="space-y-1.5 py-3">
-              <p className="text-muted-foreground">{disc.reason || '没有发现可导入的环境。'}</p>
-              {disc.sitesFile && (
-                <p className="font-mono text-[11px] break-all text-muted-foreground">查找位置:{disc.sitesFile}</p>
-              )}
-            </div>
-          ) : (
-            <div className="min-h-0 flex-1 space-y-0.5 overflow-auto">
-              {disc.envs.map((e, i) => {
-                const key = discKey(e, i)
-                const dup = existingNames.has(e.name)
-                const disabled = !!e.skipped
-                return (
-                  <label key={key}
-                    className={cn('flex items-start gap-2 rounded-ui px-1.5 py-1.5',
-                      disabled ? 'opacity-50' : 'cursor-pointer hover:bg-accent/50')}>
-                    <Checkbox className="mt-0.5" disabled={disabled}
-                      checked={!!disc.picked[key] && !disabled}
-                      onCheckedChange={(v) => setDisc((d) => ({ ...d, picked: { ...d.picked, [key]: v === true } }))} />
-                    <span className="min-w-0 flex-1">
-                      <span className="flex flex-wrap items-center gap-1.5">
-                        <span className="font-medium">{e.name}</span>
-                        {dup && <span className="rounded-ui bg-muted px-1 text-[11px] text-muted-foreground">已存在</span>}
-                        {e.folder && <span className="text-[11px] text-muted-foreground">来自文件夹「{e.folder}」</span>}
-                      </span>
-                      {e.skipped ? (
-                        <span className="block text-[11px] text-red-600 dark:text-red-400">{e.skipped}</span>
-                      ) : (
-                        <span className="block font-mono text-[11px] text-muted-foreground">
-                          {e.user}@{e.host}:{e.port}
-                          {e.zone ? ` · 区域 ${e.zone}` : ''}
-                          {e.workspace ? ` · ${e.workspace}` : ''}
-                        </span>
-                      )}
-                    </span>
-                  </label>
-                )
-              })}
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button variant="ghost" size="sm" onClick={() => setDisc((d) => ({ ...d, open: false }))}>取消</Button>
-            <Button variant="outline" size="sm" onClick={openDiscover} disabled={disc.loading}>
-              <RefreshCw className="h-3.5 w-3.5" />重新扫描
-            </Button>
-            <Button size="sm" onClick={confirmDiscover}
-              disabled={disc.loading || disc.envs.length === 0}>
-              导入选中
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* 目录选择器：前端自绘（后端列目录）。比服务端弹 Windows 对话框快一个数量级，
           而且外观跟设置页一致 —— 镜像目录的按钮就用它。 */}
