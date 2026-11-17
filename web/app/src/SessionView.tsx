@@ -33,8 +33,6 @@ export function SessionView({ session, tab, onTab, onOpenEnv, leading }: {
   const meta = (
     <>
       <Meta title="会话所属环境">{session.env}</Meta>
-      {session.ent && <><span className="opacity-30">·</span>
-        <Meta title="企业编号（建会话时点名的那个）">ENT {session.ent}</Meta></>}
       {session.prog && <><span className="opacity-30">·</span>
         <Meta title="作业编号">作业 {session.prog}</Meta></>}
       {session.ref && <><span className="opacity-30">·</span>

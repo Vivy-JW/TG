@@ -27,7 +27,7 @@ import {
 import {
   api, type ConfigMeta, type ConfigStatus,
   type DiscoveredEnv,
-  type HostsDb, type HostsEnt, type HostsPatch, type HostsSsh, type HostsView, 
+  type HostsDb, type HostsPatch, type HostsSsh, type HostsView, 
   type UpdateState,
 } from './api'
 import {
@@ -87,9 +87,6 @@ interface SshItem {
   user: string
   password: string
   zone: string
-  // ENT 清单（只读）：旧版本由设置页连库抄下来写进配置；不再提供维护入口，这里只原样搬运。
-  ents?: HostsEnt[]
-  entsSyncedAt?: string
   // workspace 该环境的 .tzs 工作区（含 mta/ 的目录，绝对路径）。
   // 与 launchArgs / watchdogSeconds 不同：它是**必填**的（引擎的默认工作区是真实客户目录），
   // 而且只有环境级这一份 —— 切环境就该跟着换工作区。
@@ -356,16 +353,12 @@ function hostsPatchOf(list: SshItem[]) {
       host: x.host, port: x.port || 22, user: x.user, password: x.password,
     }
     if (x.zone.trim()) o.zone = x.zone.trim()
-    // 企业编号(topent)不再写进环境配置 —— 该字段已整体移除,ENT 每次显式给。
     // 工作区：留空就是没配（不写这个键），与服务端“环境级没有兜底”一致。
     if (x.workspace.trim()) o.workspace = x.workspace.trim()
     // 环境自己的镜像目录：留空不写，后端回退到全局 mirror.dir/<环境名>。
     if (x.mirrorDir.trim()) o.mirrorDir = x.mirrorDir.trim()
     // 环境自己的库目录：留空不写，后端回退到全局 dict.dir（再回退数据目录/dict）。
     if (x.dictDir.trim()) o.dictDir = x.dictDir.trim()
-    // ENT 清单原样带回：hosts 是整节提交的，这里漏了 → 改一次密码就把清单抹了。
-    if (x.ents && x.ents.length) o.ents = x.ents.map((e) => ({ ent: e.ent, account: e.account, password: e.password }))
-    if (x.entsSyncedAt) o.entsSyncedAt = x.entsSyncedAt
     if (x.db) {
       const db: HostsDb = { type: x.db.type || 'oracle', host: x.db.host.trim(), port: x.db.port || 0 }
       if (x.db.type === 'oracle') { if (x.db.service.trim()) db.service = x.db.service.trim() }
@@ -423,9 +416,6 @@ function sshsFormOf(c: HostsView): SshItem[] {
       workspace: e.workspace || '',
       mirrorDir: e.mirrorDir || '',
       dictDir: e.dictDir || '',
-      // ENT 清单必须跟着表单走：hosts 是整节提交的，表单里没有它 = 保存一次就抹掉。
-      ents: (e.ents || []).map((x) => ({ ent: x.ent, account: x.account, password: x.password })),
-      entsSyncedAt: e.entsSyncedAt || '',
       db: d ? {
         type: d.type || 'oracle', host: d.host || '', port: d.port || 0,
         service: d.service || '', database: d.database || '',

@@ -99,7 +99,6 @@ export interface HostsDb {
     bindPort?: number; remoteHost?: string; remotePort?: number
   }
 }
-export interface HostsEnt { ent: number; account: string; password?: string }
 
 export interface HostsSsh {
   name: string
@@ -108,11 +107,6 @@ export interface HostsSsh {
   user: string
   password: string
   zone?: string
-  // ENT 清单：由设置页「ENT」页签或 tt env ents --refresh 从 gzou_t 同步而来，
-  // **不提供手工编辑**。entsSyncedAt 是那份清单的抄写时间（RFC3339）。
-  ents?: HostsEnt[]
-  entsSyncedAt?: string
-  // 企业编号(topent)已从环境配置移除:ENT 每次显式给(CLI --ent / 会话面板)。
   // workspace 该环境的 .tzs 工作区（绝对路径）。机器级没有这一项（见 internal/config 的 TzsSettings）
   workspace?: string
   // mirrorDir 该环境自己的源码镜像目录；空 = 使用全局 mirror.dir/<环境名>。
@@ -450,8 +444,6 @@ export const api = {
   sessionCreate: (env: string, ent: string, name: string) =>
     req<{ sessionId: string; ref?: string; env?: string; name?: string; state?: string; reused?: boolean }>(
       `${API_BASE}/sessions/new`, { method: 'POST', body: JSON.stringify({ env, ent, name }), timeoutMs: 90000 }),
-  // 空闲态重新设置会话 TOPENT(空值 = 清除覆盖并重新下发配置默认)
-  topent: (id: string, value: string) => req<{ topent: string }>(`${API_BASE}/sessions/${id}/topent`, { method: 'POST', body: JSON.stringify({ value }) }),
   bpAdd: (id: string, location: string) =>
     req<{ breakpoint: Breakpoint }>(`${API_BASE}/sessions/${id}/breakpoints`, { method: 'POST', body: JSON.stringify({ location }) }),
   bpDel: (id: string, num: number) => req<any>(`${API_BASE}/sessions/${id}/breakpoints/${num}`, { method: 'DELETE' }),
