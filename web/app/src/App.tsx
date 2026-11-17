@@ -127,7 +127,9 @@ export function App() {
   // 冷启动直接开 `#settings` 时没有上一屏 —— 那就用默认落点(第一个环境的创建页)当背景,
   // 不然遮罩后面是一片空黑,关掉弹窗还会先闪一下空白。
   const mainRoute: Route = (route.kind === 'settings'
-    ? lastMainRef.current ?? (envs[0]?.name ? { kind: 'env', env: envs[0].name, tab: 'create' } : null)
+    ? lastMainRef.current ?? ((envs[0]?.name || gpEnvs[0]?.name)
+      ? { kind: 'env', env: (envs[0]?.name || gpEnvs[0]?.name) as string, tab: 'create' }
+      : null)
     : null) ?? route
 
   // 首次挂载:认深链接(设置分区)、拉环境清单、连 WS、接管已有会话。
@@ -185,14 +187,15 @@ export function App() {
   //     而不是把人留在"界面认得这个 ID、数据里没有它"的空壳上。
   useEffect(() => {
     if (!envsLoaded) return
-    const first = envs[0]?.name
+    // TG 只有 TOP GP：envs 是 T100 那份投影（永远是空），真正有环境的是 gpEnvs。
+    const first = envs[0]?.name || gpEnvs[0]?.name
     const fallback = (): Route => first ? { kind: 'env', env: first, tab: 'create' } : { kind: 'settings' }
     if (route.kind === 'home') { setRoute(fallback()); return }
     if (route.kind === 'env' && !envs.some((e) => e.name === route.env) && !gpEnvs.some((e) => e.name === route.env)) { setRoute(fallback()); return }
     // 会话页要等**池列过至少一次**再判失效：树是池的投影（W-P1），首帧 `sessions` 还是空的，
     // 不 gate 的话"深链接到某条会话"会在数据回来之前就被当成失效、弹回环境页。
     if (route.kind === 'session' && sessionsLoaded && !sessions.some((s) => s.id === route.id)) setRoute(fallback())
-  }, [envsLoaded, envs, sessions, sessionsLoaded, route])
+  }, [envsLoaded, envs, gpEnvs, sessions, sessionsLoaded, route])
 
   // 路由 → store.view:接口日志、设置页那些"进来就重拉一次"的 effect 靠它判断
   // 自己是不是此刻的前台。键的映射只有一份(见 routing.ts 的 routeView)。
@@ -281,7 +284,9 @@ export function App() {
   // 立刻再把设置打开),那就只能留着它。
   const closeSettings = () => {
     if (lastMainRef.current) { setRoute(lastMainRef.current); return }
-    const first = envs[0]?.name
+    // 冷启动直接落在设置上时没有上一屏：回到第一个环境的创建页。TG 只有 GP，
+    // 第一个环境在 gpEnvs 里（envs 是 T100 那份投影，恒空）。
+    const first = envs[0]?.name || gpEnvs[0]?.name
     if (first) setRoute({ kind: 'env', env: first, tab: 'create' })
   }
   const goAddEnv = () => {
