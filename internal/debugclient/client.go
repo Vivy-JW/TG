@@ -461,12 +461,6 @@ func (c *Client) EnsureSession(env, name string, timeout time.Duration) (string,
 	}
 }
 
-// Topent 设置会话级企业编号（仅 idle 可设）。
-func (c *Client) Topent(id, value string) error {
-	_, err := c.Do(http.MethodPost, "/api/sessions/"+id+"/topent", map[string]any{"value": value})
-	return err
-}
-
 // Exec 透传一条 fgldb 命令，返回输出行。
 func (c *Client) Exec(id, command string) ([]string, error) {
 	data, err := c.Do(http.MethodPost, "/api/sessions/"+id+"/raw", map[string]any{"command": command})

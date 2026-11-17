@@ -444,7 +444,7 @@ func dbgResolveSessionFlag() (*target.Session, error) {
 func dbgRegisterSessionFlag(cmds ...*cobra.Command) {
 	for _, c := range cmds {
 		c.Flags().StringVar(&dbgSessionFlag, "session", "",
-			"指定 SSH 会话（Q9：只寻址 SSH 会话）：别名 / <环境>#<序号> / <环境>/<作业>[#<序号>] / <环境>/<企业编号> / <环境>；不给则唯一就落（多条时报错并列候选）")
+			"指定 SSH 会话（Q9：只寻址 SSH 会话）：别名 / <环境>#<序号> / <环境>/<作业>[#<序号>] / <环境>；不给则唯一就落（多条时报错并列候选）")
 	}
 }
 

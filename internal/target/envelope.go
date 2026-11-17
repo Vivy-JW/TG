@@ -105,9 +105,9 @@ func (f *Failure) CandidateLines() []string {
 
 // CandidateLine 按 C5.14 渲染**一行**人话候选块：
 //
-//	<ref>  <name>  <state>  ENT <ent>
+//	<ref>  <name>  <state>
 //
-// 两格缩进、字段间两个空格；未命名写 `(未命名)`；ent 取不到写 `?`。
+// 两格缩进、字段间两个空格；未命名写 `(未命名)`。
 // 第一个字段是 **ref**（恒定不变的规范 id），不是 `display` —— 候选行的用途是
 // "照着它重发一枪"，照抄一个会漂的字段会让人抄到过期写法（C5.4 / C5.14）。
 func CandidateLine(c Candidate) string {
@@ -117,7 +117,7 @@ func CandidateLine(c Candidate) string {
 
 // IdentityLine 按 C5.9 渲染人话**身份行**（会话级命令唯一的"我在哪儿"那一行）：
 //
-//	会话 <display> · <name> · <state> · ENT <ent>
+//	会话 <display> · <name> · <state>
 //
 // 行首是字面量 `会话 `，四个字段用 ` · `（空格 + U+00B7 + 空格）分隔。
 // 身份行写 `display`（人读形态），但**对账一律用 `ref`**（C5.9 的确切规则）。

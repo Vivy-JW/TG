@@ -135,7 +135,7 @@ func (m Meta) countLine() string {
 		return fmt.Sprintf("行数 %d(已截断:%s%d 条,只回了前 %d 条%s;%s)",
 			m.Returned, count, m.TotalRows, m.Returned, where, action)
 	case m.TotalRows == 0:
-		return "行数 0(注意:上错号/上错环境也会是 0 行,先核对上面的企业编号)"
+		return "行数 0(注意:上错号/上错环境也会是 0 行,先核对上面的环境与账号)"
 	default:
 		return fmt.Sprintf("行数 %d", m.TotalRows)
 	}

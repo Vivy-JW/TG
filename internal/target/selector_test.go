@@ -169,7 +169,7 @@ func TestParseSelectorF10Grammar(t *testing.T) {
 				raw, f.Code, f.Exit, CodeUsage, ExitUsage)
 		}
 		if !strings.Contains(f.Message, "选择器文法非法") {
-			t.Errorf("ParseSelector(%q) 的文案 = %q，F10 钉住的形状是「选择器文法非法：\"…\"（写法：环境 | 环境/作业 | 环境/作业#序号 | 环境/企业编号）」",
+			t.Errorf("ParseSelector(%q) 的文案 = %q，F10 钉住的形状是「选择器文法非法：\"…\"（写法：环境 | 环境/作业 | 环境/作业#序号）」",
 				raw, f.Message)
 		}
 		if !strings.Contains(f.Message, "环境/作业#序号") {

@@ -31,7 +31,7 @@ func TestLayerRegistryIsGroupDefaultsPlusNamedExceptions(t *testing.T) {
 
 	// 具名例外：只登"真的改变寻址要求"的那些（Q8）；与组默认同值的一条不登。
 	// session 组默认 L3，所以 `session ls`（L0）与 `session new`（L1）是例外。
-	const wantExceptions = 17
+	const wantExceptions = 16
 	if len(r.Exceptions) != wantExceptions {
 		var pending int
 		for _, l := range r.Exceptions {
@@ -39,12 +39,12 @@ func TestLayerRegistryIsGroupDefaultsPlusNamedExceptions(t *testing.T) {
 				pending++
 			}
 		}
-		t.Errorf("具名例外该有 %d 条（debug 7 / dict 4 / file 1 / dev tzs 3 / session 2；"+
+		t.Errorf("具名例外该有 %d 条（debug 6 / dict 4 / file 1 / dev tzs 3 / session 2；"+
 			"debug 的 12 条 L3 与组默认同值、按 Q8 不登），实得 %d（其中待定 %d）",
 			wantExceptions, len(r.Exceptions), pending)
 	}
 
-	// 登记表**不是**命令清单：8 + 17 = 25 条，远小于矩阵的 186 行明细。
+	// 登记表**不是**命令清单：8 + 16 = 24 条，远小于矩阵的 186 行明细。
 	if n := len(r.Groups) + len(r.Exceptions); n >= 186 {
 		t.Errorf("登记表有 %d 条 —— Q8 要的是『组默认 + 具名例外』，不是全清单（矩阵明细 186 行）", n)
 	}
@@ -99,7 +99,7 @@ func TestLayerRegistryDoesNotEnumerateTheCommandTree(t *testing.T) {
 		// 本轮摘掉的 12 条：组默认已按 Q7 定成 L3，它们**一条都不许**再出现在例外表里。
 		"debug start", "debug wsdebug", "debug stop", "debug exec",
 		"debug interrupt", "debug quit", "debug mode", "debug status",
-		"debug env", "debug topent", "debug serve", "debug logs",
+		"debug env", "debug serve", "debug logs",
 	} {
 		if _, ok := r.Exceptions[path]; ok {
 			t.Errorf("%q 被登记进了例外表，但它的层级就是所在组的组默认 ——\n"+
@@ -166,10 +166,8 @@ func TestProvidedLayer(t *testing.T) {
 	}{
 		{Provided{}, Layer0, "什么都没给"},
 		{Provided{Env: "恒烁正式区"}, Layer1, "只要环境"},
-		{Provided{Env: "恒烁正式区", Ent: "99"}, Layer2, "环境 + 企业编号"},
-		{Provided{Env: "恒烁正式区", Ent: "99", HasSession: true}, Layer3, "落到了一条会话"},
+		{Provided{Env: "恒烁正式区", HasSession: true}, Layer3, "落到了一条会话"},
 		{Provided{HasSession: true}, Layer3, "会话本身就隐含了环境"},
-		{Provided{Ent: "99"}, Layer0, "B23：环境一律点名 —— 没有环境，企业编号解决不了任何事"},
 	}
 	for _, c := range cases {
 		if got := c.p.Layer(); got != c.want {
@@ -206,24 +204,17 @@ func TestCheckLayerMismatch(t *testing.T) {
 		p    Provided
 	}{
 		{"debug exec", Provided{Env: "E", HasSession: true}},
-		{"dict r.t", Provided{}},                     // L0 什么都不需要
-		{"debug sql", Provided{Env: "E", Ent: "99"}}, // L2 够了
-		{"session new", Provided{Env: "E"}},          // session 的 L1 例外：环境就够，会话它自己起
-		{"session ls", Provided{}},                   // 例外 L0
-		{"dev tzs list_tables", Provided{}},          // 待定不猜：不拦
+		{"dict r.t", Provided{}},            // L0 什么都不需要
+		{"debug sql", Provided{Env: "E"}},   // L2 的账号由配置给，环境就够
+		{"session new", Provided{Env: "E"}}, // session 的 L1 例外：环境就够，会话它自己起
+		{"session ls", Provided{}},          // 例外 L0
+		{"dev tzs list_tables", Provided{}}, // 待定不猜：不拦
 	} {
 		if f := CheckLayer(r, c.path, c.p); f != nil {
 			t.Errorf("CheckLayer(%q, %+v) 该放行，却报 %s：%s", c.path, c.p, f.Code, f.Message)
 		}
 	}
 
-	// L2 的命令只给到 L1 也要报（缺的是企业编号）。
-	f2 := CheckLayer(r, "debug sql", Provided{Env: "E"})
-	if f2 == nil || !strings.Contains(f2.Message, "L2") {
-		t.Errorf("`tg debug sql`（L2）只给到环境该报缺 L2，实得 %v", f2)
-	} else if !strings.Contains(f2.Hint, "--ent") {
-		t.Errorf("缺 L2 时的修复建议该点名 --ent，实得 hint = %q", f2.Hint)
-	}
 	// L3 的命令缺会话时，修复建议要点名 --session。
 	f3 := CheckLayer(r, "debug exec", Provided{})
 	if f3 == nil || !strings.Contains(f3.Hint, "--session") {
@@ -243,7 +234,7 @@ func TestLayerNames(t *testing.T) {
 		}
 	}
 	for l, w := range map[Layer]string{
-		Layer0: "无远端目标", Layer1: "要一个环境", Layer2: "要环境 + 企业编号",
+		Layer0: "无远端目标", Layer1: "要一个环境", Layer2: "要环境（账号取 db.accounts[0]）",
 		Layer3: "要一条 SSH 会话", Layer4: "要一条会话 + 一轮运行",
 	} {
 		if got := LayerNeed(l); got != w {
@@ -322,7 +313,7 @@ func TestExceptionDisciplineCatchesEqualToGroupDefault(t *testing.T) {
 	redundant := []string{
 		"debug start", "debug wsdebug", "debug stop", "debug exec",
 		"debug interrupt", "debug quit", "debug mode", "debug status",
-		"debug env", "debug topent", "debug serve", "debug logs",
+		"debug env", "debug serve", "debug logs",
 	}
 	for _, p := range redundant {
 		old.Exceptions[p] = Layer3

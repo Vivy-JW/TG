@@ -143,7 +143,7 @@ func TestEmitCountLine(t *testing.T) {
 		m    Meta
 		want string
 	}{
-		{"零行", Meta{TotalRows: 0}, "先核对上面的企业编号"},
+		{"零行", Meta{TotalRows: 0}, "先核对上面的环境与账号"},
 		{"正常", Meta{TotalRows: 7}, "行数 7"},
 		// 库侧包装多取一行判"还有更多",所以 totalRows 只是下界
 		{"库侧截断", Meta{TotalRows: 5000, Returned: 200, Truncated: true, ServerLimited: true}, "≥5000"},

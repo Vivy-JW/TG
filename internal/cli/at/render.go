@@ -66,16 +66,13 @@ type contract struct {
 func PrintContract(w io.Writer, cmd *cobra.Command) (int, error) {
 	scope := ScopeOf(cmd)
 	sc := scope.String()
-	if scope == EnvEntReq {
-		sc = "env+ent"
-	}
-	c := contract{OK: true, Complete: true, Command: cmd.CommandPath(), Scope: sc, EntRequired: scope == EnvEntReq, Values: []contractValue{}}
+	c := contract{OK: true, Complete: true, Command: cmd.CommandPath(), Scope: sc, EntRequired: false, Values: []contractValue{}}
 	exit := 0
 
 	switch scope {
 	case None:
 		c.Message = noneMessage(cmd)
-	case Env, EnvFilter:
+	case Env, EnvFilter, EnvEnt:
 		c.Grammar = "<环境>"
 		c.Sources = []string{"<环境> ← config.json 的 hosts.sshs[].name（本机配置，无网络）"}
 		c.Example = exampleOf(cmd, "<环境>")
@@ -83,7 +80,16 @@ func PrintContract(w io.Writer, cmd *cobra.Command) (int, error) {
 		if scope == EnvFilter {
 			c.Notes = append(c.Notes,
 				"本命令是会话寻址：--at 只用来收窄“在哪个环境里找会话”",
-				"指名会话用 --session（tg session ls --json 是它的下拉）；要断言企业用 --session <环境>/<企业>")
+				"指名会话用 --session（tg session ls --json 是它的下拉）")
+		}
+		if scope == EnvEnt {
+			c.Grammar = "<环境>（也可以写 <环境>@<据点编号>，据点可选）"
+			c.Sources = append(c.Sources, "据点   = <环境> + \"@\" + 据点编号（azp_file.azp01，字母开头）")
+			c.Example = exampleOf(cmd, "<环境>@<据点编号>")
+			c.Notes = append(c.Notes,
+				"据点候选在服务器库里，--at-list 是纯本机的，不拨 SSH",
+				"据点清单：tg site list --env <环境>",
+				"GP 里没有企业编号：@ 右边写据点编号，写数字会直接报错")
 		}
 		values, err := envValues()
 		if err != nil {
@@ -99,34 +105,6 @@ func PrintContract(w io.Writer, cmd *cobra.Command) (int, error) {
 			break
 		}
 		c.Values = values
-	case EnvEnt:
-		c.Grammar = "<环境>@<企业>（也可以只写 <环境>，企业可选）；TOP GP 环境是 <环境>@<据点编号>"
-		c.Sources = []string{
-			"<环境> ← config.json 的 hosts.sshs[].name（本机配置，无网络）",
-			"<企业> ← config.json 的 hosts.sshs[].ents（T100 的 ENT 清单：TG 里不再同步）",
-			"组合   = 环境名 + \"@\" + 企业编号（企业编号是纯数字）",
-		}
-		c.Example = exampleOf(cmd, "<环境>@<企业>")
-		c.Notes = append(c.Notes,
-			"企业清单来自配置，不拨 SSH；还没同步过的环境会明确报出来（见下）",
-			"要更新清单：TG 不再提供 ENT 同步（GP 的据点用 tg site list）",
-			"GP 环境不认企业编号：@ 右边写据点编号，写数字会直接报错")
-		exit = fillEntValues(&c)
-	case EnvEntReq:
-		c.Grammar = "<环境>@<企业>；TOP GP 环境是 <环境>@<据点编号>"
-		c.Sources = []string{
-			"<环境> ← config.json 的 hosts.sshs[].name（本机配置，无网络）",
-			"<企业> ← config.json 的 hosts.sshs[].ents（T100 的 ENT 清单：TG 里不再同步）",
-			"组合   = 环境名 + \"@\" + 企业编号（企业编号是纯数字）",
-			"GP 据点= 环境名 + \"@\" + 据点编号（azp_file.azp01）；清单：tg site list --env <环境>",
-		}
-		c.Example = exampleOf(cmd, "<环境>@<企业>")
-		c.Notes = append(c.Notes,
-			"企业部分只读快照，不拨 SSH；没有快照的环境会明确报出来（见下）",
-			"要现况：TG 不再提供 ENT 同步",
-			"本命令必须带 @企业：企业编号决定用哪个账号连库",
-			"TOP GP 环境例外：@ 右边写据点编号（如 22主机@COF），它决定查哪个资料库")
-		exit = fillEntValues(&c)
 	}
 
 	if common.JSON {
@@ -241,28 +219,6 @@ func envValues() ([]contractValue, error) {
 		out = append(out, contractValue{Handle: e.Name, Env: e.Name})
 	}
 	return out, nil
-}
-
-// fillEntValues 逐环境读快照填 c，返回建议退出码。
-func fillEntValues(c *contract) int {
-	envs, _, err := LoadEnvs()
-	if err != nil {
-		c.Complete = false
-		c.Failed = append(c.Failed, contractFailure{Reason: "config", Error: err.Error(), Action: "检查配置文件：tg config path"})
-		return 3
-	}
-	// TOP GP 没有 ENT（企业号）：@ 右边是据点编号，候选在 azp_file 里，要连库才拿得到 ——
-	// 而 --at-list 是纯本机的。这里不做假下拉，只指路。
-	var gpEnvs []string
-	for _, e := range envs {
-		gpEnvs = append(gpEnvs, e.Name)
-	}
-	if len(gpEnvs) > 0 {
-		c.Notes = append(c.Notes, fmt.Sprintf(
-			"TG 只有 TOP GP：--at 的 @ 右边是据点编号（不是企业号），候选要连库才拿得到：tg site list --env %s",
-			gpEnvs[0]))
-	}
-	return 0
 }
 
 // exampleOf 用命令自己的路径与位置参数拼一条可复制的例子。

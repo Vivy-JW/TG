@@ -103,7 +103,7 @@ func failureSeqInvalid(seq string) *Failure {
 // **新场景**：同上，只有读了 `--session` 才判得出 → 退 2。
 func failureSelectorGrammar(raw string) *Failure {
 	return newScenarioFailure(CodeUsage,
-		"选择器文法非法：%q（写法：环境 | 环境/作业 | 环境/作业#序号 | 环境/企业编号）", raw)
+		"选择器文法非法：%q（写法：环境 | 环境/作业 | 环境/作业#序号）", raw)
 }
 
 // ---------------------------------------------------------------------------
@@ -186,15 +186,6 @@ func failureJobNotFound(env, job string, inEnv []Session) *Failure {
 	return f
 }
 
-// failureEntNotFound 是 `环境/企业编号` 形态的"没有这条"。
-// 契约没有单列一条 F（F7 是作业那一支），但它与 F7 同类：指名的东西压根不存在（C2.7）→
-// `SESSION_NOT_FOUND`、候选块列**该环境下的全部会话**。**新场景**（选择器形态）→ 退 3。
-func failureEntNotFound(env, ent string, inEnv []Session) *Failure {
-	f := newScenarioFailure(CodeNotFound, "环境 %q 下没有企业编号 %s 的 SSH 会话", env, ent)
-	f.Candidates = candidatesOf(inEnv)
-	return f
-}
-
 // failureSeqOutOfRange 是 F8：序号越界。`scope` 是 `<环境>` 或 `<环境>/<作业>`；
 // `m` 是**同一环境下**的会话条数（C2.11）；候选块列的就是这 m 条。
 // **新场景**（`#序号` 只可能写在 `--session` 里）→ 退 3。
@@ -215,21 +206,6 @@ func failureEnvConflict(fromSelector, fromFlag string) *Failure {
 	return newScenarioFailure(CodeUsage,
 		"--session 里的环境是 %q，与 --env 给的 %q 矛盾；两者只能有一个是权威",
 		fromSelector, fromFlag)
-}
-
-// failureEntConflict 是 F13 / C3.3-2：`--session` 里的企业编号与 `--ent` 矛盾。
-// **新场景** → 退 2。
-func failureEntConflict(fromSelector, fromFlag string) *Failure {
-	return newScenarioFailure(CodeUsage,
-		"--session 里的企业是 %s，与 --ent 给的 %s 矛盾；两者只能有一个是权威",
-		fromSelector, fromFlag)
-}
-
-// failureSessionEntConflict 是 F14 / C3.3-3：落到的那条会话实际 ENT 与 `--ent` 不同。
-// **新场景** → 退 2。
-func failureSessionEntConflict(sel string, actual, fromFlag string) *Failure {
-	return newScenarioFailure(CodeUsage,
-		"%s 的 SSH 会话企业是 %s，与 --ent 给的 %s 矛盾", sel, actual, fromFlag)
 }
 
 // ---------------------------------------------------------------------------
@@ -345,7 +321,7 @@ func failureLayerMismatch(cmdPath string, need, have Layer) *Failure {
 	case Layer1:
 		f.Hint = "加 --env <环境>"
 	case Layer2:
-		f.Hint = "加 --env <环境> 与 --ent <企业编号>"
+		f.Hint = "加 --env <环境>"
 	case Layer3:
 		f.Hint = "加 --session <选择器>，或先起一条会话（tg debug start <作业> --env <环境>）"
 	default:

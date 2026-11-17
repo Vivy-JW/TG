@@ -245,8 +245,6 @@ func TestNewScenarioClassification(t *testing.T) {
 		{"F9 序号不是十进制正整数", failureSeqInvalid("x"), ExitUsage},
 		{"F10/F11 选择器文法非法", failureSelectorGrammar(""), ExitUsage},
 		{"F12 环境矛盾", failureEnvConflict("测试1012", "恒烁正式区"), ExitUsage},
-		{"F13 企业矛盾", failureEntConflict("88", "99"), ExitUsage},
-		{"F14 会话企业不符", failureSessionEntConflict("恒烁正式区/88", "88", "99"), ExitUsage},
 		{"F15 句柄过期", failureStale(occupant, "1"), ExitNoSession},
 		{"F18 别名已被占用", FailureNameTaken("汇率单", occupant), ExitUsage},
 		{"F19 别名取值非法", failureAliasInvalid(), ExitUsage},

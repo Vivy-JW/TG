@@ -219,7 +219,7 @@ type WSLogAcct struct {
 func wslogAcctFor() WSLogAcct {
 	a := WSLogAcct{
 		Account: wsSysAccount,
-		Reason:  "wsfa_t 是系统账号 ds 下的共享表,接口日志不按企业分 schema",
+		Reason:  "wsfa_t 是系统账号 ds 下的共享表,不分 schema",
 	}
 	return a
 }

@@ -50,7 +50,7 @@ func newEnvCmd() *cobra.Command {
 	// （dict/<环境>.db、ents/<环境>.json、srccache/<环境>/ 都拿它当键）。
 	cmd.AddCommand(&cobra.Command{
 		Use:   "rename <旧环境名> <新环境名>",
-		Short: "改环境名，并把按名字落盘的字典库/企业快照/源码镜像一起迁移",
+		Short: "改环境名，并把按名字落盘的字典库/源码镜像一起迁移",
 		Long: `把环境改成一个新名字，**同时**迁移所有按旧名落盘的东西：
 
   dict/<旧名>.db       本地字典库（改完不用重新同步；尊重 dict.dir / 环境 dictDir）
@@ -283,7 +283,7 @@ func runEnvRename(cmd *cobra.Command, from, to string) error {
 	}
 	cmd.Printf("已把环境 %q 改名为 %q。\n", from, to)
 	if len(moves) == 0 {
-		cmd.Printf("没有需要迁移的落点（本地字典库/企业快照/源码镜像都不存在）。\n")
+		cmd.Printf("没有需要迁移的落点（本地字典库/源码镜像都不存在）。\n")
 	}
 	for _, m := range moves {
 		cmd.Printf("  迁移 %-8s %s → %s\n", m.Kind, m.From, m.To)

@@ -21,7 +21,7 @@ const (
 	Layer0 Layer = iota
 	// Layer1：只要环境（登录 SSH，或按环境读服务器文件/源码）。
 	Layer1
-	// Layer2：环境 + 企业编号（按企业编号取库账号）。
+	// Layer2：环境 + 库账号（账号取 db.accounts[0]；T100 的企业编号那层已删）。
 	Layer2
 	// Layer3：一条 SSH 会话（这是本契约的寻址层）。
 	Layer3
@@ -65,7 +65,7 @@ func LayerNeed(l Layer) string {
 	case Layer1:
 		return "要一个环境"
 	case Layer2:
-		return "要环境 + 企业编号"
+		return "要环境（账号取 db.accounts[0]）"
 	case Layer3:
 		return "要一条 SSH 会话"
 	case Layer4:
@@ -134,26 +134,25 @@ func cloneLayerMap(m map[string]Layer) map[string]Layer {
 // 例外总条数不是矩阵「例外条数」一列的和：矩阵那份是**逐条判据**（含状态语义），
 // 这里是**认路登记表**（只留改变寻址要求的）。
 var layerExceptions = map[string]Layer{
-	// ---- tg debug（7 条例外：5 L1 + 2 L2） ----
+	// ---- tg debug（6 条例外：4 L1 + 2 L2） ----
 	//
 	// 组默认是 L3（Q7 的寻址层），所以组内 12 条 `: L3`（start / wsdebug / stop / exec /
-	// interrupt / quit / mode / status / env / topent / serve / logs）**一条都不登** ——
+	// interrupt / quit / mode / status / env / serve / logs）**一条都不登** ——
 	// 它们在认路时与组默认同值、一条都不改变行为（Q8：清单从命令树派生，
 	// 与组默认相同的命令登进来就是"全清单"的开始）。
-	// 留下的是真正**改变寻址要求**的：5 条 L1（只要环境）+ 2 条 L2（环境 + 企业编号）。
+	// 留下的是真正**改变寻址要求**的：4 条 L1（只要环境）+ 2 条 L2（环境 + 库账号）。
 	"debug wslogs":  Layer1, // C1.3：走环境 + 企业、不认 --session，待定收口为 L1
 	"debug source":  Layer1, // 服务器源码白名单只读，走独立短连接
 	"debug resolve": Layer1, // 查 gzzz_t 解作业编号→实体程序
-	"debug ents":    Layer1, // 环境级的企业→账号清单
 	"debug probe":   Layer1, // M0 尖刺：自己就起会话，不认外部会话
-	"debug sql":     Layer2, // 只读 SQL，按环境 + 企业编号取库账号
-	"debug db":      Layer2, // 探 ENT→账号映射并用该账号连一次库
+	"debug sql":     Layer2, // 只读 SQL，账号取 db.accounts[0]
+	"debug db":      Layer2, // 用该环境的账号连一次库验一下
 
 	// ---- tg dict（4 条例外） ----
 	"dict db discover": Layer1, // 登录 SSH 探库要素
 	"dict mirror pull": Layer1, // 隐藏转发：SFTP 增量下载该环境镜像
 	"dict mirror path": Layer1, // 隐藏转发：该环境镜像目录（与环境绑定）
-	"dict db sync":     Layer2, // 账号由企业编号决定
+	"dict db sync":     Layer2, // 账号取 db.accounts[0]
 
 	// ---- tg file（1 条例外） ----
 	"file mirror dir": Layer0, // 设的是全局镜像根目录，与环境无关
@@ -223,15 +222,13 @@ func normalizeCmdPath(p string) string {
 type Provided struct {
 	// Env 给了环境（`--env` / `--ssh`，或选择器里的环境段）。
 	Env string
-	// Ent 给了企业编号（`--ent`，或 `--session 环境/企业编号`）。
-	Ent string
 	// HasSession 已经落到了**唯一**一条会话。
 	HasSession bool
 }
 
 // Layer 返回这次调用提供到第几层。
 //
-// 没有环境时一律算 L0：B23 定的是"环境一律点名"，`--ent` 单独出现解决不了任何事
+// 没有环境时一律算 L0：B23 定的是"环境一律点名"，别的东西单独出现解决不了任何事
 // （没有环境就不知道该连哪台机器）。
 func (p Provided) Layer() Layer {
 	if p.HasSession {
@@ -239,9 +236,6 @@ func (p Provided) Layer() Layer {
 	}
 	if p.Env == "" {
 		return Layer0
-	}
-	if p.Ent != "" {
-		return Layer2
 	}
 	return Layer1
 }
@@ -252,6 +246,11 @@ func (p Provided) Layer() Layer {
 // 不够用时返回一条 `USAGE` 退 2 的失败 —— **不新增码**（4.1.1 是唯一清单）。
 func CheckLayer(r LayerRegistry, cmdPath string, p Provided) *Failure {
 	need := r.AddressingLayer(cmdPath)
+	// TG 只面向 TOP GP：库账号由 db.accounts[0] 自动给出，命令行上不需要再指认。
+	// 登记表里的 L2 因此与 L1 同义，留着只是不推翻既有矩阵。
+	if need == Layer2 {
+		need = Layer1
+	}
 	if need == LayerUndetermined || need <= Layer0 {
 		return nil
 	}
