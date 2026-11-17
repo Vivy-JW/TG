@@ -30,8 +30,8 @@ skips: ## 回读：跑了多少、跳了多少（会真跑一遍全量）
 	go test ./... -count=1 -v 2>&1 | grep -E '^--- (PASS|SKIP)' | sort | uniq -c
 
 update-live-check: ## tg update 的真联网自检（要能访问 GitHub；代理用 TG_PROXY）
-	@go build -ldflags "-X tg/internal/cli.Version=0.0.0" -o "$$TEMP/tt-updcheck.exe" .
-	@$$TEMP/tt-updcheck.exe update check --format table --proxy "$$TG_PROXY" ; code=$$? ; rm -f "$$TEMP/tt-updcheck.exe" ; if [ "$$code" = "0" ] || [ "$$code" = "10" ] ; then echo "live-check OK (exit $$code)" ; else echo "live-check FAILED (exit $$code)" ; exit 1 ; fi
+	@go build -ldflags "-X tg/internal/cli.Version=0.0.0" -o "$$TEMP/tg-updcheck.exe" .
+	@$$TEMP/tg-updcheck.exe update check --format table --proxy "$$TG_PROXY" ; code=$$? ; rm -f "$$TEMP/tg-updcheck.exe" ; if [ "$$code" = "0" ] || [ "$$code" = "10" ] ; then echo "live-check OK (exit $$code)" ; else echo "live-check FAILED (exit $$code)" ; exit 1 ; fi
 
 
 # 调 .bat 为什么长这样（两处都别退回去）：
@@ -41,7 +41,7 @@ update-live-check: ## tg update 的真联网自检（要能访问 GitHub；代�
 #   2) 换成 `cmd /c X` 也不行：从 Git Bash 直接敲时 MSYS 会把 `/c` 当路径转成 `C:\`。
 #   `MSYS2_ARG_CONV_EXCL="*"` + 显式 `cmd.exe /c` 在两种走法下都对（已实测）。
 version-check: ## 版本号只有 VERSION 一个出处：对照 web 的两份 package.json 与 package-lock.json
-	@node -e 'const fs=require("fs");const want=fs.readFileSync("VERSION","utf8").trim();if(!/^[0-9]+\.[0-9]+\.[0-9]+$$/.test(want)){console.error("VERSION is not MAJOR.MINOR.PATCH: "+want);process.exit(1)}const lock=JSON.parse(fs.readFileSync("web/package-lock.json","utf8"));const rows=[["web/package.json",JSON.parse(fs.readFileSync("web/package.json","utf8")).version],["web/app/package.json",JSON.parse(fs.readFileSync("web/app/package.json","utf8")).version],["web/package-lock.json",lock.version],["web/package-lock.json packages[\"\"]",lock.packages[""].version]];const bad=rows.filter(r=>r[1]!==want);if(bad.length){console.error("version mismatch, VERSION = "+want+"\n  "+bad.map(r=>r[0]+" = "+r[1]).join("\n  "));process.exit(1)}console.log("version-check OK: "+want+" (VERSION is the single source)")'
+	@node -e 'const fs=require("fs");const want=fs.readFileSync("VERSION","utf8").trim();if(!/^[0-9]+\.[0-9]+\.[0-9]+$$/.test(want)){console.error("VERSION is not MAJOR.MINOR.PATCH: "+want);process.exit(1)}const lock=JSON.parse(fs.readFileSync("web/package-lock.json","utf8"));const rows=[["web/package.json",JSON.parse(fs.readFileSync("web/package.json","utf8")).version],["web/app/package.json",JSON.parse(fs.readFileSync("web/app/package.json","utf8")).version],["web/package-lock.json",lock.version],["web/package-lock.json packages[\"\"]",lock.packages[""].version],["web/package-lock.json packages[\"app\"]",lock.packages["app"].version]];const bad=rows.filter(r=>r[1]!==want);if(bad.length){console.error("version mismatch, VERSION = "+want+"\n  "+bad.map(r=>r[0]+" = "+r[1]).join("\n  "));process.exit(1)}console.log("version-check OK: "+want+" (VERSION is the single source)")'
 
 package: version-check ## 便携包 → dist/tg-portable/ 与 dist/tg-portable.zip
 	MSYS2_ARG_CONV_EXCL="*" cmd.exe /c "build_portable.bat"

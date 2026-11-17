@@ -20,7 +20,7 @@
 ## 判据
 
 ```bash
-build_msi.bat        # → dist/TT-<版本>-x64.msi
+build_msi.bat        # → dist/TG-<版本>-x64.msi
 ```
 
 装一次、卸一次，确认：不需要管理员、PATH 被加上又被摘掉、程序目录被清干净、

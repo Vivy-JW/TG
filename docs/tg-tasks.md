@@ -69,7 +69,7 @@
 - ☑ `GET /api/gp/meta` 回明文口令 —— **决定保留**（只监听 127.0.0.1；`run\config.json` 本身就必须存明文，设置页要能编辑口令并回显；TT 侧同样明文）
 - ☑ 前端 `dist` 重编 + exe 重打（多轮；2026-11-17 最新产物 `web/dist/assets/index-*.js` ≈4.04 MB，exe `0.5.2-2026-11-17h`）
 - ☑ `build_portable.bat` / `installer/tg.wxs` 改 TG 名称、产品名（2026-11-13 `1685d08`；MSI 2026-11-16 实跑产出 `dist\TG-0.5.2-x64.msi`，UpgradeCode 换成 TG 自己的）
-- ☐ 版本号与 CHANGELOG
+- ☑ 版本号与 CHANGELOG（2026-11-17）：TG 作为新工具重新起版本，`VERSION` = **0.1.0**（不沿用 TT 的 0.5.2）；同步 `web/package.json`、`web/app/package.json`、`web/package-lock.json`（3 处 version + 2 处 `tg-web` 名字），`make version-check` 的 node 脚本增查 `packages["app"]`；新建 `CHANGELOG.md`（Keep a Changelog，只记 0.1.0 这一版）；README 的「当前状态/常用命令」同步到 GP 口径
 
 ## 阶段 5 改名三批
 
