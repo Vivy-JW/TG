@@ -45,7 +45,7 @@
 
 - ☐ `tg debug` 接 GP（起会话 / 停站 / 断点 / 步进）
 - ☐ 摘 T100 接线：`ents.go`、`db.go`、`dbsqldirect.go`、`srcmirror.go`、`api.go` 的 ENT 入口
-- ☐ 连带删 `tt debug ents` / `tt debug topent`
+- ☑ 连带删 `tt debug ents` / `tt debug topent`（2026-11-16 `c0e3974` 删 `--fglserver`，2026-11-17 `24b2c45` 把 ENT 管线整条删掉：`--ent`、`/api/ents*`、`cfg.Topent`、`requireExplicitEnt`、快照 `ent`/`topent*`）
 - ☑ `tg session` 收成 GP 语义（2026-11-16）：去掉 `--ent` / `session ent` / `--fglserver`，只要环境；`ls`/`show` 的 JSON 不再带 `ent` 与三个 `topent*` 键；`session new` 的作用域从 `EnvEntReq` 降成 `Env`
 - ☐ 两套 PTY 二选一：把 `internal/gp/session.go` 降级成 `internal/debug` 的薄封装
 - ☐ 调试工作台前端在 GP 下验一遍
@@ -54,7 +54,7 @@
 ## 阶段 3 删 T100 领域层
 
 - ☑ `tt dev tzc` / `tt dev tzs`（10 条命令，2026-11-11 连同 `internal/dev` 的 fence/model/pkgfile/split/store/synth/tapfile/tglfile/tzs/verify 一起删了；只留 `dev/fgl` 与 `dev/testutil`）
-- ☑ 删 `engine/` + `designer-src/`（1264 文件 ≈17 MB），删前打了 zip 到仓库外（2026-11-12，commit 见 handoff 第 35 条）
+- ☑ 删旧命令手册 `.agents/docs/architecture/commands.html`（2026-11-17，TT 时代的命令快照，含 .tzc/.tzs 两个整组已删命令与 `tt env ents` 样例，全仓无引用）`n- ☑ 删 `engine/` + `designer-src/`（1264 文件 ≈17 MB），删前打了 zip 到仓库外（2026-11-12，commit 见 handoff 第 35 条）
 - ☑ 确认 `engine/designer/` 28 个厂商 DLL（10.5 MB）不进 TG 发行包（engine 整个删了，`build_portable.bat` 的 staging 段也删了）
 - ☑ `tg interface`（3 条）：标签改查 gae_file，`.42s` 路径已删（2026-11-12）
 - ☑ `tg outline` 换 GP 目录结构：不换结构，改成"本地文件 > `--dir` > 镜像 > 直读服务器"（与 `tg interface` 同源，2026-11-12）
