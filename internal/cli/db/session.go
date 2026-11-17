@@ -24,7 +24,6 @@ import (
 // sqlSession 一次执行要用的连接。direct 与 ssh 恰有一个非空。
 type sqlSession struct {
 	route   string // 直连时是 client-direct；服务器路线要等结果里的方言才能定
-	ent     int
 	account string
 	target  string
 	viaTun  bool
@@ -40,10 +39,10 @@ type sqlSession struct {
 //
 // 错误一律带稳定码：身份错 TARGET/2、直连连不上 DB_UNREACHABLE/4、
 // SSH 连不上 SSH_FAILED/4、其余 DB_FAILED/4 —— 与单条命令原有的退出码一一对应。
-func openSession(cfg *debug.Config, ent int, route string) (*sqlSession, string, error) {
+func openSession(cfg *debug.Config, route string) (*sqlSession, string, error) {
 	fallbackNote := ""
 	if route != SQLRouteServer {
-		cc, err := dbConnFor(cfg, ent)
+		cc, err := connFor(cfg)
 		if err != nil {
 			return nil, "", output.Errorf("TARGET", 2, "%v", err)
 		}
@@ -59,7 +58,7 @@ func openSession(cfg *debug.Config, ent int, route string) (*sqlSession, string,
 				}
 			}
 			return &sqlSession{
-				route: dbconfig.RouteClientDirect, ent: ent, account: acct,
+				route: dbconfig.RouteClientDirect, account: acct,
 				target: cc.Address(), viaTun: cc.ViaSSH != nil,
 				direct: d, dialect: d.Dialect(),
 			}, "", nil
@@ -82,13 +81,10 @@ func openSession(cfg *debug.Config, ent int, route string) (*sqlSession, string,
 		return nil, "", output.Errorf("SSH_FAILED", 4, "SSH 连接失败: %v", err)
 	}
 	acct := ""
-	if ent <= 0 {
-		// 服务器路线默认按 TOPENT→gzou_t 解析；GP 没有那套，直接把账号给过去。
-		if a, err := primaryAccount(cfg); err == nil {
-			acct = a
-		}
+	if a, err := primaryAccount(cfg); err == nil {
+		acct = a
 	}
-	return &sqlSession{ent: ent, ssh: conn, mgr: debug.NewManager(cfg), account: acct}, fallbackNote, nil
+	return &sqlSession{ssh: conn, mgr: debug.NewManager(cfg), account: acct}, fallbackNote, nil
 }
 
 // Query 在这条会话上跑一条只读 SQL。
@@ -96,7 +92,7 @@ func (s *sqlSession) Query(ctx context.Context, sqlText string, timeout int) (*d
 	if s.direct != nil {
 		return s.direct.Query(ctx, sqlText)
 	}
-	res, err := s.mgr.RunReadonlyQuery(s.ssh, debug.ReadonlyQueryReq{SQL: sqlText, Ent: s.ent, Account: s.account, Timeout: timeout})
+	res, err := s.mgr.RunReadonlyQuery(s.ssh, debug.ReadonlyQueryReq{SQL: sqlText, Account: s.account, Timeout: timeout})
 	if err != nil {
 		return nil, err
 	}
@@ -123,13 +119,10 @@ func (s *sqlSession) Close() {
 	}
 }
 
-// acctSource 信封里的账号来源：直连是按 ENT 清单定的，服务器路线由 debug 侧解析。
+// acctSource 信封里的账号来源：直连一律是 db.accounts[0]，服务器路线由 debug 侧解析。
 func (s *sqlSession) acctSource() string {
 	if s.direct != nil {
-		if s.ent <= 0 {
-			return dbconfig.AcctFromPrimary
-		}
-		return dbconfig.AcctFromEntConfig
+		return dbconfig.AcctFromPrimary
 	}
 	return s.acctSrc
 }
@@ -147,18 +140,14 @@ func (s *sqlSession) routeName() string {
 
 // applySessionMeta 把"这次落在哪"填进结果信封。
 //
-// 直连与服务器路线的账号来源不同（前者按 ENT 清单直连，后者由 debug 侧解析），
+// 直连与服务器路线的账号来源不同（前者按 db.accounts[0]，后者由 debug 侧解析），
 // 所以只在直连时覆盖 Account/AccountSource，避免把服务器路线已解析的值盖成空。
 func applySessionMeta(res *debug.DBQueryResult, cfg *debug.Config, s *sqlSession, note string) {
 	res.Env = cfg.EnvName()
 	res.Zone = cfg.Zone
-	res.Ent = s.ent
 	if s.direct != nil {
 		res.Account = s.account
-		res.AccountSource = dbconfig.AcctFromEntConfig
-		if s.ent <= 0 {
-			res.AccountSource = dbconfig.AcctFromPrimary
-		}
+		res.AccountSource = dbconfig.AcctFromPrimary
 		res.DBTarget = s.target
 		res.Route = dbconfig.RouteClientDirect
 		res.ViaTunnel = s.viaTun

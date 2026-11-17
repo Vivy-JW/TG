@@ -132,7 +132,7 @@ func TestFailureEnvelopeCarriesCandidates(t *testing.T) {
 //
 // 两格缩进、字段间两空格；未命名写 `(未命名)`；第一个字段是 **ref**（恒定），不是 display。
 func TestCandidateLineFormat(t *testing.T) {
-	got := CandidateLine(Candidate{Ref: "恒烁正式区#1", Name: "汇率单", State: StateStopped, Ent: "99"})
+	got := CandidateLine(Candidate{Ref: "恒烁正式区#1", Name: "汇率单", State: StateStopped})
 	want := "  恒烁正式区#1  汇率单  已停站"
 	if got != want {
 		t.Errorf("候选行（C5.14）= %q\n    期望 %q", got, want)
@@ -171,7 +171,7 @@ func TestCandidateLineFormat(t *testing.T) {
 func TestIdentityLineFormat(t *testing.T) {
 	got := IdentityLine(Session{
 		Ref: "恒烁正式区#1", Display: "恒烁正式区/apmt520#1",
-		Name: "汇率单", State: StateStopped, Ent: "99",
+		Name: "汇率单", State: StateStopped,
 	})
 	want := "会话 恒烁正式区/apmt520#1 · 汇率单 · 已停站"
 	if got != want {

@@ -47,10 +47,6 @@ var (
 	dbgExecMax int    // exec --max:单条命令**显示**的行数上限(0=不限;不影响本地完整副本)
 	dbgSQLFile string // sql --file:从本地文件读语句(不是远端 @)
 	dbgEnvFlag string // start/wsdebug --env:这次启动要连哪个环境(权威;空=回落全局 --env/当前环境)
-	// dbgEntRun 是 start/wsdebug --ent：T100 遗留，可选 ——
-	// **这一轮跑在哪个企业**只对 T100 有意义；GP 的账号固定取 db.accounts[0]，
-	// 给了才把它 export 进会话 shell（TOPENT 语义保留，不要求）。
-	dbgEntRun string
 
 	wsShow         string   // wslogs --show <rowid>:只看这一条的报文
 	wsSaveReq      string   // wslogs --show --save-request:把请求原文另存一份(改完再 --request-file)
@@ -173,7 +169,7 @@ func dbgTargetEnv() string {
 //
 // 留下来的字段是**服务端有、目标层不认**的那些（目标层只认"哪条会话"，
 // 不认"这条会话现在什么样"）：`reused` 是客户端自己补的复用痕迹，
-// `zone` / `topent*` / `screenTarget` / `stop` 是快照里给人看的部分。
+// `zone` / `screenTarget` / `stop` 是快照里给人看的部分。
 type dbgSnapView struct {
 	target.Session
 
@@ -181,19 +177,7 @@ type dbgSnapView struct {
 	Zone   string `json:"zone"`
 	// Product 服务端给的这一轮产品别（"gp" = TOP GP，其余/T100 = 空）。
 	// GP 没有企业编号、区域、FGLSERVER 那几层，身份行与画面去向都要按它分档。
-	Product  string `json:"product"`
-	Topent   string `json:"topent"`
-	TopentCf string `json:"topentCfg"`
-	TopentSh string `json:"topentShell"`
-	// TopentSession 是**本会话显式给的企业编号**（`tg debug start --ent` / 面板输入；
-	// 服务端的 `topentSession` 键，见 `Session.TopentSession`）。
-	//
-	// 它**只是**快照里既有的一栏，有它自己的含义 —— **不是** `ent` 的备胎：
-	// `<ent>` 那一栏的唯一来源是快照的 `ent`（服务端 `SessionBrief.Ent`，
-	// 契约 C5.1 / C5.3），见 `dbgIdentity`。上一批这里曾经被用来兜底 `ent`
-	// （`dbgIdentityEnt`），那处兼容层已按验收判定删净：客户端不许在 `ent` 与
-	// `topentSession` 之间做取舍（C5.17–C5.19）。
-	TopentSession string `json:"topentSession"`
+	Product string `json:"product"`
 	// ScreenTarget 是服务端给的一句"这一轮画面画到哪儿"（GP 恒为"由 fgldb 接管"）。
 	ScreenTarget string `json:"screenTarget"`
 	Stop         *struct {
@@ -206,37 +190,26 @@ type dbgSnapView struct {
 
 // dbgIdentity 会话的"我在哪儿"（契约 C5.9：**会话级命令唯一的身份行**）。
 //
-// 两行，格式逐字对着 C5.9：
+// 两行：
 //
-//	会话 <display> · <name> · <state> · ENT <ent>
-//	  账号 <acct> · 库 <target> · 区域 <zone>
+//	会话 <display> · <name> · <state>
+//	  账号 <acct> · 库 <target>
 //
 // 第一行的渲染**不在本文件**：它是 `internal/target.IdentityLine`（C5.9 的唯一实现，
 // 与候选行 `CandidateLine` 同处一个包，两者的字段规则才不会各写一遍）。
-// 本函数只负责第二行那三样 —— 它们来自配置与企业快照，不是会话的身份键。
+// 本函数只负责第二行 —— 账号与库都来自配置，不是会话的身份键。
 //
-// 为什么非要有这一行:同一台机器上可以有多个环境指向**同一个库**(只有企业编号不同),
-// 那时 topent/topentCfg/topentShell 三个裸字段要么全空、要么同值,人根本看不出这次
-// 连的是哪个账号。账号由企业编号经 gzou_t 解析而来,查不到数据时"上错号"与"配置真的
-// 缺失"在输出上一模一样 —— 这一行就是用来分开这两件事的。
+// 为什么要单起一行:同一台机器上可以有多个环境指向**同一个库**,光看会话名字看不出
+// 这次连的是哪个账号。账号由配置 `db.accounts[0]` 直接给出（GP 没有企业编号那层，
+// 不经 gzou_t 解析）；配了没配、连的是哪台库，这一行就要能分开。
 //
-// **C8.4 登记的那处单会话输出变化就是这里**：从
-// `生效身份: 环境 … / 区域 … / 企业 … / 账号 … / 库 …` 换成上面两行（H2 的那一处例外，
-// 表征测试 `TestDBGIdentity*` 同步改了）。
-//
-// 账号走 LookupEnts(Offline):只读快照、**一次网络都不发**,没有快照就只回"查不到" ——
-// 这是输出里的一句说明,不值得为它拨一次 SSH(慢时 40 秒)。查不到不算错误,
-// 但会说明为什么没有,并给出自己核对的命令。
+// 表征测试 `TestDBGIdentity*` 盯着这两行的形状。
 func dbgIdentity(snap *dbgSnapView) string {
 	if snap == nil {
 		return "" // 没有快照时返回空串(不能打出半行)
 	}
 	// 第一行：C5.9 的身份行。`display` 取不到时（服务端没给这个键）退回 ref/句柄，
 	// 那是 `target.Session.DisplayForm` 的兜底，不是这里再拼一遍。
-	//
-	// `<ent>` **直接用快照里的 `ent`**（服务端 `SessionBrief.Ent` = `Session.CurrentEnt()`，
-	// C5.1 / C5.3）。这里**没有第二份取值链**：客户端不在 `ent` 与 `topentSession` 之间
-	// 做取舍（C5.17–C5.19）—— 上一批那处兼容兜底已删净，`ent` 只有这一个来源。
 	line := target.IdentityLine(snap.Session)
 
 	// 第二行：账号 / 库。GP 没有区域/企业那两层，账号来自 db.accounts[0]。
@@ -246,7 +219,6 @@ func dbgIdentity(snap *dbgSnapView) string {
 	}
 	tgt, acct, acctWhy := dbgDBIdentity(env)
 	second := fmt.Sprintf("  账号 %s · 库 %s", acct, tgt)
-	acctWhy = ""
 	if acctWhy != "" {
 		second += "  " + acctWhy
 	}
@@ -347,11 +319,7 @@ TG 里没有本机 GDC 接线这一层,也就没有"放行之后什么都不弹"
 		if dbgModule != "" {
 			body["module"] = dbgModule
 		}
-		// `--ent` 是**这一轮的企业**，随请求体送过去：服务端把它落到本轮 cfg.Topent，
-		// 再 export 进会话 shell。空值不送 —— 由服务端拒绝（不再静默沿用登录 shell 的 $TOPENT）。
-		if e := strings.TrimSpace(dbgEntRun); e != "" {
-			body["ent"] = e
-		}
+
 		// 显式指名的宿主：只送**服务端原始句柄**（C5.4：路径与请求体只认 id，不认 ref/display）。
 		// 空值不送 —— 没打 --session 时请求体与今天逐字相同（H2）。
 		if host != nil {
@@ -1079,12 +1047,10 @@ type wslOut struct {
 // wsLogAcct 接口日志是用哪个账号查的、为什么(服务端随回包带出来)。
 //
 // 为什么值得单独打一行:空结果时这是唯一能区分"这段时间确实没调用"与
-// "账号/企业用错了"的线索。只读 SQL 那边靠结果头的"企业 N → 账号 X",
-// 接口日志这边则要说明"它压根不按企业走"。
+// "账号配错了"的线索 —— GP 的接口日志固定用系统账号查，账号不对就一条都查不出来。
 type wsLogAcct struct {
-	Account       string `json:"account"`
-	Reason        string `json:"reason"`
-	TopentWarning string `json:"topentWarning"`
+	Account string `json:"account"`
+	Reason  string `json:"reason"`
 }
 
 func printWSLogAcct(a *wsLogAcct) {
@@ -1092,9 +1058,6 @@ func printWSLogAcct(a *wsLogAcct) {
 		return
 	}
 	fmt.Printf("[账号] %s —— %s\n", a.Account, a.Reason)
-	if a.TopentWarning != "" {
-		fmt.Printf("[账号] 注意: %s\n", a.TopentWarning)
-	}
 }
 
 func wslogContentURL(rowid string) string {
@@ -1357,7 +1320,7 @@ var debugSQLCmd = &cobra.Command{
 		if sqlText == "" {
 			return fmt.Errorf(`需要一条查询语句，或用 --file 指定语句文件`)
 		}
-		return cdb.QueryOnce(sqlText, 0, dbgTimeout, cdb.SQLRouteServer)
+		return cdb.QueryOnce(sqlText, dbgTimeout, cdb.SQLRouteServer)
 	},
 }
 
@@ -1379,8 +1342,8 @@ rowid 从 tg debug wslogs 输出中取。
   tg debug wsdebug <rowid> --set digi-body.std_data.parameter.production_item_no=
   tg debug wsdebug <rowid> --request-file my_req.json
 
-**重放跑在 GP 上**:作业、模块、账号都由环境配置与 t_prog_link 决定,没有 T100 的
-TOPENT(企业编号)那层。成功启动后输出里的「生效身份」就是这一轮真正连的东西。`,
+**重放跑在 GP 上**:作业、模块、账号都由环境配置与 t_prog_link 决定,没有 T100 那层
+企业编号。成功启动后输出里的「生效身份」就是这一轮真正连的东西。`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		rowid := args[0]
@@ -1395,10 +1358,7 @@ TOPENT(企业编号)那层。成功启动后输出里的「生效身份」就是
 			return err
 		}
 		body := map[string]any{"rowid": rowid}
-		// `--ent`：重放同样要**显式**说明跑在哪个企业（与 start 同一条规矩）。
-		if e := strings.TrimSpace(dbgEntRun); e != "" {
-			body["ent"] = e
-		}
+
 		if reqOverride != "" {
 			body["request"] = reqOverride
 		}
@@ -1474,11 +1434,7 @@ func init() {
 	debugExecCmd.Flags().StringVar(&dbgExecFile, "file", "", "命令文件:一行一条,空行与 # 开头跳过(与位置参数并用时位置参数在前)")
 	debugExecCmd.Flags().IntVar(&dbgExecMax, "max", 2000, "单条命令**显示**的行数上限(0=不限)。超出的部分不打印,但完整输出会落本地并给出路径")
 	debugStartCmd.Flags().IntVar(&dbgTimeout, "timeout", 120, "等待入口停站超时(秒)")
-	// 企业编号：T100 遗留，**可选**。GP 没有企业编号那层（账号取 db.accounts[0]），
-	// 给了才按 TOPENT 语义 export 进会话 shell。
-	const entHelp = "企业编号(ENT,可选，T100 遗留)：给了才 export 进会话 shell；GP 不需要 —— 账号取 db.accounts[0]"
-	debugStartCmd.Flags().StringVar(&dbgEntRun, "ent", "", entHelp)
-	debugWsdebugCmd.Flags().StringVar(&dbgEntRun, "ent", "", entHelp)
+
 	debugSQLCmd.Flags().StringVar(&dbgSQLFile, "file", "", "从本地文件读查询语句(长语句用)")
 	debugSQLCmd.Flags().IntVar(&dbgTimeout, "timeout", 0, "查询超时秒数(默认 30,上限 120)")
 	debugWsdebugCmd.Flags().IntVar(&dbgTimeout, "timeout", 150, "等待入口停站超时(秒)")

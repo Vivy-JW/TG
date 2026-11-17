@@ -183,34 +183,16 @@ func TestWSLogPageClamp(t *testing.T) {
 }
 
 // wsfa_t 是 ds 下的共享表,查接口日志恒用系统账号 —— 这个"为什么"必须随结果带出去,
-// 否则"日志为空"会被读成"这段时间没有调用",而不是"账号/企业可能用错了"。
+// 否则"日志为空"会被读成"这段时间没有调用"。
+//
+// 2026-11-17：TOPENT 那层随 ENT 管线删了，这条只剩"账号恒为系统账号 + 说明为什么"。
 func TestWSLogAcctFor(t *testing.T) {
-	cases := []struct {
-		name       string
-		topent     string
-		wantWarn   bool // 期望带 TOPENT 警告
-		wantInWarn string
-	}{
-		{name: "有效企业编号", topent: "99"},
-		{name: "据点码填错位置", topent: "SITE01", wantWarn: true, wantInWarn: "SITE01"},
-		{name: "空", topent: "", wantWarn: true, wantInWarn: "没有生效的 TOPENT"},
-		{name: "零", topent: "0", wantWarn: true, wantInWarn: "0"},
-		{name: "带空白", topent: "  99  "},
+	a := wslogAcctFor()
+	if a.Account != wsSysAccount {
+		t.Errorf("账号应当恒为系统账号 %s,得到 %q", wsSysAccount, a.Account)
 	}
-	for _, c := range cases {
-		a := wslogAcctFor(c.topent)
-		if a.Account != wsSysAccount {
-			t.Errorf("[%s] 账号应当恒为系统账号 %s,得到 %q", c.name, wsSysAccount, a.Account)
-		}
-		if a.Reason == "" {
-			t.Errorf("[%s] 必须说明为什么用这个账号", c.name)
-		}
-		if (a.TopentWarning != "") != c.wantWarn {
-			t.Errorf("[%s] TOPENT 警告 = %q, 期望有无=%v", c.name, a.TopentWarning, c.wantWarn)
-		}
-		if c.wantInWarn != "" && !strings.Contains(a.TopentWarning, c.wantInWarn) {
-			t.Errorf("[%s] 警告里应当点出原始值 %q: %q", c.name, c.wantInWarn, a.TopentWarning)
-		}
+	if a.Reason == "" {
+		t.Error("必须说明为什么用这个账号")
 	}
 }
 

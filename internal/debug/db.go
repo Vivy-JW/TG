@@ -11,24 +11,17 @@ import (
 	"fmt"
 	"net"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"tg/internal/dbconfig"
-	"tg/internal/entdir"
 	"tg/internal/host"
 )
 
-// EntMapping 一个企业编号 → 账号。定义在 internal/entdir:
-// tg dict 的客户端直连路径也解析同一张 gzou_t,两边的映射必须是同一个形状。
-type EntMapping = entdir.Mapping
-
 // DBProbeResult 单账号连接探查结果
 type DBProbeResult struct {
-	Ent     int    `json:"ent,omitempty"`
 	Account string `json:"account"`
 	Host    string `json:"host"`
 	Port    string `json:"port"`
@@ -39,15 +32,14 @@ type DBProbeResult struct {
 
 // DBReport 完整探查报告
 type DBReport struct {
-	Zone     string            `json:"zone,omitempty"`
-	TNS      string            `json:"tns"` // 显示用:oracle service / kingbase 库名
-	Mappings []EntMapping      `json:"mappings,omitempty"`
-	Probe    *DBProbeResult    `json:"probe,omitempty"`
-	Env      map[string]string `json:"env,omitempty"` // 探测到的环境(sqlplus/oracleHome 等)
+	Zone string `json:"zone,omitempty"`
+	TNS  string `json:"tns"` // 显示用:oracle service / kingbase 库名
+
+	Probe *DBProbeResult    `json:"probe,omitempty"`
+	Env   map[string]string `json:"env,omitempty"` // 探测到的环境(sqlplus/oracleHome 等)
 }
 
 var (
-	reGzouMap  = regexp.MustCompile(`^\s*(\d+)\|(.*?)\s*$`)
 	reEnvKV    = regexp.MustCompile(`^(ORA|SQLP|TNSADM|TWOTASK)=(\S*)\s*$`)
 	reKBEnvKV  = regexp.MustCompile(`^(KSQL|KPORT|KDB)=(.*)\s*$`)
 	reTNSField = regexp.MustCompile(`(HOST|PORT|SERVICE_NAME)\s*=\s*([^)\s]+)`)
@@ -201,53 +193,6 @@ func (d *dbRun) exec(conn *host.SSHConn, connStr, oracleSQL, kbSQL string, timeo
 	return conn.OutputStdin(cmd, []byte(oracleSQL), timeout)
 }
 
-// dbAllMappings 查询 gzou_t 全部企业→账号映射(用 ds 系统账号)
-//
-// 账号列的取法要挡两种"空":Oracle 里空串就等同于 NULL,`nvl` 兜得住;
-// 金仓里空串是独立的,只有 `nullif(trim(...))` 才兜得住。**只写 nvl/coalesce 是不够的** ——
-// 漏掉的那种会在下面那行正则上整行匹配不上、被静默丢掉,于是"企业 907 没配账号"
-// 会被读成"企业 907 不存在"。
-func dbAllMappings(conn *host.SSHConn, d *dbRun) ([]EntMapping, error) {
-	// 企业目录固定用系统账号 ds 读:gzou_t 是跨企业共享的系统表(见 dbconfig.SystemAccount)。
-	connStr, err := d.dbConnStr(dbconfig.SystemAccount)
-	if err != nil {
-		return nil, err
-	}
-	kbSQL := `select gzou001,coalesce(nullif(trim(gzou003),''),'-') from gzou_t where gzoustus='Y' order by gzou001`
-	oraSQL := "set heading off\nset feedback off\nselect gzou001||'|'||nvl(trim(gzou003),'-') from gzou_t where gzoustus='Y' order by gzou001;"
-	out, err := d.exec(conn, connStr, oraSQL, kbSQL, 30*time.Second)
-	if err != nil {
-		return nil, fmt.Errorf("查询 gzou_t 失败: %w (%s)", err, host.FirstLines(out, 3))
-	}
-	var maps []EntMapping
-	for _, ln := range strings.Split(out, "\n") {
-		if m, ok := parseEntLine(ln); ok {
-			maps = append(maps, m)
-		}
-	}
-	if len(maps) == 0 {
-		return nil, fmt.Errorf("%w(输出: %s)", errEmptyCatalog, host.FirstLines(out, 5))
-	}
-	sort.Slice(maps, func(i, j int) bool { return maps[i].Ent < maps[j].Ent })
-	return maps, nil
-}
-
-// parseEntLine 解析 gzou_t 的一行输出。抽成纯函数是为了能直接钉住
-// "有企业、但账号列是空"这一情形 —— 旧正则 (`(\S+)`) 会把它整行丢掉,
-// 于是"企业没配账号"被读成"企业不存在"。
-func parseEntLine(ln string) (EntMapping, bool) {
-	m := reGzouMap.FindStringSubmatch(ln)
-	if m == nil {
-		return EntMapping{}, false
-	}
-	ent, _ := strconv.Atoi(m[1])
-	acct := strings.TrimSpace(m[2])
-	if acct == "" {
-		acct = "-" // SQL 侧已归一,这里是第二道:输出里出现空列时同样按"没配"处理
-	}
-	return EntMapping{Ent: ent, Account: acct, Placeholder: acct == "-"}, true
-}
-
 // JobResolve 作业解析结果(gendbg 原版语义)
 type JobResolve struct {
 	Prog      string // 实体程序编号(gzza001/gzzz002)
@@ -304,73 +249,6 @@ func dbConnectTest(conn *host.SSHConn, d *dbRun, account string) error {
 		return fmt.Errorf("连接失败: %s", host.FirstLines(out, 4))
 	}
 	return nil
-}
-
-// ProbeDB 登录服务器按当前环境探查:ent>0 验证该企业账号连通性;ent<=0 仅列映射。
-// 连接完全使用显式 dbconfig.Connection(服务器侧可达的 host/port/service|库名)。
-//
-// 企业清单走 EntCatalog(与 tt debug ents、只读 SQL 同一个 resolver)——
-// 两条命令必须给出同一份清单,否则 agent 会拿到两套互相矛盾的答案。
-// opt 只用到 Refresh(跳过缓存快照强制现查)。
-func ProbeDB(cfg *Config, ent int, opt EntListOpt) (*DBReport, error) {
-	conn, err := host.Dial(cfg.SSH)
-	if err != nil {
-		return nil, fmt.Errorf("SSH 连接失败: %w", err)
-	}
-	defer conn.Close()
-
-	zone := zoneOr36(cfg.Zone)
-	if cfg.DB == nil {
-		return nil, fmt.Errorf("当前环境未挂数据库连接(设置-环境-SSH 页选择「数据库连接」)")
-	}
-	d, err := resolveDBRun(conn, cfg)
-	if err != nil {
-		return nil, err
-	}
-	report := &DBReport{Zone: zone, TNS: cfg.DB.Svc()}
-	report.Env = map[string]string{}
-	if cfg.DB.Type == "kingbase" {
-		h, p, db, _ := d.kbTarget()
-		report.TNS = db
-		report.Env = map[string]string{"ksql": d.ksql, "host": h, "port": p, "database": db}
-	} else {
-		report.Env = map[string]string{
-			"host":       cfg.DB.Host,
-			"port":       strconv.Itoa(cfg.DB.Port),
-			"service":    cfg.DB.Svc(),
-			"sqlplus":    d.oraT,
-			"oracleHome": d.oraHome,
-		}
-	}
-	opt.Ent = ent // 让报告里的"当前企业"与请求一致
-	listing, err := NewEntCatalog(cfg.DataDir).list(conn, d, cfg, opt)
-	if err != nil {
-		return nil, err
-	}
-	report.Mappings = listing.Ents
-	if ent <= 0 {
-		return report, nil // 仅列映射
-	}
-	// 用 pickEntAccount 而不是自己遍历:"没配账号"与"企业不存在"是两回事,
-	// 那句话术(以及"当前有: 99, 907, …"的提示)三个命令共用一份。
-	account, err := pickEntAccount(listing.Ents, ent)
-	if err != nil {
-		return nil, err
-	}
-	res := &DBProbeResult{Ent: ent, Account: account}
-	if cfg.DB.Type == "kingbase" {
-		h, p, db, _ := d.kbTarget()
-		res.Host, res.Port, res.Service = h, p, db
-	} else {
-		res.Host, res.Port, res.Service = cfg.DB.Host, strconv.Itoa(cfg.DB.Port), cfg.DB.Svc()
-	}
-	if err := dbConnectTest(conn, d, account); err != nil {
-		res.Error = err.Error()
-	} else {
-		res.Connect = true
-	}
-	report.Probe = res
-	return report, nil
 }
 
 // ProbeDBAccount 用**显式账号**探一次服务器侧连通性（TG 的 GP 环境用这个）。

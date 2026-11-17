@@ -19,8 +19,7 @@ const (
 	SelectorEnvJobSeq
 	// SelectorEnvJob 是写法 ⑥：`恒烁正式区/apmt520`（（环境, 作业）；多条即 F3）。
 	SelectorEnvJob
-	// SelectorEnvEnt 是写法 ⑦：`恒烁正式区/99`（（环境, 企业编号）；第二段全数字，C2.3）。
-	SelectorEnvEnt
+
 	// SelectorEnv 是写法 ⑧：`恒烁正式区`（按环境找；该环境下唯一一条才落，多条即 F4）。
 	SelectorEnv
 )
@@ -36,8 +35,7 @@ func (k SelectorKind) String() string {
 		return "env/job#n"
 	case SelectorEnvJob:
 		return "env/job"
-	case SelectorEnvEnt:
-		return "env/ent"
+
 	case SelectorEnv:
 		return "env"
 	}
@@ -55,8 +53,7 @@ type Selector struct {
 	Env string
 	// Prog 是作业段（仅 SelectorEnvJob / SelectorEnvJobSeq）。
 	Prog string
-	// Ent 是企业编号段（仅 SelectorEnvEnt，字符串形态，C2.3）。
-	Ent string
+
 	// N 是序号（仅 SelectorRef / SelectorEnvJobSeq；0 = 没写）。
 	//
 	// 序号**始终被服务端分配、始终存在**（C2.2），省掉的只是写法。
@@ -129,20 +126,11 @@ func ParseSelectorWith(raw string, environments []string) (Selector, *Failure) {
 			return Selector{}, failureSelectorGrammar(raw) // F10（空段）
 		}
 		sel.Env = segs[0]
-		if SecondSegmentKind(segs[1]) == SecondSegEnt {
-			if sel.N > 0 {
-				// 文法里 `环境/企业编号` 不带序号段（2.1.4）—— 带了就是形态不对。
-				return Selector{}, failureSelectorGrammar(raw) // F10
-			}
-			sel.Ent = segs[1]
-			sel.Kind = SelectorEnvEnt
+		sel.Prog = segs[1]
+		if sel.N > 0 {
+			sel.Kind = SelectorEnvJobSeq
 		} else {
-			sel.Prog = segs[1]
-			if sel.N > 0 {
-				sel.Kind = SelectorEnvJobSeq
-			} else {
-				sel.Kind = SelectorEnvJob
-			}
+			sel.Kind = SelectorEnvJob
 		}
 	default:
 		return Selector{}, failureSelectorGrammar(raw) // F10（段数不对）
@@ -194,23 +182,6 @@ func parseSeq(s string) (int, bool) {
 		return 0, false
 	}
 	return n, true
-}
-
-// SecondSegmentKind 是 C2.3 的判据：选择器第二段**全数字 → 企业编号；否则 → 作业名**。
-//
-// 判据**只**看"全数字"这四个字，不先做 B29 的合法性校验：`1a` 这种串按 C2.3 落到作业那一支，
-// 随后在"环境/作业"那一步按 F7 报 —— 它**不会**被静默当成企业编号 1
-// （那才是"看起来落上了、其实落在别处"）。
-func SecondSegmentKind(seg string) string {
-	if seg == "" {
-		return ""
-	}
-	for _, r := range seg {
-		if r < '0' || r > '9' {
-			return SecondSegJob
-		}
-	}
-	return SecondSegEnt
 }
 
 // ValidateAlias 校验 `--name` 的取值（C2.4 / C2.5 / F19 / Q17）。

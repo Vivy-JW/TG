@@ -16,9 +16,6 @@ func cfgFor(h, zone string) *Config {
 	c := &Config{}
 	c.SSH = host.SSHConfig{Host: h, Port: 22, User: "u"}
 	c.Zone = zone
-	// 企业编号现在是**必填**（requireExplicitEnt）：起会话的判据测试必须给它一个明显式值，
-	// 否则每一条都会先撞"未指定 ENT"而测不到自己那件事（选择/复用/歧义/世代）。
-	c.Topent = host.EntValue("99")
 	c.fillDefaults()
 	return c
 }
@@ -88,7 +85,6 @@ func envCfg(name string) *Config {
 	c := &Config{SSH: host.SSHConfig{Host: "h1", Port: 22, User: "u"}, Zone: "36",
 		SSHs: []host.NamedSsh{e}}
 	// 企业编号必填（requireExplicitEnt）：这些夹具都走真实"起会话"的路。
-	c.Topent = host.EntValue("99")
 	c.fillDefaults()
 	// 必须**走真实的环境选择路径**把 envName 定下来:没有默认环境之后,
 	// 不点名时 EnvName() 会退回 `host-zone` 推导名 —— 两个同机同区域的环境
@@ -151,12 +147,6 @@ func TestPrepareSessionRebuildsOnEnvSwitch(t *testing.T) {
 	if got := ns.EnvNameNow(); got != "测试1012" {
 		t.Fatalf("新会话环境应为 测试1012, got %q", got)
 	}
-	// 会话级企业编号：只来自**显式给的** cfg.Topent（夹具里是 99）。
-	// 「不给就让登录 shell 的 $TOPENT 决定」那条静默路径已经删掉了 —— 不给 ENT 的启动
-	// 会在 requireExplicitEnt 处被拒（判据见 ent_required_test.go）。
-	if got := ns.TopentSession(); got != "99" {
-		t.Fatalf("会话企业应等于显式给的那个(99)，实得 %q", got)
-	}
 }
 
 // 复用同环境会话时,环境名要跟着配置刷新(否则快照会报旧环境名)。
@@ -180,77 +170,6 @@ func TestPrepareSessionRejectsActiveRun(t *testing.T) {
 
 	if _, err := m.prepareSession(cfgFor("h1", "36"), "m1", "p1", "", "", "", "", ""); err == nil {
 		t.Fatal("同目标活跃会话(stopped)应报错,要求先结束当前调试")
-	}
-}
-
-// 复用宿主时**不得把会话自己的 ENT 弄丢**。
-//
-// 事故背景（2026-10-23）：`SetRun` 整份替换 cfg，而本轮请求常常没带 `--ent`
-// （前端「运行 / 重新开始」就是这样），新 cfg 的 Topent 是空的。于是会话的
-// `TopentSession()` 变空 → 下一轮 `requireExplicitEnt` 的三个来源（本次 --ent /
-// 会话 override / 会话建立时的值）全部落空 → 409。
-// 表现出来就是："建会话后第一次能启动，之后每次启动都报必须指定 ENT"。
-func TestSetRunKeepsSessionEnt(t *testing.T) {
-	s := fakeIdleSession("s1", "h1", "36")
-	s.cfg.Topent = host.EntValue("99")
-
-	noEnt := cfgFor("h1", "36")
-	noEnt.Topent = host.EntValue("") // 本轮请求没点名 ENT
-	s.SetRun(noEnt, "axm", "axmt500", "axmt500", "", "")
-	if got := s.TopentSession(); got != "99" {
-		t.Fatalf("复用宿主时把会话自己的 ENT 弄丢了（got %q）：下一轮启动会 409", got)
-	}
-
-	// 本轮显式给了新 ENT：以新值为准，不能被旧值盖住
-	withEnt := cfgFor("h1", "36")
-	withEnt.Topent = host.EntValue("200")
-	s.SetRun(withEnt, "axm", "axmt500", "axmt500", "", "")
-	if got := s.TopentSession(); got != "200" {
-		t.Fatalf("本轮显式给的 ENT 应当生效，got %q", got)
-	}
-}
-
-func TestTopentForRun(t *testing.T) {
-	c := cfgFor("h1", "36")
-	c.Topent = "7" // 会话级 ENT(启动 --ent 给的那个);不再是环境配置值
-	s := fakeIdleSession("s1", "h1", "36")
-	s.cfg = c
-	if got := s.topentForRun(); got != "7" {
-		t.Fatalf("无手动设置时应回退到本会话显式给的 ENT,got %q", got)
-	}
-	// 文本型 TOPENT(会话面板允许)原样透传
-	c2 := cfgFor("h1", "36")
-	c2.Topent = " txt-9 "
-	s3 := fakeIdleSession("s3", "h1", "36")
-	s3.cfg = c2
-	if got := s3.topentForRun(); got != "txt-9" {
-		t.Fatalf("文本型 ENT 应剔除两侧空白透传,got %q", got)
-	}
-	s.mu.Lock()
-	s.topentOverride = "99"
-	s.mu.Unlock()
-	if got := s.topentForRun(); got != "99" {
-		t.Fatalf("手动设置应优先于会话初始 ENT,got %q", got)
-	}
-	s2 := fakeIdleSession("s2", "h1", "36")
-	s2.cfg.Topent = "" // 「没给 ENT」这一档的夹具：cfgFor 现在默认带 99，这里显式清掉
-	if got := s2.topentForRun(); got != "" {
-		t.Fatalf("没给 ENT 也没手动设置应返回空(沿用登录 shell 的 $TOPENT),got %q", got)
-	}
-	if got := s.TopentOverride(); got != "99" {
-		t.Fatalf("TopentOverride 应返回手动值,got %q", got)
-	}
-	if got := s.TopentSession(); got != "7" {
-		t.Fatalf("TopentSession 应返回启动时显式给的值,got %q", got)
-	}
-	// TopentShell 取登录回读的 $TOPENT:与 TopentSession 是两个来源
-	// (没给 ENT 时会话不 export TOPENT,故"当前连的是哪个"以回读值为准)
-	if got := s.TopentShell(); got != "" {
-		t.Fatalf("未回读(无 Runtime)时 TopentShell 应为空,got %q", got)
-	}
-	c.Runtime = &host.RuntimeEnv{TOP: "/u1/t35prd", ERP: "/u1/t35prd/erp", Topent: " 13 "}
-	if got := s.TopentShell(); got != "13" {
-		t.Fatalf("TopentShell 应返回登录回读值并剔除空白,got %q", got)
 	}
 }
 

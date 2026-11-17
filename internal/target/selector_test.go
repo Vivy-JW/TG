@@ -21,31 +21,27 @@ func TestParseSelectorLegalForms(t *testing.T) {
 		kind SelectorKind
 		env  string
 		prog string
-		ent  string
 		n    int
 		why  string
 	}{
 		// 写法 ④（2.2）：规范 id = 环境#序号（C2.0 的"生命周期内恒定"那个形态）。
-		{"恒烁正式区#1", SelectorRef, "恒烁正式区", "", "", 1, "C2.1.2：规范 id"},
-		{"测试1012#12", SelectorRef, "测试1012", "", "", 12, "C2.1.2：序号是十进制正整数"},
-		{"带 空格的环境#3", SelectorRef, "带 空格的环境", "", "", 3, "C2.1：环境名精确取值，允许空格"},
+		{"恒烁正式区#1", SelectorRef, "恒烁正式区", "", 1, "C2.1.2：规范 id"},
+		{"测试1012#12", SelectorRef, "测试1012", "", 12, "C2.1.2：序号是十进制正整数"},
+		{"带 空格的环境#3", SelectorRef, "带 空格的环境", "", 3, "C2.1：环境名精确取值，允许空格"},
 		// 写法 ⑤（2.2）：环境/作业#序号 —— 作业段只是"选择方式"（3.0），不改变序号作用域。
-		{"恒烁正式区/apmt520#1", SelectorEnvJobSeq, "恒烁正式区", "apmt520", "", 1, "2.1.4 + 3.0"},
-		// 写法 ⑥（2.2）：环境/作业。
-		{"恒烁正式区/apmt520", SelectorEnvJob, "恒烁正式区", "apmt520", "", 0, "2.1.4"},
-		{"恒烁正式区/A_1-x", SelectorEnvJob, "恒烁正式区", "A_1-x", "", 0, "B29 的作业名字符集"},
-		// 写法 ⑦（2.2）：环境/企业编号 —— C2.3 的判据是"第二段全数字"。
-		{"恒烁正式区/99", SelectorEnvEnt, "恒烁正式区", "", "99", 0, "C2.3：全数字 → 企业编号"},
-		{"恒烁正式区/0", SelectorEnvEnt, "恒烁正式区", "", "0", 0, "C2.3：判据只看全数字，不校验它合不合理"},
+		{"恒烁正式区/apmt520#1", SelectorEnvJobSeq, "恒烁正式区", "apmt520", 1, "2.1.4 + 3.0"},
+		// 写法 ⑥（2.2）：环境/作业。第二段只可能是作业名（企业编号那层已随 ENT 管线删掉）。
+		{"恒烁正式区/apmt520", SelectorEnvJob, "恒烁正式区", "apmt520", 0, "2.1.4"},
+		{"恒烁正式区/A_1-x", SelectorEnvJob, "恒烁正式区", "A_1-x", 0, "B29 的作业名字符集"},
 		// 写法 ⑧（2.2）：环境 —— 但**光看字面**它与别名同形（C2.4 的分流只看 / 与 #），
 		// 所以解析层先按别名记下；知道环境清单之后才分成环境（见 TestParseSelectorWithEnvNames）。
-		{"恒烁正式区", SelectorAlias, "", "", "", 0, "C2.4 的字面分流（写法 ⑧ 由 promoteEnvName 判）"},
+		{"恒烁正式区", SelectorAlias, "", "", 0, "C2.4 的字面分流（写法 ⑧ 由 promoteEnvName 判）"},
 		// 写法 ③（2.2）：别名 —— 不含 / 与 # 的一律按别名（C2.4 的落地判据）。
-		{"汇率单", SelectorAlias, "", "", "", 0, "C2.4：不含 / 与 #"},
-		{"复现 1", SelectorAlias, "", "", "", 0, "Q17：别名允许空格"},
-		{"HuiLvDan", SelectorAlias, "", "", "", 0, "Q17：别名允许 ASCII"},
+		{"汇率单", SelectorAlias, "", "", 0, "C2.4：不含 / 与 #"},
+		{"复现 1", SelectorAlias, "", "", 0, "Q17：别名允许空格"},
+		{"HuiLvDan", SelectorAlias, "", "", 0, "Q17：别名允许 ASCII"},
 		// C2.4 的分界：`1a` 不含 / 与 # → 别名；它**不会**被当成 `环境/1a` 或企业编号。
-		{"1a", SelectorAlias, "", "", "", 0, "C2.4：分流只看有没有 / 与 #"},
+		{"1a", SelectorAlias, "", "", 0, "C2.4：分流只看有没有 / 与 #"},
 	}
 	for _, c := range cases {
 		got, f := ParseSelector(c.raw)
@@ -53,9 +49,9 @@ func TestParseSelectorLegalForms(t *testing.T) {
 			t.Errorf("ParseSelector(%q) 该合法（%s），却报 %s：%s", c.raw, c.why, f.Code, f.Message)
 			continue
 		}
-		if got.Kind != c.kind || got.Env != c.env || got.Prog != c.prog || got.Ent != c.ent || got.N != c.n {
-			t.Errorf("ParseSelector(%q) = {kind=%v env=%q prog=%q ent=%q n=%d}，期望 {kind=%v env=%q prog=%q ent=%q n=%d}（%s）",
-				c.raw, got.Kind, got.Env, got.Prog, got.Ent, got.N, c.kind, c.env, c.prog, c.ent, c.n, c.why)
+		if got.Kind != c.kind || got.Env != c.env || got.Prog != c.prog || got.N != c.n {
+			t.Errorf("ParseSelector(%q) = {kind=%v env=%q prog=%q n=%d}，期望 {kind=%v env=%q prog=%q n=%d}（%s）",
+				c.raw, got.Kind, got.Env, got.Prog, got.N, c.kind, c.env, c.prog, c.n, c.why)
 		}
 		// C5.6：选择器必须**原样**回显（requested.session 用它）。
 		if got.Raw != c.raw {
@@ -161,7 +157,6 @@ func TestParseSelectorF10Grammar(t *testing.T) {
 		"/apmt520",       // 环境名为空
 		"#1",             // 环境名为空
 		"恒烁正式区#1#2",      // 两个序号段
-		"恒烁正式区/99#1",     // 文法里 `环境/企业编号` 不带序号段
 		"a/b/c/d",        // 段数不对
 	} {
 		_, f := ParseSelector(raw)
@@ -205,28 +200,35 @@ func TestParseSelectorF11EmptyStringIsGrammarIllegal(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// C2.3 的第二段判据（与 WP2 的 contract_debug_test.go 同源，落在生产侧）
+// C2.3：第二段只可能是作业名（企业编号那层随 ENT 管线删掉了）
 // ---------------------------------------------------------------------------
 
-// TestSecondSegmentKindIsAllDigits 钉住 C2.3 + B29：
-// 第二段**全数字 → 企业编号；否则 → 作业名**，两种形态不会撞（作业名首字符是字母）。
-func TestSecondSegmentKindIsAllDigits(t *testing.T) {
-	for _, s := range []string{"99", "1012", "0", "1"} {
-		if got := SecondSegmentKind(s); got != SecondSegEnt {
-			t.Errorf("第二段 %q 该判成企业编号（C2.3：全数字），得 %q", s, got)
+// TestSecondSegmentIsAlwaysJob 钉住 C2.3 的现状：`环境/<第二段>` 的第二段一律按作业名
+// 走，纯数字不再被解释成企业编号 —— `环境/99` 解析成「环境 + 作业 99」，随后在
+// 找会话那一步按 F7（SESSION_NOT_FOUND）被拒，而不是落成"企业 99"。
+func TestSecondSegmentIsAlwaysJob(t *testing.T) {
+	for _, raw := range []string{"恒烁正式区/99", "恒烁正式区/0", "恒烁正式区/1a"} {
+		got, f := ParseSelector(raw)
+		if f != nil {
+			t.Errorf("ParseSelector(%q) 在文法层该通过（第二段按作业名走），却报 %s：%s", raw, f.Code, f.Message)
+			continue
+		}
+		if got.Kind != SelectorEnvJob {
+			t.Errorf("ParseSelector(%q).Kind = %v，想要 SelectorEnvJob（企业编号那层已删）", raw, got.Kind)
+		}
+		if got.Prog == "" {
+			t.Errorf("ParseSelector(%q).Prog 该记下第二段，实得空", raw)
 		}
 	}
-	// 判据**不**先做 B29 的合法性校验：`1a` 这类串按 C2.3 落到作业那一支，
-	// 随后在"环境/作业"那一步按 F7 报 SESSION_NOT_FOUND。
-	// 它**不会**被静默当成企业编号 —— 那才是"看起来落上了、其实落在别处"。
-	for _, s := range []string{"apmt520", "bsft001", "a", "A_1-x", "1a", "99x", "作业"} {
-		if got := SecondSegmentKind(s); got != SecondSegJob {
-			t.Errorf("C2.3 的判据只看「全数字」：第二段 %q 含非数字字符，该判成作业名（%q），得 %q",
-				s, SecondSegJob, got)
+	for _, raw := range []string{"恒烁正式区/apmt520", "恒烁正式区/a", "恒烁正式区/A_1-x"} {
+		got, f := ParseSelector(raw)
+		if f != nil {
+			t.Errorf("ParseSelector(%q) 该合法，却报 %s：%s", raw, f.Code, f.Message)
+			continue
 		}
-	}
-	if got := SecondSegmentKind(""); got != "" {
-		t.Errorf("空段的形态 = %q，该是空串（它走 F10 的文法非法，不走 C2.3 的分流）", got)
+		if got.Kind != SelectorEnvJob {
+			t.Errorf("ParseSelector(%q).Kind = %v，想要 SelectorEnvJob", raw, got.Kind)
+		}
 	}
 }
 

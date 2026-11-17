@@ -25,8 +25,8 @@ import (
 	"tg/internal/cli/common"
 	"tg/internal/config"
 	"tg/internal/dbconfig"
+	dictlib "tg/internal/dict"
 	"tg/internal/dict/db"
-	 dictlib "tg/internal/dict"
 	"tg/internal/dict/live"
 	"tg/internal/output"
 )
@@ -73,7 +73,7 @@ func openQuerySource() error {
 			}
 			return localNeedsEnvErr()
 		}
-		return openRemoteSource(env, dictEnt)
+		return openRemoteSource(env)
 	}
 	switch cfg := strings.TrimSpace(queryCfgSource()); {
 	case strings.HasPrefix(strings.ToLower(cfg), "local:"): // ② 配置指定 local:<环境>
@@ -83,7 +83,7 @@ func openQuerySource() error {
 	case cfg == "" || strings.EqualFold(cfg, "auto"): // ③ 未配置：没有默认环境，不能猜
 		return noSourceErr()
 	default: // ② 配置指定了环境名:远程
-		return openRemoteSource(cfg, dictEnt)
+		return openRemoteSource(cfg)
 	}
 }
 
@@ -252,9 +252,8 @@ func gpEnvNamed(name string) (config.NamedSsh, bool) {
 // openRemoteSource 打开指定环境的远程库(客户端直连)。
 //
 // TOP GP 没有"企业 → 账号"这一层:账号就是 hosts.sshs[].db.accounts 的列表首项,
-// 表字典的公司别(zta_file.zta02)也取它 —— 见 live.newLive。entRaw 只在
-// 配置还留着 T100 环境时才有意义, GP 上忽略。
-func openRemoteSource(target, entRaw string) error {
+// 表字典的公司别(zta_file.zta02)也取它 —— 见 live.newLive。
+func openRemoteSource(target string) error {
 	path, err := common.ResolveConfig(false)
 	if err != nil {
 		return err
@@ -285,8 +284,7 @@ func openRemoteSource(target, entRaw string) error {
 		}
 		company = site.Schema
 	}
-	srcTarget = dbconfig.NewTarget(cc, ref.Name, ref.Env.Host, ref.Env.User, ref.Env.Zone,
-		entRaw, dbconfig.RouteClientDirect)
+	srcTarget = dbconfig.NewTarget(cc, ref.Name, ref.Env.Host, ref.Env.User, ref.Env.Zone, dbconfig.RouteClientDirect)
 	srcNotes = []string{"TOP GP 环境：直查远程库，营运据点 " + company}
 	if common.Verbose {
 		fmt.Fprintf(os.Stderr, "[dict] 数据源: 远程 %s (账号 %s, 营运据点 %s, %s %s)\n",

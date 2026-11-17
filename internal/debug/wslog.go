@@ -19,9 +19,9 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 	"tg/internal/dbconfig"
 	"tg/internal/host"
+	"time"
 
 	"github.com/pkg/sftp"
 )
@@ -213,26 +213,13 @@ const wsSysAccount = dbconfig.SystemAccount
 type WSLogAcct struct {
 	Account string `json:"account"`
 	Reason  string `json:"reason"`
-	// TopentWarning 非空 = 当前 TOPENT 不是有效企业编号。
-	//
-	// **它不影响接口日志查询**(共享表),但会影响重放(wsdebug)时的框架据点校验,
-	// 所以照样报出来 —— 免得把"日志查得到"和"重放跑得通"当成同一件事。
-	TopentWarning string `json:"topentWarning,omitempty"`
 }
 
 // wslogAcctFor 决定查接口日志用的账号并说明理由。纯函数(不碰 SSH),便于单测。
-func wslogAcctFor(rawTopent string) WSLogAcct {
+func wslogAcctFor() WSLogAcct {
 	a := WSLogAcct{
 		Account: wsSysAccount,
 		Reason:  "wsfa_t 是系统账号 ds 下的共享表,接口日志不按企业分 schema",
-	}
-	raw := strings.TrimSpace(rawTopent)
-	if raw == "" {
-		a.TopentWarning = "当前没有生效的 TOPENT(企业编号);不影响接口日志查询,但重放时框架按空企业走"
-		return a
-	}
-	if n, ok := host.EntValue(raw).Int(); !ok || n <= 0 {
-		a.TopentWarning = fmt.Sprintf("TOPENT 不是有效企业编号(%s);不影响接口日志查询,但框架的据点校验会用到它", raw)
 	}
 	return a
 }

@@ -139,12 +139,12 @@ grep -v '^# ' 切下去就是一个标准 CSV（逗号/引号/换行按 RFC4180 
 				if sqlText != "" || file != "" {
 					return fmt.Errorf("--batch 与「位置语句 / --file」三选一")
 				}
-				return QueryBatch(batch, 0, timeout, route)
+				return QueryBatch(batch, timeout, route)
 			}
 			if sqlText == "" {
 				return fmt.Errorf(`需要一条查询语句（见 tg db sql --help），或用 --file / --batch 指定语句来源`)
 			}
-			return QueryOnce(sqlText, 0, timeout, route)
+			return QueryOnce(sqlText, timeout, route)
 		},
 	}
 	cmd.Flags().StringVar(&file, "file", "", "从本地文件读语句（与位置参数二选一）")
@@ -158,9 +158,9 @@ grep -v '^# ' 切下去就是一个标准 CSV（逗号/引号/换行按 RFC4180 
 
 // prepareTarget 单条与批量共用的前置校验与配置装载。
 //
-// 顺序是刻意的：身份（ENT/环境/账号）先于连接，配置错退 2、连不上退 4 ——
+// 顺序是刻意的：账号/环境先于连接，配置错退 2、连不上退 4 ——
 // 让"填错了"与"连不上"从一开始就不是同一类错误。
-func prepareTarget(ent int, route string) (*debug.Config, error) {
+func prepareTarget(route string) (*debug.Config, error) {
 	if !sqlRouteValid(normalizeSQLRoute(route)) {
 		return nil, output.Errorf("USAGE", 2, "--route 只接受 auto | direct | server（收到 %q）", route)
 	}
@@ -168,11 +168,11 @@ func prepareTarget(ent int, route string) (*debug.Config, error) {
 	if err != nil {
 		return nil, output.Errorf("TARGET", 2, "%v", err)
 	}
-	if _, err := entAccount(cfg, ent); err != nil {
-		return nil, output.Errorf("TARGET", 2, "%v", err)
-	}
 	if cfg.DB == nil {
 		return nil, output.Errorf("DB_FAILED", 4, "当前环境未挂数据库连接(设置-环境-SSH 页选择「数据库连接」)")
+	}
+	if _, err := primaryAccount(cfg); err != nil {
+		return nil, output.Errorf("TARGET", 2, "%v", err)
 	}
 	if !cfg.DB.ReadonlySQLEnabled() {
 		return nil, output.Errorf("DB_FAILED", 4, "该环境的只读 SQL 已在配置里关闭(debug.sshs[].db.readonlySql=false)")
@@ -184,17 +184,17 @@ func prepareTarget(ent int, route string) (*debug.Config, error) {
 //
 // route 为空按 server 处理：旧调用方（tg debug sql）走的还是服务器 sqlplus 那一条，
 // 不能让一个隐藏的兼容命令悄悄换掉执行方式与取值格式。
-func QueryOnce(sqlText string, ent, timeout int, route string) error {
+func QueryOnce(sqlText string, timeout int, route string) error {
 	route = normalizeSQLRoute(route)
 	// 只读闸门先行：拒绝要退 3（“这句不让查”），与“连不上/查出错”（4）分开。
 	if err := safesql.Check(sqlText); err != nil {
 		return output.Errorf("SQL_REJECTED", 3, "%v", err)
 	}
-	cfg, err := prepareTarget(ent, route)
+	cfg, err := prepareTarget(route)
 	if err != nil {
 		return err
 	}
-	sess, note, err := openSession(cfg, ent, route)
+	sess, note, err := openSession(cfg, route)
 	if err != nil {
 		return err
 	}
@@ -230,14 +230,14 @@ func writeSQLResult(w io.Writer, res *debug.DBQueryResult) error {
 	}
 	src := res.AccountSource
 	if src == "" {
-		src = dbconfig.AcctFromEnt
+		src = dbconfig.AcctFromPrimary
 	}
 	// 裸表名解析到登录账号的 schema（Oracle 的 owner 与账号同名），把它写进信封：
 	// "查的是另一个库的 850 行"和"这表是空的"在输出上必须能分开。
 	schema := strings.ToUpper(strings.TrimSpace(res.Account))
 	meta := output.Meta{
 		Source: "live", Env: res.Env, SSHHost: res.SSHHost, Zone: res.Zone,
-		Ent: res.Ent, Account: res.Account, AccountSource: src, Schema: schema,
+		Account: res.Account, AccountSource: src, Schema: schema,
 		Target: res.DBTarget, Dialect: res.Dialect, Route: route, Readonly: true,
 		ViaTunnel: res.ViaTunnel,
 		TotalRows: res.TotalRows, Returned: len(res.Rows),

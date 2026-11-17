@@ -11,12 +11,12 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
-	"time"
 	"tg/internal/config"
 	dictlib "tg/internal/dict"
 	"tg/internal/host"
 	sessionid "tg/internal/session"
 	"tg/internal/target"
+	"time"
 
 	"github.com/pkg/sftp"
 )
@@ -90,11 +90,6 @@ type Manager struct {
 	// srcKeyLocks 每个连接 key 一把锁:不同目标真正并行,同一目标排队（见 withSrcConn）。
 	srcLocksMu  sync.Mutex
 	srcKeyLocks map[string]*sync.Mutex
-
-	// 企业目录(ENT→账号):只读 SQL / 接口日志都要先问一次 gzou_t,
-	// 同一个环境(主机+账号+区域+库)下缓存 10 分钟,并落一份快照供离线使用。
-	// 见 ents.go —— 取值顺序、降级规则、新鲜度口径都在那里,**只有那一份实现**。
-	ents *EntCatalog
 }
 
 // maxBufferedEvents 环形缓冲上限。
@@ -119,7 +114,6 @@ func NewManager(cfg *Config) *Manager {
 		envCache: map[string]cachedEnv{},
 		src:      map[string]*srcConn{},
 		// cfg.DataDir 可能为空(单测里的 NewManager(&Config{})):那一档只走内存不落盘
-		ents:  NewEntCatalog(cfg.DataDir),
 		Epoch: strconv.FormatInt(time.Now().UnixNano(), 36),
 		// 会话操作审计（WP6）：<DataDir>/audit/sessions.jsonl，谁 / 哪条 / 干了什么。
 		auditPath: auditPath(cfg.DataDir),
@@ -518,10 +512,6 @@ func (m *Manager) prepareSessionOn(cfg *Config, module, prog, runProg, launchRef
 		}
 		switch decision {
 		case hostReuse:
-			// 企业编号必须是**显式的**（见 requireExplicitEnt）。
-			if err := requireExplicitEnt(cfg, prev); err != nil {
-				return nil, err
-			}
 			// 复用宿主跑新一轮：SetRun 会把世代换掉（F15：旧句柄当场失效），
 			// 序号与别名**不动**（它们标识的是"这条会话"，跨轮不变：C2.0 / C2.5b）。
 			prev.SetRun(cfg, module, prog, runProg, launchRef, extra)
@@ -545,10 +535,6 @@ func (m *Manager) prepareSessionOn(cfg *Config, module, prog, runProg, launchRef
 	}
 
 	// ---- 候选 0 条：起新会话 ----
-	// 新会话没有历史 override，企业编号**只能**来自本次请求。
-	if err := requireExplicitEnt(cfg, nil); err != nil {
-		return nil, err
-	}
 	// 别名先查（F18）再拨号 —— 注定要被拒的请求不该先花一次 SSH 握手。
 	if err := m.checkNameFree(name); err != nil {
 		return nil, err
@@ -623,62 +609,6 @@ func (m *Manager) sessionCandidates(cfg *Config, name string) []*Session {
 	m.mu.Unlock()
 	sort.Slice(out, func(i, j int) bool { return out[i].ID < out[j].ID })
 	return out
-}
-
-// requireExplicitEnt 要求"这一轮要用的企业编号"是**显式给的**，不许静默沿用登录 shell 的 $TOPENT。
-//
-// 为什么删掉那条静默路径：ENT 决定用哪个账号连库、以及框架的据点校验过不过。而"没说"与
-// "说错了"在老实现里长得一模一样 —— 作业跑在登录 shell 自带的那个企业上，输出一切正常，
-// 结论却可能来自另一家企业。环境已经"一律点名"，企业没有理由保留一个隐式默认。
-//
-// 两个合法来源，任一即可：
-//   - 本次启动显式给的 `--ent`（调用方落在 `cfg.Topent`）；
-//   - 这条会话**此前**显式设过的 `tt debug topent`（会话级 override）。
-//
-// `prev` 只在"空闲复用"那条路上有意义：换目标/换名字会收掉旧会话另建一条，旧会话的
-// override **不继承** —— 所以那种情况调用方传 prev=nil，必须重新给 `--ent`。
-// productOfEnv 从整份配置里按当前环境名查产品别。
-//
-// 有些调用点（如 hLaunch）传进来的是**未 applySsh 的整份配置**，cfg.Product 是空的；
-// 这时只能回头去 SSHs 里按环境名找。
-func (c *Config) productOfEnv() string {
-	name := c.EnvName()
-	for i := range c.SSHs {
-		if c.SSHs[i].Name == name {
-			return strings.ToLower(c.SSHs[i].Product)
-		}
-	}
-	return ""
-}
-
-func requireExplicitEnt(cfg *Config, prev *Session) error {
-	// TOP GP 没有 ENT 概念（那是 T100 的"用哪个账号连库/据点校验"）。
-	// 对 GP 会话要求 ENT 等于凭空加一道谁也不知道该填什么的门 —— 直接放行。
-	if cfg != nil && (strings.EqualFold(cfg.Product, "gp") || cfg.productOfEnv() == "gp") {
-		return nil
-	}
-	if cfg != nil && strings.TrimSpace(string(cfg.Topent)) != "" {
-		return nil
-	}
-	if prev != nil {
-		if strings.TrimSpace(prev.TopentOverride()) != "" {
-			return nil
-		}
-		// 这条会话**自己**建立时定下的企业编号也算显式：它是当初 `--ent`（或 `topent`）
-		// 明确给的，随会话一起存在 `cfg.Topent` 里，不是登录 shell 那个隐式值。
-		if strings.TrimSpace(prev.TopentSession()) != "" {
-			return nil
-		}
-	}
-	f := target.NewFailure(target.CodeUsage,
-		"必须显式指定企业编号(ENT)：tg debug start <作业> --ent <企业编号>。"+
-			"若这条环境已有空闲会话，也可先 tt debug topent <编号> 再启动。"+
-			"**不再**沿用登录 shell 的 $TOPENT —— 那会让「忘了点名」与「点错了」长得一样，"+
-			"而 ENT 决定用哪个账号连库、以及据点校验过不过。")
-	// 老写法（不带 --ent）也要报这一条：它正是这次要禁掉的静默行为，不是"新场景"。
-	f.NewScenario = false
-	f.Hint = "tt debug ents 可列出这台机器上的企业编号与各自账号；确认后再点名"
-	return f
 }
 
 // namedHost 按**服务端原始句柄**取"这次显式指名的那条会话"（`--session` 落位之后的 id，C5.4）。
@@ -1011,7 +941,6 @@ type SessionBrief struct {
 	Name string `json:"name"`
 	// Ent 是该会话**当前**生效的企业编号（C5.3 / C2.5c）：shell 回读值优先，
 	// 取不到退到本会话显式给的值；空 = 未取到。**它是快照**，`SetTopent` 会改它。
-	Ent string `json:"ent"`
 	// N 是序号（同一环境下的第 N 条，从 1 起；C2.2 / Q24）。建立时分配，之后不变。
 	N int `json:"n"`
 	// Kind 是会话类型（C5.5）：本契约只寻址 SSH 会话，所以恒为 `ssh`
@@ -1096,8 +1025,8 @@ func (m *Manager) briefOf(s *Session) SessionBrief {
 		// 身份（C5.1 末段：只有 id / ref / n 是身份，判定身份只许用这三个）
 		Ref: refOf(env, n), Display: displayOf(env, s.Prog, n),
 		N: n, Kind: target.KindSSH, Epoch: s.Epoch(),
-		// 快照（会变：name 只在创建时给，ent 随 topent 改）
-		Name: s.Name(), Ent: s.CurrentEnt(),
+		// 快照（会变：name 只在创建时给）
+		Name:   s.Name(),
 		Module: s.Module, Prog: s.Prog, RunProg: s.RunProg,
 		State: string(s.State()), Env: s.EnvName(), Started: s.Started(), File: cur.File, Line: cur.Line,
 		Func: cur.Func, Reason: cur.Reason,

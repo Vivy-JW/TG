@@ -8,15 +8,16 @@ package target
 //   所以这里钉的是"唯一那份"，不是"第二份"。）
 
 import (
+	"fmt"
 	"reflect"
 	"sort"
 	"strings"
 	"testing"
 )
 
-// TestSessionEnvelopeKeyLiterals 逐字钉住 C5.1：`session` 块的**恒定键**（11 个）。
+// TestSessionEnvelopeKeyLiterals 逐字钉住 C5.1：`session` 块的**恒定键**（10 个）。
 func TestSessionEnvelopeKeyLiterals(t *testing.T) {
-	want := []string{"id", "ref", "display", "name", "env", "ent", "n", "kind", "prog", "state", "epoch"}
+	want := []string{"id", "ref", "display", "name", "env", "n", "kind", "prog", "state", "epoch"}
 	assertSameSet(t, "C5.1 的 session 键集", SessionEnvelopeKeys, want)
 
 	// C5.3 / Q22 的纯新增键必须是它的子集（契约测试用它判"旧键有没有被改名"）。
@@ -30,25 +31,24 @@ func TestSessionEnvelopeKeyLiterals(t *testing.T) {
 		}
 	}
 	// 两者合起来必须正好是 SessionBrief 的 JSON 键（C5.2：键名一个都不许改）。
-	// 27 = 26（原定）+ watchdogDisabled：2026-10-29 真机验证后新增的“这一轮不会
-	// 自动放行”标记。按 C5.2 新增键必须显式登记（不能靠 omitempty 飘进去），
-	// 所以这个数从 26 改成 27 是本契约的一次有记录的变更，不是测试漂移。
-	if got := len(SessionEnvelopeKeys) + len(SessionOptionalKeys); got != 27 {
-		t.Errorf("恒定键 + omitempty 键 = %d 个，应该是 27 个（C5.1/C5.2）", got)
+	// 26 = 27 − ent：企业编号那层随 ENT 管线删掉了，`ent` 不再是会话身份键。
+	// 按 C5.2 删键同样要有记录 —— 这是本期唯一的一次删键。
+	if got := len(SessionEnvelopeKeys) + len(SessionOptionalKeys); got != 26 {
+		t.Errorf("恒定键 + omitempty 键 = %d 个，应该是 26 个（C5.1/C5.2）", got)
 	}
 	// 顶层恒定键（5.1）：session 与 requested。
 	assertSameSet(t, "5.1 的顶层恒定键", SessionTopKeys, []string{"session", "requested"})
 	// 失败信封的四键恒定 + 两键按条件（C5.10）。
 	assertSameSet(t, "C5.10 的失败信封恒定键", FailureRequiredKeys, []string{"ok", "code", "error", "exitCode"})
 	assertSameSet(t, "C5.10/C5.11 的失败信封条件键", FailureOptionalKeys, []string{"hint", "candidates"})
-	// 候选九键 —— **全契约的唯一出处**（C5.12）。
+	// 候选八键 —— **全契约的唯一出处**（C5.12）。
 	assertSameSet(t, "C5.12 的候选键集", CandidateKeys,
-		[]string{"id", "ref", "display", "name", "env", "ent", "n", "prog", "state"})
-	if len(CandidateKeys) != 9 {
-		t.Errorf("C5.12 写死候选是**九键**，实得 %d 个", len(CandidateKeys))
+		[]string{"id", "ref", "display", "name", "env", "n", "prog", "state"})
+	if len(CandidateKeys) != 8 {
+		t.Errorf("C5.12 写死候选是**八键**，实得 %d 个", len(CandidateKeys))
 	}
 	if !isSubset(CandidateKeys, SessionEnvelopeKeys) {
-		t.Errorf("C5.4b：候选九键必须是 session 键集的**真子集**（同一个渲染函数两处都用）")
+		t.Errorf("C5.4b：候选八键必须是 session 键集的**真子集**（同一个渲染函数两处都用）")
 	}
 }
 
@@ -312,8 +312,8 @@ func TestGrammarConstants(t *testing.T) {
 		t.Errorf("别名纪律 = %d–%d 字符 / 排除 %q，C2.5 写的是 1–64 / \"/#\"",
 			AliasMinRunes, AliasMaxRunes, AliasForbid)
 	}
-	if SecondSegEnt != "ent" || SecondSegJob != "job" {
-		t.Errorf("第二段的两种形态 = %q / %q，C2.3 写的是 \"ent\" / \"job\"", SecondSegEnt, SecondSegJob)
+	if SecondSegJob != "job" {
+		t.Errorf("第二段的形态 = %q，C2.3 写的是 \"job\"（企业编号那层已删，第二段只可能是作业名）", SecondSegJob)
 	}
 	if JobPattern != `^[A-Za-z][A-Za-z0-9_-]{0,63}$` {
 		t.Errorf("作业名正则 = %q，B29 写的是 `^[A-Za-z][A-Za-z0-9_-]{0,63}$`", JobPattern)
@@ -327,14 +327,20 @@ func TestGrammarConstants(t *testing.T) {
 // TestInvalidFormTableIsComplete 钉住 WP2 那张 F1–F20 的表**仍然完整**：
 // 它现在是本包的生产常量（唯一出处），`internal/debug` 的契约测试引用它 ——
 // 少一条就是少验一种"说不清的错"。
+//
+// 2026-11-17：F13/F14（`--session` 里的企业与 `--ent` 矛盾）随 ENT 管线退役，
+// 表是 18 条；键保留原编号、不再连号（F 号是契约里的稳定标识）。
 func TestInvalidFormTableIsComplete(t *testing.T) {
-	if len(InvalidForms) != 20 {
-		t.Fatalf("非法写法表该有 20 条（F1–F20），实得 %d 条", len(InvalidForms))
+	if len(InvalidForms) != 18 {
+		t.Fatalf("非法写法表该有 18 条（F1–F20 去掉已退役的 F13/F14），实得 %d 条", len(InvalidForms))
 	}
-	for i, f := range InvalidForms {
-		if want := "F" + itoa(i+1); f.Key != want {
-			t.Errorf("第 %d 条该是 %s，表里写的是 %q（键必须连号）", i+1, want, f.Key)
+	prev := 0
+	for _, f := range InvalidForms {
+		var n int
+		if _, err := fmt.Sscanf(f.Key, "F%d", &n); err != nil || n <= prev {
+			t.Errorf("非法写法 %q 的编号不是递增的（上一条是 F%d）—— 键必须按契约顺序排", f.Key, prev)
 		}
+		prev = n
 		if strings.TrimSpace(f.Write) == "" || strings.TrimSpace(f.Code) == "" {
 			t.Errorf("%s 的输入描述或机器码空着 —— 它是将来照着敲的输入集", f.Key)
 		}

@@ -150,7 +150,7 @@ func TestCharServerCodeMapsToExitAndEnvelope(t *testing.T) {
 			}
 			cands := []target.Candidate{{
 				ID: "s1", Ref: "恒烁正式区#1", Display: "恒烁正式区/apmt520#1",
-				Name: "汇率单", Env: "恒烁正式区", Ent: "99", N: 1, Prog: "apmt520", State: "stopped",
+				Name: "汇率单", Env: "恒烁正式区", N: 1, Prog: "apmt520", State: "stopped",
 			}}
 			err := dbgServerErrorOf(c.code, "别名不能复用", cands)
 			ec, ok := err.(exitCoder)

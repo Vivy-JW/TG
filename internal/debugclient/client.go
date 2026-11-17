@@ -214,7 +214,6 @@ type Brief struct {
 	Display string `json:"display"`
 	Name    string `json:"name"`
 	Env     string `json:"env"`
-	Ent     string `json:"ent"`
 	State   string `json:"state"`
 	N       int    `json:"n"`
 	Epoch   string `json:"epoch"`
@@ -268,7 +267,7 @@ func (c *Client) Resolve(want string) (Brief, error) {
 		for _, h := range hits {
 			cands = append(cands, target.Candidate{
 				ID: h.ID, Ref: h.Ref, Display: h.Display, Name: h.Name,
-				Env: h.Env, Ent: h.Ent, N: h.N, Prog: h.Prog, State: h.State,
+				Env: h.Env, N: h.N, Prog: h.Prog, State: h.State,
 			})
 		}
 		return Brief{}, &Failure{Code: target.CodeAmbiguous,
@@ -334,7 +333,6 @@ type LaunchReq struct {
 	Prog   string
 	Module string
 	Name   string
-	Ent    string
 }
 
 // Launch 建会话（可同时起作业），返回会话句柄。
@@ -348,9 +346,6 @@ func (c *Client) Launch(req LaunchReq) (string, error) {
 	}
 	if req.Name != "" {
 		body["name"] = req.Name
-	}
-	if req.Ent != "" {
-		body["ent"] = req.Ent
 	}
 	data, err := c.Do(http.MethodPost, "/api/sessions", body)
 	if err != nil {
@@ -372,11 +367,8 @@ func (c *Client) Launch(req LaunchReq) (string, error) {
 //
 // 服务端是异步登录的（应答里 state=loading），所以这里要轮询到 idle —— 与
 // `tg debug env` 的等待语义一致，只是不再走子进程。
-func (c *Client) SwitchToIdle(env, ent, name string, timeout time.Duration) (string, error) {
+func (c *Client) SwitchToIdle(env, name string, timeout time.Duration) (string, error) {
 	body := map[string]any{"env": env}
-	if ent != "" {
-		body["ent"] = ent
-	}
 	if name != "" {
 		body["name"] = name
 	}
@@ -428,11 +420,8 @@ func (c *Client) SwitchToIdle(env, ent, name string, timeout time.Duration) (str
 // SwitchToIdle 办这件事：环境里有 2 条会话 → SESSION_AMBIGUOUS → 那个动作必然失败。
 //
 // 走的是 `/api/sessions/new`（服务端语义就是"同名幂等、绝不收口别人"）。
-func (c *Client) EnsureSession(env, ent, name string, timeout time.Duration) (string, error) {
+func (c *Client) EnsureSession(env, name string, timeout time.Duration) (string, error) {
 	body := map[string]any{"env": env}
-	if ent != "" {
-		body["ent"] = ent
-	}
 	if name = strings.TrimSpace(name); name != "" {
 		body["name"] = name
 	}
@@ -550,13 +539,10 @@ func (f *Failure) WriteEnvelope(w io.Writer) error {
 //
 // 与 Launch 的分工：Launch 是"建会话（可顺带起作业）"；这条是"会话已经在了，只在它里面起作业"。
 // 返回的 sessionId 就是传进去的那一条（宿主不会被换掉）。
-func (c *Client) StartJob(id, prog, module, ent string) (string, error) {
+func (c *Client) StartJob(id, prog, module string) (string, error) {
 	body := map[string]any{"prog": prog}
 	if m := strings.TrimSpace(module); m != "" {
 		body["module"] = m
-	}
-	if e := strings.TrimSpace(ent); e != "" {
-		body["ent"] = e
 	}
 	data, err := c.Do(http.MethodPost, "/api/sessions/"+id+"/job", body)
 	if err != nil {

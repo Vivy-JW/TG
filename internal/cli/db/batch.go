@@ -116,11 +116,11 @@ func runBatchQueries(ctx context.Context, q sqlQuerier, stmts []batchStmt, timeo
 }
 
 // QueryBatch 执行一批只读 SQL 并渲染。
-func QueryBatch(arg string, ent, timeout int, route string) error {
+func QueryBatch(arg string, timeout int, route string) error {
 	if common.OutputFormat() != output.FormatJSON {
 		return output.Errorf("USAGE", 2, "批量只输出 JSON（多结果集拼成 CSV/表格会误导）：去掉 --format/--csv/--human")
 	}
-	cfg, err := prepareTarget(ent, route)
+	cfg, err := prepareTarget(route)
 	if err != nil {
 		return err
 	}
@@ -133,7 +133,7 @@ func QueryBatch(arg string, ent, timeout int, route string) error {
 		return output.Errorf("USAGE", 2, "%v", err)
 	}
 
-	sess, note, err := openSession(cfg, ent, route)
+	sess, note, err := openSession(cfg, route)
 	if err != nil {
 		return err
 	}
@@ -174,7 +174,7 @@ func printBatchResult(cfg *debug.Config, sess *sqlSession, note string, items []
 	}
 	meta := output.Meta{
 		Source: "live", Env: cfg.EnvName(), Zone: cfg.Zone,
-		Ent: sess.ent, Account: sess.account, AccountSource: sess.acctSource(),
+		Account: sess.account, AccountSource: sess.acctSource(),
 		Target: sess.target, Dialect: sess.dialect, Route: sess.routeName(), Readonly: true,
 		ViaTunnel: sess.viaTun,
 		TotalRows: len(items), Returned: len(items), Elapsed: elapsed, Notes: notes,

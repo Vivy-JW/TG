@@ -14,9 +14,9 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
-	"time"
 	"tg/internal/host"
 	sessionid "tg/internal/session"
+	"time"
 
 	"github.com/pkg/sftp"
 )
@@ -345,10 +345,9 @@ type Session struct {
 	custModule string // 转客制作业:实际启动的客制模块名(cpm/apm→cpm),空 = 标准模块
 
 	// ---- 单一常驻会话(复用宿主) ----
-	envName        string // 会话所连环境名(设置页 envs 名称;空 = 顶层默认/推导名)
-	booted         bool   // 是否已完成首次登录(菜单→shell),宿主可复用
-	shellReady     bool   // pty 当前停在 shell 提示符,可直接敲 shell 命令
-	topentOverride string // 会话内手动设置的 TOPENT(空 = 未设置,按配置默认)
+	envName    string // 会话所连环境名(设置页 envs 名称;空 = 顶层默认/推导名)
+	booted     bool   // 是否已完成首次登录(菜单→shell),宿主可复用
+	shellReady bool   // pty 当前停在 shell 提示符,可直接敲 shell 命令
 
 	// ---- 重放调试 ----
 	// replayRspPath 本次重放把响应写到哪个服务器临时文件(LaunchReplay 填)。
@@ -473,28 +472,6 @@ func (s *Session) Epoch() string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.epoch
-}
-
-// CurrentEnt 是该会话**当前**生效的企业编号（C5.3 的 `ent`，C2.5c 的快照）。
-//
-// 取值顺序：登录 shell 回读的 `$TOPENT` 优先（那是"这台机器现在连的是哪个企业"的权威值，
-// 见 TopentShell），取不到（还没登录 / 没有 Runtime）才退到本会话显式给的值（--ent 或
-// 会话内 `tt debug topent` 设的覆盖）。空 = 未取到 —— 它是**快照**，不是地址（C2.5c）。
-func (s *Session) CurrentEnt() string {
-	if v := s.TopentShell(); v != "" {
-		return v
-	}
-	return s.topentForRun()
-}
-
-// setTopentOverride 记下会话级 TOPENT 覆盖（`tt debug topent` 改的那一半）。
-//
-// 拆出来是为了让"改企业编号**不动**身份"这件事可测：SetTopent 的另一半是把值下发到宿主
-// shell（要 pty，测试里碰不得），而身份不变恰恰与那半边无关 —— 变的只有快照 `ent`。
-func (s *Session) setTopentOverride(v string) {
-	s.mu.Lock()
-	s.topentOverride = v
-	s.mu.Unlock()
 }
 
 // NewSession 建立 SSH 连接并打开 PTY(登录与启动由 Launch 驱动)。
@@ -779,18 +756,6 @@ func (s *Session) bootHost(ctx context.Context) error {
 		return err
 	}
 	s.markShellReady()
-	// 2.5 连接即下发**用户显式给的企业编号**(tg debug start --ent / 界面面板输入)。
-	//
-	// 环境配置里已经**没有**企业编号了(hosts.sshs[].topent 已移除)——所以这里不再有
-	// "环境默认企业"可下发。空值就什么都不做:**保留登录 shell 自己的 $TOPENT**
-	// (选区/环境脚本给的那个),它会被下面 2.6 的回读如实抓成 TopentShell。
-	// 换句话说:不给 --ent = 沿用这台机器登录后的企业;给了 = 以给的那个为准。
-	if ent := s.topentForRun(); ent != "" {
-		if err := s.applyTopentToShell(ent); err != nil {
-			return fmt.Errorf("登录 %s(环境 %s)后下发 TOPENT=%q 失败: %w",
-				s.cfg.SSH.Host, s.envName, ent, err)
-		}
-	}
 	// 2.6 回读登录后的权威 T100 路径(选区后环境变量,与标准 debug 同源)。
 	// T100 路径只来自登录动态获取:回读失败即登录失败,无静态配置可回退
 	if err := s.readRuntimeEnv(); err != nil {
@@ -857,19 +822,6 @@ func (s *Session) startRun(ctx context.Context, launchProg string) error {
 	// 画面去哪说一句:GP 由 fgldb 接管,没有本机 GDC 接线这一层，
 	// 也就没有"接线不对、放行之后什么都不弹"这类告警。
 	s.emitEvent(Event{Type: "log", Text: ScreenTarget()})
-	// TOPENT:会话内手动设置优先,其次配置企业(ENT);都没有则不导出,沿用选区登录默认
-	// (选区输出的是机器默认值如「TOPENT = 99」;作业运行/数据库连接都以 TOPENT 为准)
-	// 连接时(bootHost)已下发过一次,这里再下发是为了覆盖"会话开着时在设置页改了配置"的情况。
-	if ent := s.topentForRun(); ent != "" {
-		// 单引号包裹并剔除内嵌单引号(值不限文本,防注入/拆词),与 topentShellCmd 同规则
-		setup += "export TOPENT='" + strings.ReplaceAll(ent, "'", "") + "'\r\n"
-		// 本轮起 shell 里的 TOPENT 即 ent:同步运行时回读值,界面显示的"当前会话 TOPENT"才不滞后
-		s.mu.Lock()
-		if s.cfg.Runtime != nil {
-			s.cfg.Runtime.Topent = ent
-		}
-		s.mu.Unlock()
-	}
 	s.pty.Write(setup)
 	if err := s.waitRegexp(host.ReShellPrompt, 15*time.Second, "shell 提示符(cd)"); err != nil {
 		return err
@@ -961,15 +913,6 @@ func (s *Session) SetRun(cfg *Config, module, prog, runProg, launchRef, extra st
 	if cfg != nil {
 		cc := *cfg
 		cc.Runtime = s.cfg.Runtime // 会话内动态路径保留(同一宿主/区域)
-		// **别把这条会话的 ENT 弄丢**：整份替换会把它抹成空（本轮请求常常没带 --ent，
-		// 前端「运行/重新开始」就是这样）。变空之后 `requireExplicitEnt` 的三个来源
-		// （本次 --ent / 会话 override / 会话建立时的值）全部落空 —— 于是**第一次启动成功、
-		// 之后每次启动都 409**，界面停在 idle，人看到的是"重新开始之后步入/步过全灰"
-		// （实测：鼎捷1/鼎捷2 首次启动后 cfg.Topent 变空，再启动必 409）。
-		// 会话建立时显式给的 ENT 是这条会话自己的事实（TopentSession 的语义），保留它。
-		if strings.TrimSpace(string(cc.Topent)) == "" {
-			cc.Topent = s.cfg.Topent
-		}
 		s.cfg = &cc
 		s.envName = cc.EnvName() // 环境名跟着配置走,不然快照会报旧环境
 	}
@@ -1022,120 +965,6 @@ func (s *Session) loadReplayResponse() {
 	s.mu.Unlock()
 	s.emitEvent(Event{Type: "log", Text: "本次重放产生的响应:" + txt})
 }
-
-// TopentOverride 会话内手动设置的 TOPENT(空 = 未设置,按配置默认)
-func (s *Session) TopentOverride() string {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	return s.topentOverride
-}
-
-// TopentSession 本会话的 TOPENT(用户显式给的那个:tg debug start --ent / 界面面板)。
-//
-// **不再是"配置级"值**:环境配置里的企业编号已移除(hosts.sshs[].topent),所以这个值
-// 只有两个来源 —— 启动时显式给,或会话内用 SetTopent 改。空 = 用户没给,
-// 此时企业由**登录 shell 自己的 $TOPENT** 决定(见 TopentShell)。
-func (s *Session) TopentSession() string {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	return strings.TrimSpace(string(s.cfg.Topent))
-}
-
-// TopentShell 登录后 shell 里实际回读到的 $TOPENT(选区/环境脚本给的企业;空 = 登录未导出)。
-// 与 TopentSession 的区别:用户没显式给 TOPENT 时,会话不会去 export ——
-// 所以"当前这台机器连的是哪个企业"以本值为准。
-func (s *Session) TopentShell() string {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if s.cfg.Runtime == nil {
-		return ""
-	}
-	return strings.TrimSpace(s.cfg.Runtime.Topent)
-}
-
-// topentForRun 本轮运行生效的 TOPENT:会话内手动设置优先,其次启动时显式给的值,
-// 再否则**不导出**(沿用登录 shell 自己的 $TOPENT)。
-func (s *Session) topentForRun() string {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if s.topentOverride != "" {
-		return s.topentOverride
-	}
-	return strings.TrimSpace(string(s.cfg.Topent))
-}
-
-// TopentIntForDB 该会话实际生效的**企业编号**,供只读 SQL 决定用哪个账号连库。
-//
-// 非数字(例如把据点码填进了企业编号的位置)返回 0 —— 调用方要据此明确拒绝,
-// 而不是拿一个错的编号去查库:查错 schema 的结果是 0 行,而 0 行会被读成
-// "这条业务数据不存在",那是最危险的错误结论。
-func (s *Session) TopentIntForDB() int {
-	n, _ := host.EntValue(s.topentForRun()).Int()
-	return n
-}
-
-// SetTopent 空闲态重新设置宿主 shell 的 TOPENT(空值 = 清除手动覆盖,回到环境默认 TOPENT)。
-// 立即 export 到 shell(清除时下发环境默认值,环境也没配才 unset),随后的各轮调试仍按
-// topentForRun 优先导出覆盖值。
-func (s *Session) SetTopent(value string) error {
-	s.setTopentOverride(value)
-	// 清除覆盖(空值)不能简单 unset:连接时已把环境默认下发进 shell,unset 会掉回选区机器默认,
-	// 与"会话企业 = 设置页配置"不一致。这里直接下发 topentForRun()(覆盖值 || 配置企业;
-	// 都没有才是空 = unset),让宿主 shell 的 TOPENT 恒等于当前生效值。
-	eff := s.topentForRun()
-	if err := s.applyTopentToShell(eff); err != nil {
-		return err
-	}
-	if value == "" {
-		if eff != "" {
-			s.emitEvent(Event{Type: "log", Text: fmt.Sprintf("已清除 TOPENT 覆盖,回到环境默认 %q", eff)})
-		} else {
-			s.emitEvent(Event{Type: "log", Text: "已清除 TOPENT 覆盖(环境未配置,shell 内已 unset)"})
-		}
-		return nil
-	}
-	s.emitEvent(Event{Type: "log", Text: fmt.Sprintf("TOPENT 已设置为 %q(会话内,立即生效)", value)})
-	return nil
-}
-
-// applyTopentToShell 把 value 直接 export/unset 到宿主 shell(空值 = 清除)。
-// 只动 shell、不记录 override:SetTopent(会话内手动设置)与 bootHost(连接时下发环境默认)共用。
-// 回执超时只记日志不报错(命令通常已生效);写入终端失败才返回错误。
-func (s *Session) applyTopentToShell(value string) error {
-	if err := s.pty.Write(topentShellCmd(value)); err != nil {
-		return fmt.Errorf("写入终端失败: %w", err)
-	}
-	// 等待 shell 回执(确认命令已被执行)
-	if err := s.waitRegexp(reTopentOK, 5*time.Second, "TOPENT 设置回执"); err != nil {
-		s.emitEvent(Event{Type: "log", Text: "TOPENT 已下发但未等到 shell 回执: " + err.Error()})
-	}
-	// shell 里的 TOPENT 已变成 value(或已 unset):同步运行时回读值,
-	// 使界面显示的"当前会话 TOPENT"就是 shell 真实值,而不是登录那一刻的旧值。
-	s.mu.Lock()
-	if s.cfg.Runtime != nil {
-		s.cfg.Runtime.Topent = value
-	}
-	s.mu.Unlock()
-	return nil
-}
-
-// topentShellCmd 拼出把 TOPENT 下发到宿主 shell 的命令(空值 = unset)。
-// 值不限数字/文本:shell 单引号包裹并剔除内嵌单引号,防注入/拆词。
-func topentShellCmd(value string) string {
-	if value == "" {
-		return "unset TOPENT; echo " + reTopentOKMark + "\r"
-	}
-	q := "'" + strings.ReplaceAll(value, "'", "") + "'"
-	return "export TOPENT=" + q + "; echo " + reTopentOKMark + "\r"
-}
-
-// reTopentOKMark TOPENT 下发回执标记(TDBG 是本工具自己的本地标记,非远端变量名)
-const reTopentOKMark = "TDBG-TOPENT-OK"
-
-// reTopentOK 回执标记:必须匹配独占一行的回执。
-// PTY 会把我方发去的整条命令原样回显,该行同样含有本标记字符串 ——
-// 用子串匹配会在命令被 shell 执行之前就"等到回执",锚定整行才能排除命令回显本身。
-var reTopentOK = regexp.MustCompile(`^\s*` + reTopentOKMark + `\s*$`)
 
 // enterIdle 把会话置为空闲(宿主 shell 保留、无调试运行)并广播 state=idle。
 // 程序自然退出 / 结束调试 / 复用启动失败都会回到这个状态。

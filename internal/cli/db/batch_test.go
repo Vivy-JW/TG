@@ -111,7 +111,7 @@ func TestQueryBatchRefusesNonJSONFormats(t *testing.T) {
 	common.CSV, common.JSON = true, false
 	t.Cleanup(func() { common.CSV, common.JSON = oldCSV, oldJSON })
 
-	err := QueryBatch("q.json", 99, 30, SQLRouteAuto)
+	err := QueryBatch("q.json", 30, SQLRouteAuto)
 	var oe *output.Error
 	if !errors.As(err, &oe) || oe.Exit != 2 || oe.Code != "USAGE" {
 		t.Fatalf("--csv 下的批量应是 USAGE/2，得到 %v", err)

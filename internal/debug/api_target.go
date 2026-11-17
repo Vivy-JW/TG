@@ -54,7 +54,7 @@ import (
 func sessionView(b SessionBrief) target.Session {
 	return target.Session{
 		ID: b.ID, Ref: b.Ref, Display: b.Display, Name: b.Name,
-		Env: b.Env, Ent: b.Ent, N: b.N, Prog: b.Prog, State: b.State, Epoch: b.Epoch,
+		Env: b.Env, N: b.N, Prog: b.Prog, State: b.State, Epoch: b.Epoch,
 	}
 }
 

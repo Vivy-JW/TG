@@ -53,7 +53,6 @@ type Config struct {
 	CustRoot  string               `json:"-"` // TOP GP 的 $CUST 客制根；T100 为空
 	SSH       host.SSHConfig       `json:"-"` // 生效 SSH(envName 合并)
 	Zone      string               `json:"-"` // 生效登录区域
-	Topent    host.EntValue        `json:"-"` // 生效默认企业(连接会话即下发到 shell；会话内可覆盖)
 	DB        *dbconfig.Connection `json:"-"` // 生效数据库连接(该环境的 ssh.db 深拷贝;nil=该 ssh 未挂库)
 	Runtime   *host.RuntimeEnv     `json:"-"` // 登录后动态获取的 T100 路径(探针/选区回显);nil=尚未获取,需登录探测
 }
@@ -202,57 +201,12 @@ func (c *Config) CloneEnv(name string) *Config {
 	return &c2
 }
 
-// TopentInt 返回生效默认企业的数字编号(数据库探测用;文本/未配置返回 0=仅列映射)
-func (c *Config) TopentInt() int {
-	n, _ := c.Topent.Int()
-	return n
-}
-
-// EntAccount 按企业编号取该环境 ENT 清单里的账号（纯配置，不联网）。
-//
-// 这是"企业→账号"在**配置层**的唯一实现：CLI 的 tg db sql 与 Web 的 /api/dbsql
-// 都从这里取，两条路落到同一个 schema。清单没同步就报“没同步”，绝不猜一个账号
-// —— 猜错的账号查出来是 0 行，而那看起来和“数据不存在”一模一样。
-func (c *Config) EntAccount(ent int) (string, error) {
-	name := c.EnvName()
-	for i := range c.SSHs {
-		if c.SSHs[i].Name != name {
-			continue
-		}
-		e := &c.SSHs[i]
-		for _, x := range e.Ents {
-			if x.Ent != ent {
-				continue
-			}
-			if a := strings.TrimSpace(x.Account); a != "" && a != "-" {
-				return a, nil
-			}
-			return "", fmt.Errorf("企业 %d 在配置的 ENT 清单里没有可用账号（TG 不再同步 ENT 清单；GP 的据点用 tg site list --env %s）", ent, name)
-		}
-		if len(e.Ents) == 0 {
-			return "", fmt.Errorf("环境 %q 还没同步过 ENT 清单：TG 不再同步 ENT（GP 的据点用 tg site list --env %s）", name, name)
-		}
-		return "", fmt.Errorf("企业 %d 不在 %s 的 ENT 清单里（TG 不再同步 ENT；GP 的据点用 tg site list --env %s）", ent, name, name)
-	}
-	return "", fmt.Errorf("环境 %q 不在配置里", name)
-}
-
-// DBConnForEnt 取该环境的库连接副本，并把 Account 槽位换成本次企业的账号。
-//
-// 返回的是**副本**：Accounts 切片只读共享，Account 是"这次用哪个账号"的一次性槽位，
-// 改它不能影响配置本体（否则下一次查询会沿用上一次的企业）。
-func (c *Config) DBConnForEnt(ent int) (*dbconfig.Connection, error) {
+// ProbeAccount 取该环境的库连接（Account 槽位保持配置里的值；GP 只有 db.accounts[0] 这条路）。
+func (c *Config) ProbeAccount() (*dbconfig.Connection, error) {
 	if c.DB == nil {
 		return nil, fmt.Errorf("环境 %q 未挂数据库连接（设置 → 站点管理 → 数据库）", c.EnvName())
 	}
 	cc := *c.DB
-	if ent > 0 {
-		acct, err := c.EntAccount(ent)
-		if err != nil {
-			return nil, err
-		}
-		cc.Account = acct
-	}
 	return &cc, nil
 }
 
@@ -261,10 +215,8 @@ func (c *Config) BPsPersisted() bool {
 	return c.DataDir != "" && (c.PersistBPs == nil || *c.PersistBPs)
 }
 
+// fillDefaults 补齐缺省值（启动参数、超时、终端尺寸；监听地址由 config 层给）。
 func (c *Config) fillDefaults() {
-	if c.Listen == "" {
-		c.Listen = config.DefaultListen
-	}
 	if c.LaunchArgs == "" {
 		c.LaunchArgs = config.DefaultLaunchArgs
 	}

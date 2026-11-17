@@ -233,7 +233,7 @@ func TestContractFailureEnvelopeKeysAreStable(t *testing.T) {
 }
 
 // TestContractCandidateKeysAreASubsetOfSessionKeys 钉住 C5.12 的**唯一出处**纪律：
-// 候选九键必须是 `session` 键集的**真子集**（C5.4b：同一个 struct 的投影，不许手抄第二份 JSON 定义）。
+// 候选八键必须是 `session` 键集的**真子集**（C5.4b：同一个 struct 的投影，不许手抄第二份 JSON 定义）。
 func TestContractCandidateKeysAreASubsetOfSessionKeys(t *testing.T) {
 	inSession := map[string]bool{}
 	for _, k := range debugContractSessionEnvelopeKeys {
@@ -241,13 +241,13 @@ func TestContractCandidateKeysAreASubsetOfSessionKeys(t *testing.T) {
 	}
 	for _, k := range debugContractCandidateKeys {
 		if !inSession[k] {
-			t.Errorf("候选键 %q 不在 `session` 块的键集里 —— C5.12 要求九键是它的**真子集**，\n"+
+			t.Errorf("候选键 %q 不在 `session` 块的键集里 —— C5.12 要求八键是它的**真子集**，\n"+
 				"    这样同一个渲染函数才能既打身份行又打候选行。要么改候选键集，要么改 session 键集，\n"+
 				"    两处都在 debugcontract_const_test.go。", k)
 		}
 	}
-	if len(debugContractCandidateKeys) != 9 {
-		t.Errorf("C5.12 写死候选是**九键**，常量表里有 %d 个：%v",
+	if len(debugContractCandidateKeys) != 8 {
+		t.Errorf("C5.12 写死候选是**八键**，常量表里有 %d 个：%v",
 			len(debugContractCandidateKeys), debugContractCandidateKeys)
 	}
 }
@@ -452,32 +452,11 @@ func TestContractRefGrammar(t *testing.T) {
 	}
 }
 
-// TestContractSelectorSecondSegmentKind 钉住 C2.3 的判据：
-// 选择器第二段**全数字 → 企业编号；否则 → 作业名**，两种形态不会撞
-// （作业名首字符是字母，B29），所以不需要额外消歧规则。
-func TestContractSelectorSecondSegmentKind(t *testing.T) {
-	for _, s := range []string{"99", "1012", "0", "1"} {
-		if got := selectorSecondSegKind(s); got != debugContractSecondSegEnt {
-			t.Errorf("第二段 %q 该判成企业编号（C2.3：全数字），得 %q", s, got)
-		}
-	}
-	for _, s := range []string{"apmt520", "bsft001", "a", "A_1-x"} {
-		if got := selectorSecondSegKind(s); got != debugContractSecondSegJob {
-			t.Errorf("第二段 %q 该判成作业名（C2.3：非全数字），得 %q", s, got)
-		}
-	}
-	// 判据的分界在「全数字」这四个字上：判据**不**先做 B29 的合法性校验，
-	// 所以 `1a` 这种形态（B29 下不可能是合法作业名）按 C2.3 落到作业那一支，
-	// 随后会在"环境/作业"那一步按 F7 报 SESSION_NOT_FOUND。
-	// 它**不会**被静默当成企业编号 1 —— 那才是"看起来落上了、其实落在别处"。
-	for _, s := range []string{"1a", "apmt520a1", "99x"} {
-		if got := selectorSecondSegKind(s); got != debugContractSecondSegJob {
-			t.Errorf("C2.3 的判据只看「全数字」：第二段 %q 含非数字字符，应当判成作业名（%q），得 %q。\n"+
-				"    注：B29 下这类串不是合法作业名，所以它最终按 F7（SESSION_NOT_FOUND）被拒 —— "+
-				"这一支绝不能静默退回企业编号，那会变成「看起来落上了、其实落在别处」。",
-				s, debugContractSecondSegJob, got)
-		}
-	}
+// TestContractSelectorJobPattern 钉住 B29：选择器的第二段（=作业名）的合法字符集。
+//
+// 第二段现在**只可能是作业名**（企业编号那层随 ENT 管线一起删了），所以这里只钉
+// 作业名的正则，不再有"全数字判企业"的分支。
+func TestContractSelectorJobPattern(t *testing.T) {
 	// 作业名合法字符集本身也要钉（B29 / 2.1.4）。
 	jre := regexp.MustCompile(debugContractJobPattern)
 	for _, s := range []string{"apmt520", "a", "A_1-x", strings.Repeat("z", 64)} {
@@ -496,22 +475,27 @@ func TestContractSelectorSecondSegmentKind(t *testing.T) {
 // T2.1-d 非法写法一览 F1–F20（2.4 + Q23 的 F20）
 // ---------------------------------------------------------------------------
 
-// TestContractInvalidFormsAreComplete 钉住那张表**本身**：F1–F20 逐条都在、没有空壳。
+// TestContractInvalidFormsAreComplete 钉住那张表**本身**：F1–F20 里还在的逐条都在、没有空壳。
 //
 // 有人删掉一条非法写法，这张测试当场红 —— 那张表就是将来 TDD 的输入集，
 // 少一条等于少验一种"说不清的错"。
+//
+// 2026-11-17：F13/F14（`--session` 里的企业与 `--ent` 矛盾）随 ENT 管线一起退役 ——
+// TG 只面向 TOP GP，已经没有"企业编号"这一层，也没有 `--ent` 可矛盾。表因此是 18 条，
+// 键**保留原编号不连号**（F 号是契约里的稳定标识，重编号会让文档与历史记录对不上）。
 func TestContractInvalidFormsAreComplete(t *testing.T) {
-	const total = 20
+	const total = 18
 	if len(debugContractInvalidForms) != total {
-		t.Fatalf("非法写法表该有 %d 条（F1–F20），实得 %d 条", total, len(debugContractInvalidForms))
+		t.Fatalf("非法写法表该有 %d 条（F1–F20 去掉已退役的 F13/F14），实得 %d 条", total, len(debugContractInvalidForms))
 	}
 	seen := map[string]bool{}
-	for i, f := range debugContractInvalidForms {
-		wantKey := fmt.Sprintf("F%d", i+1)
-		if f.Key != wantKey {
-			t.Errorf("第 %d 条该是 %s，表里写的是 %q —— 键必须连号，否则「逐条覆盖」这句话就没人验得了",
-				i+1, wantKey, f.Key)
+	prev := 0
+	for _, f := range debugContractInvalidForms {
+		var n int
+		if _, err := fmt.Sscanf(f.Key, "F%d", &n); err != nil || n <= prev {
+			t.Errorf("非法写法 %q 的编号不是递增的（上一条是 F%d）—— 键必须按契约顺序排", f.Key, prev)
 		}
+		prev = n
 		if seen[f.Key] {
 			t.Errorf("非法写法 %s 登记了两次", f.Key)
 		}
@@ -558,8 +542,6 @@ func TestContractInvalidFormsCodeSequence(t *testing.T) {
 		{"F10", debugContractCodeUsage},
 		{"F11", debugContractCodeUsage},
 		{"F12", debugContractCodeUsage},
-		{"F13", debugContractCodeUsage},
-		{"F14", debugContractCodeUsage},
 		{"F15", debugContractCodeStale},
 		{"F16", debugContractCodeUsage},
 		{"F17", debugContractCodeUsage},
@@ -643,7 +625,7 @@ func TestContractInvalidFormsServerSideEnvelopes(t *testing.T) {
 		fKey    string // 契约 2.4 的那一行：码与"要不要候选"都从表里取，不在测试里重抄
 		candLen int    // -1 = 这个码下不该出现 candidates（C5.11）
 	}{
-		{"F1 省略目标 + 池里两条", hsTwo, "/api/sessions/switch", `{"env":"h1","ent":"99"}`,
+		{"F1 省略目标 + 池里两条", hsTwo, "/api/sessions/switch", `{"env":"h1"}`,
 			http.StatusConflict, "F1", 2},
 		{"F19 别名取值非法（含 /）", hsTwo, "/api/sessions", `{"prog":"apmt520","name":"不合/法"}`,
 			http.StatusBadRequest, "F19", -1},
@@ -824,25 +806,15 @@ func byKeyExit(t *testing.T, key string) int {
 	return 0
 }
 
-// TestContractFlagConflictsIsNotYetEnforced 钉住四个标志的冲突矩阵（C3.3 的四种组合）
-// 里**今天可测的两个半**：
+// TestContractFlagConflictsIsNotYetEnforced 钉住标志冲突矩阵（C3.3）里**今天还在的那一条**：
 //
-//   - F12 / F13：`--session` 带的环境/企业与 `--env` / `--ent` 矛盾 → 退 2、`code: USAGE`；
-//   - F14：`--session` 里的会话实际 ENT 与 `--ent` 不同 → 退 2、`code: USAGE`。
+//   - F12：`--session` 带的环境与 `--env` 矛盾 → 退 2、`code: USAGE`。
 //
-// **WP4a 之后这三条已经可断言了**（目标层是纯函数，`internal/target` 的
-// `TestResolveF12EnvConflict` / `F13` / `F14` 逐条断言了码与退出码；CLI 那侧的包装
-// 由 `internal/cli/debug/target_test.go` 钉住 `ExitFor(code, NewScenario, newSyntax)` 的分档 ——
-// 分档判据是"**这个场景是不是新场景**"，不是"有没有打标志"，见 `target.Failure.NewScenario`）。
-//
-// 所以这里**不再跳过**：本包只做一件它能做的事 —— 核对 debugcontract 常量表里
-// 这三条 F 的码与 `internal/target` 的常量一致（跨包字面量的唯一防线在那边，
-// 这里只保证"本包引用的那份没漂"）。
+// F13/F14 是"企业与 `--ent` 矛盾"那两条，随 ENT 管线一起退役（TG 只面向 TOP GP，
+// 没有企业编号、也没有 `--ent` 可矛盾），所以这张表里不再有它们。
 func TestContractFlagConflictsIsNotYetEnforced(t *testing.T) {
 	want := map[string]string{
 		"F12": debugContractCodeUsage,
-		"F13": debugContractCodeUsage,
-		"F14": debugContractCodeUsage,
 	}
 	byKey := map[string]debugContractInvalidForm{}
 	for _, f := range debugContractInvalidForms {
@@ -851,7 +823,7 @@ func TestContractFlagConflictsIsNotYetEnforced(t *testing.T) {
 	for k, code := range want {
 		f, ok := byKey[k]
 		if !ok {
-			t.Fatalf("非法写法表里没有 %s —— C3.3 的四种组合里这三条必须登记在案", k)
+			t.Fatalf("非法写法表里没有 %s —— C3.3 的组合里这一条必须登记在案", k)
 		}
 		if f.Code != code {
 			t.Errorf("%s 的机器码 = %q，C3.3 要求 %q", k, f.Code, code)
@@ -895,7 +867,7 @@ func TestContractAliasRulesAreNotYetEnforced(t *testing.T) {
 
 // TestContractIdentityKeysAreInSessionBrief 是 C5.3 / Q22 那五个新键（连同 `kind`）的**落地断言**。
 //
-// **WP4c 起它不再跳过**：`ref` / `display` / `name` / `ent` / `n` / `epoch` 已经在
+// **WP4c 起它不再跳过**：`ref` / `display` / `name` / `n` / `epoch` 已经在
 // `SessionBrief` 上，`kind` 也补上了（C5.5）。这一条只做"键在不在、键名对不对"这一件事 ——
 // "取不到时给空串而不省键"由 `TestContractSessionEnvelopeConstantKeysAreNeverOmitted`
 // 用**真实输出**钉（那是 C5.1 的另一半）。
@@ -904,7 +876,6 @@ func TestContractIdentityKeysAreInSessionBrief(t *testing.T) {
 		"ref":     "ref",     // 规范 id（C2.0 恒定，C5.4）
 		"display": "display", // 人读形态（作业段是快照，C5.4）
 		"name":    "name",    // 别名（C2.5b）
-		"ent":     "ent",     // 当前企业编号（快照，C2.5c）
 		"n":       "n",       // 序号（C2.2 / Q24）
 		"epoch":   "epoch",   // 世代号（F15）
 		"kind":    "kind",    // 会话类型（C5.5：恒为 ssh）
@@ -1170,12 +1141,12 @@ func TestContractNameIdempotencyIsEnforced(t *testing.T) {
 func TestContractCandidateLineFormat(t *testing.T) {
 	got := target.CandidateLine(target.Candidate{
 		ID: "s1", Ref: "恒烁正式区#1", Display: "恒烁正式区/apmt520#1",
-		Name: "汇率单", Env: "恒烁正式区", Ent: "99", N: 1, Prog: "apmt520", State: "stopped",
+		Name: "汇率单", Env: "恒烁正式区", N: 1, Prog: "apmt520", State: "stopped",
 	})
 	want := "  恒烁正式区#1  汇率单  已停站"
 	if got != want {
 		t.Errorf("候选行（C5.14）= %q\n    期望 %q\n"+
-			"    格式：两格缩进 + <ref> + 两空格 + <name> + 两空格 + <state> + 两空格 + ENT <ent>",
+			"    格式：两格缩进 + <ref> + 两空格 + <name> + 两空格 + <state>",
 			got, want)
 	}
 	if strings.Contains(got, "会话 ") {
@@ -1214,7 +1185,7 @@ func TestContractIdentityLineIsLanded(t *testing.T) {
 	m := NewManager(cfgFor("h1", "36"))
 	live := idleOn("s1", cfgFor("h1", "36"))
 	live.Prog = "apmt520"
-	live.cfg.Topent = "99" // 起会话时给的 --ent（`ent` 那一栏的来源）
+
 	m.mu.Lock()
 	if err := m.assignIdentityLocked(live, "汇率单"); err != nil {
 		m.mu.Unlock()
@@ -1227,7 +1198,7 @@ func TestContractIdentityLineIsLanded(t *testing.T) {
 		t.Fatalf("C5.3 要求服务端产出 display 与 name（WP4c 已落地），实得 display=%q name=%q", b.Display, b.Name)
 	}
 
-	// C5.9 的逐字格式：`会话 <display> · <name> · <state> · ENT <ent>`
+	// C5.9 的逐字格式：`会话 <display> · <name> · <state>`（ENT 那一段随管线删了）
 	// （分隔符是 空格 + U+00B7 + 空格；`<state>` 用现行中文标签）。
 	line := target.IdentityLine(sessionView(b))
 	want := "会话 " + b.Display + " · " + b.Name + " · " + target.StateLabel(b.State)
@@ -1394,11 +1365,8 @@ func keysOf(m map[string]any) []string {
 	return out
 }
 
-// selectorSecondSegKind 是 C2.3 的判据：第二段全数字 → 企业编号；否则 → 作业名。
-//
-// WP3 起它**委托**给 `internal/target` 的生产实现（`SecondSegmentKind`）：
-// 判据只有一处，测试验的就是那一处（不再是"测试自己抄一份、再验自己"）。
-func selectorSecondSegKind(seg string) string { return target.SecondSegmentKind(seg) }
+// 注：`selectorSecondSegKind` 已随 C2.3 的"第二段是作业名"定稿删掉 ——
+// 企业编号那层不再存在，第二段的形态不再需要判据函数。
 
 // invalidFormKeys 返回表里现有的 F 键（失败信息用）。
 func invalidFormKeys() []string {

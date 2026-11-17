@@ -29,9 +29,9 @@ var (
 // debugStopCmd 可复取的停站现场快照:GET /api/sessions/{id}
 var debugStopCmd = &cobra.Command{
 	Use:   "stop",
-	Short: "查看当前调试会话的停站现场(state/位置/断点/TOPENT,可复取)",
+	Short: "查看当前调试会话的停站现场(state/位置/断点,可复取)",
 	Long: `返回当前调试会话的完整现场快照(与原生命令的瞬态输出不同,可反复取用):
-会话状态(state)、停站文件:行/函数/原因、断点列表、TOPENT、运行时长等。
+会话状态(state)、停站文件:行/函数/原因、断点列表、运行时长等。
 --json 输出原始快照(默认),文本模式给摘要。无会话时给出引导。`,
 	Example: `  tg debug stop
   tg debug stop --json`,
@@ -75,9 +75,6 @@ var debugStopCmd = &cobra.Command{
 			if bps, ok := full["breakpoints"].([]any); ok {
 				fmt.Printf("断点: %d 个\n", len(bps))
 			}
-		}
-		if s.Topent != "" {
-			fmt.Printf("TOPENT override: %s\n", s.Topent)
 		}
 		if s.State != "stopped" && s.State != "" {
 			fmt.Println("(未停站;可用 tg debug start/exec 或先观察会话状态)")

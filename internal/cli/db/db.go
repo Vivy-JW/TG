@@ -109,31 +109,3 @@ func primaryAccount(cfg *debug.Config) (string, error) {
 	}
 	return user, nil
 }
-
-// entAccount 解析本次要用哪个账号：>0 按 ENT 清单（T100 那条线在用），
-// <=0 取账号清单首项（TG/GP 的正常路径）。
-//
-// 实现只有一处（debug.Config.EntAccount）：Web 的 /api/dbsql 与 CLI 必须按同一份
-// 清单落到同一个 schema —— 两处各写一遍，“同名不同号”迟早会漂移。
-func entAccount(cfg *debug.Config, ent int) (string, error) {
-	if ent > 0 {
-		return cfg.EntAccount(ent)
-	}
-	return primaryAccount(cfg)
-}
-
-// dbConnFor 把该环境的库连接取出来，并在给了企业编号时换成那个企业的账号。
-func dbConnFor(cfg *debug.Config, ent int) (*dbconfig.Connection, error) {
-	cc, err := connFor(cfg)
-	if err != nil {
-		return nil, err
-	}
-	if ent > 0 {
-		acct, err := cfg.EntAccount(ent)
-		if err != nil {
-			return nil, err
-		}
-		cc.Account = acct
-	}
-	return cc, nil
-}

@@ -191,14 +191,11 @@ func TestLifecycleEndpoints(t *testing.T) {
 	defer hs.Close()
 	c := New(hs.URL)
 
-	id, err := c.SwitchToIdle("主机109", "99", "录像A", time.Second)
+	id, err := c.SwitchToIdle("主机109", "录像A", time.Second)
 	if err != nil || id != "s1" {
 		t.Fatalf("SwitchToIdle = %q, %v", id, err)
 	}
-	if err := c.Topent("s1", "99"); err != nil {
-		t.Fatal(err)
-	}
-	sid, err := c.Launch(LaunchReq{Env: "主机109", Prog: "bsft001_wf", Module: "asf", Name: "录像A", Ent: "99"})
+	sid, err := c.Launch(LaunchReq{Env: "主机109", Prog: "bsft001_wf", Module: "asf", Name: "录像A"})
 	if err != nil || sid != "s9" {
 		t.Fatalf("Launch = %q, %v", sid, err)
 	}
@@ -216,7 +213,6 @@ func TestLifecycleEndpoints(t *testing.T) {
 		method, path string
 	}{
 		{"POST", "/api/sessions/switch"},
-		{"POST", "/api/sessions/s1/topent"},
 		{"POST", "/api/sessions"},
 		{"POST", "/api/sessions/s9/raw"},
 		{"POST", "/api/sessions/s9/control"},
@@ -230,15 +226,15 @@ func TestLifecycleEndpoints(t *testing.T) {
 			t.Errorf("第 %d 次 = %s %s，要 %s %s", i, got[i].method, got[i].path, w.method, w.path)
 		}
 	}
-	// 请求体里几个关键字段：起会话必须带 ent / ssh，放行必须是 continue。
-	if got[2].body["ent"] != "99" || got[2].body["ssh"] != "主机109" {
-		t.Errorf("起会话请求体不对：%+v", got[2].body)
+	// 请求体里几个关键字段：起会话必须带 ssh，放行必须是 continue。
+	if got[1].body["ssh"] != "主机109" {
+		t.Errorf("起会话请求体不对：%+v", got[1].body)
 	}
-	if got[4].body["action"] != "continue" {
-		t.Errorf("放行动作不对：%+v", got[4].body)
+	if got[3].body["action"] != "continue" {
+		t.Errorf("放行动作不对：%+v", got[3].body)
 	}
-	if got[3].body["command"] != "break 812" {
-		t.Errorf("exec 命令体不对：%+v", got[3].body)
+	if got[2].body["command"] != "break 812" {
+		t.Errorf("exec 命令体不对：%+v", got[2].body)
 	}
 }
 
@@ -292,15 +288,18 @@ func TestStartJobEndpoint(t *testing.T) {
 	}))
 	defer hs.Close()
 
-	id, err := New(hs.URL).StartJob("s1", "bsft001_wf", "asf", "99")
+	id, err := New(hs.URL).StartJob("s1", "bsft001_wf", "asf")
 	if err != nil || id != "s1" {
 		t.Fatalf("StartJob = %q, %v", id, err)
 	}
 	if gotPath != "POST /api/sessions/s1/job" {
 		t.Fatalf("路径 = %q", gotPath)
 	}
-	if gotBody["prog"] != "bsft001_wf" || gotBody["module"] != "asf" || gotBody["ent"] != "99" {
+	if gotBody["prog"] != "bsft001_wf" || gotBody["module"] != "asf" {
 		t.Fatalf("请求体 = %+v", gotBody)
+	}
+	if _, has := gotBody["ent"]; has {
+		t.Fatalf("请求体不该再带 ent（ENT 管线已删）：%+v", gotBody)
 	}
 
 	// 没回 sessionId 要报错（而不是让调用方拿着空句柄继续）
@@ -308,7 +307,7 @@ func TestStartJobEndpoint(t *testing.T) {
 		_, _ = w.Write([]byte(`{"ok":true}`))
 	}))
 	defer hs2.Close()
-	if _, err := New(hs2.URL).StartJob("s1", "p", "", ""); err == nil {
+	if _, err := New(hs2.URL).StartJob("s1", "p", ""); err == nil {
 		t.Fatal("没回 sessionId 该报错")
 	}
 }

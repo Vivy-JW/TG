@@ -33,12 +33,11 @@ func newPingCmd() *cobra.Command {
 			if err != nil {
 				return output.Errorf("TARGET", 2, "%v", err)
 			}
-			ent := 0
-			cc, err := dbConnFor(cfg, ent)
+			cc, err := connFor(cfg)
 			if err != nil {
 				return output.Errorf("TARGET", 2, "%v", err)
 			}
-			acct, err := entAccount(cfg, ent)
+			acct, err := primaryAccount(cfg)
 			if err != nil {
 				return output.Errorf("TARGET", 2, "%v", err)
 			}
@@ -58,16 +57,13 @@ func newPingCmd() *cobra.Command {
 
 			if common.IsJSON() {
 				return common.PrintJSON(map[string]any{
-					"ok": true, "env": cfg.EnvName(), "ent": ent,
+					"ok": true, "env": cfg.EnvName(),
 					"account": acct, "schema": strings.ToUpper(acct),
 					"dialect": cc.Type, "target": cc.Address(),
 					"version": oneLine,
 				})
 			}
 			who := cfg.EnvName()
-			if ent > 0 {
-				who = fmt.Sprintf("%s@%d", cfg.EnvName(), ent)
-			}
 
 			fmt.Printf("连接正常: %s (%s, %s) %s\n", who, acct, cc.Type, oneLine)
 			return nil

@@ -88,27 +88,6 @@ func TestSessionNewDoesNotTouchOtherSessions(t *testing.T) {
 	}
 }
 
-// ENT 必填：谁都没说 → 400 + USAGE，且文案要能照做（与 requireExplicitEnt 同一份判据）。
-func TestSessionNewRequiresExplicitEnt(t *testing.T) {
-	hs, s := actionTestDebugServer(t)
-	giveServerNamedEnv(s, "h1", "127.0.0.1", "36")
-
-	resp := doReq(t, "POST", hs.URL+"/api/sessions/new", "", `{"env":"h1","name":"录像A"}`)
-	if resp.StatusCode != 400 {
-		t.Fatalf("没给 ENT 该退 400，实得 %d（%s）", resp.StatusCode, respError(t, resp))
-	}
-	ok, code, msg := envelopeOf(t, resp)
-	if ok || code != "USAGE" {
-		t.Fatalf("该回 ok=false + code=USAGE，实得 ok=%v code=%q", ok, code)
-	}
-	if !strings.Contains(msg, "--ent") {
-		t.Errorf("文案没指出怎么给 ENT：%q", msg)
-	}
-	if n := len(s.mgr.Snapshot()); n != 0 {
-		t.Errorf("被拒的请求不该留下会话，实得 %d 条", n)
-	}
-}
-
 // 环境不存在 / 没给环境：两条各自说清楚，都不该先去拨号。
 func TestSessionNewValidatesEnv(t *testing.T) {
 	hs, s := actionTestDebugServer(t)

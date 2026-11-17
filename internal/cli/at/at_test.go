@@ -12,60 +12,43 @@ import (
 
 func TestParse(t *testing.T) {
 	good := []struct {
-		raw    string
-		env    string
-		ent    int
-		hasEnt bool
+		raw  string
+		env  string
+		site string
 	}{
-		{"主机109", "主机109", 0, false},
-		{"主机109@99", "主机109", 99, true},
-		{" 主机109@99 ", "主机109", 99, true},
-		{"with space@100", "with space", 100, true},
-		{"a@b@7", "a@b", 7, true}, // 从最后一个 @ 切
+		{"主机109", "主机109", ""},
+		{"22主机@COF", "22主机", "cof"},
+		{" 22主机@cof_demo ", "22主机", "cof_demo"},
+		{"with space@DEMO1", "with space", "demo1"},
+		{"a@b@DEMO1", "a@b", "demo1"}, // 从最后一个 @ 切
+		{"22主机@ICD-YYY", "22主机", "icd-yyy"},
 	}
 	for _, c := range good {
 		v, err := Parse(c.raw)
 		if err != nil {
 			t.Fatalf("Parse(%q) 不该报错: %v", c.raw, err)
 		}
-		if v.Env != c.env || v.Ent != c.ent || v.HasEnt != c.hasEnt {
-			t.Errorf("Parse(%q) = %+v，想要 env=%q ent=%d hasEnt=%v", c.raw, v, c.env, c.ent, c.hasEnt)
+		if v.Env != c.env || v.Site != c.site || v.HasSite != (c.site != "") {
+			t.Errorf("Parse(%q) = %+v，想要 env=%q site=%q", c.raw, v, c.env, c.site)
 		}
 	}
 
-	bad := []string{"", "   ", "@99", "主机109@", "主机109@0", "主机109@-3", "主机109@a b", "主机109@" + strings.Repeat("x", 21)}
+	bad := []string{"", "   ", "@COF", "主机109@", "主机109@a b", "主机109@" + strings.Repeat("x", 21)}
 	for _, raw := range bad {
 		if _, err := Parse(raw); err == nil {
 			t.Errorf("Parse(%q) 该报错", raw)
 		}
 	}
 
-	// 右边不是纯数字时按据点/资料库编号解析（GP 环境用），这里只验纯函数的行为：
-	// 是不是 GP 环境、该不该拒，由 Apply 按环境产品分派，不在 Parse 里判断。
-	sites := []struct {
-		raw  string
-		env  string
-		site string
-	}{
-		{"22主机@COF", "22主机", "cof"},
-		{"22主机@cof_demo", "22主机", "cof_demo"},
-		{"a@b@DEMO1", "a@b", "demo1"},
-		{"22主机@ICD-YYY", "22主机", "icd-yyy"},
-		{"22主机@001", "22主机", ""}, // 纯数字仍按企业编号走，不能抢
-	}
-	for _, c := range sites {
-		v, err := Parse(c.raw)
-		if err != nil {
-			t.Fatalf("Parse(%q) 不该报错: %v", c.raw, err)
-		}
-		if c.site == "" {
-			if !v.HasEnt || v.Ent != 1 {
-				t.Errorf("Parse(%q) = %+v，纯数字该按企业编号解析", c.raw, v)
-			}
+	// TG 只有 TOP GP：@ 右边是据点编号，纯数字是 T100 的企业号写法，明确拒掉不猜。
+	for _, raw := range []string{"主机109@99", "主机109@0", "主机109@-3", "22主机@001"} {
+		_, err := Parse(raw)
+		if err == nil {
+			t.Errorf("Parse(%q) 该报错（@ 右边是据点编号，不是企业号）", raw)
 			continue
 		}
-		if v.Env != c.env || v.Site != c.site || !v.HasSite || v.HasEnt {
-			t.Errorf("Parse(%q) = %+v，想要 env=%q site=%q", c.raw, v, c.env, c.site)
+		if !strings.Contains(err.Error(), "据点编号") {
+			t.Errorf("Parse(%q) 的报错要指向「据点编号」，实得 %v", raw, err)
 		}
 	}
 }
@@ -116,8 +99,8 @@ func TestScopeOf(t *testing.T) {
 
 func TestApplyRejects(t *testing.T) {
 	_, cmds := fakeRoot()
-	oldRaw, oldEnt := Raw, Ent
-	t.Cleanup(func() { Raw, Ent = oldRaw, oldEnt })
+	oldRaw, oldSite := Raw, Site
+	t.Cleanup(func() { Raw, Site = oldRaw, oldSite })
 
 	cases := []struct {
 		path string
@@ -125,9 +108,9 @@ func TestApplyRejects(t *testing.T) {
 		want string // 错误里必须出现的关键词
 	}{
 		{"version", "主机109", "不接受 --at"},
-		{"debug wslogs", "主机109@99", "只接受 <环境>"},
-		{"debug exec", "主机109@99", "--session 主机109/99"},
-		{"debug start", "主机109@99", "只接受 <环境>"},
+		{"debug wslogs", "主机109@COF", "只接受 <环境>"},
+		{"debug exec", "主机109@COF", "--session 主机109/COF"},
+		{"debug start", "主机109@COF", "只接受 <环境>"},
 	}
 	for _, c := range cases {
 		Raw = c.raw

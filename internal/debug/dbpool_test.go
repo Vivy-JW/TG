@@ -283,7 +283,7 @@ func TestDirectSQLFallsBackWhenNoDBConfigured(t *testing.T) {
 	// 没挂库（测试里构造的 Server 就是这种）：直连这条路必须说"我不回答"，
 	// 让调用方走原来的 SSH 路 —— 否则 /api/dbsql 的拨号失败契约会变。
 	s := &Server{cfg: &Config{}, dbPool: newDBDirectPool()}
-	if _, _, handled := s.directSQL(context.Background(), 99, 30, "select 1 from dual"); handled {
+	if _, _, handled := s.directSQL(context.Background(), 30, "select 1 from dual"); handled {
 		t.Fatal("没挂库时不该由直连回答")
 	}
 }
@@ -291,7 +291,7 @@ func TestDirectSQLFallsBackWhenNoDBConfigured(t *testing.T) {
 func TestDirectSQLFallsBackWhenPoolMissing(t *testing.T) {
 	// 直接字面量构造的 Server 可能没有池（老测试）：不能空指针崩，应当回退。
 	s := &Server{cfg: &Config{}}
-	if _, _, handled := s.directSQL(context.Background(), 99, 30, "select 1 from dual"); handled {
+	if _, _, handled := s.directSQL(context.Background(), 30, "select 1 from dual"); handled {
 		t.Fatal("没有池时不该由直连回答")
 	}
 }

@@ -39,17 +39,13 @@ func TestLaunchCfgResolvesByName(t *testing.T) {
 		t.Fatalf("不点名应回当前配置: got=%v err=%v", got, err)
 	}
 	// 点名:换成该环境。
-	// 注:企业编号不再从环境里取(hosts.sshs[].topent 已移除)—— 所以这里只断言环境名
-	// 与连接换了;ENT 由调用方显式给(launchCfg 的 ent 参数 / --ent)。
+	// 注:环境里已没有企业编号(hosts.sshs[] 不再带 ENT)—— TG 只面向 TOP GP。
 	got, err := s.launchCfg("测试1012", "")
 	if err != nil {
 		t.Fatalf("点名存在的环境不该失败: %v", err)
 	}
 	if got.EnvName() != "测试1012" {
 		t.Fatalf("点名 测试1012 应换成该环境: env=%q", got.EnvName())
-	}
-	if got.Topent != "" {
-		t.Fatalf("没显式给 ENT 时不该从环境里继承一个,got %q", got.Topent)
 	}
 	if got.SSH.Host != "h1" {
 		t.Fatalf("点名后应连该环境的机器, got %q", got.SSH.Host)
@@ -178,9 +174,12 @@ func TestLoadConfigSplitSections(t *testing.T) {
 }
 
 // NewDefaultConfig 落盘后应能被宽松加载读回(首次运行的配置骨架)。
+//
+// 监听地址不在其中：调试面的 Listen 由 `tg serve` / `web` 那一层给（默认 127.0.0.1:28670
+// 写在 config.DefaultListen），`fillDefaults` 不再替它编一个。
 func TestNewDefaultConfigRoundTrip(t *testing.T) {
 	cfg := NewDefaultConfig()
-	if cfg.Listen == "" || cfg.LaunchArgs == "" || cfg.WatchdogSeconds == 0 ||
+	if cfg.LaunchArgs == "" || cfg.WatchdogSeconds == 0 ||
 		cfg.TermWidth == 0 || cfg.TermHeight == 0 || cfg.PrintElements == 0 {
 		t.Fatalf("默认值缺失: %+v", cfg)
 	}

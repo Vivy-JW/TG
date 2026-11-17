@@ -244,10 +244,6 @@ func envValues() ([]contractValue, error) {
 }
 
 // fillEntValues 逐环境读快照填 c，返回建议退出码。
-//
-// 坏一个环境不影响其它环境；但“坏”必须出现在 Failed 里，不许变成一条看起来正常的
-// 假值（从前那种 `{handle: env, note: "无快照"}` 的写法会让 EnvEntReq 的命令看起来
-// 可以只填环境，实际一用就报“需要 @企业”）。
 func fillEntValues(c *contract) int {
 	envs, _, err := LoadEnvs()
 	if err != nil {
@@ -255,65 +251,16 @@ func fillEntValues(c *contract) int {
 		c.Failed = append(c.Failed, contractFailure{Reason: "config", Error: err.Error(), Action: "检查配置文件：tg config path"})
 		return 3
 	}
-	staleSeen := false
+	// TOP GP 没有 ENT（企业号）：@ 右边是据点编号，候选在 azp_file 里，要连库才拿得到 ——
+	// 而 --at-list 是纯本机的。这里不做假下拉，只指路。
 	var gpEnvs []string
 	for _, e := range envs {
-		// TOP GP 没有 ENT（企业号）：它的 @ 右边是据点编号，候选在 azp_file 里，
-		// 要连库才拿得到 —— 而 --at-list 是纯本机的。这里不做假下拉，只指路。
-		if strings.EqualFold(e.Product, productGP) {
-			gpEnvs = append(gpEnvs, e.Name)
-			continue
-		}
-		l, err := SnapshotEnts(e.Name)
-		if err != nil {
-			c.Failed = append(c.Failed, contractFailure{
-				Env: e.Name, Reason: "snapshot-unreadable", Error: err.Error(),
-				Action: "检查该环境的库配置；T100 的 ENT 清单在 TG 里不再同步",
-			})
-			continue
-		}
-		if l == nil {
-			c.Failed = append(c.Failed, contractFailure{
-				Env: e.Name, Reason: "no-snapshot",
-				Error:  "没有企业清单快照（从未拉过，或换了机器/库）",
-				Action: "连上网络/VPN 后重试；T100 的 ENT 清单在 TG 里不再同步",
-			})
-			continue
-		}
-		if l.Stale && !staleSeen {
-			staleSeen = true
-			c.Notes = append(c.Notes,
-				fmt.Sprintf("有快照已过期（最旧 %s前）：现在能用，但可能不是库里最新的；要现况请重新同步（TG 不再提供 ENT 同步）", humanAge(l.AgeSeconds)))
-		}
-		for _, m := range l.Ents {
-			// 只保留 handle 与账号/来源；区域/库地址不参与 --at，不在这里显示，
-			// 避免再被误读成企业编号。
-			v := contractValue{
-				Handle: fmt.Sprintf("%s@%d", e.Name, m.Ent), Env: e.Name, Ent: m.Ent,
-				Source: l.Source, Stale: l.Stale, AgeSeconds: l.AgeSeconds,
-			}
-			if m.Account != "" && m.Account != "-" {
-				v.Account = m.Account
-			} else {
-				v.Account = "未配账号"
-			}
-			c.Values = append(c.Values, v)
-		}
+		gpEnvs = append(gpEnvs, e.Name)
 	}
 	if len(gpEnvs) > 0 {
 		c.Notes = append(c.Notes, fmt.Sprintf(
-			"TOP GP 环境（%s）的 @ 右边是据点编号，不是企业号；候选要连库才拿得到：tg site list --env %s",
-			strings.Join(gpEnvs, "、"), gpEnvs[0]))
-	}
-	if len(c.Failed) > 0 {
-		c.Complete = false
-	}
-	if len(c.Values) == 0 {
-		if len(gpEnvs) > 0 {
-			return 0 // 有 GP 环境：没有企业清单是正常的，不是"问不到"
-		}
-		// 一条都拿不到：空列表 ≠ 没有企业，退出码要把这两种情况分开。
-		return 3
+			"TG 只有 TOP GP：--at 的 @ 右边是据点编号（不是企业号），候选要连库才拿得到：tg site list --env %s",
+			gpEnvs[0]))
 	}
 	return 0
 }

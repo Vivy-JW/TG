@@ -15,22 +15,21 @@ package debug
 
 import (
 	"context"
-	"strconv"
 	"time"
 
 	"tg/internal/dbconfig"
 )
 
 // directSQL 尝试走常驻直连；第二个返回值只在 handled=true 时有意义。
-func (s *Server) directSQL(ctx context.Context, ent, timeout int, sqlText string) (*DBQueryResult, error, bool) {
+func (s *Server) directSQL(ctx context.Context, timeout int, sqlText string) (*DBQueryResult, error, bool) {
 	if s.dbPool == nil || s.cfg.DB == nil || !s.cfg.DB.ReadonlySQLEnabled() {
 		return nil, nil, false
 	}
-	cc, err := s.cfg.DBConnForEnt(ent)
+	cc, err := s.cfg.ProbeAccount()
 	if err != nil {
 		return nil, nil, false
 	}
-	key := s.cfg.EnvName() + "|" + strconv.Itoa(ent) + "|" + cc.Account
+	key := s.cfg.EnvName() + "|" + cc.Account
 	q, release, err := s.dbPool.acquire(key, func() (*DirectQuery, error) {
 		octx, cancel := context.WithTimeout(ctx, 15*time.Second)
 		defer cancel()
@@ -54,9 +53,8 @@ func (s *Server) directSQL(ctx context.Context, ent, timeout int, sqlText string
 	}
 	res.Env = s.cfg.EnvName()
 	res.Zone = s.cfg.Zone
-	res.Ent = ent
 	res.Account = cc.Account
-	res.AccountSource = dbconfig.AcctFromEntConfig
+	res.AccountSource = dbconfig.AcctFromPrimary
 	res.DBTarget = cc.Address()
 	res.Route = dbconfig.RouteClientDirect
 	res.ViaTunnel = cc.ViaSSH != nil

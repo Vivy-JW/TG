@@ -58,7 +58,7 @@ func init() {
 
 			if prog == "" {
 				// 空闲会话：走"切到该环境并命名"，服务端会建一条 idle 的宿主。
-				id, serr := cl.SwitchToIdle(env, "", strings.TrimSpace(nsName), time.Duration(nsTimeout)*time.Second)
+				id, serr := cl.SwitchToIdle(env, strings.TrimSpace(nsName), time.Duration(nsTimeout)*time.Second)
 				if serr != nil {
 					return serr
 				}
@@ -217,7 +217,7 @@ func init() {
 			if rerr != nil {
 				return rerr
 			}
-			id, jerr := cl.StartJob(b.ID, prog, nsModule, "")
+			id, jerr := cl.StartJob(b.ID, prog, nsModule)
 			if jerr != nil {
 				return jerr
 			}

@@ -40,21 +40,11 @@ func ProbeOnce(ent int) error {
 	if err != nil {
 		return output.Errorf("TARGET", 2, "%v", err)
 	}
-	var rep *debug.DBReport
-	if ent > 0 {
-		// T100 那条线（tg debug db 转发）：按 ENT 清单定位企业账号。
-		if _, err := entAccount(cfg, ent); err != nil {
-			return output.Errorf("TARGET", 2, "%v", err)
-		}
-		rep, err = debug.ProbeDB(cfg, ent, debug.EntListOpt{Ent: ent})
-	} else {
-		// TG/GP：一个库一个账号，直接拿 accounts[0] 去服务器侧连一次。
-		acct, aerr := primaryAccount(cfg)
-		if aerr != nil {
-			return output.Errorf("TARGET", 2, "%v", aerr)
-		}
-		rep, err = debug.ProbeDBAccount(cfg, acct)
+	acct, aerr := primaryAccount(cfg)
+	if aerr != nil {
+		return output.Errorf("TARGET", 2, "%v", aerr)
 	}
+	rep, err := debug.ProbeDBAccount(cfg, acct)
 	if err != nil {
 		return output.Errorf("DB_FAILED", 4, "%v", err)
 	}
@@ -76,23 +66,8 @@ func ProbeOnce(ent int) error {
 			fmt.Printf("ORACLE_HOME: %s\n", oh)
 		}
 	}
-	if len(rep.Mappings) > 0 {
-		fmt.Printf("\n企业(ENT) → 账号(schema)，共 %d 个（来自配置的 ENT 清单）：\n", len(rep.Mappings))
-		for _, m := range rep.Mappings {
-			mark := " "
-			if rep.Probe != nil && m.Ent == rep.Probe.Ent {
-				mark = "*"
-			}
-			fmt.Printf("  %s %-6d → %s\n", mark, m.Ent, m.Account)
-		}
-	}
 	if rep.Probe != nil {
 		p := rep.Probe
-		if len(rep.Mappings) > 0 {
-			fmt.Printf("\n企业 %d 连接验证: %s@%s\n", p.Ent, p.Account, rep.TNS)
-		} else {
-			fmt.Printf("\n账号 %s 连接验证 (%s)\n", p.Account, rep.TNS)
-		}
 		if p.Host != "" {
 			fmt.Printf("  主机: %s:%s  服务名: %s\n", p.Host, p.Port, p.Service)
 		}

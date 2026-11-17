@@ -24,10 +24,8 @@ type Meta struct {
 	Env           string `json:"env,omitempty"`
 	SSHHost       string `json:"sshHost,omitempty"`
 	Zone          string `json:"zone,omitempty"`
-	Topent        string `json:"topent,omitempty"` // 环境配的默认企业编号(原样,可能非数字)
-	Ent           int    `json:"ent,omitempty"`    // 本次实际用的企业编号
 	Account       string `json:"account,omitempty"`
-	AccountSource string `json:"accountSource,omitempty"` // accounts[0] | ent(gzou_t) | flag
+	AccountSource string `json:"accountSource,omitempty"` // accounts[0] | flag
 	// Schema 这次查询实际落在哪个 schema（Oracle 的 owner / 金仓的 schema）。
 	//
 	// GP 一个库里装几十套表（ds / digiwin / cof_demo …），裸表名解析到"登录账号的
@@ -78,12 +76,9 @@ func (m Meta) headerLines() []string {
 		out = append(out, l)
 	}
 
-	// 第二行:连的是谁。企业编号与账号**同在一行**,因为"哪个企业 → 哪个账号"是一条链,
-	// 拆成两行会让人以为可以各自独立地看。
+	// 第二行:连的是谁(账号),以及落在哪个库。
 	var parts []string
-	if m.Ent > 0 {
-		parts = append(parts, fmt.Sprintf("企业(ENT) %d → 账号 %s", m.Ent, m.Account))
-	} else if m.Account != "" {
+	if m.Account != "" {
 		parts = append(parts, "账号 "+m.Account)
 	}
 	if m.AccountSource != "" {

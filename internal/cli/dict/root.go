@@ -36,10 +36,6 @@ var dbPath string
 // 企业目录快照的落点,也是截断时结果落盘的落点。
 var srcConfigPath string
 
-// dictEnt 本次查询显式指定的企业编号(--ent);空 = 不按企业解析账号。
-// 环境级 topent 已移除,所以这是企业编号的唯一来源之一(另一个是 tg debug --ent)。
-var dictEnt string
-
 // dictCompany --company:本次远程直查用哪个公司别(zta_file.zta02 / Oracle schema)。
 // 空 = 用配置 hosts.sshs[].company(再空 = ds)。
 var dictCompany string
@@ -52,11 +48,7 @@ func init() {
 	// 显示选项 —— 从前只有 msg/prog/r.t 各自定义了一个,其余命令等于没有防线。
 	Group.PersistentFlags().IntVar(&queryLimit, "limit", -1,
 		"结果最多返回多少条 (0 = 不限;-1 = 跟随配置;缺省取 config.json query.limit,再缺省 20)")
-	// --ent 挂在命令组上:账号由企业编号决定(ENT → gzou_t → 账号),而企业编号
-	// **不再存在环境配置里**(hosts.sshs[].topent 已删除)—— 每次显式给,
-	// 不给就用账号列表首项(并在信封 notes 里说明)。
-	Group.PersistentFlags().StringVar(&dictEnt, "ent", "",
-		"企业编号(ENT):据此解析该环境用哪个账号(schema);不给 = 用账号列表首项")
+
 	// --company 是 GP 的公司别(zta_file.zta02 / Oracle schema):"这个库里有几十家公司,
 	// 我这次要看哪一家"。只影响远程直查;同步仍按配置里的公司别(本地 .db 一个环境一份)。
 	Group.PersistentFlags().StringVar(&dictCompany, "company", "",
@@ -333,8 +325,8 @@ func srcMeta() output.Meta {
 	}
 	if srcTarget != nil {
 		t := srcTarget
-		m.Env, m.SSHHost, m.Zone, m.Topent = t.Env, t.SSHHost, t.Zone, t.Topent
-		m.Ent, m.Account, m.AccountSource = t.Ent, t.Account, t.AccountSource
+		m.Env, m.SSHHost, m.Zone = t.Env, t.SSHHost, t.Zone
+		m.Account, m.AccountSource = t.Account, t.AccountSource
 		m.Target, m.Dialect, m.Route = t.Address(), t.Dialect(), t.Route
 		m.ViaTunnel, m.LocalDBPath = t.ViaTunnel, t.Path
 	}

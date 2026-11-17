@@ -107,12 +107,12 @@ func TestActionEndpointsRejectMalformedBody(t *testing.T) {
 //   - `/api/wslogs/debug` 现在要求"能落一条会话"（`mustTargetOrEmpty`：池空 = 冷启动 → 放行，
 //     多条 → 409 + `SESSION_AMBIGUOUS`）。这里先放一条空宿主会话（`actionTestServerWithSession`）
 //     并带上它的句柄，只是为了把这一层闸门过得干净：这条测试要测的是拨号那一层。
-//   - `/api/dbsql` 现在要求 `ent` 必填（C7.1-5），给 0 会被 400 拦在拨号之前。
+//   - `/api/dbsql` 不再收 `ent`（GP 只有一个账号），请求体只带 SQL。
 func TestActionEndpointsReportDialFailure(t *testing.T) {
 	hs, sid := actionTestServerWithSession(t)
 	cases := []struct{ method, path, body string }{
 		{"POST", "/api/wslogs/debug", `{"rowid":"1","session":"` + sid + `"}`},
-		{"POST", "/api/dbsql", `{"sql":"select 1 from dual","ent":99}`},
+		{"POST", "/api/dbsql", `{"sql":"select 1 from dual"}`},
 		{"GET", "/api/wslogs", ""},
 		{"GET", "/api/wslogs/content?rowid=1", ""},
 	}
@@ -179,14 +179,12 @@ func TestActionEndpointsRequireExplicitTarget(t *testing.T) {
 		candLen  int
 		wantText string
 	}{
-		{"两条 + 切环境（歧义）", hsTwo, "/api/sessions/switch", `{"env":"h1","ent":"99"}`,
+		{"两条 + 切环境（歧义）", hsTwo, "/api/sessions/switch", `{"env":"h1"}`,
 			http.StatusConflict, target.CodeAmbiguous, 2, "无法确定你要哪一条"},
 		{"两条 + 按日志重放（歧义）", hsTwo, "/api/wslogs/debug", `{"rowid":"1"}`,
 			http.StatusConflict, target.CodeAmbiguous, 2, "无法确定你要哪一条"},
 		{"点名了一条不存在的会话", hsTwo, "/api/wslogs/debug", `{"rowid":"1","session":"s-没了"}`,
 			http.StatusNotFound, target.CodeNotFound, -1, "会话不存在"},
-		{"只读 SQL 不给 ent", hsTwo, "/api/dbsql", `{"sql":"select 1 from dual"}`,
-			http.StatusBadRequest, debugContractCodeUsage, -1, "ent 必填"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -214,7 +212,7 @@ func TestActionEndpointsRequireExplicitTarget(t *testing.T) {
 			if msg, _ := raw["error"].(string); c.wantText != "" && !strings.Contains(msg, c.wantText) {
 				t.Errorf("文案里该有一句 %q，实得 %q", c.wantText, msg)
 			}
-			// C5.11：候选清单只在"歧义/指名不存在"那几种码下出现，且必须是九键的投影。
+			// C5.11：候选清单只在"歧义/指名不存在"那几种码下出现，且必须是八键的投影。
 			cands, hasCands := raw["candidates"]
 			if c.candLen < 0 {
 				if hasCands {
@@ -231,9 +229,9 @@ func TestActionEndpointsRequireExplicitTarget(t *testing.T) {
 			}
 			for _, one := range list {
 				row, _ := one.(map[string]any)
-				for _, k := range []string{"id", "ref", "display", "name", "env", "ent", "n", "prog", "state"} {
+				for _, k := range []string{"id", "ref", "display", "name", "env", "n", "prog", "state"} {
 					if _, ok := row[k]; !ok {
-						t.Errorf("候选行少了 %q 键（C5.12 的九键），实得 %v", k, row)
+						t.Errorf("候选行少了 %q 键（C5.12 的八键），实得 %v", k, row)
 					}
 				}
 			}
@@ -365,23 +363,17 @@ func TestListFiltersByEnv(t *testing.T) {
 	}
 }
 
-// TestSessionEntEndpoint：`POST /sessions/{id}/ent` 与 `/topent` 同一件事，
-// 只是请求体按规格写成 {"value"} / {"clear":true}。
-func TestSessionEntEndpoint(t *testing.T) {
+// TestSessionEntEndpointsAreGone：ENT 在 TOP GP 里没有对端（账号由 db.accounts[0] 决定），
+// 所以 `/sessions/{id}/ent` 与 `/sessions/{id}/topent` 两条路都已删除。
+func TestSessionEntEndpointsAreGone(t *testing.T) {
 	hs, s := actionTestDebugServer(t)
 	giveServerNamedEnv(s, "h1", "127.0.0.1", "36")
-	sess := idleOn("s1", s.cfg.CloneEnv("h1"))
-	s.mgr.sessions["s1"] = sess
+	s.mgr.sessions["s1"] = idleOn("s1", s.cfg.CloneEnv("h1"))
 
-	// 假会话没有真 PTY（SetTopent 要往 shell 下发），所以这里钉**接线与闸门**：
-	// 非空闲时 /ent 与 /topent 给出同一个拒绝 —— 两条路走的是同一份实现。
-	sess.mu.Lock()
-	sess.state = StateStopped
-	sess.mu.Unlock()
 	for _, path := range []string{"/api/sessions/s1/ent", "/api/sessions/s1/topent"} {
 		resp := doReq(t, "POST", hs.URL+path, "", `{"value":"88"}`)
-		if resp.StatusCode != 409 {
-			t.Fatalf("%s 应与非空闲会话一样拒绝，实得 %d（%s）", path, resp.StatusCode, respError(t, resp))
+		if resp.StatusCode != 404 {
+			t.Fatalf("%s 该 404（接口已删），实得 %d（%s）", path, resp.StatusCode, respError(t, resp))
 		}
 	}
 }
@@ -431,12 +423,10 @@ func TestSessionJobStartsOnThatSession(t *testing.T) {
 		t.Fatalf("缺 prog 该 400，实得 %d（%s）", resp.StatusCode, respError(t, resp))
 	}
 
-	// 空闲 + 有 prog：拨号必然失败（测试桩），但**会话没被换掉**，且报的是拨号错
+	// 空闲 + 有 prog：受理开会话返回 202（起作业是异步的，拨号失败走事件与日志，
+	// 不再让 handler 等一次 SSH 握手）。
 	resp = doReq(t, "POST", hs.URL+"/api/sessions/s2/job", "", `{"prog":"bsft001_wf"}`)
-	if resp.StatusCode < 500 {
-		t.Fatalf("拨号失败该 5xx，实得 %d（%s）", resp.StatusCode, respError(t, resp))
-	}
-	if got := s.mgr.Get("s2"); got == nil {
-		t.Fatal("起作业失败不该把宿主会话删掉（它还是那条空闲会话）")
+	if resp.StatusCode != 202 {
+		t.Fatalf("该 202 受理，实得 %d（%s）", resp.StatusCode, respError(t, resp))
 	}
 }

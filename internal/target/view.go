@@ -34,9 +34,6 @@ type Session struct {
 	// Env 是环境名（`config.json` 的 `hosts.sshs[].name` 精确取值，C2.1）。
 	// 它是地址的一部分，会话生命周期内不改（2.1.2）。
 	Env string `json:"env"`
-	// Ent 是该会话**当前**生效的企业编号（登录后由 shell 的 `$TOPENT` 定，可被 SetTopent 改写）。
-	// **它是快照、不是地址**（C2.5c）：不许拿它推导地址或序号。空 = 未取到。
-	Ent string `json:"ent"`
 	// N 是序号：**同一环境下**的第 N 条 SSH 会话，从 1 起（C2.2 / Q24）。建立时分配，之后不变。
 	N int `json:"n"`
 	// Prog 是当前作业（快照）。`display` 的作业段就是它，作业中途会变（C2.5c）。
@@ -90,7 +87,6 @@ type Candidate struct {
 	Display string `json:"display"`
 	Name    string `json:"name"`
 	Env     string `json:"env"`
-	Ent     string `json:"ent"`
 	N       int    `json:"n"`
 	Prog    string `json:"prog"`
 	State   string `json:"state"`
@@ -100,7 +96,7 @@ type Candidate struct {
 func (s Session) Candidate() Candidate {
 	return Candidate{
 		ID: s.ID, Ref: s.CanonicalRef(), Display: s.DisplayForm(), Name: s.Name,
-		Env: s.Env, Ent: s.Ent, N: s.N, Prog: s.Prog, State: s.State,
+		Env: s.Env, N: s.N, Prog: s.Prog, State: s.State,
 	}
 }
 
@@ -125,8 +121,6 @@ type Request struct {
 	Selector *Selector
 	// Env 是 `--env`（含 `--conn` / `--ssh`）的权威取值（空 = 没给）。C3.1：它是**环境**的权威。
 	Env string
-	// Ent 是 `--ent` 的权威取值（空 = 没给）。C3.1：它是**企业**的权威。
-	Ent string
 	// Epoch 是调用方手上的世代号（空 = 不校验，F15）。
 	//
 	// 用途：会话被复用/重启后旧句柄当场失效。调用方把上一次拿到的 `session.epoch`

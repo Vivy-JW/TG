@@ -16,7 +16,7 @@ import (
 
 func testResult() *debug.DBQueryResult {
 	return &debug.DBQueryResult{
-		Ent: 99, Account: "dsdemo", AccountSource: "ent(config)",
+		Account: "dsdemo", AccountSource: "primary",
 		Env: "开发环境", SSHHost: "10.0.0.1", Zone: "31",
 		DBTarget: "10.0.0.2:1521/t100dev", Dialect: "oracle",
 		Columns:   []string{"BMAA001", "BMAASTUS"},
@@ -54,14 +54,12 @@ func renderCSV(t *testing.T, res *debug.DBQueryResult) (comments, body string) {
 
 func TestWriteSQLResultHeader(t *testing.T) {
 	head, _ := renderCSV(t, testResult())
-	for _, must := range []string{"开发环境", "10.0.0.1", "31", "企业(ENT) 99", "dsdemo", "oracle", "10.0.0.2:1521/t100dev"} {
+	for _, must := range []string{"开发环境", "10.0.0.1", "31", "账号 dsdemo", "oracle", "10.0.0.2:1521/t100dev"} {
 		if !strings.Contains(head, must) {
 			t.Errorf("头部缺少 %q:\n%s", must, head)
 		}
 	}
-	if !strings.Contains(head, "企业(ENT) 99 → 账号 dsdemo") {
-		t.Errorf("「企业→账号」应在同一行:\n%s", head)
-	}
+
 }
 
 func TestWriteSQLResultCSVBody(t *testing.T) {

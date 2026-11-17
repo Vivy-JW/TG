@@ -46,9 +46,7 @@ func Resolve(pool Pool, req Request) (Session, *Failure) {
 		if sel.Env != "" && req.Env != "" && sel.Env != req.Env {
 			return Session{}, failureEnvConflict(sel.Env, req.Env)
 		}
-		if sel.Kind == SelectorEnvEnt && req.Ent != "" && sel.Ent != req.Ent {
-			return Session{}, failureEntConflict(sel.Ent, req.Ent)
-		}
+
 	}
 
 	// ② 环境存在性：选择器里的环境、或 `--env` 给的那个，都必须在配置里（F6 / C2.1）。
@@ -96,16 +94,6 @@ func Resolve(pool Pool, req Request) (Session, *Failure) {
 		}
 		if len(hits) > 1 {
 			return Session{}, failureAmbiguous(sel.Raw, hits) // F3
-		}
-		return finish(hits[0], req)
-
-	case SelectorEnvEnt:
-		hits := filterByEnt(cand, sel.Ent)
-		if len(hits) == 0 {
-			return Session{}, failureEntNotFound(sel.Env, sel.Ent, cand)
-		}
-		if len(hits) > 1 {
-			return Session{}, failureAmbiguous(sel.Raw, hits)
 		}
 		return finish(hits[0], req)
 
@@ -189,9 +177,7 @@ func finish(s Session, req Request) (Session, *Failure) {
 	if req.Epoch != "" && s.Epoch != req.Epoch {
 		return Session{}, failureStale(s, req.Epoch) // F15
 	}
-	if req.Ent != "" && s.Ent != req.Ent {
-		return Session{}, failureSessionEntConflict(s.CanonicalRef(), s.Ent, req.Ent) // F14
-	}
+
 	return s, nil
 }
 
@@ -248,16 +234,6 @@ func filterByProg(in []Session, prog string) []Session {
 	out := make([]Session, 0, len(in))
 	for _, s := range in {
 		if s.Prog == prog {
-			out = append(out, s)
-		}
-	}
-	return out
-}
-
-func filterByEnt(in []Session, ent string) []Session {
-	out := make([]Session, 0, len(in))
-	for _, s := range in {
-		if s.Ent == ent {
 			out = append(out, s)
 		}
 	}

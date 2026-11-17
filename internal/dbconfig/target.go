@@ -19,10 +19,8 @@ const (
 
 // AccountSource 账号是怎么定下来的(AccountSource 字段的取值)。
 const (
-	AcctFromPrimary   = "accounts[0]" // 客户端直连:账号列表首项
-	AcctFromEnt       = "ent(gzou_t)" // 按企业编号查 gzou_t 解析（快照/现查）
-	AcctFromEntConfig = "ent(config)" // 按企业编号查配置里的 ENT 清单（同步过之后的标准路径）
-	AcctFromFlag      = "flag"        // 命令行显式指定
+	AcctFromPrimary = "accounts[0]" // 账号列表首项（GP 只有这条路）
+	AcctFromFlag    = "flag"        // 命令行显式指定
 )
 
 // Target 一次查询的完整落脚点。
@@ -34,8 +32,6 @@ type Target struct {
 	SSHHost       string // 该环境的 SSH 主机
 	SSHUser       string
 	Zone          string // 登录区域代码(31 开发 / 35 测试 / 36 正式)
-	Topent        string // 环境配的默认企业编号(原样,可能非数字)
-	Ent           int    // 本次实际使用的企业编号(0 = 未用)
 	Account       string // 本次实际用的库账号/schema
 	AccountSource string
 	Route         string // Route 之一
@@ -44,11 +40,10 @@ type Target struct {
 	Conn          Connection
 }
 
-// NewTarget 由连接与所属环境构造落脚点,账号先按客户端直连惯例取列表首项;
-// 解析出企业账号后调 WithAccount 覆盖。
-func NewTarget(conn *Connection, env, sshHost, sshUser, zone, topent, route string) *Target {
+// NewTarget 由连接与所属环境构造落脚点,账号先按客户端直连惯例取列表首项。
+func NewTarget(conn *Connection, env, sshHost, sshUser, zone, route string) *Target {
 	t := &Target{Env: env, SSHHost: sshHost, SSHUser: sshUser, Zone: zone,
-		Topent: topent, Route: route, AccountSource: AcctFromPrimary}
+		Route: route, AccountSource: AcctFromPrimary}
 	if conn != nil {
 		t.Conn = *conn
 		t.ViaTunnel = conn.ViaSSH != nil
@@ -59,13 +54,10 @@ func NewTarget(conn *Connection, env, sshHost, sshUser, zone, topent, route stri
 	return t
 }
 
-// WithAccount 换上按企业编号解析出的账号,返回自身便于链式。
-func (t *Target) WithAccount(acct, source string, ent int) *Target {
+// WithAccount 换上一个显式给的账号（GP 一般不需要：账号就是 db.accounts[0]）。
+func (t *Target) WithAccount(acct, source string) *Target {
 	if acct != "" {
 		t.Account, t.AccountSource = acct, source
-	}
-	if ent > 0 {
-		t.Ent = ent
 	}
 	return t
 }

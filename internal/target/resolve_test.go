@@ -21,7 +21,7 @@ func contractPool() Pool {
 		Environments: []string{"恒烁正式区", "测试1012"},
 		Sessions: []Session{{
 			ID: "s1000", Ref: "恒烁正式区#1", Display: "恒烁正式区/apmt520#1",
-			Name: "汇率单", Env: "恒烁正式区", Ent: "99", N: 1,
+			Name: "汇率单", Env: "恒烁正式区", N: 1,
 			Prog: "apmt520", State: StateIdle, Epoch: "k1",
 		}},
 	}
@@ -32,7 +32,7 @@ func envPool() Pool {
 	p := contractPool()
 	p.Sessions = append(p.Sessions, Session{
 		ID: "s2000", Ref: "恒烁正式区#2", Display: "恒烁正式区/bsft001#2",
-		Env: "恒烁正式区", Ent: "88", N: 2,
+		Env: "恒烁正式区", N: 2,
 		Prog: "bsft001", State: StateStopped, Epoch: "k1",
 	})
 	return p
@@ -64,7 +64,7 @@ func TestResolveEnvIsTheEnvironmentAuthority(t *testing.T) {
 	p := contractPool()
 	p.Sessions = append(p.Sessions, Session{
 		ID: "s3000", Ref: "测试1012#1", Display: "测试1012/apmt520#1",
-		Env: "测试1012", Ent: "99", N: 1, Prog: "apmt520", State: StateIdle, Epoch: "k1",
+		Env: "测试1012", N: 1, Prog: "apmt520", State: StateIdle, Epoch: "k1",
 	})
 	got, f := Resolve(p, Request{Env: "恒烁正式区"})
 	if f != nil {
@@ -236,35 +236,16 @@ func TestResolveF12EnvConflict(t *testing.T) {
 	}
 }
 
-// TestResolveF13EntConflict 钉住 F13 / C3.3-2：`--session 环境/企业编号` 与 `--ent` 矛盾 → 退 2。
-func TestResolveF13EntConflict(t *testing.T) {
-	sel := mustSelector(t, "恒烁正式区/88")
-	_, f := Resolve(contractPool(), Request{Selector: &sel, Ent: "99"})
-	assertFailure(t, f, "F13", CodeUsage, ExitUsage, false)
-	if !strings.Contains(f.Message, "--session 里的企业是 88") || !strings.Contains(f.Message, "与 --ent 给的 99 矛盾") {
-		t.Errorf("F13 的文案 = %q", f.Message)
-	}
-}
-
-// TestResolveF14SessionEntConflict 钉住 F14 / C3.3-3：落到的那条会话实际 ENT 与 `--ent` 不同 → 退 2。
-func TestResolveF14SessionEntConflict(t *testing.T) {
-	p := contractPool()
-	p.Sessions[0].Ent = "88"
-	sel := mustSelector(t, "恒烁正式区/apmt520")
-	_, f := Resolve(p, Request{Selector: &sel, Ent: "99"})
-	assertFailure(t, f, "F14", CodeUsage, ExitUsage, false)
-	if !strings.Contains(f.Message, "的 SSH 会话企业是 88") || !strings.Contains(f.Message, "与 --ent 给的 99 矛盾") {
-		t.Errorf("F14 的文案 = %q", f.Message)
-	}
-	// C2.9：企业矛盾只在**同一环境**下比 —— 环境不同时先撞 F12 那条环境矛盾。
-	// （这里的"环境不同"是 `--session` 里的环境 与 `--env` 给的环境：测试1012 vs 恒烁正式区。）
-	selOther := mustSelector(t, "测试1012/88")
-	_, f12 := Resolve(p, Request{Selector: &selOther, Env: "恒烁正式区", Ent: "99"})
+// TestResolveSessionEnvMismatchStillWins 钉住 C2.9 的现役部分：`--session` 里的环境
+// 与 `--env` 给的环境不同时先撞 F12 那条环境矛盾（企业矛盾 F13/F14 随 ENT 管线删掉了）。
+func TestResolveSessionEnvMismatchStillWins(t *testing.T) {
+	sel := mustSelector(t, "测试1012/apmt520")
+	_, f12 := Resolve(contractPool(), Request{Selector: &sel, Env: "恒烁正式区"})
 	if f12 == nil {
-		t.Fatalf("C2.9：环境不同 + 企业不同时该报错（先撞环境那条），实得成功")
+		t.Fatalf("C2.9：环境不同时该报错（撞环境那条），实得成功")
 	}
 	if !strings.Contains(f12.Message, "--session 里的环境是") {
-		t.Errorf("C2.9：环境不同时该先报 F12 的环境矛盾，实得 %q", f12.Message)
+		t.Errorf("C2.9：环境不同时该先报环境的矛盾，实得 %q", f12.Message)
 	}
 }
 

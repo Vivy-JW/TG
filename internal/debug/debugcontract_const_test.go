@@ -141,9 +141,8 @@ const (
 	debugContractAliasForbid   = target.AliasForbid
 )
 
-// 选择器第二段的两种形态（契约 C2.3）与作业名合法字符集（B29）。
+// 选择器第二段的形态（契约 C2.3：第二段只可能是作业名）与作业名合法字符集（B29）。
 const (
-	debugContractSecondSegEnt = target.SecondSegEnt
 	debugContractSecondSegJob = target.SecondSegJob
 	debugContractJobPattern   = target.JobPattern
 )

@@ -203,7 +203,6 @@ func dbgRequest() target.Request {
 	return target.Request{
 		Selector: dbgSelector(),
 		Env:      dbgTargetEnv(), // `--env` / `--conn` 权威；`--ssh` 由各命令自己并进 dbgEnvFlag
-		Ent:      dbgEntFlag(),
 	}
 }
 
@@ -232,16 +231,6 @@ func dbgSelector() *target.Selector {
 // 不让它活到第二次寻址。用包级变量而不是返回值，是为了让 dbgRequest 这条
 // "装请求"的路保持无错误返回（与旧入口一样好接）。
 var dbgSelectorFailure *target.Failure
-
-// dbgEntFlag 取 `--ent` 的权威取值（契约 C3.1：它是**企业**的权威）。
-//
-// 从前这里恒返回 ""（"会话级命令今天没有 --ent"），于是目标层为它准备的两种冲突判据
-// （F13：`--session` 里的企业 vs `--ent`；F14：落到的会话实际企业 vs `--ent`）**永远触发不了**
-// —— 那两条规则只活在文档里。现在 start / wsdebug 都有这个标志，判据跟着活过来。
-//
-// 其余命令（exec / quit / topent …）仍然没有它：它们不改变"这一轮跑在哪个企业"，
-// 企业在那条会话建立时就已经钉住了。
-func dbgEntFlag() string { return strings.TrimSpace(dbgEntRun) }
 
 // dbgTargetError 是目标层失败在 CLI 这一侧的**信封**（契约 5.2 / C4.1 / C4.2）。
 //

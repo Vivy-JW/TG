@@ -44,7 +44,7 @@ package target
 // **这两处都不是定论**：等契约文档退场、以代码为准的那一天，`display` 要么被正式纳入
 // 键集、要么被判冗余下线；`kind` 要么落成真字段、要么退出键集。
 var SessionEnvelopeKeys = []string{
-	"id", "ref", "display", "name", "env", "ent", "n", "kind", "prog", "state", "epoch",
+	"id", "ref", "display", "name", "env", "n", "kind", "prog", "state", "epoch",
 }
 
 // NewSessionKeys 是 C5.3 / Q22 定稿的**纯新增**键：它们今天不在 `SessionBrief` 上，
@@ -56,7 +56,7 @@ var SessionEnvelopeKeys = []string{
 //   - `display` 见 SessionEnvelopeKeys 的注释；
 //   - `kind` 见 C5.5（本契约只寻址 SSH 会话，所以取值恒为 KindSSH）；
 
-var NewSessionKeys = []string{"ref", "display", "kind", "name", "ent", "n", "epoch"}
+var NewSessionKeys = []string{"ref", "display", "kind", "name", "n", "epoch"}
 
 // SessionOptionalKeys 是 `session` 块里**按 omitempty 规则出现**的其余键
 // （C5.2：键名与类型一律沿用 `internal/debug/manager.go` 的 `SessionBrief`，一个都不改名）。
@@ -91,7 +91,7 @@ var FailureOptionalKeys = []string{"hint", "candidates"}
 // 契约测试会断言 "Candidate 这个类型的 json 标签与它逐字一致" ——
 // 常量表给测试用、struct 标签给序列化用，两者必须是同一套键。
 var CandidateKeys = []string{
-	"id", "ref", "display", "name", "env", "ent", "n", "prog", "state",
+	"id", "ref", "display", "name", "env", "n", "prog", "state",
 }
 
 // CandidatesRequiredCodes 是**必须带候选清单**的机器码（C5.11）：
@@ -248,11 +248,10 @@ const (
 	AliasForbid   = "/#"
 )
 
-// 选择器第二段的两种形态（C2.3）：全数字 → 企业编号；否则 → 作业名。
+// 选择器第二段的形态（C2.3）：作业名。
 // 作业名合法字符集见 B29（JobPattern），首字符是字母，所以两种形态不会撞。
 const (
-	SecondSegEnt = "ent" // 全数字
-	SecondSegJob = "job" // 其余
+	SecondSegJob = "job" // 作业名
 	JobPattern   = `^[A-Za-z][A-Za-z0-9_-]{0,63}$`
 )
 
@@ -313,10 +312,7 @@ var InvalidForms = []InvalidForm{
 		Code: CodeUsage, Exit: 2, Candidates: false},
 	{Key: "F12", Write: "--session 测试1012/apmt520 与 --env 恒烁正式区 并存（环境矛盾）",
 		Code: CodeUsage, Exit: 2, Candidates: false},
-	{Key: "F13", Write: "--session 恒烁正式区/88 与 --ent 99 并存（企业矛盾）",
-		Code: CodeUsage, Exit: 2, Candidates: false},
-	{Key: "F14", Write: "--session 恒烁正式区/apmt520 --ent 99，而该会话 ENT 是 88",
-		Code: CodeUsage, Exit: 2, Candidates: false},
+
 	{Key: "F15", Write: "--session 的环境与序号都对，但句柄是上一代（epoch 过期）",
 		Code: CodeStale, Exit: 3, Candidates: true},
 	{Key: "F16", Write: "--session 挂到不接受它的命令上（tg debug status --session X / tg debug sql --session X）",

@@ -34,17 +34,14 @@ const (
 
 // DBQueryResult 一次只读查询的结果。
 //
-// Ent/Account 是**必回显**的:让"上错号"当场可见,而不是让人从"查不到数据"倒推。
+// Account 是**必回显**的:让"上错号"当场可见,而不是让人从"查不到数据"倒推。
 //
-// Env/SSHHost/Zone/DBTarget 与 Ent/Account 一起回答"这次查询到底落在哪":
-// ENT 只决定账号(哪个 schema),环境才决定连的是哪台服务器、哪个区(31开发/35测试/36正式)
-// 的库 —— 同一个企业编号在开发区与正式区是两套完全不同的库,少回显一半就还可能
+// Env/SSHHost/Zone/DBTarget 与 Account 一起回答"这次查询到底落在哪":
+// 账号决定连哪个 schema,环境决定连的是哪台服务器、哪个区的库 —— 少回显一半就还可能
 // 把"查错了地方"读成"数据不存在"。调用方(CLI)会把它们打进结果头部。
 type DBQueryResult struct {
-	Ent     int    `json:"ent"`
 	Account string `json:"account"`
-	// AccountSource 账号是怎么定的：ent(config)=配置里的 ENT 清单（标准路径），
-	// ent(gzou_t)=该环境还没同步 ENT，回落到快照/现查。信封里要如实带出去。
+	// AccountSource 账号是怎么定的：primary=db.accounts[0]（GP 只有这一条路）。
 	AccountSource string `json:"accountSource,omitempty"`
 	Env           string `json:"env,omitempty"`      // 环境名(配置里的 sshs[].name)
 	SSHHost       string `json:"sshHost,omitempty"`  // 该环境的 SSH 主机
@@ -67,41 +64,6 @@ type DBQueryResult struct {
 	Notes         []string   `json:"notes,omitempty"`
 }
 
-// entAccount 由企业编号解析出该企业该用的数据库账号(经 gzou_t)。
-//
-// 这一步是"上错号查不到数据"的解药:账号不再由调用方硬编码,而是从会话的 TOPENT
-// 现查。解析不到就**报错**,不静默回退 —— 回退到 ds 会安安静静地查另一个 schema,
-// 拿到 0 行,然后被当成"没有这条数据"。
-//
-// 取值顺序(内存 → 快照 → 现查)、降级规则与新鲜度口径全在 ents.go 的 EntCatalog,
-// **这里不再自己存一份缓存** —— 两处各存一份必然漂移,而"企业 99 到底在不在"这种事
-// 两条命令给出不同答案比慢一点坏得多。
-func (m *Manager) entAccount(conn *host.SSHConn, d *dbRun, ent int) (string, error) {
-	return m.ents.account(conn, d, m.cfg, ent)
-}
-
-// pickEntAccount 是纯函数,便于单测。
-func pickEntAccount(maps []EntMapping, ent int) (string, error) {
-	for _, mp := range maps {
-		if mp.Ent != ent {
-			continue
-		}
-		acct := strings.TrimSpace(mp.Account)
-		// gzou003 缺失时映射表里会是 "-" 之类的占位
-		if acct == "" || acct == "-" {
-			return "", fmt.Errorf("企业 %d 在 gzou_t 里没有配可用账号(该企业的业务数据无法定位到 schema)", ent)
-		}
-		return acct, nil
-	}
-	known := make([]string, 0, len(maps))
-	for _, mp := range maps {
-		known = append(known, fmt.Sprintf("%d", mp.Ent))
-	}
-	return "", fmt.Errorf("企业 %d 不在 gzou_t 的启用清单里(当前有: %s)。"+
-		"请确认会话的 TOPENT 是否正确:tt debug topent 可查看,`tt debug topent <企业号>` 可改",
-		ent, strings.Join(known, ", "))
-}
-
 // clampSQLTimeout 把超时钳到合理区间
 func clampSQLTimeout(sec int) int {
 	if sec <= 0 {
@@ -116,12 +78,8 @@ func clampSQLTimeout(sec int) int {
 // ReadonlyQueryReq 一次只读查询的入参
 type ReadonlyQueryReq struct {
 	SQL string
-	// Ent 企业编号：>0 时按 gzou_t/ENT 清单解析账号（T100 那条线在用）。
-	//
-	// TG 只面向 TOP GP，没有企业清单：调用方直接把 Account 填上（accounts[0]），
-	// Ent 留 0 —— 库里的账号是"哪个库的登录号"，不是"哪家企业"。
-	Ent int
-	// Account 非空时直接用它，跳过企业解析。
+	// Account 非空时直接用它；空则取 db.accounts[0] —— GP 没有企业清单，
+	// 账号就是"这个库的登录号"，不按企业再解析一层。
 	Account string
 	Timeout int // 秒;0 = 默认
 }
@@ -144,18 +102,13 @@ func (m *Manager) RunReadonlyQuery(conn *host.SSHConn, req ReadonlyQueryReq) (*D
 	if err != nil {
 		return nil, err
 	}
-	ent := req.Ent
-	explicit := strings.TrimSpace(req.Account)
-	account := explicit
+	account := strings.TrimSpace(req.Account)
 	if account == "" {
-		if ent <= 0 {
-			ent = m.cfg.TopentInt()
+		u, _, ok := m.cfg.DB.DialCred()
+		if !ok {
+			return nil, fmt.Errorf("环境 %q 的数据库没配账号（设置 → 站点管理 → 数据库 → 数据库账号）", m.cfg.EnvName())
 		}
-		a, err := m.entAccount(conn, d, ent)
-		if err != nil {
-			return nil, err
-		}
-		account = a
+		account = u
 	}
 
 	// 库侧限行:能证安全才包装,包不了就如实标注
@@ -203,19 +156,8 @@ func (m *Manager) RunReadonlyQuery(conn *host.SSHConn, req ReadonlyQueryReq) (*D
 		}
 	}
 
-	acctSource := dbconfig.AcctFromEnt
-	if explicit != "" {
-		acctSource = dbconfig.AcctFromPrimary
-	} else {
-		for i := range m.cfg.SSHs {
-			if m.cfg.SSHs[i].Name == m.cfg.EnvName() && len(m.cfg.SSHs[i].Ents) > 0 {
-				acctSource = dbconfig.AcctFromEntConfig
-				break
-			}
-		}
-	}
 	res := &DBQueryResult{
-		Ent: ent, Account: account, AccountSource: acctSource,
+		Account: account, AccountSource: dbconfig.AcctFromPrimary,
 		// 环境信息在这里定格:后面既有 SSH 会话又有库会话,任何一处晚了都可能拿到
 		// 另一个环境的影子值 —— 头部那几个字段是给人判断"查的是哪儿"的,不能猜。
 		// SSH 主机取**实际连上的那条连接**(不是配置里的当前环境),库地址取

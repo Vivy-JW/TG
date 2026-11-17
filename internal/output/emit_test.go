@@ -30,7 +30,7 @@ func splitHeader(t *testing.T, out string) (comments []string, body []string) {
 func sampleMeta() Meta {
 	return Meta{
 		Source: "live", Env: "主机正式区", SSHHost: "172.16.1.109", Zone: "36",
-		Ent: 99, Account: "dsdemo", AccountSource: "ent(gzou_t)",
+		Account: "dsdemo", AccountSource: "primary",
 		Target: "172.16.1.109:1521/t35prd", Dialect: "oracle", Route: "client-direct",
 		TotalRows: 2, Returned: 2, Elapsed: 1.5,
 	}
@@ -54,8 +54,8 @@ func TestEmitJSONEnvelope(t *testing.T) {
 		t.Fatalf("输出不是合法 JSON: %v\n%s", err, buf.String())
 	}
 	for k, want := range map[string]any{
-		"ok": true, "env": "主机正式区", "ent": float64(99),
-		"account": "dsdemo", "accountSource": "ent(gzou_t)",
+		"ok": true, "env": "主机正式区",
+		"account": "dsdemo", "accountSource": "primary",
 		"target": "172.16.1.109:1521/t35prd", "dialect": "oracle",
 		"totalRows": float64(2), "returned": float64(2),
 	} {
@@ -90,12 +90,12 @@ func TestEmitCSVHeaderBeforeBody(t *testing.T) {
 	if !strings.Contains(comments[0], "环境 主机正式区") || !strings.Contains(comments[0], "区域 36") {
 		t.Errorf("第一行应回显环境与区域: %q", comments[0])
 	}
-	// 企业编号与账号同在一行 —— 它们是一条链,拆开看会被误读成两件独立的事
-	if !strings.Contains(comments[1], "企业(ENT) 99 → 账号 dsdemo") {
-		t.Errorf("第二行应把企业与账号连在一句话里: %q", comments[1])
+	// 账号与库同在一行：账号是"这条连接是谁"，库是"连到哪"，是同一件事的两面。
+	if !strings.Contains(comments[1], "账号 dsdemo") {
+		t.Errorf("第二行应回显账号: %q", comments[1])
 	}
-	if !strings.Contains(comments[1], "来源 ent(gzou_t)") {
-		t.Errorf("第二行要说清账号是怎么定下来的: %q", comments[1])
+	if !strings.Contains(comments[1], "172.16.1.109:1521/t35prd") {
+		t.Errorf("第二行应回显库地址: %q", comments[1])
 	}
 
 	recs, err := csv.NewReader(strings.NewReader(strings.Join(body, "\n"))).ReadAll()

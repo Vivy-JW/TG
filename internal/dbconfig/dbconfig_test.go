@@ -215,12 +215,12 @@ func TestNewTargetSeedsClientDirectConvention(t *testing.T) {
 		Type: "oracle", Host: "db1", Service: "t35prd",
 		Accounts: []DBAcct{{Account: "ds", Password: "pw-dev"}},
 	}
-	tg := NewTarget(conn, "E1", "ssh1", "u1", "36", "7", RouteClientDirect)
+	tg := NewTarget(conn, "E1", "ssh1", "u1", "36", RouteClientDirect)
 
 	if tg.Account != "ds" || tg.AccountSource != AcctFromPrimary {
 		t.Errorf("账号该预填列表首项：得 (%q, %q)", tg.Account, tg.AccountSource)
 	}
-	if tg.Env != "E1" || tg.SSHHost != "ssh1" || tg.SSHUser != "u1" || tg.Zone != "36" || tg.Topent != "7" {
+	if tg.Env != "E1" || tg.SSHHost != "ssh1" || tg.SSHUser != "u1" || tg.Zone != "36" {
 		t.Errorf("环境字段没带全：%+v", tg)
 	}
 	if tg.ViaTunnel {
@@ -236,18 +236,18 @@ func TestNewTargetSeedsClientDirectConvention(t *testing.T) {
 
 func TestNewTargetWithTunnelAndNoConn(t *testing.T) {
 	conn := &Connection{Type: "kingbase", Host: "db1", Database: "topprd", ViaSSH: &ViaSSH{Host: "ssh1"}}
-	tg := NewTarget(conn, "E1", "ssh1", "u1", "36", "", RouteClientDirect)
+	tg := NewTarget(conn, "E1", "ssh1", "u1", "36", RouteClientDirect)
 	if !tg.ViaTunnel {
 		t.Error("配了 ViaSSH 该标成经隧道")
 	}
 
 	// 没有连接（本地 SQLite 那种落脚点）也不该炸。
-	none := NewTarget(nil, "", "", "", "", "", RouteLocalSQLite)
+	none := NewTarget(nil, "", "", "", "", RouteLocalSQLite)
 	if none.Account != "" || none.ViaTunnel {
 		t.Errorf("没有连接时账号该留空：%+v", none)
 	}
 	// 连接的账号列表为空时同样留空，而不是拿个空串当账号。
-	empty := NewTarget(&Connection{}, "E1", "", "", "", "", RouteClientDirect)
+	empty := NewTarget(&Connection{}, "E1", "", "", "", RouteClientDirect)
 	if empty.Account != "" {
 		t.Errorf("没有账号时该留空，得 %q", empty.Account)
 	}
@@ -255,16 +255,16 @@ func TestNewTargetWithTunnelAndNoConn(t *testing.T) {
 
 func TestWithAccount(t *testing.T) {
 	tg := NewTarget(&Connection{Accounts: []DBAcct{{Account: "ds", Password: "pw-dev"}}},
-		"E1", "ssh1", "u1", "36", "", RouteClientDirect)
+		"E1", "ssh1", "u1", "36", RouteClientDirect)
 
-	tg.WithAccount("dsdata", AcctFromEnt, 7)
-	if tg.Account != "dsdata" || tg.AccountSource != AcctFromEnt || tg.Ent != 7 {
-		t.Errorf("该被覆盖：得 (%q, %q, %d)", tg.Account, tg.AccountSource, tg.Ent)
+	tg.WithAccount("dsdata", AcctFromFlag)
+	if tg.Account != "dsdata" || tg.AccountSource != AcctFromFlag {
+		t.Errorf("该被覆盖：得 (%q, %q)", tg.Account, tg.AccountSource)
 	}
 
-	// 空账号不覆盖（解析不出来时保留原来的预填值），ent<=0 也不覆盖。
-	tg.WithAccount("", AcctFromEnt, 0)
-	if tg.Account != "dsdata" || tg.Ent != 7 {
-		t.Errorf("空账号 / ent<=0 不该覆盖：得 (%q, %d)", tg.Account, tg.Ent)
+	// 空账号不覆盖（解析不出来时保留原来的预填值）。
+	tg.WithAccount("", AcctFromFlag)
+	if tg.Account != "dsdata" {
+		t.Errorf("空账号不该覆盖：得 %q", tg.Account)
 	}
 }

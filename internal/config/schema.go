@@ -40,30 +40,6 @@ type SSHConfig struct {
 // Addr 返回 SSH 地址 host:port
 func (c *SSHConfig) Addr() string { return c.Host + ":" + strconv.Itoa(c.Port) }
 
-// EntValue 企业编号(TOPENT)：数字或文本均可，兼容 JSON 数字。
-// 需真实编号的场景用 Int()（非数字返回 false）。
-type EntValue string
-
-// UnmarshalJSON 同时接受 JSON 数字与字符串
-func (e *EntValue) UnmarshalJSON(b []byte) error {
-	s := strings.TrimSpace(string(b))
-	if s == "null" {
-		*e = ""
-		return nil
-	}
-	*e = EntValue(strings.Trim(s, `"`))
-	return nil
-}
-
-// MarshalJSON 统一序列化为字符串
-func (e EntValue) MarshalJSON() ([]byte, error) { return json.Marshal(string(e)) }
-
-// Int 解析为数字（供数据库探测按企业编号匹配；非数字内容返回 false）
-func (e EntValue) Int() (int, bool) {
-	n, err := strconv.Atoi(strings.TrimSpace(string(e)))
-	return n, err == nil
-}
-
 // NamedSsh 服务器环境：SSH 连接 + 登录区域。
 //
 // 合并自 TDebug/host.NamedSsh 与 TDictCli/host.NamedSsh；TDebug 多出的
@@ -72,10 +48,8 @@ func (e EntValue) Int() (int, bool) {
 // 这是三个工具共用的唯一环境登记处：原来 tdebug 放在 debug.sshs、
 // tdict 放在 hosts.sshs，schema 完全一致，合并后只留 hosts.sshs。
 //
-// **刻意没有 topent(企业编号)**:企业是"这一次要连哪个企业"运行时参数,
-// 登记在环境上等于给它一个会被静默沿用的默认值 —— 而用错企业的典型症状是
-// "查不到数据",与"数据不存在"完全一样。现在 ENT 只能每次显式给:
-// CLI `--ent`、Web 会话面板的输入框。
+// **没有企业编号(TOPENT)**:TG 只面向 TOP GP，一个环境一个库、账号就是 db.accounts[0]，
+// 企业编号那层（gzou_t → 账号）整条链已经删掉，环境上不留任何相关字段。
 type NamedSsh struct {
 	Name            string `json:"name"`
 	SSHConfig              // 匠名嵌入：host/port/user/password 提升到 ssh 层
@@ -133,27 +107,6 @@ type NamedSsh struct {
 	// 在输出上分不出来。
 	DictDir string               `json:"dictDir,omitempty"`
 	DB      *dbconfig.Connection `json:"db,omitempty"` // 该环境的数据库连接（与 SSH 一对一）
-	// Ents 这个环境支持的企业编号与各自的账号（gzou_t 的 gzou001/gzou003）。
-	//
-	// 为什么存进配置（而不是每次现查 gzou_t）：企业清单是**慢变量**，而“能不能看
-	// 到可选项”不该依赖网络（VPN 未开、不同环境在不同内网，都会把发现变成一堆超时）。
-	// 因此这里存的是“某次从 gzou_t 抄下来的清单”，由设置页「ENT」页签或
-	// `tt env ents --refresh` 显式同步（不允许手填）。entsSyncedAt 就是那份清单的
-	// 抄写时间 —— 它不参与判定，但必须如实带出去：账号被改过而没同步，用户要能看见。
-	Ents         []EntEntry `json:"ents,omitempty"`
-	EntsSyncedAt string     `json:"entsSyncedAt,omitempty"` // RFC3339
-}
-
-// EntEntry 一条“企业编号 → 数据库账号”的归档。
-//
-// 账号是连接该企业 schema 用的那个（gzou_t.gzou003）；Password 是同步时从
-// db.accounts 抄过来的副本（账号清单里没收录时按 T100 惯例 账号=密码）。
-// 运行时**优先用 db.accounts 里的口令**（那是唯一的编辑入口），这里这份只有
-// 在账号清单里没有该账号时才用 —— 两处不一致时，以人在设置里改过的那份为准。
-type EntEntry struct {
-	Ent      int    `json:"ent"`
-	Account  string `json:"account"`
-	Password string `json:"password,omitempty"`
 }
 
 // Hosts 服务器环境清单：config.json 顶层 hosts 节。
@@ -164,14 +117,6 @@ type EntEntry struct {
 // Web 由会话面板选中。见 resolve.go 的 pickName —— 它现在只认显式名字。
 type Hosts struct {
 	SSHs []NamedSsh `json:"sshs"`
-}
-
-// EntsOf 返回某环境的 ENT 清单与同步时间（未配置/环境不存在返回 nil）。
-func (h *Hosts) EntsOf(env string) ([]EntEntry, string) {
-	if e := h.ByName(env); e != nil {
-		return e.Ents, e.EntsSyncedAt
-	}
-	return nil, ""
 }
 
 // ByName 按名取环境；未命中(含 name 为空)返回 nil。

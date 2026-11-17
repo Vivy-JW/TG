@@ -215,8 +215,6 @@ func (s *Server) routes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/sessions/{id}/close", s.hSessionClose)
 	// 规格：在**既有会话**里起作业（会话已存在，{id} 就是宿主）
 	mux.HandleFunc("POST /api/sessions/{id}/job", s.hSessionJob)
-	mux.HandleFunc("POST /api/sessions/{id}/topent", s.hTopent)
-	mux.HandleFunc("POST /api/sessions/{id}/ent", s.hSessionEnt)
 	// 规格里的 quit 是 POST（DELETE 保留：旧调用方在用的名字）。两者同一件事。
 	mux.HandleFunc("POST /api/sessions/{id}/quit", s.hQuit)
 	mux.HandleFunc("POST /api/sessions/{id}/mode", s.hMode)
@@ -599,11 +597,6 @@ func (s *Server) hLaunch(w http.ResponseWriter, r *http.Request) {
 		// `SESSION_AMBIGUOUS`。从前 CLI 只在本机校验这个标志、POST 里不带它，于是
 		// 同环境两条空闲会话时 `--session 恒一#1` 照样歧义 —— 标志在 --help 里写着却帮不上忙。
 		Session string `json:"session"`
-		// Ent 是**这一轮**的企业编号(ENT)。从前只能靠"起会话后再设定"或者沿用登录
-		// shell 的 $TOPENT,而后者是静默的 —— "忘了点名"
-		// 与"点错了"表现完全一样(作业照跑,只是跑在另一家企业上)。现在它是必填:
-		// 空且目标会话也没有显式 override 时,`prepareSession` 会拒掉(见 requireExplicitEnt)。
-		Ent string `json:"ent"`
 	}
 	if !readBody(w, r, &req) {
 		return
@@ -645,13 +638,6 @@ func (s *Server) hLaunch(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fail(w, 404, err)
 		return
-	}
-	// `--ent`：只改**本轮**配置（launchCfg 在没有任何覆盖时会直接返回 s.cfg，
-	// 就地写它会把这个企业留给后面每一轮）。浅拷贝与 CloneWithZone 同一套做法。
-	if e := strings.TrimSpace(req.Ent); e != "" {
-		c2 := *cfg
-		c2.Topent = host.EntValue(e)
-		cfg = &c2
 	}
 	// `--name` 的判定都在**建立会话之前**（C2.8 的同一条纪律：一个字节都不该白花）。
 	// 顺序是：prog（必填）→ 环境（存在性，F6）→ 指名的会话（存在性，F 那一族）→
@@ -771,7 +757,6 @@ func identityKeysOf(resp map[string]any, b SessionBrief) {
 	resp["ref"] = b.Ref
 	resp["display"] = b.Display
 	resp["name"] = b.Name
-	resp["ent"] = b.Ent
 	resp["n"] = b.N
 	resp["kind"] = b.Kind
 	resp["epoch"] = b.Epoch
@@ -793,11 +778,6 @@ func (s *Server) hSnapshot(w http.ResponseWriter, r *http.Request) {
 		"breakpoints":     sess.Breakpoints(),
 		"holdingSeconds":  sess.HoldingSeconds(),
 		"watchdogSeconds": s.cfg.WatchdogSeconds,
-		"topent":          sess.TopentOverride(),
-		// 本会话显式给的 TOPENT(启动 --ent / 面板输入)。**不再是"配置级"** ——
-		// 环境配置里的企业编号已移除,所以它与 topent(会话内覆盖)只在"启动给 vs 中途改"上有别。
-		"topentSession": sess.TopentSession(),
-		"topentShell":   sess.TopentShell(),
 		// 本次重放跑完后读回来的响应原文(非重放会话为空)。
 		// 以前想看它只能"停在收尾断点再 continue 到 exit"从 stdout 抓,很绕。
 		"replayResponse": sess.ReplayResponse(),
@@ -935,11 +915,6 @@ func (s *Server) hSessionRestart(w http.ResponseWriter, r *http.Request) {
 	if sess == nil {
 		return
 	}
-	// 请求体可选:不传就是"原样重启"(沿用该会话当前的企业编号)。
-	var req struct {
-		Ent string `json:"ent"`
-	}
-	_ = readBody(w, r, &req)
 	env := sess.EnvName()
 	id := sess.ID
 	// 别名要在收口**之前**取下来：重启是"同一条逻辑会话重新登录"（F15 的前提正是
@@ -959,9 +934,6 @@ func (s *Server) hSessionRestart(w http.ResponseWriter, r *http.Request) {
 		// 那会把会话悄悄连到另一台机器上。直接报错,让人点名一个存在的环境。
 		fail(w, 500, fmt.Errorf("环境 %q 已被删除,无法重启;请用 /api/sessions/switch 点名一个存在的环境", env))
 		return
-	}
-	if ent := strings.TrimSpace(req.Ent); ent != "" {
-		cfg.Topent = host.EntValue(ent)
 	}
 	// 重启 = 同一条逻辑会话重新登录（名字跟着继承）。
 	ns, err := s.mgr.CreateSessionOn(cfg, name)
@@ -987,80 +959,6 @@ func (s *Server) hSessionRestart(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, map[string]any{"ok": true, "sessionId": ns.ID, "env": cfg.EnvName(), "state": "loading"})
 }
 
-// hTopent 空闲态重新设置 TOPENT(会话内,立即下发到 shell)。
-// 仅允许 idle(宿主 shell 就绪、无调试运行);值不限数字/文本(导出为环境变量),
-// 服务端剔除两侧空白;留空 = 清除手动覆盖并重新下发配置默认。
-func (s *Server) hTopent(w http.ResponseWriter, r *http.Request) {
-	var req struct {
-		Value string `json:"value"`
-	}
-	if !readBody(w, r, &req) {
-		return
-	}
-	s.applyTopent(w, r, req.Value)
-}
-
-// hSessionEnt 是规格里的 `POST /api/sessions/{id}/ent`：与 `/topent` 同一件事、同一条规矩，
-// 只是请求体按规格写成 `{"value":"99"}` / `{"clear":true}`。
-//
-// 为什么两个端点都留：`/topent` 是既有调用方（CLI 与前端面板）在用的名字，
-// `/ent` 是规格名。两者的**行为**收在同一个 `applyTopent` 里 —— 两条路各写一份必然漂，
-// 而漂的那一处恰好是"到底设上了没有"。
-func (s *Server) hSessionEnt(w http.ResponseWriter, r *http.Request) {
-	var req struct {
-		Value string `json:"value"`
-		Clear bool   `json:"clear"`
-	}
-	if !readBody(w, r, &req) {
-		return
-	}
-	s.applyTopent(w, r, entValueOf(req.Value, req.Clear))
-}
-
-// entValueOf 把规格里的两种写法归一：`{"value":"99"}` 与 `{"clear":true}`。
-//
-// 单独一个函数是为了能钉住它：两个端点（/ent 与 /topent）共用同一份实现，
-// 而"清除"在这条链路上等于空值（见 SetTopent 的注释：空值 = 回到环境默认，不是 unset）。
-func entValueOf(value string, clear bool) string {
-	if clear {
-		return ""
-	}
-	return value
-}
-
-// applyTopent 是设置/清除会话级企业编号的唯一实现。
-func (s *Server) applyTopent(w http.ResponseWriter, r *http.Request, value string) {
-	req := struct{ Value string }{Value: value}
-	req.Value = trimTopent(req.Value)
-	// 设 ENT 属于**编排**（CapSetup）：平台子进程启动时就要设它。拍在交互式那一类里
-	// 会让 record 会话连企业编号都设不上 —— W7 分类正是为这种差别存在的。
-	sess := s.sessOfWriteCap(w, r, CapSetup)
-	if sess == nil {
-		return
-	}
-	if st := sess.State(); st != StateIdle {
-		fail(w, 409, fmt.Errorf("仅会话空闲时可设置 TOPENT(当前 %s),请先结束当前调试", st))
-		return
-	}
-	if err := sess.SetTopent(req.Value); err != nil {
-		fail(w, 500, err)
-		return
-	}
-	txt := "设置 TOPENT"
-	if req.Value == "" {
-		txt += "(清除)"
-	} else {
-		txt += "=" + req.Value
-	}
-	s.emitAction(r, sess, "session.topent", txt)
-	writeJSON(w, 200, map[string]any{"ok": true, "topent": req.Value})
-}
-
-// trimTopent TOPENT 归一:剔除两侧空白(值不限数字/文本);全空白归一为空(清除)
-func trimTopent(v string) string {
-	return strings.TrimSpace(v)
-}
-
 // hSessionSwitch 「连到该环境」:连上目标环境(仅内存)并按该环境重连到 idle。
 // 若已是目标环境会话则幂等返回(不改动正在进行的调试)。
 //
@@ -1081,7 +979,6 @@ func trimTopent(v string) string {
 func (s *Server) hSessionSwitch(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Env string `json:"env"`
-		Ent string `json:"ent"`
 		// Name 是**这条新会话的别名**（可选）：创建即命名。
 		//
 		// 为什么需要它（多会话）：那几步要能点名"我这条"会话，而点名要有名字。
@@ -1100,9 +997,6 @@ func (s *Server) hSessionSwitch(w http.ResponseWriter, r *http.Request) {
 	if cfg == nil {
 		fail(w, 404, fmt.Errorf("环境 %q 不存在(请在设置中添加)", req.Env))
 		return
-	}
-	if ent := strings.TrimSpace(req.Ent); ent != "" {
-		cfg.Topent = host.EntValue(ent)
 	}
 	// 目标先落位,再判"谁能写":闸门必须按**要收掉的那一条**判,不能按池子里随便一条
 	// (从前那一处 `Manager.Current()` 就是这么判的 —— 多会话下按的是随机一条)。
@@ -1208,12 +1102,9 @@ func (s *Server) hSessionSwitch(w http.ResponseWriter, r *http.Request) {
 //
 // 幂等键是**名字**：同环境已有同名会话 → 原样返回它（不重连、不收口）。不给名字则必然新建
 // —— "都没有名字"不构成"是同一条"的证据，猜错的代价是两条会话落在不同作业上。
-//
-// ENT 必填（requireExplicitEnt）：与启动作业同一条纪律，不许静默沿用登录 shell 的 $TOPENT。
 func (s *Server) hSessionCreate(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Env  string `json:"env"`
-		Ent  string `json:"ent"`
 		Name string `json:"name"`
 	}
 	if !readBody(w, r, &req) {
@@ -1228,19 +1119,6 @@ func (s *Server) hSessionCreate(w http.ResponseWriter, r *http.Request) {
 	cfg := s.envCfgFor(env)
 	if cfg == nil {
 		fail(w, 404, fmt.Errorf("环境 %q 不存在(请在设置中添加)", env))
-		return
-	}
-	// `--ent` 只改**这一次**的配置（envCfgFor 给的是克隆，写它不会把这个企业留给别的会话）。
-	if e := strings.TrimSpace(req.Ent); e != "" {
-		cfg.Topent = host.EntValue(e)
-	}
-	if err := requireExplicitEnt(cfg, nil); err != nil {
-		var f *target.Failure
-		if errors.As(err, &f) {
-			writeCandidateFailure(w, http.StatusBadRequest, f.Code, f.Message, nil)
-			return
-		}
-		fail(w, 400, err)
 		return
 	}
 	name := strings.TrimSpace(req.Name)
@@ -2105,7 +1983,7 @@ func (s *Server) hWSLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, 200, map[string]any{"ok": true, "items": items, "hasMore": hasMore,
-		"acct": wslogAcctFor(s.wslogTopent(nil)), "ent": entOfQuery(q.Get("ent"))})
+		"acct": wslogAcctFor(), "ent": entOfQuery(q.Get("ent"))})
 }
 
 // hWSLogContent GET /api/wslogs/content?rowid=
@@ -2129,7 +2007,7 @@ func (s *Server) hWSLogContent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, 200, map[string]any{"ok": true, "item": item, "content": content,
-		"acct": wslogAcctFor(s.wslogTopent(nil))})
+		"acct": wslogAcctFor()})
 }
 
 // hWSLogDebug POST /api/wslogs/debug {rowid, request?, session?, name?} → 用该日志的报文重放调试。
@@ -2153,8 +2031,6 @@ func (s *Server) hWSLogDebug(w http.ResponseWriter, r *http.Request) {
 		// **起会话**的命令（C3.5），所以别名在这条路上也要登记 —— 否则它起的会话只能用 ref
 		// 寻址、也不能当幂等键（C1.6 / Q23）。空 = 未命名，与今天逐字相同（键不出现）。
 		Name string `json:"name"`
-		// Ent 是**这一轮**的企业编号(ENT),语义同 hLaunch：必填（或目标会话已有显式 override）。
-		Ent string `json:"ent"`
 	}
 	if !readBody(w, r, &req) {
 		return
@@ -2170,12 +2046,6 @@ func (s *Server) hWSLogDebug(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fail(w, 404, err)
 		return
-	}
-	// `--ent`：与 hLaunch 同一条规矩，只改本轮克隆。
-	if e := strings.TrimSpace(req.Ent); e != "" {
-		c2 := *targetCfg
-		c2.Topent = host.EntValue(e)
-		targetCfg = &c2
 	}
 	// `--name` 的判定与 hLaunch **同一处、同一序**（C2.8 的纪律：一个字节都不该白花）：
 	// 取值纪律（F19 → 400 + `USAGE`）与别名的三种结局（Q23：空闲复用 / 忙碌
@@ -2273,24 +2143,7 @@ func (s *Server) hWSLogDebug(w http.ResponseWriter, r *http.Request) {
 	// 随回包一起给出去,让 CLI 能当场说清,而不是等人自己去翻事件日志。
 	writeJSON(w, 200, map[string]any{"ok": true, "sessionId": sess.ID,
 		"module": sess.Module, "prog": sess.Prog, "runProg": sess.RunProg, "warn": replayWarn,
-		"acct": wslogAcctFor(s.wslogTopent(cur))})
-}
-
-// wslogTopent 取"此刻的 TOPENT 是什么"。
-//
-// **只用于说明** —— 查 wsfa_t 恒用系统账号 ds(见 wslogAcctFor),这个值不影响用哪个账号。
-// 优先会话里的生效值(会话级覆盖 > 环境配置),没有会话就用环境配置。
-//
-// **`sess` 由调用方给,不再从会话池里取"当前会话"**（C7.1-4 的那一处 `Manager.Current()`）：
-// 服务端不许自己挑一条（Q4/C8.2）。会话外的那两条（`hWSLogs` / `hWSLogContent`）
-// 传 nil —— 它们是服务级只读，目标本来就只有"环境"这一层（契约第 7 节的表）。
-func (s *Server) wslogTopent(sess *Session) string {
-	if sess != nil {
-		if v := sess.TopentOverride(); v != "" {
-			return v
-		}
-	}
-	return string(s.cfg.Topent)
+		"acct": wslogAcctFor()})
 }
 
 // hDBSQL 只读 SQL:POST /api/dbsql {sql, ent, timeout}
@@ -2311,27 +2164,15 @@ func (s *Server) wslogTopent(sess *Session) string {
 func (s *Server) hDBSQL(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		SQL     string `json:"sql"`
-		Ent     int    `json:"ent"`     // 必填(>0):要查哪个企业。C7.1-5 删掉了"回落当前会话"那条兜底
 		Timeout int    `json:"timeout"` // 秒
 	}
 	if !readBody(w, r, &req) {
 		return
 	}
-	// 企业编号必须显式给（C7.1-5）。这不是"多要一个参数"：缺它的时候服务端只能去
-	// 某条会话上猜一个企业出来，而猜错的后果（0 行）与大写"数据不存在"一模一样。
-	if req.Ent <= 0 {
-		writeJSON(w, 400, failureEnvelope{
-			OK: false, Code: output.CodeUsage,
-			Error: "ent 必填(要查哪个企业编号):tg db sql --at <环境> " +
-				"（旧 tg debug sql 才会从会话补；新命令请显式点名）",
-		})
-		return
-	}
-	ent := req.Ent
 
 	// 直连优先：进程内复用一条连接（建连+登录只付一次），拿不到才回退 SSH + sqlplus。
 	// 这一条只在挂了库、且能按 ENT 清单解出账号时才尝试 —— 其余情况行为与从前一字不差。
-	if res, derr, handled := s.directSQL(r.Context(), ent, req.Timeout, req.SQL); handled {
+	if res, derr, handled := s.directSQL(r.Context(), req.Timeout, req.SQL); handled {
 		if derr != nil {
 			fail(w, 400, derr)
 			return
@@ -2347,7 +2188,7 @@ func (s *Server) hDBSQL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer conn.Close()
-	res, err := s.mgr.RunReadonlyQuery(conn, ReadonlyQueryReq{SQL: req.SQL, Ent: ent, Timeout: req.Timeout})
+	res, err := s.mgr.RunReadonlyQuery(conn, ReadonlyQueryReq{SQL: req.SQL, Timeout: req.Timeout})
 	if err != nil {
 		fail(w, 400, err)
 		return
@@ -2361,7 +2202,7 @@ func (s *Server) logAISQL(r *http.Request, res *DBQueryResult, sqlText string) {
 	if actorOf(r) != "ai" {
 		return
 	}
-	text := "只读 SQL(企业 " + fmt.Sprint(res.Ent) + " → " + res.Account + "): " + firstLine(sqlText, 120)
+	text := "只读 SQL(" + res.Account + "): " + firstLine(sqlText, 120)
 	s.mgr.emit(Event{Type: "log", Actor: "ai", Action: "sql", Text: text})
 }
 
@@ -2654,7 +2495,6 @@ func (s *Server) hSessionJob(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Prog   string `json:"prog"`
 		Module string `json:"module"`
-		Ent    string `json:"ent"`
 	}
 	if !readBody(w, r, &req) {
 		return
@@ -2671,11 +2511,6 @@ func (s *Server) hSessionJob(w http.ResponseWriter, r *http.Request) {
 	if cfg == nil {
 		fail(w, 404, fmt.Errorf("环境 %q 不存在（会话登记着它，但配置里没有）", sess.EnvName()))
 		return
-	}
-	cc := *cfg
-	cfg = &cc // 只改本轮克隆：ent 覆盖不许留在内存配置里
-	if e := strings.TrimSpace(req.Ent); e != "" {
-		cfg.Topent = host.EntValue(e)
 	}
 	module := strings.TrimSpace(req.Module)
 	// T100 的 -m 默认是 asf；GP 没有这个默认，空模块要留给 startRunGP 按 p_link 解析。

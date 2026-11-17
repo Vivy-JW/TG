@@ -62,8 +62,6 @@ var (
 	Raw string
 	// List --at-list 是否存在（真正处理在 Execute 的预扫描里，见 ListTarget）。
 	List bool
-	// Ent --at 解析出的企业编号（0 = 未带企业）。
-	Ent int
 	// Site --at 解析出的据点/资料库编号（GP 环境；空 = 没带）。
 	// 存小写：azp01 是大写（COF），而解析成 schema 后是 cof_demo。
 	Site string
@@ -73,8 +71,6 @@ var (
 type Value struct {
 	Raw     string
 	Env     string
-	Ent     int
-	HasEnt  bool
 	Site    string
 	SiteRaw string // 原样（保留大小写，只用于报错文案）
 	HasSite bool
@@ -97,7 +93,7 @@ var siteRE = regexp.MustCompile(`^[A-Za-z0-9_$#-]{1,20}$`)
 func Parse(raw string) (Value, error) {
 	s := strings.TrimSpace(raw)
 	if s == "" {
-		return Value{}, fmt.Errorf("--at 不能为空：写 <环境> 或 <环境>@<企业>（不知道填什么就加 --at-list）")
+		return Value{}, fmt.Errorf("--at 不能为空：写 <环境> 或 <环境>@<据点编号>（不知道填什么就加 --at-list）")
 	}
 	i := strings.LastIndex(s, "@")
 	if i < 0 {
@@ -106,26 +102,22 @@ func Parse(raw string) (Value, error) {
 	env := strings.TrimSpace(s[:i])
 	num := strings.TrimSpace(s[i+1:])
 	if env == "" {
-		return Value{}, fmt.Errorf("--at %q 少了环境名：写 <环境>@<企业>", s)
+		return Value{}, fmt.Errorf("--at %q 少了环境名：写 <环境>@<据点编号>", s)
 	}
-	if n, err := strconv.Atoi(num); err == nil {
-		if n <= 0 {
-			return Value{}, fmt.Errorf("--at %q 的企业部分不是正整数（%q）；写法是 <环境>@<企业>，如 主机109@99（不知道填什么就加 --at-list）", s, num)
-		}
-		return Value{Raw: s, Env: env, Ent: n, HasEnt: true}, nil
+	if _, err := strconv.Atoi(num); err == nil {
+		return Value{}, fmt.Errorf("--at %q：@ 右边写据点编号（字母开头，如 22主机@COF），不是数字企业号；据点清单：tg site list --env %s", s, env)
 	}
 	if siteRE.MatchString(num) {
 		return Value{Raw: s, Env: env, Site: strings.ToLower(num), SiteRaw: num, HasSite: true}, nil
 	}
-	return Value{}, fmt.Errorf("--at %q 的 %q 既不是企业编号（纯数字），也不是据点/资料库编号（字母、数字、_ $ # -，20 字内）；"+
-		"写法是 <环境>@<企业>（T100）或 <环境>@<据点编号>（TOP GP），不知道填什么就加 --at-list", s, num)
+	return Value{}, fmt.Errorf("--at %q 的 %q 不像据点/资料库编号（字母、数字、_ $ # -，20 字内）；"+
+		"写法是 <环境>@<据点编号>（如 22主机@COF），不知道填什么就加 --at-list", s, num)
 }
 
 // Apply 是根命令的 PersistentPreRunE：把 --at 落到各命令本来就读取的地方。
 //
-// 落点只有两个，都是既有开关的“同一个值”：
-//   - 环境 → common.Env（与 --env 同一个变量，所有命令原样生效）；
-//   - 企业 → 命令自己的 --ent 变量（命令若声明了该开关；没声明就是作用域配错了）。
+// TG 只有 TOP GP：--at 只落两样 —— 环境（common.Env）与据点（at.Site），
+// 没有 T100 那套「企业编号 → 账号」的分派。
 //
 // 这样各命令一行都不用改，也不会出现“--at 与 --env 各读一份”。
 func Apply(cmd *cobra.Command, _ []string) error {
@@ -139,39 +131,30 @@ func Apply(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	// 同一个 @ 写法在两类环境含义不同，所以先看环境是哪个产品再分派。
-	// product 为空按 T100 处理（老配置没有这个字段，而 GP 环境一定会写 gp）。
+	// TG 只支持 TOP GP：@ 右边只能是据点/资料库编号。
+	// 产品标识空着的老配置按 GP 处理（TG 里没有别的产品），所以只挡明确写成非 gp 的。
 	prod := productOf(v.Env)
-	switch {
-	case v.HasSite && prod != productGP:
-		return fmt.Errorf("--at %q：环境 %s 是 T100，@ 右边只能是企业编号（纯数字）；%q 更像据点/资料库编号 —— "+
-			"是不是把据点码填到企业号的位置了？", raw, v.Env, v.Site)
-	case v.HasEnt && prod == productGP:
-		return fmt.Errorf("--at %q：环境 %s 是 TOP GP，@ 右边写据点编号（如 22主机@COF），不是数字企业号；"+
-			"据点清单：tg site list --env %s", raw, v.Env, v.Env)
+	if v.HasSite && prod != "" && prod != productGP {
+		return fmt.Errorf("--at %q：环境 %s 不是 TOP GP，@ 右边的据点编号用不上；TG 只连 TOP GP 环境", raw, v.Env)
 	}
 
 	switch scope {
 	case None:
 		return rejectNone(cmd)
 	case Env:
-		if v.HasEnt || v.HasSite {
-			return fmt.Errorf("%s 只接受 <环境>：去掉 @%s（这条命令不按企业/据点收窄）", cmd.CommandPath(), rightOf(v))
+		if v.HasSite {
+			return fmt.Errorf("%s 只接受 <环境>：去掉 @%s（这条命令不按据点收窄）", cmd.CommandPath(), rightOf(v))
 		}
 	case EnvFilter:
-		if v.HasEnt || v.HasSite {
-			return fmt.Errorf("%s 的 --at 只用来收窄“在哪个环境里找会话”，不带企业/据点；"+
-				"要断言那条会话属于某个企业，请用 --session %s/%s", cmd.CommandPath(), v.Env, rightOf(v))
+		if v.HasSite {
+			return fmt.Errorf("%s 的 --at 只用来收窄“在哪个环境里找会话”，不带据点；"+
+				"要断言那条会话属于某个据点，请用 --session %s/%s", cmd.CommandPath(), v.Env, rightOf(v))
 		}
 	case EnvEnt:
-		// 环境必给，企业/据点可选
+		// 环境必给，据点可选
 	case EnvEntReq:
-		if !v.HasEnt && !v.HasSite {
-			if prod == productGP {
-				return fmt.Errorf("%s 需要 <环境>@<据点编号>：据点决定查哪个资料库；现成的取值：%s --at-list",
-					cmd.CommandPath(), cmd.CommandPath())
-			}
-			return fmt.Errorf("%s 需要 <环境>@<企业>：企业编号决定用哪个账号连库；现成的取值：%s --at-list",
+		if !v.HasSite {
+			return fmt.Errorf("%s 需要 <环境>@<据点编号>：据点决定查哪个资料库；现成的取值：%s --at-list",
 				cmd.CommandPath(), cmd.CommandPath())
 		}
 	}
@@ -203,22 +186,6 @@ func Apply(cmd *cobra.Command, _ []string) error {
 	if v.HasSite {
 		Site = v.Site
 	}
-	if v.HasEnt {
-		Ent = v.Ent
-		if f := cmd.Flag("ent"); f != nil {
-			want := strconv.Itoa(v.Ent)
-			if f.Changed {
-				if got := strings.TrimSpace(f.Value.String()); got != want {
-					return fmt.Errorf("--at 的企业（%s）与 --ent（%s）不一致：二选一，或保持一致", want, got)
-				}
-			} else if err := f.Value.Set(want); err != nil {
-				return fmt.Errorf("把 --at 的企业写进 --ent 失败: %w", err)
-			}
-		}
-		if err := checkEnt(cmd, v.Env, v.Ent); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
@@ -236,9 +203,6 @@ func rejectNone(cmd *cobra.Command) error {
 
 // rightOf 取 --at 里 @ 右边那一段（只用于报错文案）。
 func rightOf(v Value) string {
-	if v.HasEnt {
-		return strconv.Itoa(v.Ent)
-	}
 	if v.SiteRaw != "" {
 		return v.SiteRaw
 	}

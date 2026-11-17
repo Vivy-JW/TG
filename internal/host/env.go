@@ -7,7 +7,7 @@
 // 污染，dbprobe.go 对工具路径/账号做白名单校验且 SQL 走 stdin 而非拼进命令串），
 // 再补入 TDictCli/host 独有的 mirror.go（源码镜像引擎）。
 //
-// 环境模型（SSHConfig/EntValue/NamedSsh）现在只在 internal/config 里定义一次，
+// 环境模型（SSHConfig/NamedSsh）现在只在 internal/config 里定义一次，
 // 本文件以类型别名暴露，因此 host.NamedSsh 与 config.NamedSsh 是同一个类型 ——
 // 调用方无需转换，也不会出现两份定义漂移。
 package host
@@ -21,9 +21,7 @@ import (
 type (
 	// SSHConfig 远程服务器连接配置
 	SSHConfig = config.SSHConfig
-	// EntValue 企业编号(TOPENT)：数字或文本均可
-	EntValue = config.EntValue
-	// NamedSsh 服务器环境：SSH 连接 + 登录区域 + 默认企业 + 一对一挂载的库连接
+	// NamedSsh 服务器环境：SSH 连接 + 登录区域 + 一对一挂载的库连接
 	NamedSsh = config.NamedSsh
 	// Hosts 服务器环境清单
 	Hosts = config.Hosts

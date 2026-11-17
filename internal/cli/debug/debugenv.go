@@ -1,11 +1,8 @@
 package debug
 
-// debug 环境/TOPENT 切换命令:
+// debug 环境切换命令:
 //   tg debug env           列出全部已配置环境与当前生效项(基于 /api/hosts + /api/sessions)
 //   tg debug env <名称>     切换当前环境到该环境(重连会话,等会话回 idle)
-//   tt debug topent        显示当前会话的 TOPENT override 与配置级默认
-//   tt debug topent <值>    设置会话级 TOPENT override(仅 idle;立即下发到会话)
-//   tt debug topent --clear 清除会话级 TOPENT override(回退配置默认)
 //
 // 与 debugctl 其它命令一致:均经 tg debug serve 的 REST 接口执行。
 
@@ -29,17 +26,9 @@ var (
 
 // dbgSnapshot 会话快照中本命令关心的字段。
 type dbgSnapshot struct {
-	ID     string `json:"id"`
-	Env    string `json:"env"`
-	State  string `json:"state"`
-	Topent string `json:"topent"` // 会话内手动设置的 TOPENT override(空=未设置)
-	// TopentSession 是**启动时显式给**的 TOPENT(`tg debug start --ent` / 界面面板填的)。
-	// 它是"用户给了就 export 进 shell"的那一个；空 = 用户没给，企业由登录 shell 的
-	// $TOPENT 决定(见 TopentShell)。T100 的只读 SQL 以前按这三个值推 `ent`；GP 已经没有
-	// 企业编号那层（账号取 db.accounts[0]），这几个字段只剩展示与 T100 会话排查用。
-	TopentSession string `json:"topentSession"`
-	TopentCfg     string `json:"topentCfg"`   // 配置级企业 TOPENT 默认(该环境 db.ent)
-	TopentShell   string `json:"topentShell"` // 当前会话 shell 里的实际 TOPENT(连接时已按配置下发)
+	ID    string `json:"id"`
+	Env   string `json:"env"`
+	State string `json:"state"`
 }
 
 // dbgEnvItem 环境清单中的一项(取自 /api/hosts 返回的环境清单)。
@@ -48,7 +37,6 @@ type dbgEnvItem struct {
 	Host   string `json:"host"`
 	Port   int    `json:"port"`
 	Zone   string `json:"zone"`
-	Topent string `json:"topent"`
 	DBConn string `json:"dbConn"`
 }
 
@@ -187,9 +175,6 @@ func dbgEnvList() error {
 			name += " ← 当前会话"
 		}
 		extra := e.DBConn
-		if e.Topent != "" {
-			extra += " (TOPENT默认=" + e.Topent + ")"
-		}
 		fmt.Printf("  %s %s:%d  zone=%-4s %s\n", name, e.Host, e.Port, e.Zone, extra)
 	}
 	return nil

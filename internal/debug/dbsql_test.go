@@ -142,31 +142,6 @@ func TestParseSQLOutEmpty(t *testing.T) {
 	}
 }
 
-// 企业→账号的选择是纯函数,单独钉住:它错了会"上错号",而后果是 0 行 ——
-// 看起来和"数据不存在"一模一样。
-func TestPickEntAccount(t *testing.T) {
-	maps := []EntMapping{{Ent: 99, Account: "dsdemo"}, {Ent: 907, Account: "dsdata"}, {Ent: 2222, Account: "dsstd"}}
-	for _, c := range []struct {
-		ent  int
-		want string
-	}{{99, "dsdemo"}, {907, "dsdata"}, {2222, "dsstd"}} {
-		got, err := pickEntAccount(maps, c.ent)
-		if err != nil || got != c.want {
-			t.Errorf("企业 %d 应解析成 %s,得到 %q (err=%v)", c.ent, c.want, got, err)
-		}
-	}
-	// 不在清单里:必须报错,**绝不回退到某个默认账号**
-	if _, err := pickEntAccount(maps, 8888); err == nil {
-		t.Error("企业不在清单里应当报错,不能静默回退")
-	} else if !strings.Contains(err.Error(), "topent") {
-		t.Errorf("报错要告诉人怎么改(topent),实际: %v", err)
-	}
-	// gzou003 是占位符:同样报错
-	if _, err := pickEntAccount([]EntMapping{{Ent: 1, Account: "-"}}, 1); err == nil {
-		t.Error("账号是占位符时应报错")
-	}
-}
-
 func TestClampSQLTimeout(t *testing.T) {
 	for _, c := range []struct{ in, want int }{{0, sqlTimeoutDefault}, {-1, sqlTimeoutDefault}, {10, 10}, {999, sqlTimeoutMax}} {
 		if got := clampSQLTimeout(c.in); got != c.want {
