@@ -164,7 +164,7 @@ m.Handle("/api/gp/", s.opt.GP)                                    // GP
 | `internal/debug/srcmirror.go` | `entdir` | 改成纯 GP 路径（`$TOP/$CUST` 镜像），去掉企业段 |
 | `internal/debug/api.go` 的企业/作业入口 | `target` 的 ENT 形态 | 摘掉 `环境/99`、`@企业` 那一支（见 §5.3） |
 
-**两套 PTY 的重复：已解决（2026-11-17，`d0f7366` 那一批）** —— **只留 `internal/debug` 一条路**。`internal/gp/session.go`（后来搬成 `internal/gpsession`）是 Web 的简化 PTY，只服务 `/api/gp/session/{new,list,exec,close}`；查下来这四个接口**前端 0 处、CLI 0 个命令、文档与技能 0 处**调用（网页调试台走的是 `/api/sessions/*`），而且它的能力是 `internal/debug` 的真子集（没有断点/步进/停站状态机）。所以没有走"降级成薄封装"那条：整包删除，同时把它的三条真机经验（按实例名选菜单、`r.d2` 要去模块前缀、写命令前先等提示符空闲否则吞字符）并进 `internal/debug/gp.go` 的 `bootGP`/`startRunGP`（后者两处盲等改成了"先等 shell 提示符、等不到再兜底睡"）。
+**两套 PTY 的重复：已解决（2026-11-17，`1deab69` 那一批）** —— **只留 `internal/debug` 一条路**。`internal/gp/session.go`（后来搬成 `internal/gpsession`）是 Web 的简化 PTY，只服务 `/api/gp/session/{new,list,exec,close}`；查下来这四个接口**前端 0 处、CLI 0 个命令、文档与技能 0 处**调用（网页调试台走的是 `/api/sessions/*`），而且它的能力是 `internal/debug` 的真子集（没有断点/步进/停站状态机）。所以没有走"降级成薄封装"那条：整包删除，同时把它的三条真机经验（按实例名选菜单、`r.d2` 要去模块前缀、写命令前先等提示符空闲否则吞字符）并进 `internal/debug/gp.go` 的 `bootGP`/`startRunGP`（后者两处盲等改成了"先等 shell 提示符、等不到再兜底睡"）。
 
 **连带删除（阶段 3）**：`cli/debug`（4547 行，T100 作业调试命令面）、`debugclient`（581 行，`cli/debug` 与 `cli/session` 共用的 REST 客户端）。GP 要命令行面的话，在 `cli/gp` 里新写，不复用这两个。
 
