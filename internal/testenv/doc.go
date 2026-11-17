@@ -2,8 +2,8 @@
 //
 // 为什么单独一个包，而不是塞进 internal/dev/testutil 或 internal/testkit：
 // **读它的代码不能带 `testing`**。`internal/dev/testutil` 要用它来定语料根，而 testutil 被
-// **生产代码** import（internal/cli/dev/selftest.go，`tt dev tzc selftest` 的实现），
-// 一旦那条链上出现 `testing`，整个 `testing` 包就会进 `tt` 二进制。于是分层是：
+// **生产代码** import（internal/cli/dev/selftest.go，旧 `dev tzc selftest` 的实现（已删）），
+// 一旦那条链上出现 `testing`，整个 `testing` 包就会进 `tg` 二进制。于是分层是：
 //
 //	testenv（本包：配置与解析，无 testing）
 //	   ↑                    ↑

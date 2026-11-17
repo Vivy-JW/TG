@@ -104,7 +104,7 @@ func readUserPath() (string, error) {
 // writeUserPath 写回用户 PATH,保持 REG_EXPAND_SZ(值里常有 %USERPROFILE% 等可展开变量)。
 //
 // **它是无条件写的**：不读原值是什么类型，所以原值本来是 REG_SZ（不含任何 `%`）时，
-// 也会被改写成 REG_EXPAND_SZ。原先会保留原类型的那份实现在 `tt dev install` 里，
+// 也会被改写成 REG_EXPAND_SZ。原先会保留原类型的那份实现在旧的 `dev install` 里（那条线已随 T100 一起删掉），
 // **已随该命令一起删除，现在没有第二份实现兜着了**（2026-09-27 从已删的规划文档转来，
 // 那条注着"别丢"）。
 //

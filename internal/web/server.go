@@ -172,7 +172,7 @@ func (s *Server) routes() {
 	m.HandleFunc("POST /api/skills/add", s.hSkillsAdd)
 	m.HandleFunc("POST /api/skills/remove", s.hSkillsRemove)
 
-	// tt 自身的更新（查/装）。与 install 同一层：应用级动作，不属于任何子系统。
+	// tg 自身的更新（查/装）。与 install 同一层：应用级动作，不属于任何子系统。
 	m.HandleFunc("GET /api/update", s.hUpdateGet)
 	m.HandleFunc("POST /api/update/check", s.hUpdateCheck)
 	m.HandleFunc("POST /api/update/apply", s.hUpdateApply)
@@ -970,7 +970,7 @@ func (s *Server) hRoot(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/debug/", http.StatusFound)
 		return
 	}
-	writeLanding(w, fmt.Sprintf("tt %s", s.opt.Version))
+	writeLanding(w, fmt.Sprintf("tg %s", s.opt.Version))
 }
 
 // ---------- 辅助 ----------

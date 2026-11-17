@@ -225,12 +225,12 @@ func SyncGP(ctx context.Context, src, dst *sql.DB, lib, account string, rep func
 		if mod == "" {
 			mod = clean(gat06)
 		}
-		tt := clean(ttype)
-		if tt == "" {
-			tt = clean(gat07)
+		ttypeOut := clean(ttype)
+		if ttypeOut == "" {
+			ttypeOut = clean(gat07)
 		}
 		tables[t] = struct{ module, cn string }{mod, clean(cn)}
-		tabs = append(tabs, tabRow{t, clean(cn), mod, tt, strings.ToUpper(clean(kind)), ""})
+		tabs = append(tabs, tabRow{t, clean(cn), mod, ttypeOut, strings.ToUpper(clean(kind)), ""})
 	}
 	rows.Close()
 	rep(fmt.Sprintf("表字典 zta_file：%d 张", len(tabs)))

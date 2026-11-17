@@ -48,7 +48,7 @@ go list -f '{{.ImportPath}}|{{join .Imports " "}}' ./internal/... | grep 'tt/int
 | `host` | **唯一 SSH / 远程服务器能力层**：连接、登录、服务器侧只读探测、源码镜像引擎、服务器侧库探测 |
 | `entdir` | 企业目录（ENT → 账号）的共享件：映射表、落盘快照、环境指纹、新鲜期 |
 | `designer` | 从设计器 `sites.xml` 只读导入环境站点 |
-| `update` | tt 自身更新：查新版、下载校验、交棒给脱离进程；外加「技能树一致性」检查 |
+| `update` | tg 自身更新：查新版、下载校验、交棒给脱离进程；外加「技能树一致性」检查 |
 | `testkit` | 跨包测试辅助：语料发现、stdout 捕获、flag 重置、仓库本体定位 |
 | `dict/dbsync` | GP 字典同步引擎：连 Oracle 读 zta/gat/gaq/all_*/gaz/zz/zr/ze，投影成本地 SQLite 的 `t_*` 表（临时库 + 原子替换）|
 | `dict` | GP 字典层的对外面：`DictPath`/`Company`、`Site`/`ResolveSchema`、`QryDef.BuildSQL`、`LookupModule`、`SyncEnv` |
@@ -116,7 +116,7 @@ go list -f '{{.ImportPath}}: {{join .Imports " "}}' ./internal/... \
 | 新输出格式 | `output` |
 | 新配置节 | `config` 的 `Section` + 由该节的主人去建强类型模型 |
 | 新 HTTP 端点 | 能力的 `*/server` 或 `*/api.go`；`web` 里只挂一行 |
-| 新的 4GL 格式细节 | `dev/fgl`（`.tzc` / `.tzs` 那套已随 `tt dev` 一起删） |
+| 新的 4GL 格式细节 | `dev/fgl`（`.tzc` / `.tzs` 那套已随旧的 `dev` 线一起删） |
 | 测试夹具 | `testkit` 或 `dev/testutil` |
 
 ## 四、谁管什么（唯一性清单）

@@ -143,7 +143,7 @@ func renderTree(nodes []actNode, depth int) []string {
 
 // fixturesDir 返回夹具目录（go test 的工作目录是包目录）。
 //
-// 合并进 tt 后包多了一层（internal/dev/fgl），写死的 "../.." 不再成立；
+// 合并进 tg 后包多了一层（internal/dev/fgl），写死的 "../.." 不再成立；
 // 这里改为从包目录逐级上溯，找到含 testdata/fgl-fixtures 的那一级
 // （夹具落在仓库根的 testdata/fgl-fixtures，与合并前位置约定一致）。
 func fixturesDir(t *testing.T) string {

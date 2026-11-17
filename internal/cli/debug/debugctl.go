@@ -146,7 +146,7 @@ func dbgWaitStopped(id string, timeout time.Duration) (map[string]any, error) {
 //
 // 两条来源,命令自己的 --env 优先:
 //   - `tg debug start x --env 恒烁正式区`(写在子命令上,语义最明确);
-//   - `tt --env 恒烁正式区 debug start x`(根命令的持久开关,别处能用,这里也认)。
+//   - `tg --env 恒烁正式区 debug start x`(根命令的持久开关,别处能用,这里也认)。
 //
 // 从前这里**只看 --ssh**,而 --env 是根命令的开关、debug 组里没人读 —— 于是
 // `tg debug start … --env X` 既不报错也不生效,方向永远取服务端当前环境。同机多环境
@@ -1448,8 +1448,8 @@ func init() {
 	// 于是报出 `asf_axmt500_wf.4gl`，而真名是 `axm_axmt500_wf.4gl`，`break asf_…:行`
 	// 必然 `No source file named`。留空 = 让会话自己解析（唯一权威来源）。
 	debugStartCmd.Flags().StringVarP(&dbgModule, "module", "m", "", debug.ModuleFlagHelp())
-	debugStartCmd.Flags().StringVar(&dbgZone, "zone", "", "区域代码覆盖(31开发/35测试/36正式;默认取配置)")
-	debugStartCmd.Flags().StringVar(&dbgSSHName, "ssh", "", "SSH 配置名(设置页配置的多 SSH;默认取配置)")
+	debugStartCmd.Flags().StringVar(&dbgZone, "zone", "", "区域代码覆盖(31开发/35测试/36正式;默认取配置)。决定 WebSocket 路径前缀(topprd 是 /ws,其余 /w)")
+	debugStartCmd.Flags().StringVar(&dbgSSHName, "ssh", "", "--env 的别名(旧叫法);不给则用服务端当前环境")
 	// --env 与全局 --env 同名同义:子命令上显式给的优先级更高(根命令那个是持久开关,
 	// 别处能用这里也必须能用;写在子命令上语义最明确)。--ssh 是环境名的历史叫法,两者并存。
 	debugStartCmd.Flags().StringVar(&dbgEnvFlag, "env", "", "环境名(等价 --ssh;不给则用服务端当前环境)。同机多环境时务必点名")

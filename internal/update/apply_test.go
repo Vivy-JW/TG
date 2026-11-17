@@ -157,7 +157,7 @@ func TestCopyTreeKeepsLocalFiles(t *testing.T) {
 
 // `tg version` 的输出比对按词比：子串比会让 0.2.2 匹配上 0.2.20。
 func TestOutputHasVersion(t *testing.T) {
-	out := "tt 0.2.2 (commit d569d10, 2026-10-07)"
+	out := "tg 0.2.2 (commit d569d10, 2026-10-07)"
 	for _, want := range []string{"0.2.2", "v0.2.2"} {
 		if !OutputHasVersion(out, want) {
 			t.Errorf("OutputHasVersion(%q, %q) = false，想要 true", out, want)
@@ -168,11 +168,11 @@ func TestOutputHasVersion(t *testing.T) {
 			t.Errorf("OutputHasVersion(%q, %q) = true，想要 false", out, want)
 		}
 	}
-	if !OutputHasVersion("tt devel (无版本信息)", "devel") {
+	if !OutputHasVersion("tg devel (无版本信息)", "devel") {
 		t.Error("devel 该被认出来（它也是版本字面量）")
 	}
 	// 预发布 tag 的版本号要能对上。
-	if !OutputHasVersion("tt 0.3.0-rc1 (commit x)", "0.3.0-rc1") {
+	if !OutputHasVersion("tg 0.3.0-rc1 (commit x)", "0.3.0-rc1") {
 		t.Error("预发布版本自报该能对上")
 	}
 }
@@ -212,7 +212,7 @@ func TestPlanRoundTrip(t *testing.T) {
 
 func TestCleanStaleStagesAndRemoveStage(t *testing.T) {
 	base := t.TempDir()
-	exeDir := filepath.Join(base, "tt")
+	exeDir := filepath.Join(base, "tg")
 	if err := os.MkdirAll(exeDir, 0o755); err != nil {
 		t.Fatal(err)
 	}

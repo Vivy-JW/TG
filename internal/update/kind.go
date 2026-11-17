@@ -9,7 +9,7 @@ import (
 	"tg/internal/config"
 )
 
-// Kind 是 tt 这份二进制的**安装形态**，它决定"怎么装新版"。
+// Kind 是 tg 这份二进制的**安装形态**，它决定"怎么装新版"。
 //
 // 只按布局判定，不看版本号：注入的版本号为空是另一件事（源码态的 `make build` 产物），
 // 由 InstallRefusal 一并说清 —— 一个函数判定，一处解释，避免两边各猜一半。
@@ -69,12 +69,12 @@ func DetectKind(exePath string) Kind {
 	return KindOther
 }
 
-// InstallRefusal 说明为什么这份 tt 不能自装，可以装时返回空串。
+// InstallRefusal 说明为什么这份 tg 不能自装，可以装时返回空串。
 //
 // 这段文字是给使用者看的判据，所以每种情形都指名"下一步该敲什么"，而不是笼统地拒绝。
 func InstallRefusal(k Kind, exePath, version string) string {
 	if version == "" {
-		return "这份 tt 没有版本号（本地 go build 的产物）：源码态由 `make build` 更新，" +
+		return "这份 tg 没有版本号（本地 go build 的产物）：源码态由 `make build` 更新，" +
 			"要装发行版请从 " + RepoPage + "/releases 取 MSI 或便携包"
 	}
 	switch k {

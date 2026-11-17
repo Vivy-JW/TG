@@ -26,8 +26,8 @@
 | 依赖谁 | 只用标准库 | — |
 
 **为什么单独一个包、为什么不能带 `testing`**：`internal/dev/testutil` 要用它定语料根，而
-testutil 被**生产代码** import（`internal/cli/dev/selftest.go`，`tt dev tzc selftest` 的实现）。
-那条链上出现 `testing`，整个 `testing` 包就会进 `tt` 二进制。分层是：
+testutil 被**生产代码** import（`internal/cli/dev/selftest.go`，旧 `dev tzc selftest` 的实现，那条线已删）。
+那条链上出现 `testing`，整个 `testing` 包就会进 `tg` 二进制。分层是：
 
 ```
 testenv（配置与解析，无 testing）

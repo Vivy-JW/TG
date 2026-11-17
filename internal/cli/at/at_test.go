@@ -55,7 +55,7 @@ func TestParse(t *testing.T) {
 
 // fakeRoot 造一棵最小命令树：作用域表按路径匹配，不需要真的注册命令。
 func fakeRoot() (*cobra.Command, map[string]*cobra.Command) {
-	root := &cobra.Command{Use: "tt"}
+	root := &cobra.Command{Use: "tg"}
 	mk := func(path ...string) *cobra.Command {
 		cur := root
 		for _, name := range path {

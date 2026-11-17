@@ -11,7 +11,7 @@ import (
 // Repo 更新源。**写死在代码里**，不给命令行开关：更新器是一个"下载可执行文件并运行它"
 // 的路径，让它能指向别处等于把这条路径交给调用参数。
 const (
-	RepoSlug  = "luyaogod/TT"
+	RepoSlug  = "Vivy-JW/TG"
 	RepoPage  = "https://github.com/" + RepoSlug
 	apiBase   = "https://api.github.com/repos/" + RepoSlug
 	LatestAPI = apiBase + "/releases/latest"

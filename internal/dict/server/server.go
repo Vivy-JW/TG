@@ -76,7 +76,7 @@ func (s *Server) dbPathFor(env string) string {
 // BDL 文档目录**不再有本包的端点**:它只是 config.json 里的一节(读写走 /api/hosts),
 // 「目录是否存在」由 /api/config/status 统一回答。原先那个 GET /api/bdldoc 与它们重复。
 //
-// 用户 PATH 安装(/api/install)也**已移到** internal/web:把 tt 加进 PATH 是应用级
+// 用户 PATH 安装(/api/install)也**已移到** internal/web:把 tg 加进 PATH 是应用级
 // 动作,与字典查询无关。
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()

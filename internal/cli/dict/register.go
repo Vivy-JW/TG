@@ -1,6 +1,6 @@
 // Package dict 承载 tg dict 命令组（原 tdict 的 CLI）。
 //
-// 合并前的 tdict 是独立二进制、独立 cli 包；现在并入 tt 后以子命令组形式存在，
+// 合并前的 tdict 是独立二进制、独立 cli 包；现在并入 tg 后以子命令组形式存在，
 // 数据源实现在 internal/dict（db 本地镜像 / live 远程直查 / dbsync 同步）。
 package dict
 

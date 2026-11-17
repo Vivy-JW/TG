@@ -35,7 +35,7 @@ tg outline <file.4gl> [--human] [--flat] [--kind ...] [--depth N|all] [--brief] 
 ```json
 {
   "ok": true,
-  "schema": "tt.outline/v1",
+  "schema": "tg.outline/v1",
   "data": {
     "kind": "outline.tree",
     "file": "D:\\TT-Work\\109tst\\erp\\asf\\4gl\\demo.4gl",

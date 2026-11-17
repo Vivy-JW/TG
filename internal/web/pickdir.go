@@ -15,7 +15,7 @@ var pickDirMu sync.Mutex
 //
 // 为什么不让浏览器自己选：<input type="file" webkitdirectory> 只给 File 对象，
 // 拿不到绝对路径；File System Access API 的 showDirectoryPicker 也只给 handle。
-// TT 的镜像目录要让 CLI 也能用，必须是真实路径，所以只能由服务端起这个对话框。
+// TG 的镜像目录要让 CLI 也能用，必须是真实路径，所以只能由服务端起这个对话框。
 //
 // 安全边界：这个对话框会阻塞在服务端进程里，且能读到用户文件系统的路径，
 // 因此和 /api/shutdown 一样只接受本机回环请求。服务默认就绑 127.0.0.1。

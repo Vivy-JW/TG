@@ -11,7 +11,7 @@ import (
 	"tg/internal/screen"
 )
 
-const schemaVersion = "tt.interface/v1"
+const schemaVersion = "tg.interface/v1"
 
 type envelope struct {
 	OK     bool   `json:"ok"`

@@ -132,7 +132,7 @@ func Execute(web fs.FS) {
 	common.WebFS = web
 	common.Version = Version
 
-	// 旧命令名兼容：tt tdebug … 等价 tg debug …
+	// 旧命令名兼容：tg tdebug … 等价 tg debug …（合并前这两个是独立二进制）
 	if len(os.Args) > 1 {
 		if target, ok := legacyAliases[os.Args[1]]; ok {
 			os.Args[1] = target
@@ -208,10 +208,10 @@ func scanConfigFlag(args []string) string {
 
 // alreadyReported 由"自己已经把失败打出去了"的命令组实现 —— 根命令据此跳过 reportError。
 //
-// 为什么需要它：`tt dev` 是完整的一套 CLI（自己的 Usage、自己的退出码、自己把失败打成
+// 为什么需要它：有些命令组自己已经是一套完整 CLI（自己的 Usage、自己的退出码、自己把失败打成
 // stdout 的信封或帧），而 reportError 在 JSON 模式下也往 stdout 写信封。两份叠在一起的
 // 后果是 **stdout 上恰好两个 JSON 对象**：`jq .error.code` 打出两行，其中一行是 null，
-// 而"`--json` 下 stdout 恰好一个对象"正是 .tzs 那条线刚立下的规则。
+// 而「`--json` 下 stdout 恰好一个对象」是这条线的硬判据。
 //
 // 用结构化接口而不是共享一个类型：记号由命令组自己声明（`exitCode.AlreadyReported`），
 // 根命令只问"你报过了吗" —— 不必为了一个记号把 internal/cli/dev 的类型导出。
@@ -227,13 +227,13 @@ type jsonErrorWriter interface{ WriteEnvelope(w io.Writer) error }
 
 // reportError 打一次错误。
 //
-// JSON 模式下错误也走 **stdout 的 JSON 信封**（与 tt dev 既有的 {"ok":false,...}
+// JSON 模式下错误也走 **stdout 的 JSON 信封**（与既有命令组的 {"ok":false,...}
 // 同一条路子），让 agent 靠 Code 分支而不是靠正则啃中文；其余模式保持 stderr 散文，
 // 并多打一行「提示:」把修复建议单独拎出来。
 //
 // ⚠️ 这会改变"stderr 有内容 = 失败"这个既有判据：JSON 模式下失败信息在 stdout。
 //
-// **`tt dev` 不经过这里**：它自己是一套完整的 CLI（自己的 Usage、自己的退出码、
+// **已经自己打过失败的命令组不经过这里**：它自己是一套完整的 CLI（自己的 Usage、自己的退出码、
 // 自己把失败打成 stdout 的信封或帧），所以它返回的错误实现了 alreadyReported ——
 // 否则同一个失败会在 stdout 上出现两份信封，而 `jq .error.code` 会打出两行（一行是 null）。
 func reportError(err error) {

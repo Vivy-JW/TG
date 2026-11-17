@@ -180,7 +180,7 @@ func TestUnknownSubcommandListsWhatIsAvailable(t *testing.T) {
 	// 的空壳返回 false，拿空壳当夹具会得到一份空清单（第一版就是这么写的，红的却不是被测代码）。
 	// 真实的 tg dict / tg debug 子命令都有 Run。
 	noop := func(*cobra.Command, []string) {}
-	root := &cobra.Command{Use: "tt"}
+	root := &cobra.Command{Use: "tg"}
 	root.AddCommand(&cobra.Command{Use: "alpha", Run: noop})
 	root.AddCommand(&cobra.Command{Use: "beta", Run: noop})
 	root.AddCommand(&cobra.Command{Use: "secret", Hidden: true, Run: noop})
@@ -191,7 +191,7 @@ func TestUnknownSubcommandListsWhatIsAvailable(t *testing.T) {
 			"把「我打错了命令」读成成功）")
 	}
 	msg := err.Error()
-	for _, want := range []string{`"nope"`, "tt", "alpha", "beta"} {
+	for _, want := range []string{`"nope"`, "tg", "alpha", "beta"} {
 		if !strings.Contains(msg, want) {
 			t.Errorf("错误里该有 %q：%s", want, msg)
 		}

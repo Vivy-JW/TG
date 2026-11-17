@@ -42,7 +42,7 @@ type CheckResult struct {
 	PublishedAt time.Time `json:"publishedAt,omitempty"`
 	CheckedAt   time.Time `json:"checkedAt"`
 	Assets      []Asset   `json:"assets,omitempty"`
-	Source      string    `json:"source,omitempty"` // 更新源（当前只有 luyaogod/TT）
+	Source      string    `json:"source,omitempty"` // 更新源（当前只有 Vivy-JW/TG）
 }
 
 // Check 查一次远端最新，并与 current 比较。不落盘：落盘由命令层决定（便于测试与
@@ -50,7 +50,7 @@ type CheckResult struct {
 func Check(ctx context.Context, c *Client, current string, pre bool) (*CheckResult, error) {
 	cur, err := ParseVersion(current)
 	if err != nil {
-		return nil, fmt.Errorf("手上这份 tt 的版本号不可用: %w", err)
+		return nil, fmt.Errorf("手上这份 tg 的版本号不可用: %w", err)
 	}
 	rel, err := c.Latest(ctx, pre)
 	if err != nil {

@@ -192,7 +192,7 @@ func runDict(t *testing.T, args ...string) string {
 	t.Helper()
 	var runErr error
 	_, out := testkit.CaptureStdout(t, func() int {
-		root := &cobra.Command{Use: "tt", SilenceUsage: true, SilenceErrors: true}
+		root := &cobra.Command{Use: "tg", SilenceUsage: true, SilenceErrors: true}
 		root.AddCommand(Group)
 		root.SetArgs(append([]string{"dict"}, args...))
 		runErr = root.Execute()

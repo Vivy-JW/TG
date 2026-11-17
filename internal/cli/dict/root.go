@@ -2,7 +2,7 @@ package dict
 
 // tg dict 命令组的根:数据源钩子(打开/关闭查询数据源)与本地 SQLite 路径解析。
 //
-// 全局开关(--config/--json/--csv/-v/--env)由 tt 根命令的 persistent flags 提供
+// 全局开关(--config/--json/--csv/-v/--env)由 tg 根命令的 persistent flags 提供
 // (见 internal/cli/common),这里只保留字典独有的部分:--db 与数据源钩子。
 // 合并前本文件还带着一份与 TDebug 逐行相同的配置路径解析(toolsHome/userConfigDir/
 // isPortable/legacyConfigPaths/resolveConfigPath…),现在统一到 internal/config,
@@ -81,15 +81,15 @@ func init() {
 	common.MetaProvider = srcMeta
 }
 
-// runRootPreRun 显式补跑祖先命令(tt 根)的 PersistentPreRunE。
+// runRootPreRun 显式补跑祖先命令(tg 根)的 PersistentPreRunE。
 //
 // cobra 只运行「从叶命令往上找到的第一个」PersistentPreRunE —— 子命令一旦定义,
 // 父命令的就被整个跳过。从 Group.Parent() 起找,即刻意跳过 Group 自己的钩子
 // (调用方本就是在替代它)。
 //
 // **必须把叶命令透传下去**: cobra 的契约是钩子收到"真正要执行的那条命令",
-// 钩子也据此判自己该做什么（例如 tt 根钩子按命令路径解析 --at 的作用域）。
-// 传祖先(p 自己)的话，根钩子会把一切当成 "tt" —— `tg dict db list --at X` 会被
+// 钩子也据此判自己该做什么（例如 tg 根钩子按命令路径解析 --at 的作用域）。
+// 传祖先(p 自己)的话，根钩子会把一切当成 "tg" —— `tg dict db list --at X` 会被
 // 判成"这条命令不接受 --at"。这不是理论，实测就是这么错的。
 func runRootPreRun(cmd *cobra.Command, args []string) error {
 	for p := Group.Parent(); p != nil; p = p.Parent() {

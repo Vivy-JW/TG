@@ -11,10 +11,10 @@ import (
 )
 
 // 技能一致性：`tg install skills` 把 mkdir 之外的技能树复制到 agent 会读的目录里，
-// 那一份**不随二进制升级自动变**。于是升级完就会出现"tt 是 0.2.2，agent 读的还是
+// 那一份**不随二进制升级自动变**。于是升级完就会出现"tg 是 0.2.2，agent 读的还是
 // 0.2.1 的手册"——而 skills/ 是评测里执行者唯一能读的东西，这种错位比二进制旧更坏。
 //
-// 这份戳就是为了把两件事对上：装过哪些目录、装它们的是哪个 tt 版本。它住在数据目录
+// 这份戳就是为了把两件事对上：装过哪些目录、装它们的是哪个 tg 版本。它住在数据目录
 // （`.tg-skills.json`，与 `.tg-serve.json` 同类：不是缓存），因为它是**两个命令之间的
 // 状态**：install 写、update 与 version 读。
 //
@@ -22,7 +22,7 @@ import (
 // 按它硬失败的那一套，见 internal/cli/install.go），多一个键要赌各家解析器的宽容度；
 // 而且"装到哪些目录"这件事本来就不属于某个技能，属于这次安装。
 type SkillsStamp struct {
-	Version   string    `json:"version"`   // 写这份戳时手上那份 tt 的版本
+	Version   string    `json:"version"`   // 写这份戳时手上那份 tg 的版本
 	UpdatedAt time.Time `json:"updatedAt"` // 最后一次写入时间
 	Targets   []string  `json:"targets"`   // 装到过哪些目录（**绝对路径**：升级时的 cwd 未必与安装时相同）
 }

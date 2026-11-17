@@ -1,6 +1,6 @@
 // 包 host：远程服务器能力共享层 —— 环境模型/SSH 连接/登录动态路径探测/源码镜像。
 // 供 debug（会话调度）与 mirror/db/source/env 等 CLI 命令共同依赖，命令之间互不 import。
-// tt 除 serve 外均为一次性 CLI：本包不维护跨进程状态，探测结果只在单进程内使用。
+// tg 除 serve 外均为一次性 CLI：本包不维护跨进程状态，探测结果只在单进程内使用。
 //
 // 合并说明：本包以 TDebug/host 为基（它在每个有分叉的文件上都是更成熟、更安全的一版：
 // ssh.go 用 channel 消除数据竞争并新增 OutputStdin，tenv.go 用定界符协议挡掉 PTY 回显

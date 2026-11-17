@@ -1,7 +1,7 @@
 // Package common 是三个工具命令组共享的 CLI 上下文：全局开关、内嵌前端、
 // 配置路径解析、统一输出约定。
 //
-// 它是叶子包（不 import 任何 tt 内部命令包），所以 internal/cli 下的
+// 它是叶子包（不 import 任何 tg 内部命令包），所以 internal/cli 下的
 // debug/dev/dict 三个命令组都能安全依赖它，不会与根命令形成循环。
 package common
 

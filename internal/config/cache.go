@@ -23,7 +23,7 @@ var CacheSubdirs = []string{
 	"execlog",   // 调试执行的大输出落盘副本
 	"debug-bps", // 断点存档
 	"spill",     // 查询被截断时落盘的完整结果(见 tg dict 的返回上限)
-	"update",    // tt 自身的更新：下载的安装包与最近一次检查结果(删了只是下次重下)
+	"update",    // tg 自身的更新：下载的安装包与最近一次检查结果(删了只是下次重下)
 }
 
 // CacheDir 数据目录下的缓存子目录。name 必须在 CacheSubdirs 清单里，
@@ -166,7 +166,7 @@ func removeOlderThan(dir string, cutoff time.Time) (removed int, freed int64) {
 // RemoveTree 删掉一整棵目录树(自底向上逐个删),返回删掉的文件数与字节数。
 //
 // **不用 os.RemoveAll**:在 Windows 上 %APPDATA% 可能被应用沙箱重定向成 reparse
-// point(实测 Claude 桌面版的 MSIX 容器里,tt 在它下面建的目录都成了
+// point(实测 Claude 桌面版的 MSIX 容器里,tg 在它下面建的目录都成了
 // `AppData\Local\Packages\<包名>\LocalCache\Roaming\...` 的跳转),而 os.RemoveAll
 // 对这类目录报 ELOOP("too many levels of symbolic links")—— 同一个目录
 // filepath.WalkDir 走得好好的,所以这不是权限或占用问题。

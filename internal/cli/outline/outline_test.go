@@ -167,7 +167,7 @@ func TestRunDefaultsToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(out), &got); err != nil {
 		t.Fatalf("输出不是 JSON: %v\n%s", err, out)
 	}
-	if !got.OK || got.Schema != "tt.outline/v1" || got.Data.Kind != "outline.tree" ||
+	if !got.OK || got.Schema != "tg.outline/v1" || got.Data.Kind != "outline.tree" ||
 		got.Data.LineBase != 1 || got.Data.Total != 3 || len(got.Data.Nodes) != 1 {
 		t.Fatalf("JSON 信封不符: %+v", got)
 	}

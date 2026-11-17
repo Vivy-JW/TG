@@ -23,7 +23,7 @@ tg interface labels <form>    隐藏诊断：gae_file 的 token 表（--lang 选
 
 ## JSON 契约
 
-成功信封固定在 `schema: tt.interface/v1`，`data.kind` 为：
+成功信封固定在 `schema: tg.interface/v1`，`data.kind` 为：
 
 ```text
 interface.show | interface.pages | interface.fields | interface.labels

@@ -19,7 +19,7 @@ import (
 	"tg/internal/output"
 )
 
-const schemaVersion = "tt.outline/v1"
+const schemaVersion = "tg.outline/v1"
 
 var validKinds = []fgl.OutlineKind{
 	fgl.KindFunction, fgl.KindMain, fgl.KindReport, fgl.KindDialog,

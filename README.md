@@ -26,11 +26,11 @@ build_portable.bat
 
 ## 使用
 
-命令与 TT 保持一致，当前可用的主要命令：
+当前可用的主要命令：
 
 ```cmd
 tg serve              # 启动本地配置页（http://127.0.0.1:28670）
-tg install path       # 把 tt 加入用户 PATH
+tg install path       # 把 tg 加入用户 PATH
 tg install skills     # 把内置技能安装到指定目录
 tg update check       # 检查是否有新版本（不下载）
 tg version            # 查看当前版本

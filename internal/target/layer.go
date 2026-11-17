@@ -157,7 +157,7 @@ var layerExceptions = map[string]Layer{
 	// ---- tg file（1 条例外） ----
 	"file mirror dir": Layer0, // 设的是全局镜像根目录，与环境无关
 
-	// ---- tt dev tzs（3 条待定，W1） ----
+	// ---- 旧 dev tzs 线（已随 T100 删除，登记只为历史对账） ----
 	"dev tzs list_tables":  LayerUndetermined,
 	"dev tzs list_columns": LayerUndetermined,
 	"dev tzs list_records": LayerUndetermined,
@@ -209,12 +209,12 @@ func (r LayerRegistry) GroupOf(cmdPath string) string {
 	return best
 }
 
-// normalizeCmdPath 把命令路径归一：吃 `tt ` 前缀与首尾空白。
+// normalizeCmdPath 把命令路径归一：吃 `tg ` 前缀与首尾空白。
 //
-// 两种来源都要收：cobra 的 `CommandPath()` 带 `tt ` 前缀，手写的路径不带。
+// 两种来源都要收：cobra 的 `CommandPath()` 带 `tg ` 前缀，手写的路径不带。
 func normalizeCmdPath(p string) string {
 	p = strings.TrimSpace(p)
-	p = strings.TrimSpace(strings.TrimPrefix(p, "tt "))
+	p = strings.TrimSpace(strings.TrimPrefix(p, "tg "))
 	return p
 }
 

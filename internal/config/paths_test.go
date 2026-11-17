@@ -9,7 +9,7 @@ import (
 
 // isolateEnv 把配置发现相关的环境变量全部指到临时目录，让测试不受本机
 // 真实存在的 %APPDATA% 内容影响。返回统一用户目录的**上级**（%APPDATA% 指向的临时目录，
-// 即 UserConfigDir = <返回值>\tt 的父目录）。
+// 即 UserConfigDir = <返回值>\tg 的父目录）。
 func isolateEnv(t *testing.T) string {
 	t.Helper()
 	home := t.TempDir()
@@ -213,7 +213,7 @@ func TestCacheDir_ValidatesName(t *testing.T) {
 
 // Locations 从配置路径派生：数据目录、状态文件、日志。
 func TestLocations_DataDir(t *testing.T) {
-	l := LocationsAt(filepath.Join(t.TempDir(), "tt", "config.json"))
+	l := LocationsAt(filepath.Join(t.TempDir(), "tg", "config.json"))
 	want := filepath.Dir(l.ConfigPath)
 	if l.DataDir() != want {
 		t.Errorf("DataDir = %q, 期望 %q", l.DataDir(), want)
@@ -239,7 +239,7 @@ func TestLocations_ResolveDictDB(t *testing.T) {
 	if err := os.WriteFile(existing, []byte{}, 0o600); err != nil {
 		t.Fatal(err)
 	}
-	l := LocationsAt(filepath.Join(dir, "tt", "config.json"))
+	l := LocationsAt(filepath.Join(dir, "tg", "config.json"))
 
 	// TDICT_DB 最高优先级
 	t.Setenv("TDICT_DB", existing)
@@ -282,7 +282,7 @@ func TestLocations_ResolveDictDB(t *testing.T) {
 func TestLocations_SyncTarget(t *testing.T) {
 	t.Setenv("TDICT_DB", "") // 隔离开发机上的真实 TDICT_DB,否则缺省目标会变成它
 	dir := t.TempDir()
-	l := LocationsAt(filepath.Join(dir, "tt", "config.json"))
+	l := LocationsAt(filepath.Join(dir, "tg", "config.json"))
 	dataDir := filepath.Dir(l.ConfigPath)
 
 	// 1. 配置值优先，存在与否都一样

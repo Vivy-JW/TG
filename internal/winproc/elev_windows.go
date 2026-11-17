@@ -11,7 +11,7 @@ import (
 //
 // pid <= 0 means "this process". The check exists because driving a Genero
 // Desktop Client window from a differently-privileged process silently fails
-// (window messages are refused) or steals the foreground, so TT treats a
+// (window messages are refused) or steals the foreground, so TG treats a
 // mismatch as a pre-flight failure instead of a warning.
 func TokenElevated(pid int) (bool, error) {
 	const (

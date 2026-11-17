@@ -1,7 +1,7 @@
 # internal/form42f — `.42f` 表单文件解析（纯函数，零 IO）
 
 只做一件事：把编译后的 `.42f`（明文 XML）解析成**字段表** —— 每个字段的
-`colName` / `fieldId` / 控件类型 / 几何 / 必填等，供 `tg interface` / `tt dev tzs` 共用。
+`colName` / `fieldId` / 控件类型 / 几何 / 必填等，供 `tg interface` 用（`dev tzs` 那条线已随 T100 删除）。
 
 ```go
 f, err := form42f.ParseForm42F("axmt500_wf", xmlText)

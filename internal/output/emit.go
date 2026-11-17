@@ -45,7 +45,7 @@ func Emit(w io.Writer, opt Options) error {
 // envelope --json 的顶层形状:成功标志 + 环境信息(平铺)+ 载荷。
 //
 // 平铺而不是塞进嵌套的 meta:tg debug sql 的 DBQueryResult 就是平的,且被 web 前端
-// 消费 —— 改成嵌套是白改一遍。`ok` 与 tt dev 既有的 {"ok":false,...} 对齐,
+// 消费 —— 改成嵌套是白改一遍。`ok` 与其它命令既有的 {"ok":false,...} 对齐,
 // 让只读 JSON、不看退出码的消费者也能判成败。
 type envelope struct {
 	OK bool `json:"ok"`

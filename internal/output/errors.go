@@ -45,9 +45,9 @@ const (
 	// CodeSessionTargetBusy 别名指向的会话不能复用（F20 / Q23 / C1.6）：正在跑或已停站。
 	CodeSessionTargetBusy = "SESSION_TARGET_BUSY"
 
-	// tg update 那条线。它管的是"tt 自己"，与字典无关，所以码也自成一族。
+	// tg update 那条线。它管的是"tg 自己"，与字典无关，所以码也自成一族。
 	CodeUpdateUsage    = "UPDATE_USAGE"    // 参数组合不成立（如非交互环境没给 --yes）
-	CodeUpdateRefused  = "UPDATE_REFUSED"  // 这份 tt 不让自装（源码态、认不出的布局）
+	CodeUpdateRefused  = "UPDATE_REFUSED"  // 这份 tg 不让自装（源码态、认不出的布局）
 	CodeUpdateChecksum = "UPDATE_CHECKSUM" // 摘要/制品自报版本校验不过
 	CodeUpdateNetwork  = "UPDATE_NETWORK"  // 出网失败（代理、限流、超时）
 	CodeUpdateApply    = "UPDATE_APPLY"    // 落地动作失败（覆盖不进去、msiexec 失败、计划读不出）
@@ -57,7 +57,7 @@ const (
 	CodeLocalIO = "LOCAL_IO" // 本地写失败（get -o）
 )
 
-// 退出码。0 与 1 **沿用 tt 既有语义**(1 = 用法/参数错),只新增分类码 ——
+// 退出码。0 与 1 **沿用既有语义**(1 = 用法/参数错),只新增分类码 ——
 // 重新编号会把既有脚本的一次性判据改掉,而换来的只是对齐一个没有权威性的约定。
 const (
 	ExitOK      = 0
@@ -78,7 +78,7 @@ type Error struct {
 
 func (e *Error) Error() string { return e.Message }
 
-// ExitCode 让 tt 的退出码管线(internal/cli 的 exitCoder)认得出它。
+// ExitCode 让 tg 的退出码管线(internal/cli 的 exitCoder)认得出它。
 func (e *Error) ExitCode() int { return e.Exit }
 
 // Errorf 构造一个带码的错误。

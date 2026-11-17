@@ -281,7 +281,7 @@ func VersionOf(ctx context.Context, exe string) (string, error) {
 }
 
 // OutputHasVersion 判断 `tg version` 的输出里有没有目标版本号。
-// 输出形如 `tt 0.2.1 (commit abc1234, 2026-10-07)`，所以按**词**比而不是子串比：
+// 输出形如 `tg 0.2.1 (commit abc1234, 2026-10-07)`，所以按**词**比而不是子串比：
 // 子串会让 0.2.2 匹配上 0.2.20。两边的 v 前缀都抹掉 —— tag 带它、注入的版本号不带。
 func OutputHasVersion(out, want string) bool {
 	want = strings.TrimPrefix(strings.TrimSpace(want), "v")

@@ -3,7 +3,7 @@
 // Package winproc 只做三件事：起一个不随本进程死的子进程、判它活着、杀掉它。
 //
 // 单独成包是因为有两处要用：`tg serve` 把自己重新拉起来做后台常驻（internal/cli/debug），
-// 和 `tt dev tzs` 托管 C# 引擎（internal/dev/tzs）。原来只有前者，实现就住在
+// 和旧 `dev tzs` 托管 C# 引擎（已随 T100 删除）。原来只有前者，实现就住在
 // internal/cli/debug/servebg_windows.go 里；第二处出现时按「清掉重复」的纪律抽出来。
 package winproc
 

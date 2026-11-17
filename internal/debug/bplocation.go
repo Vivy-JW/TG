@@ -26,8 +26,9 @@ import (
 
 // ModuleFlagHelp 是 `--module` 的帮助文本（CLI 注册 flag 时用同一份，别各写一句）。
 func ModuleFlagHelp() string {
-	return "T100 模块目录名。**留空 = 登录后自动解析**（按 <作业>.42r 在各模块 42r 目录里搜，" +
-		"实测 axmt500_wf→axm、bsft001_wf→asf，这是唯一权威来源）；显式给出则按它拼 <模块>_<作业>.4gl"
+	return "模块目录名（$TOP/<模块>/4gl，如 abm）。**留空 = 自动解析**：" +
+		"先按 t_prog_link 的 p_link 看这条作业属于哪个模块（实测 abmi600→cbm，客制模块也走这条），" +
+		"没有记录时退回作业名前缀；显式给出则以它为准，但 p_link 说是别的模块时按 p_link 启动并在会话里提示"
 }
 
 // BPLocContext 是修正断点位置所需的那几条"会话已知事实"。

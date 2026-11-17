@@ -48,7 +48,7 @@ const bpStoreDir = "debug-bps"
 // bpProduct 产品命名空间：T100 的 Product 为空，统一落到 t100；GP 为 gp。
 //
 // A 方案只隔离产品，不隔离 T100 的环境：同一程序在不同 T100 环境之间仍然共享断点，
-// 这是原行为。是否应该按环境隔离（或按源码版本隔离）待与 TT 开发者确认。
+// 这是原行为。是否应该按环境隔离（或按源码版本隔离）—— 这是 TT 时代的原行为，暂未确认。
 func bpProduct(product string) string {
 	p := strings.ToLower(strings.TrimSpace(product))
 	if p == "" {

@@ -1,6 +1,6 @@
 // Package debug 承载 tg debug 命令组（原 TDebug 的 CLI）。
 //
-// 合并前的 TDebug 是独立二进制、独立 cli 包；现在并入 tt 后以子命令组形式存在，
+// 合并前的 TDebug 是独立二进制、独立 cli 包；现在并入 tg 后以子命令组形式存在，
 // 源码由 internal/cli/debug 下的文件实现，调试内核在 internal/debug。
 package debug
 

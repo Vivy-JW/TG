@@ -30,8 +30,8 @@ flag 重置、仓库本体定位。
 | 依赖谁 | `internal/dev/testutil`（`CorpusRoot` / `CorpusFiles`，发现逻辑的单源） | 方向单向 |
 
 **依赖方向不能反过来**：`internal/dev/testutil` 被**生产代码** import
-（`internal/cli/dev/selftest.go:16`，`tt dev tzc selftest` 的实现），而本包 import `testing` ——
-testutil 一旦引本包，整个 `testing` 包就会进 `tt` 二进制。
+（`internal/cli/dev/selftest.go:16`，旧 `dev tzc selftest` 的实现，那条线已删），而本包 import `testing` ——
+testutil 一旦引本包，整个 `testing` 包就会进 `tg` 二进制。
 
 ## 判据
 
