@@ -1,5 +1,5 @@
 ---
-name: tt-erp-debug
+name: tg-erp-debug
 description: 当需要对T100程序进行错误排查和DEBUG时，触发此技能
 ---
 
@@ -11,7 +11,7 @@ description: 当需要对T100程序进行错误排查和DEBUG时，触发此技�
 
 ## DEBUG作业的基本流程
 
-> 参数不确定就 `tg debug <命令> --help`；环境/企业取值用 `--at-list`。下面的 `<ref>` 是会话地址（如 `主机109#1`），从 `debug start` 输出或 `tg session ls` 里抄。
+> 参数不确定就 `tg debug <命令> --help`；环境与据点取值用 `--at-list`。下面的 `<ref>` 是会话地址（如 `主机109#1`），从 `debug start` 输出或 `tg session ls` 里抄。
 
 1. 起服务（已在跑会提示，不会起第二个）：
 

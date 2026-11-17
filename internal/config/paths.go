@@ -1,4 +1,4 @@
-// Package config 是 tt 的统一配置层：位置解析、读写、校验、打码。
+// Package config 是 tg 的统一配置层：位置解析、读写、校验、打码。
 //
 // 外部资源（缓存子目录、服务状态、本地字典库、引擎 exe……）的落点也在这里统一解析，
 // 见 locations.go 的 Locations —— 所有"东西放哪/去哪读"的问题都从这一层取答案，
@@ -163,7 +163,7 @@ func ResolvePath(flagPath string, allowMissing bool) (string, error) {
 	}
 
 	return "", fmt.Errorf(
-		"配置文件未找到。\n\n尝试了以下路径:\n%s\n\n缺省位置: %s\n设置 TG_CONFIG 环境变量或使用 --config 指定正确路径:\n  setx TG_CONFIG \"D:\\path\\to\\config.json\"\n  tt --config \"D:\\path\\to\\config.json\" config path",
+		"配置文件未找到。\n\n尝试了以下路径:\n%s\n\n缺省位置: %s\n设置 TG_CONFIG 环境变量或使用 --config 指定正确路径:\n  setx TG_CONFIG \"D:\\path\\to\\config.json\"\n  tg --config \"D:\\path\\to\\config.json\" config path",
 		FormatTriedPaths(tried), DefaultConfigPath(),
 	)
 }

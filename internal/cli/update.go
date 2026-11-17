@@ -1,6 +1,6 @@
 package cli
 
-// tg update —— tt 自身的更新：查有没有新版、下载并校验制品、把"替换二进制"交给一个
+// tg update —— tg 自身的更新：查有没有新版、下载并校验制品、把"替换二进制"交给一个
 // 脱离的更新器进程。
 //
 // 四条边界（读代码前先读它们）：
@@ -11,13 +11,13 @@ package cli
 //   - **只在显式命令里联网**。`tg serve` 与日常命令都不查；`tg version` 只读缓存。
 //   - 引擎与设计器 dll 随包走，不单独升 —— 更新单位是整包/MSI。
 //
-// 退出码（这条线自己的一张表，与 tt dev / tg dict 各不相干，见根帮助的退出码表）：
+// 退出码（这条线自己的一张表，与 tg dict 各不相干，见根帮助的退出码表）：
 //
 //	0  已是最新 / 更新已交棒 / 用户取消了安装
 //	10 有可用更新（新号：3 在这条线上是"校验失败"，不能混用）
 //	2  用法错（含非交互环境没给 --yes）
 //	3  校验失败（摘要不符、制品自报版本不符）
-//	4  拒绝写入（这份 tt 不让自装）
+//	4  拒绝写入（这份 tg 不让自装）
 //	5  出网失败（代理、限流、超时）或落盘失败
 //
 // 10 不是错误：`tg update check` 已经把自己的结论打到 stdout 了，所以它带着这个码返回
@@ -70,7 +70,7 @@ func newUpdateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: "更新 tg 自身（查新版、下载校验、交棒给更新器）",
-		Long: `更新 tt 自身。
+		Long: `更新 tg 自身。
 
 默认只做"查 + 下载 + 校验"，然后**问你一句**再装；--check-only 只查不装，
 --dry-run 走到交棒前一步全停。非交互环境（agent / 脚本）必须显式给 --yes。
@@ -118,10 +118,10 @@ func newUpdateCheckCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "check",
 		Short: "查有没有新版（不下载、不安装）",
-		Long: `查一次更新源，与手上这份 tt 比较。结论写进缓存（<数据目录>/update/check.json），
+		Long: `查一次更新源，与手上这份 tg 比较。结论写进缓存（<数据目录>/update/check.json），
 ` + "`tg version`" + ` 与设置页离线读它。
 
-只查不动手，所以这份 tt 是什么形态都不影响它。
+只查不动手，所以这份 tg 是什么形态都不影响它。
 
 退出码: 0 已是最新 | 10 有可用更新 | 5 出网失败`,
 		Args: cobra.NoArgs,
@@ -142,7 +142,7 @@ func newUpdateLogCmd() *cobra.Command {
 		Short: "回读最近一次升级的阶段与结果",
 		Long: `回读升级状态（<数据目录>/.tg-update.json）与日志尾部（<数据目录>/.tg-update.log）。
 
-更新器是脱离了终端跑的进程：装完它改的是已经装好的那份 tt，前台早退出了。
+更新器是脱离了终端跑的进程：装完它改的是已经装好的那份 tg，前台早退出了。
 "到底装成了没有、卡在哪一步"只能从这里回答。`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -387,7 +387,7 @@ func runUpdate(cmd *cobra.Command, f updateFlags, checkOnlyMode bool) error {
 
 	// ---- 确认 ----
 	if !f.yes {
-		ok, err := confirm(cmd, fmt.Sprintf("要把 tt 从 %s 升级到 %s 吗？", env.current, res.Latest))
+		ok, err := confirm(cmd, fmt.Sprintf("要把 tg 从 %s 升级到 %s 吗？", env.current, res.Latest))
 		if err != nil {
 			return err
 		}
@@ -472,7 +472,7 @@ func resolveUpdateEnv(proxyFlag string) (*updateEnv, error) {
 // 并跑一遍载荷里的 tg.exe 自报版本。
 //
 // 为什么先解到旁边而不是直接覆盖：解包/校验失败必须发生在动手之前 —— 覆盖到一半失败会
-// 留下一个半新半旧的 tt。
+// 留下一个半新半旧的 tg。
 func stagePortable(ctx context.Context, zipPath, exePath, target string, errOut io.Writer) (string, error) {
 	dir := filepath.Dir(exePath)
 	stage := filepath.Join(filepath.Dir(dir), fmt.Sprintf(".tg-update-stage-%d", time.Now().Unix()))

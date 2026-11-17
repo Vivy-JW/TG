@@ -105,7 +105,7 @@ func newVersionCmd() *cobra.Command {
 			if common.IsJSON() {
 				return common.PrintJSON(map[string]any{"ok": true, "version": versionString(), "hints": hints})
 			}
-			cmd.Println("tt " + versionString())
+			cmd.Println("tg " + versionString())
 			for _, msg := range hints {
 				cmd.Println(msg)
 			}

@@ -1,4 +1,4 @@
-// `tg install` —— 把 tt 装进使用者的环境。
+// `tg install` —— 把 tg 装进使用者的环境。
 //
 //	tg install skills [--to <dir>|auto] [--agent <名字>] [--force] [--dry-run] [--strict]
 //	                                           把官方技能 + 登记的第三方技能复制到目标目录
@@ -49,7 +49,7 @@ func newInstallCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "install",
 		Short: "把 tg 装进你的环境（skills / path）",
-		Long: `把 tt 装进你的环境：
+		Long: `把 tg 装进你的环境：
 
   tg install skills [--to <dir>|auto] [--agent <名字>] [--force] [--dry-run] [--strict]
                                              把官方技能 + 登记的第三方技能复制到目标目录
@@ -82,7 +82,7 @@ func newInstallSkillsCmd() *cobra.Command {
 
 技能有两个来源：
 
-  官方    与 tt 可执行文件同目录的 skills/。随包发布、走专用路径，不受本机配置影响。
+  官方    与 tg 可执行文件同目录的 skills/。随包发布、走专用路径，不受本机配置影响。
   第三方  设置页「技能」里登记的路径（config.json 的 skills.externals），一行一个技能
           目录，位置任选。装它们之前会逐个校验 SKILL.md 的 frontmatter。
 
@@ -108,7 +108,7 @@ func newInstallSkillsCmd() *cobra.Command {
 
 目标目录不存在就新建；已经存在就**追加**：同名的条目默认跳过（不覆盖目标里已有的技能，
 方便多个来源共用 .agents/skills），不冲突的技能照常加进去。要刷新同名条目（例如升级后
-把技能刷成与 tt 同版）再加 --force（只删目标里名字来自来源树 or 登记表的那些条目，
+把技能刷成与 tg 同版）再加 --force（只删目标里名字来自来源树 or 登记表的那些条目，
 不碰其它内容）。
 
 --dry-run 只打印计划与告警，一个字节都不写。--strict 时有告警就返回非零退出码（给 CI 用）。`,
@@ -422,7 +422,7 @@ func newInstallPathCmd() *cobra.Command {
 			}
 			fmt.Printf("已把 %s 追加到用户 PATH（HKCU\\Environment\\Path，不需要管理员）\n", st.ExeDir)
 			fmt.Printf("  新值: %s\n", next)
-			fmt.Println("  新开的终端即可直接敲 `tt`（当前已开的终端需要重开）")
+			fmt.Println("  新开的终端即可直接敲 `tg`（当前已开的终端需要重开）")
 			return nil
 		},
 	}

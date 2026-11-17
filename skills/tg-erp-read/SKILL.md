@@ -17,7 +17,7 @@ tg env list
 2. 找到程序编号。作业编号是用户在客户端看到的功能入口，而程序编号是作业的实现代码。一个作业可能调用多个程序，而一个程序也可能被多个作业复用。作业不等于程序，一个程序也可能被多个作业复用。在处理问题时，我们要优先判断用户说的是作业还是程序。用户大概率讲的是作业，我们需要借助 `tg dict prog <程序编号>` 来找到对应的程序，才能确定去看哪一份源代码。
 
 ```bash
-tg dict prog <程序编号> --evn <环境>
+tg dict prog <程序编号> --env <环境>
 tg dict prog --kw <业务词> --env <环境>
 ```
 
@@ -28,18 +28,21 @@ tg dict prog --kw <业务词> --env <环境>
 tg file mirror path --env <环境>
 ```
 
-从远程SFTP读取源码的命令：
+从远程SFTP读取源码的命令（GP 的树是 `<实例>/tiptop` 与 `<实例>/topcust` 并列，模块直接在第一层，**没有 T100 的 `erp/` 那层**）：
+
 ```bash
-tg file ls --env <环境> erp/<模块>/4gl
-tg file find --env <环境> erp -name '*<程序>*'
-tg file grep -rn --env <环境> --include '*.4gl' '<关键字>' erp/<模块>/4gl
-tg file head -n 80 --env <环境> erp/<模块>/4gl/<程序>.4gl
+tg file ls --at <环境> <模块>/4gl
+tg file find --at <环境> . -name '*<程序>*' -maxdepth 3
+tg file grep -rn --at <环境> --include '*.4gl' '<关键字>' <模块>/4gl
+tg file head -n 80 --at <环境> <模块>/4gl/<程序>.4gl
 ```
 
-4.使用代码大纲工具`tg outline`可以辅助快速阅读代码
+客制代码在另一棵树，前面加 `topcust/`（如 `topcust/cbm/4gl/abmi600.4gl`）；路径不带前缀就是 `$TOP`。
+
+4.使用代码大纲工具`tg outline`可以辅助快速阅读代码（有镜像时按文件名在镜像里找，没有就直接读服务器）
 
 ```bash
-tg outline testdata/fgl-fixtures/input-on-key.4gl --human
+tg outline abmi100.4gl --at <环境> --human
 ```
 
 ```text
@@ -50,21 +53,22 @@ FUNCTION inp_key  [2-7]
 
 ## 获取和阅读程序画面
 
-通过程序编号（同上，不是作业编号哦）在本地或远程中找到对应同样编号的`.42f`文件（一份xml组件树）和`.42s`文件（语言档），然后借助`tg interface`可以通过这两份文件合成组件树，借助其提供的一些列API，可以帮助Agent快速理解画面结构
+通过程序编号（同上，不是作业编号哦）在本地或远程找到同名的`.42f`文件（一份 xml 组件树）。GP 没有 T100 的`.42s`语言档，画面文字放在 `gae_file` 里：`tg interface` 默认先查本地字典库 `t_ui_text`，没有再直查远程 `gae_file`（`--labels auto|local|live|off` / `--lang zh_CN|zh_TW`）。借助它给出的组件树与字段表，可以帮助Agent快速理解画面结构。
 
 合成画面的命令：
  ```bash
    tg interface fields bsft001_wf `
-     --42f "C:\Users\18526\Desktop\bsft001_wf.42f" `
-     --42s "C:\Users\18526\Desktop\bsft001_wf.42s" `
+     --at <环境> `
      --page page_4 `
      --limit 20 `
      --brief
  ```
 
+手上已有 `.42f` 文件时用 `--42f <文件>` 直接指定，不必连环境。
+
 ## 通过数据字典理解字段含义
 
-在TOP GP的数据库中，所有的表和字段都是流水号，无法直接理解其含义。我们需要借助数据字典来获取其真实的中文含义。TOP GP中跟数据库相关的字段有很显而易见的特征，具体的编码规则请参考 [tg-erp-architecture/SKILL.md](../tt-erp-architecture/SKILL.md)。
+在TOP GP的数据库中，所有的表和字段都是流水号，无法直接理解其含义。我们需要借助数据字典来获取其真实的中文含义。TOP GP中跟数据库相关的字段有很显而易见的特征，具体的编码规则请参考 [tg-erp-architecture/SKILL.md](../tg-erp-architecture/SKILL.md)。
 
 例如下面一段代码中，`pmds007`、`pmdt036`、`apba010`、`apba103`、`apba104`、`apba105` 都是数据库中的字段编号，我们需要通过数据字典来查询其对应的中文含义，才能理解这段代码的逻辑。
 ```
@@ -133,7 +137,7 @@ WHEN INFIELD(bmbb05)
 END CASE
 ```
 
-> 开窗是由实体代码的，可以在 `com/qry` 看到生成的代码，但基本上不需要，因为通过工具就可以查到SQL，也要结合查询组件附近的参数看，因为会注入参数。
+> 开窗有实体代码，可以在公共的 `qry/4gl` 下看到生成的 q_*（T100 里叫 `com/qry`），但基本上不需要——用 `tg dict r.q` 直接查 SQL 更快；也要结合查询组件附近的参数看，因为会注入参数。
 
 
 查询开窗对应的SQL等信息的命令：
