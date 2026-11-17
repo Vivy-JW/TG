@@ -1,7 +1,7 @@
 // Package envmove 把「环境改名」里按名字落盘的东西一起搬走。
 //
-// 环境名是跨文件的持久键：dict/<环境>.db、ents/<环境>.json、srccache/<环境>/、
-// execlog/<环境>/、mirror.dir/<环境>/（tg file mirror 的源码镜像）。只改 config.json 里的 name，
+// 环境名是跨文件的持久键：dict/<环境>.db、srccache/<环境>/、execlog/<环境>/、
+// mirror.dir/<环境>/（tg file mirror 的源码镜像）。只改 config.json 里的 name，
 // 这些目录就变成孤儿；查询随后报「本地库不存在」，而它与「数据不存在」在输出上
 // 无法区分。所以改名必须是一次迁移：
 //
@@ -11,7 +11,6 @@
 package envmove
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -21,12 +20,11 @@ import (
 	"time"
 
 	"tg/internal/config"
-	"tg/internal/entdir"
 )
 
 // Move 一份要搬的落点（文件或整个目录）。
 type Move struct {
-	Kind string `json:"kind"` // dict / dict-bak / ents / srccache / execlog / mirror
+	Kind string `json:"kind"` // dict / dict-bak / srccache / execlog / mirror
 	From string `json:"from"`
 	To   string `json:"to"`
 }
@@ -38,11 +36,11 @@ type pair struct{ kind, from, to string }
 //
 // 路径必须与**实际读写点**用同一套解析：
 //   - dict：环境 dictDir > 顶层 dict.dir > <数据目录>/dict（config.DictDBDirForEnv）；
-//   - ents / srccache：envdir.EnvSeg；
+//   - srccache / execlog：config.EnvSeg；
 //   - mirror：环境自己的 mirrorDir 是绝对路径、与名字无关，跳过；
 //     否则把顶层 mirror.dir/<旧名> 一起搬到 <新名>（`tg file mirror` 的源码镜像）。
 //
-// 源不存在就跳过（没同步过字典、没查过企业、没调试过都很正常）；
+// 源不存在就跳过（没同步过字典、没调试过都很正常）；
 // 目标已存在则整体失败 —— 覆盖一份别人的库比报错危险得多。
 func Plan(cfgPath, from, to, host, zone string) ([]Move, error) {
 	from, to = strings.TrimSpace(from), strings.TrimSpace(to)
@@ -64,8 +62,8 @@ func Plan(cfgPath, from, to, host, zone string) ([]Move, error) {
 		return nil, fmt.Errorf("读取配置失败：%w", err)
 	}
 
-	segFrom := entdir.EnvSeg(from, host, zone)
-	segTo := entdir.EnvSeg(to, host, zone)
+	segFrom := config.EnvSeg(from, host, zone)
+	segTo := config.EnvSeg(to, host, zone)
 
 	var pairs []pair
 	// dict：必须走 DictDBDirForEnv，否则用户把 dict.dir / 环境 dictDir 配到别处时，
@@ -74,7 +72,6 @@ func Plan(cfgPath, from, to, host, zone string) ([]Move, error) {
 	pairs = append(pairs,
 		pair{"dict", config.DictDBPathIn(dictDir, from), config.DictDBPathIn(dictDir, to)},
 		pair{"dict-bak", config.DictDBPathIn(dictDir, from) + ".bak", config.DictDBPathIn(dictDir, to) + ".bak"},
-		pair{"ents", entdir.Path(dataDir, segFrom), entdir.Path(dataDir, segTo)},
 		pair{"srccache", filepath.Join(dataDir, "srccache", segFrom), filepath.Join(dataDir, "srccache", segTo)},
 		// execlog 与 srccache 同源（都是 <dataDir>/<种类>/<环境段>/[runNN/]）：
 		// 调试跑过命令的大输出副本按环境段落盘，不搬就走成孤儿目录。它只堆磁盘、
@@ -115,44 +112,30 @@ func Plan(cfgPath, from, to, host, zone string) ([]Move, error) {
 }
 
 // Execute 按计划搬迁。任一失败即回滚已搬的部分，不留半套。
-// 企业快照搬完后顺手把文件内的 env 字段改成新名（它只用于展示，但留着旧名会误导排查）。
-// oldName 用于回滚时把快照里的 env 改回去。
-func Execute(moves []Move, newName, oldName string) error {
+func Execute(moves []Move) error {
 	done := make([]Move, 0, len(moves))
 	for _, m := range moves {
 		if err := renameWithRetry(m.From, m.To); err != nil {
-			uerr := undo(done, oldName)
+			uerr := undo(done)
 			return mergeErr(fmt.Errorf("搬 %s 失败：%w", m.From, renameHint(err)), uerr)
 		}
 		done = append(done, m)
-		if m.Kind == "ents" && newName != "" {
-			if err := SetSnapshotName(m.To, newName); err != nil {
-				uerr := undo(done, oldName)
-				return mergeErr(fmt.Errorf("更新企业快照 %s 失败：%w", m.To, err), uerr)
-			}
-		}
 	}
 	return nil
 }
 
-// Undo 反向搬（配置写失败时回滚用），并把企业快照里的 env 字段改回旧名。
+// Undo 反向搬（配置写失败时回滚用）。
 // 返回回滚过程中的错误（可能有多个），由调用方决定怎么报。
-func Undo(moves []Move, oldName string) error {
-	return undo(moves, oldName)
+func Undo(moves []Move) error {
+	return undo(moves)
 }
 
-func undo(done []Move, oldName string) error {
+func undo(done []Move) error {
 	var errs []error
 	for i := len(done) - 1; i >= 0; i-- {
 		m := done[i]
 		if err := renameWithRetry(m.To, m.From); err != nil {
 			errs = append(errs, fmt.Errorf("回滚 %s → %s 失败：%w", m.To, m.From, err))
-			continue
-		}
-		if m.Kind == "ents" && oldName != "" {
-			if err := SetSnapshotName(m.From, oldName); err != nil {
-				errs = append(errs, fmt.Errorf("回滚企业快照 %s 失败：%w", m.From, err))
-			}
 		}
 	}
 	return errors.Join(errs...)
@@ -214,30 +197,4 @@ func mergeErr(primary, undoErr error) error {
 		return primary
 	}
 	return fmt.Errorf("%w；同时回滚落点失败：%v", primary, undoErr)
-}
-
-// SetSnapshotName 把企业快照里的 env 字段改成新环境名（新名由调用方给）。
-// 迁移后调用一次：文件名对了、内容还写着旧名，排查时会被带偏。
-func SetSnapshotName(snapshotPath, name string) error {
-	return setSnapshotEnv(snapshotPath, name)
-}
-
-func setSnapshotEnv(snapshotPath, name string) error {
-	if name == "" {
-		name = strings.TrimSuffix(filepath.Base(snapshotPath), ".json")
-	}
-	b, err := os.ReadFile(snapshotPath)
-	if err != nil {
-		return err
-	}
-	var m map[string]any
-	if err := json.Unmarshal(b, &m); err != nil {
-		return err
-	}
-	m["env"] = name
-	out, err := json.MarshalIndent(m, "", "  ")
-	if err != nil {
-		return err
-	}
-	return config.AtomicWrite(snapshotPath, out)
 }

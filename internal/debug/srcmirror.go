@@ -37,7 +37,6 @@ import (
 	"strings"
 	"sync"
 	"tg/internal/config"
-	"tg/internal/entdir"
 	"tg/internal/host"
 
 	"github.com/pkg/sftp"
@@ -47,12 +46,12 @@ import (
 const srcMirrorDir = "srccache"
 
 // pathSafeSeg 把任意字符串压成单个安全的路径段。
-// 实现在 internal/entdir:企业目录快照的文件名用同一套清洗,两处不能各写一份。
-func pathSafeSeg(s string) string { return entdir.PathSafeSeg(s) }
+// 实现在 internal/config:按环境名落盘的目录与改名迁移共用同一套清洗,不能各写一份。
+func pathSafeSeg(s string) string { return config.PathSafeSeg(s) }
 
 // mirrorEnvSeg 镜像目录里的环境段:优先环境名,退化为 主机-区域。
 func mirrorEnvSeg(envName, sshHost, zone string) string {
-	return entdir.EnvSeg(envName, sshHost, zone)
+	return config.EnvSeg(envName, sshHost, zone)
 }
 
 // mirrorScopeOf 拼出镜像目录的**目标作用域**（缺陷 X / T5.1）:环境段 + 会话运行作用域。

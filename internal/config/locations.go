@@ -43,7 +43,7 @@ func LocationsAt(configPath string) *Locations {
 	return &Locations{ConfigPath: configPath}
 }
 
-// DataDir 数据目录 = 配置所在目录（ents/、srccache/、.tg-serve.json 都跟着它）。
+// DataDir 数据目录 = 配置所在目录（srccache/、execlog/、.tg-serve.json 都跟着它）。
 func (l *Locations) DataDir() string {
 	if l.ConfigPath == "" {
 		return ""

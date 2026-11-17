@@ -28,7 +28,7 @@ type configStatus struct {
 	Sync config.FileStatus `json:"sync"`
 	// Install 命令行安装状态(用户 PATH),不是 config.json 里的东西。
 	Install pathinstall.Status `json:"install"`
-	// Cache 配置目录下那些**可再生**中间数据的占用(企业快照/源码镜像/查询落盘/断点存档)。
+	// Cache 配置目录下那些**可再生**中间数据的占用(源码镜像/查询落盘/断点存档/更新包)。
 	// 与 config.json 同目录但性质相反,所以单独一个块,并明确"它不是你的数据"。
 	Cache config.CacheStatus `json:"cache"`
 }

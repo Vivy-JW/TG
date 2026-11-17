@@ -55,7 +55,6 @@ func newEnvCmd() *cobra.Command {
 
   dict/<旧名>.db       本地字典库（改完不用重新同步；尊重 dict.dir / 环境 dictDir）
   dict/<旧名>.db.bak   同步留下的上一版备份
-  ents/<旧名>/         旧版 TT 留下的企业目录快照（有就一起搬，TG 不再写它）
   srccache/<旧名>/     调试源码镜像
   execlog/<旧名>/      调试跑过命令的大输出副本
   mirror.dir/<旧名>/   tg file mirror 的源码镜像（环境自配 mirrorDir 时不动）
@@ -258,14 +257,14 @@ func runEnvRename(cmd *cobra.Command, from, to string) error {
 	if err != nil {
 		return err
 	}
-	if err := envmove.Execute(moves, to, from); err != nil {
+	if err := envmove.Execute(moves); err != nil {
 		return err
 	}
 	rewritten, err := config.RenameHost(path, from, to)
 	if err != nil {
 		// 配置没改成 → 把落点搬回旧名，别留下"文件在新名、配置在旧名"的半套。
 		// 回滚失败必须报出来：只报配置错误会让用户以为文件还是旧的。
-		if uerr := envmove.Undo(moves, from); uerr != nil {
+		if uerr := envmove.Undo(moves); uerr != nil {
 			return fmt.Errorf("%w；同时回滚落点失败：%v", err, uerr)
 		}
 		return err

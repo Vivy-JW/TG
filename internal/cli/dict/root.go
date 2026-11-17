@@ -33,7 +33,7 @@ var dictFull bool
 var dbPath string
 
 // srcConfigPath 本次用的配置文件路径(PreRunE 里解析一次):它所在的目录既是
-// 企业目录快照的落点,也是截断时结果落盘的落点。
+// 本地字典库的落点,也是截断时结果落盘的落点。
 var srcConfigPath string
 
 // dictCompany --company:本次远程直查用哪个公司别(zta_file.zta02 / Oracle schema)。

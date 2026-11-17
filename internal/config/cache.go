@@ -19,7 +19,6 @@ import (
 //   - .tg-serve.json   **运行中**服务的 pid 文件,删了 `tg serve --stop` 就找不着它
 //   - .tg-serve.log    日志(排障要看,且不影响正确性;想清可以用系统手段)
 var CacheSubdirs = []string{
-	"ents",      // 企业目录快照(ENT→账号),10 分钟新鲜期,过期自动重查
 	"srccache",  // 调试时的源码镜像,只活一轮调试
 	"execlog",   // 调试执行的大输出落盘副本
 	"debug-bps", // 断点存档

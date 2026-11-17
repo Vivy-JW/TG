@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"tg/internal/config"
-	"tg/internal/entdir"
 )
 
 // writeConfigRaw 写一份最小配置（body 里的 hosts/query 由调用方给）。
@@ -53,21 +52,19 @@ func TestRenameMigratesAllPaths(t *testing.T) {
 	cfgPath := writeConfig(t, dir, "local:甲")
 
 	dictOld := config.DictDBPath(dir, "甲")
-	entsOld := entdir.Path(dir, entdir.EnvSeg("甲", "10.0.0.1", "1"))
-	mirrorOld := filepath.Join(dir, "srccache", entdir.EnvSeg("甲", "10.0.0.1", "1"))
+	srcOld := filepath.Join(dir, "srccache", config.EnvSeg("甲", "10.0.0.1", "1"))
 	touch(t, dictOld, "dict")
 	touch(t, dictOld+".bak", "bak")
-	touch(t, entsOld, `{"version":1,"env":"甲","fingerprint":"x","mappings":[{"ent":99,"account":"a","placeholder":false}]}`)
-	touch(t, filepath.Join(mirrorOld, "u1", "com", "a.4gl"), "src")
+	touch(t, filepath.Join(srcOld, "u1", "cbm", "a.4gl"), "src")
 
 	moves, err := Plan(cfgPath, "甲", "乙", "10.0.0.1", "1")
 	if err != nil {
 		t.Fatalf("Plan: %v", err)
 	}
-	if len(moves) != 4 { // dict / dict-bak / ents / srccache
-		t.Fatalf("该搬 4 份，实得 %d：%+v", len(moves), moves)
+	if len(moves) != 3 { // dict / dict-bak / srccache
+		t.Fatalf("该搬 3 份，实得 %d：%+v", len(moves), moves)
 	}
-	if err := Execute(moves, "乙", "甲"); err != nil {
+	if err := Execute(moves); err != nil {
 		t.Fatalf("Execute: %v", err)
 	}
 	rewritten, err := config.RenameHost(cfgPath, "甲", "乙")
@@ -78,14 +75,13 @@ func TestRenameMigratesAllPaths(t *testing.T) {
 		t.Error("query.source 指向旧名，改名时该一起改写")
 	}
 
-	for _, old := range []string{dictOld, dictOld + ".bak", entsOld, mirrorOld} {
+	for _, old := range []string{dictOld, dictOld + ".bak", srcOld} {
 		if _, err := os.Stat(old); !os.IsNotExist(err) {
 			t.Errorf("旧落点还在：%s", old)
 		}
 	}
 	dictNew := config.DictDBPath(dir, "乙")
-	entsNew := entdir.Path(dir, entdir.EnvSeg("乙", "10.0.0.1", "1"))
-	for _, p := range []string{dictNew, dictNew + ".bak", entsNew, filepath.Join(dir, "srccache", "乙")} {
+	for _, p := range []string{dictNew, dictNew + ".bak", filepath.Join(dir, "srccache", "乙")} {
 		if _, err := os.Stat(p); err != nil {
 			t.Errorf("新落点不存在：%s（%v）", p, err)
 		}
@@ -100,18 +96,6 @@ func TestRenameMigratesAllPaths(t *testing.T) {
 	}
 	if root.Query.Source != "local:乙" {
 		t.Errorf("query.source = %q，期望 local:乙", root.Query.Source)
-	}
-
-	b, err := os.ReadFile(entsNew)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var snap map[string]any
-	if err := json.Unmarshal(b, &snap); err != nil {
-		t.Fatal(err)
-	}
-	if snap["env"] != "乙" {
-		t.Errorf("企业快照里的 env = %v，期望 乙", snap["env"])
 	}
 }
 
@@ -213,28 +197,24 @@ func TestPlanSkipsPerEnvMirrorDir(t *testing.T) {
 	}
 }
 
-// Execute 中途失败时回滚已搬的落点，并把企业快照的 env 改回旧名。
-func TestExecuteRollbackRestoresSnapshot(t *testing.T) {
+// Execute 中途失败时回滚已搬的落点，不留半套。
+func TestExecuteRollbackRestoresMovedPaths(t *testing.T) {
 	dir := t.TempDir()
-	entsFrom := filepath.Join(dir, "ents", "甲.json")
-	touch(t, entsFrom, `{"version":1,"env":"甲"}`)
+	from := filepath.Join(dir, "dict", "甲.db")
+	touch(t, from, "db")
 
 	moves := []Move{
-		{Kind: "ents", From: entsFrom, To: filepath.Join(dir, "ents", "乙.json")},
-		{Kind: "dict", From: filepath.Join(dir, "nope.db"), To: filepath.Join(dir, "nope2.db")},
+		{Kind: "dict", From: from, To: filepath.Join(dir, "dict", "乙.db")},
+		{Kind: "dict-bak", From: filepath.Join(dir, "dict", "甲.db.bak"), To: filepath.Join(dir, "dict", "乙.db.bak")},
 	}
-	err := Execute(moves, "乙", "甲")
-	if err == nil {
+	if err := Execute(moves); err == nil {
 		t.Fatal("第二个落点不存在，Execute 应该失败")
 	}
-	if _, err := os.Stat(entsFrom); err != nil {
-		t.Errorf("回滚后旧快照不在：%v", err)
+	if _, err := os.Stat(from); err != nil {
+		t.Errorf("回滚后旧落点不在：%v", err)
 	}
-	b, _ := os.ReadFile(entsFrom)
-	var snap map[string]any
-	_ = json.Unmarshal(b, &snap)
-	if snap["env"] != "甲" {
-		t.Errorf("回滚后快照 env = %v，期望 甲", snap["env"])
+	if _, err := os.Stat(filepath.Join(dir, "dict", "乙.db")); !os.IsNotExist(err) {
+		t.Errorf("回滚后新落点还在：%v", err)
 	}
 }
 
@@ -312,7 +292,7 @@ func jsonEscape(s string) string {
 // 大输出副本按环境段落盘，改名不搬就会留下孤儿目录。
 func TestPlanMovesExecLog(t *testing.T) {
 	dir := t.TempDir()
-	seg := entdir.EnvSeg("甲", "10.0.0.1", "1")
+	seg := config.EnvSeg("甲", "10.0.0.1", "1")
 	execlogOld := filepath.Join(dir, "execlog", seg, "run1")
 	touch(t, filepath.Join(execlogOld, "cmd-1.log"), "out")
 
@@ -330,7 +310,7 @@ func TestPlanMovesExecLog(t *testing.T) {
 		t.Fatalf("execlog 没进计划：%+v", moves)
 	}
 
-	if err := Execute(moves, "乙", "甲"); err != nil {
+	if err := Execute(moves); err != nil {
 		t.Fatalf("Execute: %v", err)
 	}
 	if _, err := os.Stat(filepath.Join(dir, "execlog", seg)); !os.IsNotExist(err) {

@@ -200,13 +200,13 @@ func TestResolvePath_EnvWinsWhenMissing(t *testing.T) {
 // CacheDir 只认缓存清单里的名字：清单外的名字得到空串，不许悄悄建新目录。
 func TestCacheDir_ValidatesName(t *testing.T) {
 	dir := t.TempDir()
-	if got := CacheDir(dir, "ents"); got != filepath.Join(dir, "ents") {
-		t.Errorf("CacheDir(ents) = %q", got)
+	if got := CacheDir(dir, "srccache"); got != filepath.Join(dir, "srccache") {
+		t.Errorf("CacheDir(srccache) = %q", got)
 	}
 	if got := CacheDir(dir, "not-in-list"); got != "" {
 		t.Errorf("清单外的名字应当得到空串, 得到 %q", got)
 	}
-	if got := CacheDir("", "ents"); got != "" {
+	if got := CacheDir("", "srccache"); got != "" {
 		t.Errorf("数据目录为空应当得到空串, 得到 %q", got)
 	}
 }

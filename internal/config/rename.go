@@ -7,7 +7,7 @@ import (
 
 // ValidateEnvName 校验一个**新**环境名能不能安全地当作路径键与 query.source 的一部分。
 //
-// 环境名会直接进 dict/<环境>.db、ents/<环境>.json、mirror.dir/<环境>/ 与
+// 环境名会直接进 dict/<环境>.db、srccache/<环境>/、mirror.dir/<环境>/ 与
 // `local:<环境>`：路径分隔符会改变落点，冒号会和 query.source 的 `local:` 前缀
 // 打架。名字里允许中文与空格，但不允许首尾空白。
 func ValidateEnvName(name string) error {
@@ -32,7 +32,7 @@ func ValidateEnvName(name string) error {
 // 返回 query.source 是否被改写。
 //
 // 为什么不是"只改 name"：环境名是跨文件的持久引用 —— query.source、dict/<环境>.db、
-// ents/<环境>.json、srccache/<环境>/ 都拿它当键。只改 name 会留下悬空引用，而悬空
+// srccache/<环境>/、execlog/<环境>/ 都拿它当键。只改 name 会留下悬空引用，而悬空
 // 引用的症状是「查不到数据」，与「数据不存在」在输出上分不出来。按名字落盘的那几份
 // 由 envmove 搬走；这个函数保证配置本身是自洽的。
 func RenameHost(path, from, to string) (bool, error) {

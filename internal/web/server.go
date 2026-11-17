@@ -461,9 +461,9 @@ func (s *Server) hHostsPut(w http.ResponseWriter, r *http.Request) {
 	// 2) 搬文件（此时配置仍是旧名）。失败就把已搬的搬回去。
 	var executed []plannedMove
 	for _, p := range plans {
-		if err := envmove.Execute(p.moves, p.r.To, p.r.From); err != nil {
+		if err := envmove.Execute(p.moves); err != nil {
 			for i := len(executed) - 1; i >= 0; i-- {
-				if uerr := envmove.Undo(executed[i].moves, executed[i].r.From); uerr != nil {
+				if uerr := envmove.Undo(executed[i].moves); uerr != nil {
 					log.Printf("[tt] 回滚环境 %s 的落点失败: %v", executed[i].r.From, uerr)
 				}
 			}
@@ -474,7 +474,7 @@ func (s *Server) hHostsPut(w http.ResponseWriter, r *http.Request) {
 	}
 	rollbackMoves := func() {
 		for i := len(executed) - 1; i >= 0; i-- {
-			if uerr := envmove.Undo(executed[i].moves, executed[i].r.From); uerr != nil {
+			if uerr := envmove.Undo(executed[i].moves); uerr != nil {
 				log.Printf("[tt] 回滚环境 %s 的落点失败: %v", executed[i].r.From, uerr)
 			}
 		}

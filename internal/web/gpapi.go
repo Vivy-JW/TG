@@ -252,7 +252,6 @@ func (s *GPAPI) hEnv(w http.ResponseWriter, r *http.Request) {
 	// 改名和 T100 走同一条迁移管线：先搬按名字落盘的字典/快照/镜像，
 	// 再写配置；写配置失败就搬回来。见 internal/envmove 的注释。
 	var renameMoves []envmove.Move
-	var renameOldName string
 
 	err := config.EditHosts(s.cfgPath, func(h *config.Hosts) error {
 		oldName := strings.TrimSpace(body.OldName)
@@ -305,10 +304,10 @@ func (s *GPAPI) hEnv(w http.ResponseWriter, r *http.Request) {
 				if merr != nil {
 					return merr
 				}
-				if eerr := envmove.Execute(moves, name, oldName); eerr != nil {
+				if eerr := envmove.Execute(moves); eerr != nil {
 					return eerr
 				}
-				renameMoves, renameOldName = moves, oldName
+				renameMoves = moves
 			}
 		}
 
@@ -360,7 +359,7 @@ func (s *GPAPI) hEnv(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		if len(renameMoves) > 0 {
-			if uerr := envmove.Undo(renameMoves, renameOldName); uerr != nil {
+			if uerr := envmove.Undo(renameMoves); uerr != nil {
 				writeJSON(w, 500, map[string]any{"ok": false, "error": err.Error() + "；回滚落点失败：" + uerr.Error()})
 				return
 			}

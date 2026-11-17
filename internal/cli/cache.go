@@ -28,7 +28,6 @@ func newCacheCmd() *cobra.Command {
 
 缓存 = 跑出来的、可再生的中间数据(它们与 config.json 同居一个目录,但删了会自愈):
 
-  ents        企业目录快照(ENT→账号),10 分钟新鲜期,过期自动重查
   srccache    调试时的源码镜像,只活一轮调试
   execlog     调试执行的大输出落盘副本
   debug-bps   断点存档

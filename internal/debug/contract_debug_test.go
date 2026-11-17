@@ -1180,7 +1180,7 @@ func TestContractCandidateLineFormat(t *testing.T) {
 //     本包 import 不了 `internal/cli/debug`（那会成环），所以那条只能在那一侧。
 //
 // 身份行按 C5.9 是**两行**（第一行四字段，第二行账号/库/区域）。这里只钉第一行 ——
-// 第二行那三样来自配置与企业快照，不是会话的身份键，由 CLI 那一侧的测试覆盖。
+// 第二行那三样来自环境配置（db.accounts[0] 与库地址），不是会话的身份键，由 CLI 那一侧的测试覆盖。
 func TestContractIdentityLineIsLanded(t *testing.T) {
 	m := NewManager(cfgFor("h1", "36"))
 	live := idleOn("s1", cfgFor("h1", "36"))

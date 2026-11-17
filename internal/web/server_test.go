@@ -655,7 +655,7 @@ func TestHostsPut_RenameConflictLeavesConfigUntouched(t *testing.T) {
 	}
 }
 
-// 新增/改名的环境名会进 dict/<名>.db、ents/<名>.json 与 local:<名>：
+// 新增/改名的环境名会进 dict/<名>.db、srccache/<名>/ 与 local:<名>：
 // 路径分隔符/冒号必须当场拒绝，老配置里已有的名字则不追溯。
 func TestHostsPut_RejectsUnsafeNewName(t *testing.T) {
 	seed := `{"schemaVersion":4,
