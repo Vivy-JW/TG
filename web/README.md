@@ -20,7 +20,7 @@ web/
 ## 开发模式
 
 ```bash
-cd web && npm run dev:app      # 热更新；默认代理到后端 127.0.0.1:28670
+cd web && npm run dev:app      # 热更新；默认代理到后端 127.0.0.1:28680
 tg serve                       # 后端
 ```
 

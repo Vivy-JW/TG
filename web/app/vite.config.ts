@@ -10,9 +10,9 @@ import tailwindcss from '@tailwindcss/vite'
 //   /api/…        共享端点（hosts 配置、dbprobe、conntest…）
 //
 // 开发时 vite 在 /debug/ 上服务 SPA，并把上面两类都代理到后端。
-// 后端地址默认 127.0.0.1:28670（tt serve 的默认监听）；端口被占用顺延时用 TT_PROXY 指定。
+// 后端地址默认 127.0.0.1:28680（tt serve 的默认监听）；端口被占用顺延时用 TG_PROXY 指定。
 export default defineConfig(() => {
-  const target = process.env.TT_PROXY || 'http://127.0.0.1:28670'
+  const target = process.env.TG_PROXY || 'http://127.0.0.1:28680'
   return {
     base: '/debug/',
     plugins: [react(), tailwindcss()],

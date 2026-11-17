@@ -17,7 +17,7 @@ const SchemaVersion = 4
 
 // 缺省值。合并前三处各自硬编码，现在只有这一份。
 const (
-	DefaultListen          = "127.0.0.1:28670"
+	DefaultListen          = "127.0.0.1:28680"
 	DefaultLaunchArgs      = "BBDL512840855a 2 12345 'N' {prog}"
 	DefaultWatchdogSeconds = 1800
 	DefaultTermWidth       = 200

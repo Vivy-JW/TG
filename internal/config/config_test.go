@@ -13,7 +13,7 @@ func TestEditSection_PreservesOtherKeys(t *testing.T) {
 	path := filepath.Join(dir, "config.json")
 	seed := `{
   "schemaVersion": 2,
-  "listen": "127.0.0.1:28670",
+  "listen": "127.0.0.1:28680",
   "hosts": {"activeEnv": "a", "sshs": [{"name": "a", "host": "h", "port": 22, "user": "u", "password": "p"}]},
   "query": {"source": "local"},
   "未来的键": {"x": 1}
@@ -37,7 +37,7 @@ func TestEditSection_PreservesOtherKeys(t *testing.T) {
 	if _, has := root["未来的键"]; !has {
 		t.Error("未知顶层键被抹掉了")
 	}
-	if root["listen"] != "127.0.0.1:28670" {
+	if root["listen"] != "127.0.0.1:28680" {
 		t.Error("其他已知节被改动了")
 	}
 	q, _ := root["query"].(map[string]any)
@@ -324,7 +324,7 @@ func TestNetSettingsProxy(t *testing.T) {
 	}
 
 	old := filepath.Join(dir, "old.json")
-	if err := os.WriteFile(old, []byte(`{"schemaVersion": 2, "listen": "127.0.0.1:28670"}`), 0o600); err != nil {
+	if err := os.WriteFile(old, []byte(`{"schemaVersion": 2, "listen": "127.0.0.1:28680"}`), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	r2, err := Load(old)

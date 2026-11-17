@@ -175,7 +175,7 @@ func TestLoadConfigSplitSections(t *testing.T) {
 
 // NewDefaultConfig 落盘后应能被宽松加载读回(首次运行的配置骨架)。
 //
-// 监听地址不在其中：调试面的 Listen 由 `tg serve` / `web` 那一层给（默认 127.0.0.1:28670
+// 监听地址不在其中：调试面的 Listen 由 `tg serve` / `web` 那一层给（默认 127.0.0.1:28680
 // 写在 config.DefaultListen），`fillDefaults` 不再替它编一个。
 func TestNewDefaultConfigRoundTrip(t *testing.T) {
 	cfg := NewDefaultConfig()

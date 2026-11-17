@@ -207,7 +207,7 @@ var debugServeCmd = &cobra.Command{
 默认后台运行(单实例):命令打印服务地址与 pid 后立即返回,当前会话可继续输入其它命令;
 已有一个实例在跑时打印它的地址后直接返回。
 停止用 tg debug serve --stop;前台运行(日志直出终端)用 --foreground。
-监听地址取 config.json 顶层 listen(兼容旧结构的 debug.listen;默认 127.0.0.1:28670,不常用端口);
+监听地址取 config.json 顶层 listen(兼容旧结构的 debug.listen;默认 127.0.0.1:28680,不常用端口);
 端口被占用时自动顺延到下一个空闲端口并打印真实地址。`,
 	Example: `  tg debug serve                  # 后台启动(单实例),打印地址后返回
   tg debug serve --stop          # 停止后台实例

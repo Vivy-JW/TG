@@ -47,7 +47,7 @@ func doJSON(t *testing.T, s *Server, method, target string, body any) (*httptest
 
 const seededConfig = `{
   "schemaVersion": 2,
-  "listen": "127.0.0.1:28670",
+  "listen": "127.0.0.1:28680",
   "hosts": {
     "activeEnv": "开发环境",
     "sshs": [{
@@ -136,7 +136,7 @@ func TestHostsPut_LeavesOtherSectionsAlone(t *testing.T) {
 		t.Errorf("debug.termWidth 未写入: %v", d["termWidth"])
 	}
 	l, _ := root["listen"].(string)
-	if l != "127.0.0.1:28670" {
+	if l != "127.0.0.1:28680" {
 		t.Errorf("listen 被误改: %q", l)
 	}
 }

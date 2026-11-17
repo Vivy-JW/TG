@@ -40,7 +40,7 @@ tg outline abmi100.4gl --at 22主机 --human   # 4GL 大纲
 tg debug start abmi600 --env 22主机  # 起作业并停在入口
 tg session ls                  # 看当前调试会话
 
-tg serve              # 启动本地配置页 / 调试工作台（http://127.0.0.1:28670）
+tg serve              # 启动本地配置页 / 调试工作台（http://127.0.0.1:28680）
 tg install path       # 把 tg 加入用户 PATH
 tg install skills     # 把内置技能安装到指定目录
 tg update check       # 检查是否有新版本（不下载）
