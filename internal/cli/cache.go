@@ -32,6 +32,7 @@ func newCacheCmd() *cobra.Command {
   execlog     调试执行的大输出落盘副本
   debug-bps   断点存档
   spill       查询被截断时落盘的完整结果
+  update      tg 自己的更新包与最近一次检查结果
 
 **config.json 不是缓存**,清除时一律不动;正在运行的服务状态文件也不动。
 
