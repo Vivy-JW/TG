@@ -70,6 +70,7 @@
 - ☑ 前端 `dist` 重编 + exe 重打（多轮；2026-11-17 最新产物 `web/dist/assets/index-*.js` ≈4.04 MB，exe `0.5.2-2026-11-17h`）
 - ☑ `build_portable.bat` / `installer/tg.wxs` 改 TG 名称、产品名（2026-11-13 `1685d08`；MSI 2026-11-16 实跑产出 `dist\TG-0.5.2-x64.msi`，UpgradeCode 换成 TG 自己的）
 - ☑ 版本号与 CHANGELOG（2026-11-17）：TG 作为新工具重新起版本，`VERSION` = **0.1.0**（不沿用 TT 的 0.5.2）；同步 `web/package.json`、`web/app/package.json`、`web/package-lock.json`（3 处 version + 2 处 `tg-web` 名字），`make version-check` 的 node 脚本增查 `packages["app"]`；新建 `CHANGELOG.md`（Keep a Changelog，只记 0.1.0 这一版）；README 的「当前状态/常用命令」同步到 GP 口径
+- ☑ Genero BDL 手册随包（2026-11-18 `a2770f8`）：`internal/zipx` 抽出解包/复制（update 改调，`keepLocal` 留在 `internal/update/payload.go`）；config 加 `bdldoc` 节（`SchemaVersion` 4→5）；新增 `tg install bdl [--to|--from|--force|--dry-run]`（目标 = `--to` > `config.bdldoc.dir` > `<数据目录>/BDL-Markdown`，已装非空默认跳过、`--force` 只覆盖同名不删多余、不回写配置）；`/api/config/status`、`/api/hosts` 带 `bdldoc`，设置页加「Genero BDL 手册」卡；`build_portable.bat` 把 16.4 MB 的 `BDL-Markdown.zip` 打进包（缺包硬失败），MSI 由 heat 采集；`installer/tg.wxs` 那条一直指向不存在命令的 `InstallBDLDocs` 现在真的能跑。实跑：首装 5449 个文件 21s、二次跳过、`--force` 覆盖、`--from` 缺包 `NOT_FOUND`。**遗留风险：Genero 文档再分发许可未确认；包体/更新包各 +16.4 MB**
 
 ## 阶段 5 改名三批
 
