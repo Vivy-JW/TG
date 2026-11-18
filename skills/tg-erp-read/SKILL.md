@@ -132,12 +132,18 @@ tg dict r.t aaz_file --fields --at <环境>@<ds>
 
 TOP GP中很多弹窗、消息的内容是可以复用的，特征也比较明显，比如模块+流水的 `aap-00228`、`aap-00245`，也有很多纯数字的 `-3101`、`100`。在它们附近往往伴随着一些弹窗、提示相关的组件，不借助工具查询也是看不出来含义的。
 
+最常见的几条路（全库统计：`CALL cl_err(` 17 万处 / 6,109 个文件、`WHENEVER ERROR` 7,214 处 / 6,725 个文件、`CALL s_errmsg(` 2.2 万处 / 1,104 个文件）：
+
 ```
-INITIALIZE g_errparam TO NULL
-LET g_errparam.code = 'asf-00150'
-LET g_errparam.popup = TRUE
-CALL cl_err()
+WHENEVER ERROR CALL cl_err_msg_log                     # 程序头兜底：跑飞了写错误日志（STATUS=-1109 直接退出）
+CALL cl_err(g_bma.bma01,'abm-123',0)                   # 附加说明 + 消息代号 + 停留(0=不等键 1=等CR >1=秒)
+CALL cl_err_msg(NULL,'asf-001',g_user||'|'||'oea01',10) # 直接弹窗，| 分隔替换 %1..%n
+CALL s_errmsg('bma01',g_bma.bma01,'','abm-123',0)      # 栏位级，累积到 g_err_msg[]，最后 s_showmsg() 一起弹
+CALL cl_err3('ins','bma_file',g_bma.bma01,SQLCA.sqlcode,'','',1)  # INSERT/UPDATE 失败专用
 ```
+
+> 注意：`INITIALIZE g_errparam … LET g_errparam.code/popup` 那套是 T100 / 新版 Genero 的写法，
+> **GP 里没有**（全库只有 `lib/4gl/cl_soapcli.4gl` 一处，而且被 `{}` 注释掉了）。
 
 查询系统消息、错误消息的命令：
 
