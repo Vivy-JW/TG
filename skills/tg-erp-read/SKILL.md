@@ -140,11 +140,19 @@ tg dict r.t --kw 料件 --at <环境>@<据点编号>            # 只记得中�
 - `--full` 会把完整字段/关系一起带出来，默认是摘要。
 - 表名的命名规则、模块代码含义见 [tg-erp-architecture/SKILL.md](../tg-erp-architecture/SKILL.md)。
 
-## 7. 读开窗：`tg dict r.q`
+## 7. 读开窗：先分清 `q_*` 和 `cq_*`
 
-开窗查询组件可以复用到不同字段，特征是 `q_xxx()`。它**不是设计器生成的**：
-定义维护在 `p_qry` 作业的单头档 `gab_file`（代号、输入条件、JOIN、DISTINCT、强条件、排序、是否 HardCode、客制度）
-与单身档 `gac_file`（表、字段、控件、宽度、回传、OUTER、约束、串查）里，程序用 `cl_create_qry()` 按定义现拼 SQL。
+开窗有两类，找法完全不同 —— **看到 `cq_*` 别去 `tg dict r.q` 查**，它不在字典里：
+
+| 类型 | 定义在哪 | 怎么读 |
+|---|---|---|
+| `q_*` 标准开窗 | `gab_file` / `gac_file`（`p_qry` 作业维护），程序用 `cl_create_qry()` 现拼 | `tg dict r.q <代号>` 直接给定义与 SQL |
+| `cq_*` 手写/客制开窗 | 纯 4GL 函数，主要在 `topcust/cqry/4gl/cq_*.4gl` | 读代码（`tg file` / `tg outline`） |
+
+### 7.1 `q_*`：定义在字典里
+
+它**不是设计器生成的**：单头档 `gab_file`（代号、输入条件、JOIN、DISTINCT、强条件、排序、是否 HardCode、客制度）
++ 单身档 `gac_file`（表、字段、控件、宽度、回传、OUTER、约束、串查），程序按这些定义现拼 SQL。
 
 ```
 ON ACTION controlp
@@ -172,8 +180,39 @@ tg dict r.q --kw rwf --at <环境>@<据点编号>      # 按代号找开窗
 
 - 明细里给**两套 SQL**：一般查询（`gab02`）与开窗 CONSTRUCT 模式（`gab02` + `gab05`），别只看前者。
 - `gab07=Y` 是 HardCode 开窗：SQL 写在程序里，字典不拼。
-- `q_*` 的实体代码在公共的 `qry/4gl`（T100 里叫 `com/qry`），基本不用读 —— `tg dict r.q` 直接给 SQL 更快；
+- `q_*` 的实体代码在公共的 `qry/4gl`（T100 里叫 `com/qry`），基本不用读 —— `tg dict r.q` 更快；
   但要看**调用处注入了哪些参数**（`g_qryparam.arg1/arg2`），SQL 里的条件可能来自那里。
+
+### 7.2 `cq_*`：定义在代码里
+
+`22主机` 镜像里 36 个 `cq_*.4gl`，其中 32 个在 `topcust/cqry/4gl/`，另几个散在模块自己的 `4gl`
+（如 `tiptop/qry/4gl/cq_ime_11.4gl`、`topcust/cic/4gl/cq_cict042.4gl`）。它们是**手写的开窗函数**：
+
+```
+# topcust/cqry/4gl/cq_bmb01.4gl
+FUNCTION cq_bmb01(pi_multi_sel,pi_need_cons,p_tc_sfd01,p_tc_sfd02,p_tc_sfd05)
+   ...
+   LET ms_cons_where = "1=1"                        # CONSTRUCT 条件攒在这里
+   SELECT ze03 INTO li_count FROM ze_file WHERE ze01='qry-001' AND ze02=g_lang   # 每页笔数
+   SELECT ze03 INTO li_page  FROM ze_file WHERE ze01='qry-002' AND ze02=g_lang   # 页数
+   LET ls_sql = "SELECT ... FROM bmb_file WHERE bmb04 <= to_date('",g_today,"','yy/mm/dd') ..."
+   PREPARE cq_bmb01_BP_pre1 FROM ls_sql
+   ...
+```
+
+- 前两个参数是固定的：`pi_multi_sel`（是否多选）、`pi_need_cons`（要不要 CONSTRUCT 条件）；
+  后面才是各作业自己的带入值。多选回传时调用处写 `CALL cq_xxx(...) RETURNING g_qryparam.multiret`。
+- SQL 是**代码里手拼的**，条件、翻页、排序都可能是动态的，读 SQL 只能读源码。
+- 找文件、找调用点（镜像里直接 grep，不必连服务器）：
+
+```bash
+tg file ls --at <环境> topcust/cqry/4gl
+tg file grep -rn --at <环境> --include '*.4gl' 'FUNCTION cq_bmb01' topcust/cqry/4gl
+tg file grep -rn --at <环境> --include '*.4gl' 'CALL cq_bmb01' .
+tg outline topcust/cqry/4gl/cq_bmb01.4gl --at <环境> --human
+```
+
+- `tg dict r.q cq_bmb01` 会回 `NOT_FOUND 开窗定义 cq_bmb01 不存在` —— **这是正常的**，不代表这段没逻辑。
 
 ## 8. 读报错与提示：`tg dict msg`
 
