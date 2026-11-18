@@ -107,7 +107,7 @@ VALUES (gr_qry[li_i].check,gr_qry[li_i].pmdsdocno,gr_qry[li_i].pmdtseq,gr_qry[li
 从字典中查询表和字段的中文含义的命令：
 ```bash
 tg dict r.t --brief "capp115_tmp,pmds_t,pmdt_t,apba_t" --at <环境>@<据点编号>
-tg dict r.t apba_t --at <环境>@<据点编号>
+tg dict r.t apb_file --at <环境>@<据点编号>
 tg dict r.t capp115_tmp --at <环境>@<据点编号>
 ```
 
@@ -130,7 +130,7 @@ tg dict r.t aaz_file --fields --at <环境>@<ds>
 
 ## 从系统消息解读报错和提示
 
-T100中很多弹窗、消息的内容是可以复用的，特征也比较明显，比如模块+流水的 `aap-00228`、`aap-00245`，也有很多纯数字的 `-3101`、`100`。在它们附近往往伴随着一些弹窗、提示相关的组件，不借助工具查询也是看不出来含义的。
+TOP GP中很多弹窗、消息的内容是可以复用的，特征也比较明显，比如模块+流水的 `aap-00228`、`aap-00245`，也有很多纯数字的 `-3101`、`100`。在它们附近往往伴随着一些弹窗、提示相关的组件，不借助工具查询也是看不出来含义的。
 
 ```
 INITIALIZE g_errparam TO NULL
@@ -148,7 +148,7 @@ tg dict msg --at <环境>@<据点编号> -- -3101
 
 ## 开窗和校验带值
 
-T100中的开窗查询组件是可以复用到不同的字段的，特征为 `q_xxx()`，它是由设计器生成的。
+TOP GP中的开窗查询组件是可以复用到不同的字段的，特征为 `q_xxx()`。它**不是设计器生成**的：开窗定义维护在 `p_qry` 作业的单头档 `gab_file`（代号、输入条件、JOIN、DISTINCT、强条件、排序、是否 HardCode、客制度）与单身档 `gac_file`（表、字段、控件、宽度、回传、OUTER、约束、串查）里，程序用 `cl_create_qry()` 按这些定义现拼 SQL 去查。
 
 ```
 ON ACTION controlp
@@ -169,8 +169,8 @@ END CASE
 
 查询开窗对应的SQL等信息的命令：
 ```bash
-tg dict r.q q_sfajwfdocno_01_wf --at <环境>@<据点编号>
-tg dict r.q --kw sfajwfdocno --at <环境>@<据点编号>
+tg dict r.q q_rwf01 --at <环境>@<据点编号>
+tg dict r.q --kw rwf --at <环境>@<据点编号>
 ```
 
 过栏位的判断也是可以复用的，特征是 `v_xx`。（这一层 GP 侧没有 `tg dict r.v`；`v_*` 封装的 SQL 直接在源码里看，或按它过滤的表/字段用 `tg dict r.t` 反查。）

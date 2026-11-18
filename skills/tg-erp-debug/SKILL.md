@@ -1,9 +1,9 @@
 ---
 name: tg-erp-debug
-description: 当需要对T100程序进行错误排查和DEBUG时，触发此技能
+description: 当需要对 TOP GP 作业进行错误排查和 DEBUG 时，触发此技能
 ---
 
-# TDebug T100 作业命令行调试
+# TOP GP 作业命令行调试
 
 ## 前提和原则
 
@@ -81,6 +81,10 @@ tg session rm --session <ref>     # 断连接、清资源
 
 ## 如何DEBUG用户提供的日志ID
 
+> 前提：这张表是 T100 的接口日志档 `wsfa_t`。**GP 环境多半没有它** —— 先确认环境里有没有这张表：
+> `tg dict r.t wsfa_t --at <环境>`（返回 NOT_FOUND 就是没有；`tg db sql --at <环境> "select count(*) from wsfa_t"`
+> 会报 `ORA-00942`）。没有这张表就跳过本章，直接按用户描述的作业与操作步骤走下面的基本流程。
+
 > 用户给的 ID 是 `rowid`（`tg debug wslogs` 列表里的那一条）。环境要问清楚；`--at-list` 可以看取值。如果用户给的是作业/服务/时间而不是 `rowid`，先用 `wslogs` 过滤出那一行。
 
 1. 起服务，确认这条日志存在，先看请求/响应：
@@ -103,7 +107,7 @@ tg debug wslogs --job <作业> --from <yyyy-mm-dd> --to <yyyy-mm-dd> --at <环�
 tg debug wslogs --service <服务名> --fail --at <环境>
 ```
 
-2. 按这条日志重放，停在入口（企业必填，且必须是日志所在的那个环境）：
+2. 按这条日志重放，停在入口（环境必填，且必须是日志所在的那个环境；GP 没有企业编号，`@` 右边是据点编号）：
 
 ```bash
 tg debug wsdebug <rowid> --at <环境>@<据点编号> --name <别名>

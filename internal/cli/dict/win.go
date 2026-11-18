@@ -297,9 +297,10 @@ type gpWinDef struct {
 	JoinTables  string         `json:"JOIN 表"`
 	InputWhere  string         `json:"Input WHERE"`
 	ConstrWhere string         `json:"Construct WHERE"`
-	Memo        string         `json:"备注"`
-	SQL         string         `json:"SQL"`
-	Cols        []gpWinColItem `json:"开窗栏位"`
+	Memo         string         `json:"备注"`
+	SQL          string         `json:"SQL"`
+	SQLConstruct string         `json:"SQL(开窗模式)"`
+	Cols         []gpWinColItem `json:"开窗栏位"`
 }
 
 // gpWinDetail 是 GP 开窗的完整定义。
@@ -417,8 +418,16 @@ func runWinDetailGP(id string, headers []db.WinHeaderRow) error {
 		}
 		if defSQL.HardCode {
 			def.SQL = gpWinNoSQL
+			def.SQLConstruct = gpWinNoSQL
 		} else {
 			def.SQL = defSQL.BuildSQL(dictlib.QrySQLOpt{Schema: srcCompany, Oracle: true})
+			// 同一个开窗有两套条件片段：gab02 是一般模式，gab05 是 CONSTRUCT（开窗查询）模式。
+			// 一边为空就照抄另一边的结果，省得输出两行一样的 SQL。
+			if strings.TrimSpace(h.ConstrWhere) != "" {
+				def.SQLConstruct = defSQL.BuildSQL(dictlib.QrySQLOpt{Schema: srcCompany, Oracle: true, Construct: true})
+			} else {
+				def.SQLConstruct = def.SQL
+			}
 		}
 		detail.Defs = append(detail.Defs, def)
 	}
@@ -443,9 +452,15 @@ func printWinDetailGP(d *gpWinDetail) {
 		fmt.Printf("Construct WHERE: %s\n", orDash(h.ConstrWhere))
 		fmt.Printf("备注:      %s\n", orDash(h.Memo))
 
-		fmt.Println("\nSQL:")
+		fmt.Println("\nSQL（一般模式，用 gab02 的条件）:")
 		for _, line := range strings.Split(h.SQL, "\n") {
 			fmt.Println("  " + line)
+		}
+		if h.SQLConstruct != h.SQL {
+			fmt.Println("\nSQL（开窗/CONSTRUCT 模式，用 gab05 的条件）:")
+			for _, line := range strings.Split(h.SQLConstruct, "\n") {
+				fmt.Println("  " + line)
+			}
 		}
 
 		if len(h.Cols) > 0 {
