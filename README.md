@@ -15,7 +15,7 @@
 - ✅ 站点管理：按环境读营运据点（`azp_file`），据点编号与 schema 分开
 - ✅ 数据字典：表/字段/索引/约束/程序/消息/画面文字，可同步成本地 SQLite 离线查
 - ✅ 开窗定义：读 `gab_file`+`gac_file`，按 `cl_create_qry` 的规则现拼 SQL
-- ✅ 代码阅读：`tg outline`、`tg file`、`tg interface`、`tg dict prog --links`
+- ✅ 代码阅读：`tg outline`、`tg file`、`tg interface`、`tg dict prog --links`、`tg sdd`（作業說明書）
 - ✅ 调试：`tg session` / `tg debug`（`r.d2` + `fgldb`），以及 `tg serve` 起的 Web 调试工作台
 - ❌ 已移除：T100 的 ENT 企业编号、`.42s`、`.tzc`/`.tzs` 设计器管线、设计器导入环境、T100 字典命令
 
@@ -37,6 +37,7 @@ tg site list --env 22主机      # 该环境的营运据点与 schema
 tg dict r.t ima_file --at 22主机     # 读表定义（本地字典没有就直查）
 tg dict r.q cp_ima --at 22主机       # 开窗定义 + 现拼出来的 SQL
 tg outline abmi100.4gl --at 22主机 --human   # 4GL 大纲
+tg sdd axmt410 --at 22主机           # 作業說明書（有镜像读镜像，没有就直读服务器）
 tg debug start abmi600 --env 22主机  # 起作业并停在入口
 tg session ls                  # 看当前调试会话
 

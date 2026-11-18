@@ -1335,7 +1335,7 @@ export function SettingsView() {
               </Card>
 
               <Card id="card-dict-mirror" title="源码镜像"
-                description="把 TOP GP 的源码与画面文件（*/4gl/*.4gl + */42f/* + *.inc）从服务器拉到本地镜像，$TOP 与 $CUST 两棵树都收；供离线检索与 tg outline / tg interface 使用。">
+                description="把 TOP GP 的源码、画面文件与作业说明书（*/4gl/*.4gl + */42f/* + *.inc + */sdd/*.sdd）从服务器拉到本地镜像，$TOP 与 $CUST 两棵树都收；供离线检索与 tg outline / tg interface 使用。">
                 <SettingRow
                   id="mirror.dir"
                   label="镜像根目录（默认）"

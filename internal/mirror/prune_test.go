@@ -12,6 +12,9 @@ func TestKindOf(t *testing.T) {
 		"azz/42f/p_zta.42f":       "42f",
 		"azz/42f/1":               "42f",
 		"azz/4gl/include/xx.inc":  "inc",
+		"axm/sdd/axmt400dis.sdd":  "sdd",
+		"rest/axd/sdd/xx.sdd":     "sdd",
+		"axm/sdd/readme.txt":      "",
 		"azz/42s/zh_CN/p_zta.42s": "",
 		"azz/4gl/readme.txt":      "",
 	}
@@ -30,7 +33,9 @@ func TestPruneStaleOnlyFullSet(t *testing.T) {
 	incStale := filepath.Join(dst, "cbm", "4gl", "old.inc")
 	other := filepath.Join(dst, "note.txt")
 	legacy42s := filepath.Join(dst, "azz", "42s", "zh_CN", "x.42s")
-	for _, p := range []string{keep, stale, subStale, incStale, other, legacy42s} {
+	keepSdd := filepath.Join(dst, "axm", "sdd", "axmt400dis.sdd")
+	staleSdd := filepath.Join(dst, "axm", "sdd", "gone.sdd")
+	for _, p := range []string{keep, stale, subStale, incStale, other, legacy42s, keepSdd, staleSdd} {
 		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
 			t.Fatal(err)
 		}
@@ -38,19 +43,22 @@ func TestPruneStaleOnlyFullSet(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	n, err := pruneStale(dst, []file{{rrel: filepath.Join("azz", "4gl", "keep.4gl")}})
+	n, err := pruneStale(dst, []file{
+		{rrel: filepath.Join("azz", "4gl", "keep.4gl")},
+		{rrel: filepath.Join("axm", "sdd", "axmt400dis.sdd")},
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if n != 3 {
-		t.Fatalf("pruned = %d, want 3", n)
+	if n != 4 {
+		t.Fatalf("pruned = %d, want 4", n)
 	}
-	for _, p := range []string{keep, other, legacy42s} {
+	for _, p := range []string{keep, other, legacy42s, keepSdd} {
 		if _, err := os.Stat(p); err != nil {
 			t.Fatalf("%s 被误删: %v", p, err)
 		}
 	}
-	for _, p := range []string{stale, subStale, incStale} {
+	for _, p := range []string{stale, subStale, incStale, staleSdd} {
 		if _, err := os.Stat(p); !os.IsNotExist(err) {
 			t.Fatalf("stale 未删除: %s", p)
 		}

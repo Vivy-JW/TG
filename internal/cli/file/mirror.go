@@ -6,7 +6,7 @@ package file
 //   mirror pull [<环境>] [--full]    下载/更新该环境镜像（默认增量）
 //   mirror path [<环境>]             打印该环境镜像目录 + 上次拉取时间（AI 直接前往）
 //
-// 收哪些：两棵树（$TOP 与 $CUST）里的 `*/4gl/*.4gl`、`*/42f/*`、`*.inc`。
+// 收哪些：两棵树（$TOP 与 $CUST）里的 `*/4gl/*.4gl`、`*/42f/*`、`*.inc`、`*/sdd/*.sdd`。
 // 是"离线口子"：联网时 tg file cat/grep 与 tg outline/interface 直读服务器；
 // 断网、或要反复搜同一棵树（tg file grep 是逐文件 SFTP，最吃镜像），读这份镜像。
 //
@@ -31,13 +31,14 @@ func NewMirrorCmd() *cobra.Command {
 	var full bool
 	g := &cobra.Command{
 		Use:   "mirror",
-		Short: "管理本地源码镜像（4gl / 42f / inc，$TOP 与 $CUST 两棵树）",
+		Short: "管理本地源码镜像（4gl / 42f / inc / sdd，$TOP 与 $CUST 两棵树）",
 		Long: `把某环境的源码与表单文件镜像到本地目录，给 tg outline / tg interface / tg file grep 用。
 
-收三类文件（两棵树 $TOP 与 $CUST 都扫）：
+收四类文件（两棵树 $TOP 与 $CUST 都扫）：
   4gl  <模块>/4gl/*.4gl     源码（tg outline 读）
   42f  <模块>/42f/*         编译表单（tg interface 读）
   inc  *.inc                4GL include
+  sdd  */sdd/*.sdd          作業說明書（tg sdd 读）
 
 不收 42s：GP 没有这类文件；表单标签在 gae_file，由 tg dict db sync 落到本地
 t_ui_text（tg interface --labels 用），不在镜像里。
@@ -252,7 +253,7 @@ func newMirrorPullCmd(full *bool) *cobra.Command {
 	return &cobra.Command{
 		Use:   "pull [<环境>]",
 		Short: "下载/更新该环境镜像（默认增量；--full 全量重建）",
-		Long: `把该环境两棵树（$TOP 与 $CUST）里的 4gl / 42f / inc 拉到本地镜像目录。
+		Long: `把该环境两棵树（$TOP 与 $CUST）里的 4gl / 42f / inc / sdd 拉到本地镜像目录。
 默认增量：按大小 + 修改时间只补有差异的文件（大小相同但改过的源码也能认出来）。
 --full 全量重建：以服务器为准，服务器上已删的文件本地也删掉；不属于白名单的残留不动。
 

@@ -9,6 +9,7 @@
 //	tg file …    服务器文件只读浏览与离线源码镜像
 //	tg interface … 用 .42f + gae_file 合成前端页面/字段/中文标签
 //	tg outline …  4GL 源码大纲（块树 / 行范围）
+//	tg sdd …      作業說明書（<模块>/sdd/<作業>*.sdd）
 //
 // 共享的 CLI 上下文在 internal/cli/common（叶子包，避免循环依赖）。
 package cli
@@ -31,6 +32,7 @@ import (
 	"tg/internal/cli/file"
 	"tg/internal/cli/interfacecmd"
 	"tg/internal/cli/outline"
+	"tg/internal/cli/sdd"
 	"tg/internal/cli/session"
 	"tg/internal/cli/site"
 	"tg/internal/output"
@@ -55,6 +57,7 @@ var rootCmd = &cobra.Command{
                  + 离线镜像（4gl / 42f / inc）
   tg interface … 前端画面：.42f + gae_file（页面 / 字段 / 中文标签）
   tg outline …   4GL 源码大纲：函数 / UI 块与行范围
+  tg sdd …       作業說明書：<模块>/sdd/<作業>*.sdd（操作功能、逐字段说明、数据处理）
   tg debug …     作业调试（T100 的 gendbg 那一套；GP 的调试目前只在网页里）
   tg session …   会话：建 / 列 / 看 / 结束 / 收掉 / 透传
   tg env / config / serve / install / update   环境、配置、本地服务、安装、自更新
@@ -108,6 +111,7 @@ func init() {
 	session.Register(rootCmd)
 	interfacecmd.Register(rootCmd)
 	outline.Register(rootCmd)
+	sdd.Register(rootCmd)
 
 	rootCmd.AddCommand(newEnvCmd())
 	rootCmd.AddCommand(newConfigCmd())

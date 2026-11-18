@@ -50,6 +50,8 @@ var scopes = map[string]Scope{
 	"session ls":   Env,
 	"interface":    Env,
 	"outline":      Env,
+	// tg sdd：读作業說明書。有镜像用镜像、没有就直读服务器；用 --dir 时不需要环境。
+	"sdd": Env,
 	// 顶层 site：连库读 azp_file，只认环境（据点编号是位置参数，不走 --at）
 	"site": Env,
 

@@ -535,7 +535,7 @@ func (s *GPAPI) hSite(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, map[string]any{"ok": true, "found": found, "code": site.Code, "name": site.Name, "schema": site.Schema, "hasDB": site.HasDB})
 }
 
-// hMirror 起一轮源码镜像（只拉 *.4gl）。mode=incr 增量，其它当全量。
+// hMirror 起一轮镜像（4gl / 42f / inc / sdd）。mode=incr 增量，其它当全量。
 func (s *GPAPI) hMirror(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Env  string `json:"env"`

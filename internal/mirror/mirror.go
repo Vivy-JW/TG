@@ -1,8 +1,12 @@
 // Package mirror 把 TOP GP 服务器上的源码与表单文件镜像到本地。
 //
-// 收三类：`*/4gl/*.4gl`（源码，tg outline 读）、`*/42f/*`（编译表单，tg interface 读）、
-// `*.inc`（4GL include，grep/cat 读）。GP 的根是 $TOP（正式区）与 $CUST（客制区）两棵，
-// 都在镜像范围里。
+// 收四类：`*/4gl/*.4gl`（源码，tg outline 读）、`*/42f/*`（编译表单，tg interface 读）、
+// `*.inc`（4GL include，grep/cat 读）、`*/sdd/*.sdd`（作業說明書，tg sdd 读）。
+// GP 的根是 $TOP（正式区）与 $CUST（客制区）两棵，都在镜像范围里。
+//
+// .sdd 是每个作业的说明书（系統/程式名稱、執行指令、作業目的、操作功能、欄位說明、
+// 資料處理），读源码时最缺的"这作业为什么这么写"就在里面。全量 4 千多个、十几个 MB，
+// 对 4 百多 MB 的镜像体积可以忽略，所以并进同一份白名单而不是另开一层开关。
 //
 // 不收 42s：T100 的 42s 是"把标签编译进文件"，GP 没有这类文件 —— 它的表单标签在
 // gae_file 里（由 tg dict db sync 落成本地 t_ui_text），属于字典线，不属于镜像线。
@@ -105,7 +109,7 @@ func Roots(env config.NamedSsh) []struct{ Label, Path string } {
 	return out
 }
 
-// Pull 连服务器，把两棵源码树里的 4gl / 42f / inc 拉进 Dir(env)。
+// Pull 连服务器，把两棵源码树里的 4gl / 42f / inc / sdd 拉进 Dir(env)。
 //
 // mode="full" 会顺手删掉服务器上已不存在的本地文件（与 T100 的镜像行为一致）；
 // 其它值一律按增量处理，只补有差异的文件。
@@ -183,7 +187,7 @@ func localFiles(base string) int {
 	return n
 }
 
-// tree 把 src 下白名单内的文件（4gl / 42f / inc）拉进 dst。
+// tree 把 src 下白名单内的文件（4gl / 42f / inc / sdd）拉进 dst。
 //
 // 差异判定：大小 + mtime。mtime 在下载时按服务器写回，所以下一次能直接比 ——
 // 只比大小会漏掉「长度一样但内容改了」的源码。
@@ -193,8 +197,8 @@ type file struct {
 	mt          time.Time
 }
 
-// KindOf 按相对路径判断镜像文件类别：4gl（源码）、42f（编译表单）、inc（include）。
-// 不在白名单里的路径返回 ""。
+// KindOf 按相对路径判断镜像文件类别：4gl（源码）、42f（编译表单）、inc（include）、
+// sdd（作業說明書）。不在白名单里的路径返回 ""。
 func KindOf(rel string) string {
 	p := "/" + strings.ToLower(strings.TrimPrefix(filepath.ToSlash(rel), "./"))
 	switch {
@@ -204,6 +208,8 @@ func KindOf(rel string) string {
 		return "42f"
 	case strings.HasSuffix(p, ".inc"):
 		return "inc"
+	case strings.Contains(p, "/sdd/") && strings.HasSuffix(p, ".sdd"):
+		return "sdd"
 	}
 	return ""
 }
@@ -212,10 +218,11 @@ func KindOf(rel string) string {
 // 输出用 NUL 分隔（文件名里可以有空格/换行/制表符，不能按行切）。
 // find 不支持 -printf 或执行失败时返回错误，由调用方回退到 ReadDir。
 //
-// 白名单与 T100 的 mirror 同义：4gl 下的 .4gl、整个 42f 目录、任何 .inc。
+// 白名单与 T100 的 mirror 同义（再补一类 GP 的作业说明书）：
+// 4gl 下的 .4gl、整个 42f 目录、任何 .inc、任何 sdd 目录下的 .sdd。
 func collectByFind(conn *host.SSHConn, src string) ([]file, error) {
 	q := "'" + strings.ReplaceAll(src, "'", `'\''`) + "'"
-	cmd := "find " + q + ` -type f \( -path '*/4gl/*' -iname '*.4gl' -o -path '*/42f/*' -o -iname '*.inc' \) -printf '%P\0%s\0%T@\0' 2>/dev/null`
+	cmd := "find " + q + ` -type f \( -path '*/4gl/*' -iname '*.4gl' -o -path '*/42f/*' -o -iname '*.inc' -o -path '*/sdd/*' -iname '*.sdd' \) -printf '%P\0%s\0%T@\0' 2>/dev/null`
 	out, err := conn.Output(cmd, 2*time.Minute)
 	if err != nil {
 		return nil, err
@@ -363,7 +370,7 @@ func tree(conn *host.SSHConn, sc *sftp.Client, src, dst, mode string, progress f
 	}, nil
 }
 
-// pruneStale 全量模式下删除 dst 里服务器已不存在的镜像文件（4gl/42f/inc），并清掉空目录。
+// pruneStale 全量模式下删除 dst 里服务器已不存在的镜像文件（4gl/42f/inc/sdd），并清掉空目录。
 // 增量模式不调用。
 func pruneStale(dst string, files []file) (int, error) {
 	if _, err := os.Stat(dst); err != nil {

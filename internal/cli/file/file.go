@@ -65,7 +65,7 @@ func Register(root *cobra.Command) {
   tg file wc    [-l] <文件...>                   行/词/字节
   tg file du    [-s] [--human] [<路径>]                   占用大小（按文件大小累计，1K 块）
   tg file get   <路径> [-o <本地|->]             下载一个文件（默认同名落当前目录）
-  tg file mirror dir|path|pull                   离线镜像（4gl / 42f / inc + 增量）
+  tg file mirror dir|path|pull                   离线镜像（4gl / 42f / inc / sdd + 增量）
 
 路径怎么写（GP 的源码是两棵并列的树）：
   $TOP  = workspace  （/u1/<实例>/tiptop）
