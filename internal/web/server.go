@@ -320,6 +320,7 @@ func (s *Server) hHostsGet(w http.ResponseWriter, r *http.Request) {
 		"dict":    root.Dict,
 		"sync":    root.Sync,
 		"bdldoc":  root.BDLDoc,
+		"gpdoc":   root.GPDoc,
 		"version": s.opt.Version,
 	})
 }
@@ -338,6 +339,8 @@ type hostsPutReq struct {
 	Sync   *config.SyncSettings
 	// BDLDoc Genero 官方手册落点。只存路径，手册内容由 `tg install bdl` 解。
 	BDLDoc *config.BDLDocSettings
+	// GPDoc TOP GP 产品手册落点。只存路径，手册内容由 `tg install gpdoc` 解。
+	GPDoc *config.GPDocSettings `json:"gpdoc,omitempty"`
 }
 
 func (s *Server) hHostsPut(w http.ResponseWriter, r *http.Request) {
@@ -537,6 +540,12 @@ func (s *Server) hHostsPut(w http.ResponseWriter, r *http.Request) {
 					return nil
 				}
 				return putSection(root, "bdldoc", req.BDLDoc)
+			}},
+			{"gpdoc", func() error {
+				if req.GPDoc == nil {
+					return nil
+				}
+				return putSection(root, "gpdoc", req.GPDoc)
 			}},
 		}
 		for _, p := range patches {

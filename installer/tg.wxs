@@ -97,9 +97,17 @@
                   ExeCommand="&quot;[INSTALLFOLDER]tg.exe&quot; install bdl"
                   Execute="immediate"
                   Return="ignore" />
+    <!-- 同理，解压随包的 TOP GP 产品手册（tg install gpdoc）。落点优先 config.json 的
+         gpdoc.dir，没有就落 <数据目录>\TOP-GP-Markdown。Return="ignore" 的理由同上。 -->
+    <CustomAction Id="InstallGPDocs"
+                  Directory="INSTALLFOLDER"
+                  ExeCommand="&quot;[INSTALLFOLDER]tg.exe&quot; install gpdoc"
+                  Execute="immediate"
+                  Return="ignore" />
 
     <InstallExecuteSequence>
       <Custom Action="InstallBDLDocs" After="InstallFiles">NOT REMOVE</Custom>
+      <Custom Action="InstallGPDocs" After="InstallFiles">NOT REMOVE</Custom>
     </InstallExecuteSequence>
 
     <Feature Id="Main" Title="TG" Level="1">

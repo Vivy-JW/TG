@@ -84,6 +84,9 @@ rem (or into config bdldoc.dir). Missing zip is a hard error: the whole point of
 rem shipping it is that a fresh install can run `tg install bdl` right away.
 if not exist "BDL-Markdown.zip" (echo MISSING BDL-Markdown.zip ^(repo root^) & exit /b 1)
 copy /y BDL-Markdown.zip "%STAGE%\" >nul || (echo COPY BDL-Markdown.zip FAILED & exit /b 1)
+rem TOP GP product manual, same treatment (`tg install gpdoc`): 237 .md in one zip.
+if not exist "TOP-GP-Markdown.zip" (echo MISSING TOP-GP-Markdown.zip ^(repo root^) & exit /b 1)
+copy /y TOP-GP-Markdown.zip "%STAGE%\" >nul || (echo COPY TOP-GP-Markdown.zip FAILED & exit /b 1)
 if not exist "%STAGE%\tg.exe" (echo MISSING staged tg.exe & exit /b 1)
 rem Portable marker: the CLI keeps its config inside the package instead of
 rem writing to the user directory (see internal/config/paths.go, IsPortable).

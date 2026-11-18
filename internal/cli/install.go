@@ -63,7 +63,7 @@ func newInstallCmd() *cobra.Command {
 			return fmt.Errorf("请指定子命令: skills / path / bdl\n\n%s", cmd.UsageString())
 		},
 	}
-	cmd.AddCommand(newInstallSkillsCmd(), newInstallPathCmd(), newInstallBDLCmd())
+	cmd.AddCommand(newInstallSkillsCmd(), newInstallPathCmd(), newInstallBDLCmd(), newInstallGPDocCmd())
 	return cmd
 }
 

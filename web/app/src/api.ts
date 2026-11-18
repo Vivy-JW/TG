@@ -138,6 +138,8 @@ export interface HostsView {
   sync: { target?: string }
   // bdldoc Genero BDL 官方手册落点；空 = 缺省 <数据目录>/BDL-Markdown。内容不在这里，由 tg install bdl 解。
   bdldoc: { dir?: string }
+  // gpdoc TOP GP 产品手册落点；空 = 缺省 <数据目录>/TOP-GP-Markdown。内容由 tg install gpdoc 解。
+  gpdoc: { dir?: string }
   version: string
 }
 
@@ -152,6 +154,7 @@ export interface HostsPatch {
   dict?: { dir?: string }
   sync?: { target?: string }
   bdldoc?: { dir?: string }
+  gpdoc?: { dir?: string }
 }
 
 // 目录选择器（前端自绘）用的目录项 / 列表
@@ -170,7 +173,8 @@ export interface DirStatus {
   dir: string
   exists: boolean
 }
-// Genero BDL 官方手册的落点状态:装没装只问"目录里有东西没",不做完整性校验
+// 随包文档(BDL / TOP GP 手册)的落点状态:装没装只问"目录里有东西没",不做完整性校验。
+// bdldoc 与 gpdoc 是同一套规则,只是落点/zip/命令不同。
 export interface BDLDocStatus {
   dir: string // 生效落点(配置的或缺省的)
   configured?: string // 配置里显式写下的值;空 = 用缺省落点
@@ -240,6 +244,7 @@ export interface ConfigStatus {
   sync: FileStatus
   // bdldoc Genero BDL 官方手册：落点 + 装没装（`tg install bdl` 写的目录）
   bdldoc: BDLDocStatus
+  gpdoc: BDLDocStatus
   install: InstallStatus
   cache: CacheStatus
 }

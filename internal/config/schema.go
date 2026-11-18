@@ -14,7 +14,8 @@ import (
 //
 // 4：新增 skills 节（第三方技能登记的路径清单）。
 // 5：新增 bdldoc 节（Genero BDL 官方手册的落点，由 `tg install bdl` 写）。
-const SchemaVersion = 5
+// 6：新增 gpdoc 节（TOP GP 产品手册的落点，由 `tg install gpdoc` 写）。
+const SchemaVersion = 6
 
 // 缺省值。合并前三处各自硬编码，现在只有这一份。
 const (
@@ -296,6 +297,15 @@ type BDLDocSettings struct {
 	Dir string `json:"dir"` // 同 MirrorSettings：空串有意义，不能 omitempty
 }
 
+// GPDocSettings TOP GP 产品手册（Markdown 版）的落点（绝对路径）。
+//
+// 空 = 缺省落点 `<数据目录>/TOP-GP-Markdown`（读侧统一走 config.DocGP.DirFor，见 docs.go）。
+// 与 bdldoc 同一条规矩：内容由 `tg install gpdoc` 从随包的 TOP-GP-Markdown.zip 解出来，
+// 这里只记用户把它挪到哪儿了。
+type GPDocSettings struct {
+	Dir string `json:"dir"` // 同 MirrorSettings：空串有意义，不能 omitempty
+}
+
 // SyncSettings 旧版单文件字典库落点（绝对路径）。
 // 现在本地库按环境分文件（<数据目录>/dict/<环境>.db），Target 不再参与新落点；
 // 保留字段只为读旧配置不报错，设置页也不再写它。
@@ -377,9 +387,22 @@ type Root struct {
 	Mirror        MirrorSettings
 	Dict          DictSettings
 	BDLDoc        BDLDocSettings
+	GPDoc         GPDocSettings
 	Sync          SyncSettings
 	Net           NetSettings
 	Skills        SkillsSettings
+}
+
+// DocDir 按文档节名（DocKind.Key）取配置里写下的落点；没配/不认识的键回空串。
+// 通用规则的唯一入口：docs.go 的 DocKind.DirFor / StatusFor 都走这里。
+func (r *Root) DocDir(key string) string {
+	switch key {
+	case DocBDL.Key:
+		return r.BDLDoc.Dir
+	case DocGP.Key:
+		return r.GPDoc.Dir
+	}
+	return ""
 }
 
 // Load 读取并解析配置，返回类型化视图。
@@ -412,6 +435,9 @@ func Load(path string) (*Root, error) {
 		return nil, err
 	}
 	if err := decodeSection(root, "bdldoc", &r.BDLDoc); err != nil {
+		return nil, err
+	}
+	if err := decodeSection(root, "gpdoc", &r.GPDoc); err != nil {
 		return nil, err
 	}
 	if err := decodeSection(root, "sync", &r.Sync); err != nil {

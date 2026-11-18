@@ -112,12 +112,14 @@ interface DictForm {
   dictDir: string
   // bdlDir Genero BDL 官方手册落点；空 = 缺省 <数据目录>/BDL-Markdown。只存路径，内容由 tg install bdl 解。
   bdlDir: string
+  // gpDir TOP GP 产品手册落点；空 = 缺省 <数据目录>/TOP-GP-Markdown。内容由 tg install gpdoc 解。
+  gpDir: string
   // 刻意没有 syncTarget:字典库按环境分文件,位置由服务端算;卡片里只读显示库目录。
   // **不要**为了"完整性"把它加回来再原样回传 —— 那等于把一个不展示的键交给这一页写。
 }
 
 /** 可自动保存的配置节。脏标记与提交范围都按它划分。 */
-type ConfigKey = 'hosts' | 'debug' | 'listen' | 'query' | 'mirror' | 'dict' | 'bdldoc'
+type ConfigKey = 'hosts' | 'debug' | 'listen' | 'query' | 'mirror' | 'dict' | 'bdldoc' | 'gpdoc'
 
 // 主题切换卡片(shadcn 主题切换卡样式):三张卡各带一张迷你界面预览,选中卡描边+底色高亮。
 const THEME_OPTIONS: { value: ThemeMode; label: string; icon: typeof Sun }[] = [
@@ -500,14 +502,14 @@ export function SettingsView() {
   const [cfg, setCfg] = useState<HostsView | null>(null)
   const [sshs, setSshs] = useState<SshItem[]>([])
   const [dbg, setDbg] = useState<DebugForm>({ watchdogSeconds: 0 })
-  const [dict, setDict] = useState<DictForm>({ querySource: '', mirrorDir: '', dictDir: '', bdlDir: '' })
+  const [dict, setDict] = useState<DictForm>({ querySource: '', mirrorDir: '', dictDir: '', bdlDir: '', gpDir: '' })
   const [listen, setListen] = useState('')
   // 派生状态(路径存不存在只有服务端算得出来)与配置元信息,以及 PATH 安装状态
   const [status, setStatus] = useState<ConfigStatus | null>(null)
   const [meta, setMeta] = useState<ConfigMeta | null>(null)
   const [installBusy, setInstallBusy] = useState(false)
   const [cacheBusy, setCacheBusy] = useState(false)
-  // tt 自身的更新:状态靠 /api/update 读(不联网),查/装都是人去点才动作
+  // tg 自身的更新:状态靠 /api/update 读(不联网),查/装都是人去点才动作
   const [upd, setUpd] = useState<UpdateState | null>(null)
   const [updBusy, setUpdBusy] = useState('')
   // 字典同步的运行态由 GP 环境自带的 job 字段给出（见 gpEnvs 的轮询），
@@ -523,7 +525,7 @@ export function SettingsView() {
   // 失败原来是一段内联在卡片里的红字 —— 它出现/消失会顶动卡片高度,
   // 而这段话往往很长(带原因与下一步),内联时还会把下面的表格挤下去。
 
-  // 需要二次确认的动作(全量重建 / 开始同步 / 升级 tt)。
+  // 需要二次确认的动作(全量重建 / 开始同步 / 升级 tg)。
   // 这几个动作原先用 window.confirm:它是浏览器原生弹窗,样式与本界面无关、
   // 在 iframe/无头环境里还会被直接拦掉(拦掉时返回值按"取消"算,点了没反应还没提示)。
   // 统一改成与「删除环境」同一套 AlertDialog:文案里带上会被影响的环境与路径,
@@ -539,7 +541,7 @@ export function SettingsView() {
   // 脏标记按**配置节**记。保存时只提交改过的节 —— 设置页的各张卡片共用 /api/hosts,
   // 把没改的节一起发过去就是用陈旧快照覆盖别张卡片刚改好的节。
   const dirtyRef = useRef<Record<ConfigKey, boolean>>({
-    hosts: false, debug: false, listen: false, query: false, mirror: false, dict: false, bdldoc: false,
+    hosts: false, debug: false, listen: false, query: false, mirror: false, dict: false, bdldoc: false, gpdoc: false,
   })
   // 基线:上一次读到 / 保存成功时那一节的表单值(序列化后的样子)。
   //
@@ -560,7 +562,8 @@ export function SettingsView() {
           : k === 'query' ? { source: f.dict.querySource }
           : k === 'mirror' ? { dir: f.dict.mirrorDir.trim() }
             : k === 'dict' ? { dir: f.dict.dictDir.trim() }
-              : { dir: f.dict.bdlDir.trim() })
+              : k === 'bdldoc' ? { dir: f.dict.bdlDir.trim() }
+                : { dir: f.dict.gpDir.trim() })
   const sectionSnap = (k: ConfigKey): string => sectionSnapOf(k, formsRef.current)
   const dirtyRefAny = () => (Object.keys(dirtyRef.current) as ConfigKey[])
     .some((k) => dirtyRef.current[k] && sectionSnap(k) !== baselineRef.current[k])
@@ -606,6 +609,7 @@ export function SettingsView() {
         mirrorDir: c.mirror?.dir || '',
         dictDir: c.dict?.dir || '',
         bdlDir: c.bdldoc?.dir || '',
+        gpDir: c.gpdoc?.dir || '',
       })
       setListen(c.listen || '')
       setLoadErr('')
@@ -699,6 +703,7 @@ export function SettingsView() {
     if (keys.includes('mirror')) body.mirror = { dir: forms.dict.mirrorDir.trim() }
     if (keys.includes('dict')) body.dict = { dir: forms.dict.dictDir.trim() }
     if (keys.includes('bdldoc')) body.bdldoc = { dir: forms.dict.bdlDir.trim() }
+    if (keys.includes('gpdoc')) body.gpdoc = { dir: forms.dict.gpDir.trim() }
 
     try {
       const next = await api.saveSettings(body)
@@ -952,7 +957,7 @@ export function SettingsView() {
     } finally { setInstallBusy(false) }
   }
 
-  // ---- tt 自身的更新 ----
+  // ---- tg 自身的更新 ----
   // 查:人去点才联网(服务不轮询——见 internal/web/update.go 的三条纪律)。
   const doUpdateCheck = async () => {
     setUpdBusy('check')
@@ -971,12 +976,12 @@ export function SettingsView() {
     } finally { setUpdBusy('') }
   }
 
-  // 装:服务端拉一个 `tt update --yes` 子进程去做 —— 本服务几分钟后会被它停掉替换,
+  // 装:服务端拉一个 `tg update --yes` 子进程去做 —— 本服务几分钟后会被它停掉替换,
   // 所以这里只能告诉用户“已接手”,不能等结果。
   // 这条确认尤其不能省:它会把当前服务停掉,页面随后断开。
   const doUpdateApply = () => {
     setAsk({
-      title: '要现在升级 tt 吗?',
+      title: '要现在升级 tg 吗?',
       desc: '下载并校验完成后会停掉本服务并替换程序文件,\n本页随后会断开,请稍后重新打开。',
       confirmText: '开始升级',
       run: () => void applyUpdate(),
@@ -1554,6 +1559,45 @@ export function SettingsView() {
                 </p>
               </Card>
 
+              {/* TOP GP 产品手册:读 GP 的产品架构/命名/客制规范时查原文用。
+                  与上一张卡同一套规则:这一页只管"放哪",解包留在 tg install gpdoc。 */}
+              <Card id="card-app-gpdoc" title="TOP GP 手册"
+                description="TOP GP 产品手册(13 章 Markdown):环境与三区、目录与文件类型、命名规则、单档/双档、画面与报表、p_zta 建表、客制规范。装一次就好;阅读技能按这里的位置找原文。">
+                <SettingRow
+                  id="gpdoc.dir"
+                  label="手册目录"
+                  description={
+                    !dict.gpDir.trim()
+                      ? '留空 = 用数据目录下的 TOP-GP-Markdown(生效位置见下方)。'
+                      : status?.gpdoc?.exists
+                        ? '目录已存在。'
+                        : '目录还不存在 —— 首次 tg install gpdoc 会创建它。'
+                  }
+                  control={
+                    <div className="flex min-w-0 items-center gap-1">
+                      <Input className={input} value={dict.gpDir} placeholder="留空 = 缺省目录"
+                        onChange={(e) => { setDict((s) => ({ ...s, gpDir: e.target.value })); markDirty('gpdoc') }} />
+                      <Button variant="outline" size="sm" className="h-7 shrink-0 px-2 text-[11px]"
+                        onClick={() => setDirPick({
+                          open: true,
+                          initial: dict.gpDir.trim(),
+                          title: '选择 TOP GP 手册目录',
+                          onPick: (path) => { setDict((s) => ({ ...s, gpDir: path })); markDirty('gpdoc') },
+                        })}>
+                        选择
+                      </Button>
+                    </div>
+                  }
+                />
+                <InfoRow label="生效目录" value={status?.gpdoc?.dir || '—'} />
+                <InfoRow label="安装状态"
+                  value={status?.gpdoc?.installed ? '已解出文档' : status?.gpdoc?.exists ? '目录存在，但是空的' : '未安装'} />
+                <p className="text-[11px] leading-relaxed text-muted-foreground">
+                  解出或更新文档走命令行：<code>tg install gpdoc</code>（已装过要覆盖时加 --force；它只覆盖同名文件，
+                  不会删掉你在目录里多放的东西）。这一页只改路径，不解包。
+                </p>
+              </Card>
+
               <Card id="card-app-info" title="运行信息">
                 <InfoRow label="版本" value={cfg.version || '(未知)'} />
                 <InfoRow label="配置文件" value={cfg.config} />
@@ -1567,7 +1611,7 @@ export function SettingsView() {
               </Card>
 
               <Card id="card-app-update" title="更新"
-                description="检查/升级 tt 自身。查由你手动触发;升级会校验 sha256 后交由独立更新器完成。">
+                description="检查/升级 tg 自身。查由你手动触发;升级会校验 sha256 后交由独立更新器完成。">
                 <InfoRow label="当前版本" value={upd?.version || cfg.version || '(未知)'} />
                 <InfoRow label="安装形态" value={upd ? `${upd.kind}${upd.canInstall ? '' : '（不让自装）'}` : '—'} />
                 <InfoRow label="更新源" value={upd?.source || '—'} />
@@ -1595,7 +1639,7 @@ export function SettingsView() {
                   )}
                   {(updBusy !== '' || upd?.check?.newer) && (
                     <span className="text-[11px] text-muted-foreground">
-                      {updBusy === 'apply' ? '升级期间本页会断开，之后重新打开即可' : '也可以直接敲 tt update'}
+                      {updBusy === 'apply' ? '升级期间本页会断开，之后重新打开即可' : '也可以直接敲 tg update'}
                     </span>
                   )}
                 </div>
@@ -1627,7 +1671,7 @@ export function SettingsView() {
                   </Button>
                 </div>
                 <p className="text-[11px] text-muted-foreground">
-                  tt serve 启动时会自动清理超过{' '}
+                  tg serve 启动时会自动清理超过{' '}
                   {Math.max(1, Math.round((status?.cache?.maxAgeHours ?? 168) / 24))} 天的缓存
                   —— 刻意不"启动即全清":查询落盘的那些文件正是"刚才那条查询的完整结果",
                   启动就删会把上一条命令刚告诉你的东西删掉。
@@ -1638,7 +1682,7 @@ export function SettingsView() {
         </div>
       </div>
 
-      {/* 全量重建 / 开始同步 / 升级 tt 的二次确认:同一套 AlertDialog。
+      {/* 全量重建 / 开始同步 / 升级 tg 的二次确认:同一套 AlertDialog。
           文案里的换行(desc 里的 \n)由 AlertDialogDescription 的 whitespace-pre-line 呈现。 */}
       <AlertDialog open={ask !== null} onOpenChange={(o) => { if (!o) setAsk(null) }}>
         <AlertDialogContent>

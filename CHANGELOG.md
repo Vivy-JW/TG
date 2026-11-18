@@ -26,6 +26,12 @@ TG 是 TT 的继任者，只面向 **鼎捷 TOP GP**（T100 分支已整体移�
 - **Web 调试工作台**：`tg serve` 起本地服务，浏览器里建会话、下断点、看变量、看界面日志、改设置。
 - **源码镜像**：`tg file mirror pull` 把服务器上的 `*/4gl/*.4gl`、`*/42f/*`、`*.inc` 拉到本地，
   供离线检索（`--at <环境>`，默认增量）。
+- **随包的两份 Markdown 手册**：`BDL-Markdown.zip`（Genero BDL User Guide，19 章）与
+  `TOP-GP-Markdown.zip`（TOP GP 技术手册，13 章 / 237 个 md）跟安装包一起发，用
+  `tg install bdl` / `tg install gpdoc` 解到本机（`--to` 换位置、`--from` 换 zip、`--force` 覆盖、
+  `--dry-run` 只看落点）；落点可用 `bdldoc.dir` / `gpdoc.dir` 长期改。设置页「应用设置」
+  两张卡显示生效目录与装没装。便携包与 MSI 都会 stage 两个 zip，MSI 装完自动各跑一次
+  （`Return="ignore"`，装失败不影响安装本身）。
 
 ### 变更
 
