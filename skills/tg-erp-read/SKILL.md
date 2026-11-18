@@ -40,6 +40,9 @@ tg dict prog --kw 产品结构 --env <环境>     # 只记得中文名
 tg dict prog abmi600 --links --env <环境>   # 这个程序链接到哪个模块（客制换版看这条）
 ```
 
+拿到程序后先看它**是不是个壳**：如果文件很短、只有一句 `CALL t110(...)`，真逻辑在同模块的子程序里
+（`s` + 模块三码 + 函数名 + 后缀），追法见 [5.1](#51-入口程序常常只是个壳)。
+
 ## 3. 先读作業說明書：`tg sdd`
 
 每个模块的 `sdd/` 下是**作業說明書**（`.sdd`，繁体 Big5），按 `▼---44---` 分段：
@@ -112,6 +115,47 @@ FUNCTION inp_key  [2-7]
 
 `--flat` 平铺（带 `depth`/`parent`）、`--depth N` 限层、`--brief` 去掉 `selectionRange`（人读树还会省掉行号）、
 `--kind FUNCTION,MAIN` 只看某几类块。
+
+### 5.1 入口程序常常只是个壳
+
+读到的文件很短、只有一个 `CALL t110(...)` 之类，**别以为这段没逻辑** —— 它把活交给了同模块的子程序。
+以 `apmt200_icd`（2,265 B）为例，MAIN 里就三步：
+
+```
+LET g_prog = 'apmt200_icd'
+...
+IF (NOT cl_setup("APM")) THEN EXIT PROGRAM END IF
+CALL cl_used(g_prog,g_time,1) RETURNING g_time
+CALL t110(g_argv1,g_argv2,g_argv3,g_argv4,g_argv5,'1')   #No.FUN-630010 #FUN-840012 #FUN-940083
+CALL cl_used(g_prog,g_time,2) RETURNING g_time
+```
+
+真逻辑在 `apm/4gl/sapmt110_icd.4gl` 的 `FUNCTION t110(...)`（第 837 行）。规律：
+
+- `CALL <函数名>` 的函数名是 **4 位**（字母 + 3 位数字），对应作业号后 4 位（`apmt200` → `t110`，数字不一定相同，**别按编号猜**）；
+- 子程序文件名 = `s` + **模块三码** + 函数名 + **入口的后缀**：`apmt200_icd` → `sapmt110_icd`、`apmt730_icd` → `sapmt720_icd`、`aapt140` → `saapt110`；
+- 带下划线的 `s_xxx`（`s_aapt110_gl`、`s_t110_w`）是 `sub`/`lib` 里的共享子程序，不是这一类。
+
+**三步定位（实测有效）**：
+
+```bash
+# ① 看链接清单：找 s<模块><函数名>*，有多个时按后缀与入口对齐
+tg dict prog apmt200_icd --links --at <环境> --limit 0
+#   → apm sapmt110_icd / apm sapmt110_sub / apm sapmt720_sub …（entry=true 那条才是入口自己）
+
+# ② 直接 grep 函数定义：跨模块也能找到，参数表对得上就是它
+tg file grep -rn --at <环境> --include '*.4gl' 'FUNCTION t110' apm/4gl
+#   → apm/4gl/sapmt110_icd.4gl:837
+
+# ③ 目标可能很大（saapt110.4gl 有 2.6 MB），用大纲读，别 cat
+tg outline apm/4gl/sapmt110_icd.4gl --at <环境> --human
+```
+
+- 同名函数常有几份（`sapmt110`、`sapmt110_icd`、`sapmt110_slk`、`sapmt110_sub` 都有 `FUNCTION t110`），
+  按**入口后缀**挑（`_icd` 对 `_icd`），再核对参数个数（`sapmt110` 是 6 参、`saapt110` 是 5 参且第一参是 `p_aptype`）。
+- `--links` 是全量清单，别被默认 20 条截断：加 `--limit 0`（或按 `tg dict spill show <文件>` 翻页）。
+- 这类壳程序不算少：`22主机` 镜像里 1,050 个 <6 KB 的 `.4gl` 中有 **245 个**在 `CALL` 4 位函数。
+- 反过来也成立：改一处逻辑前先看**谁在调它** —— `tg file grep -rn --at <环境> --include '*.4gl' 'CALL t110' .`。
 
 ## 6. 查字段含义：`tg dict r.t`
 
