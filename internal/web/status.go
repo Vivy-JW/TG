@@ -26,6 +26,8 @@ type configStatus struct {
 	Dict config.DirStatus `json:"dict"`
 	// Sync 字典同步的本地 SQLite。
 	Sync config.FileStatus `json:"sync"`
+	// BDLDoc Genero BDL 官方手册的落点与是否已装（`tg install bdl` / `tg config set bdldoc.dir`）。
+	BDLDoc config.BDLDocStatus `json:"bdldoc"`
 	// Install 命令行安装状态(用户 PATH),不是 config.json 里的东西。
 	Install pathinstall.Status `json:"install"`
 	// Cache 配置目录下那些**可再生**中间数据的占用(源码镜像/查询落盘/断点存档/更新包)。
@@ -45,6 +47,7 @@ func (s *Server) hConfigStatus(w http.ResponseWriter, r *http.Request) {
 		st.Dict = config.DirStatusOf(root.Dict.Dir)
 		st.Sync = config.FileStatusOf(root.Sync.Target, s.syncDefaultTarget())
 	}
+	st.BDLDoc = config.BDLDocStatusFor(path)
 	st.Install = pathinstall.Get()
 	// 缓存就在数据目录下,配置读不到也算得出来(缓存与配置文件无关)。
 	st.Cache = config.CacheStatusOf(config.LocationsAt(path).DataDir())

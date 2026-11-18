@@ -319,6 +319,7 @@ func (s *Server) hHostsGet(w http.ResponseWriter, r *http.Request) {
 		"mirror":  root.Mirror,
 		"dict":    root.Dict,
 		"sync":    root.Sync,
+		"bdldoc":  root.BDLDoc,
 		"version": s.opt.Version,
 	})
 }
@@ -335,6 +336,8 @@ type hostsPutReq struct {
 	Mirror *config.MirrorSettings
 	Dict   *config.DictSettings
 	Sync   *config.SyncSettings
+	// BDLDoc Genero 官方手册落点。只存路径，手册内容由 `tg install bdl` 解。
+	BDLDoc *config.BDLDocSettings
 }
 
 func (s *Server) hHostsPut(w http.ResponseWriter, r *http.Request) {
@@ -528,6 +531,12 @@ func (s *Server) hHostsPut(w http.ResponseWriter, r *http.Request) {
 					return nil
 				}
 				return putSection(root, "sync", req.Sync)
+			}},
+			{"bdldoc", func() error {
+				if req.BDLDoc == nil {
+					return nil
+				}
+				return putSection(root, "bdldoc", req.BDLDoc)
 			}},
 		}
 		for _, p := range patches {

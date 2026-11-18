@@ -1,4 +1,10 @@
-package update
+// Package zipx 是解包的唯一实现：zip-slip 防护、反斜杠条目、载荷根识别、树复制。
+//
+// 为什么单独一个包：解包有两处真实调用方 —— 自助升级（internal/update 解开便携包）
+// 与 `tg install bdl`（解开随包的 BDL 文档）。第两个调用方当初只是"顺手 import 一下
+// update"，等于让"装文档"这件事依赖自助升级那条竖线；这套校验又最不该被复制第二份
+// （复制出来的第二份迟早少一条 ..\ 检查，而它解出来的东西要落到用户的程序目录/数据目录）。
+package zipx
 
 import (
 	"archive/zip"
@@ -58,7 +64,10 @@ func writeZipEntry(f *zip.File, target string) error {
 	if _, err := io.Copy(out, rc); err != nil {
 		return fmt.Errorf("写 %s 失败: %w", target, err)
 	}
-	return out.Sync()
+	// 不 fsync：这两条线解的都是**可再生**的内容（升级包重下一次、手册重解一次），
+	// 而 5470 个小文件各一次 FlushFileBuffers 要几十秒 —— 用 35 秒换"断电时可能
+	// 少半页手册"不划算。Close 已经把数据交给系统缓存。
+	return nil
 }
 
 // safeJoin 把 zip 里的条目名拼到 base 下，并保证结果不跑到 base 外面。
@@ -91,23 +100,12 @@ func PayloadRoot(staging string) (string, error) {
 	return staging, nil
 }
 
-// keepLocal 是**载荷里可能有、但绝不能被覆盖的条目**：它们是用户的数据，恰好与随包
-// 分发的那一份同名。
+// CopyTree 把 src 树里的文件覆盖到 dst（就地覆盖）：已存在的文件被替换，src 里没有的
+// 文件保持原样。
 //
-// 今天只有 config.json，而它恰好是最贵的一个：便携形态的配置就住在包内（那是便携契约），
-// 而 zip 里带的是 config.empty.json 拷来的**空模板** —— 覆盖它等于删掉用户的口令、
-// 环境与库连接。这条不是理论风险：真要“整个目录换掉”，第一个受害的就是它。
-var keepLocal = map[string]bool{
-	"config.json": true,
-}
-
-// copyTree 把 src 树里的文件覆盖到 dst（就地覆盖）：已存在的文件被替换，**src 里没有的
-// 文件保持原样**，keepLocal 里的绝不碰。
-//
-// 为什么不是"整个目录换掉"：便携形态的 config.json 就在包内（那是便携契约），而 zip 里
-// 带的是空的模板 —— 整目录替换会删掉用户的口令与环境。代价是上一版删掉/改名的文件会
-// 留在原地（与"解压覆盖"的语义一致，README 里写明的就是这条路）。
-func copyTree(src, dst string) (files int, err error) {
+// skip 拿到的是**相对 src 的斜杠路径**，返回 true 表示这一条不许动（调用方用它保护
+// 用户自己的文件，例如便携包里那份 config.json）；可以为 nil。
+func CopyTree(src, dst string, skip func(rel string) bool) (files int, err error) {
 	return files, filepath.WalkDir(src, func(path string, d os.DirEntry, werr error) error {
 		if werr != nil {
 			return werr
@@ -116,14 +114,14 @@ func copyTree(src, dst string) (files int, err error) {
 		if rerr != nil {
 			return rerr
 		}
-		target := filepath.Join(dst, rel)
-		if keepLocal[filepath.ToSlash(rel)] {
-			return nil // 用户的数据：跟包内那份同名，但不是一回事
+		if skip != nil && skip(filepath.ToSlash(rel)) {
+			return nil // 调用方点名要保护的东西
 		}
+		target := filepath.Join(dst, rel)
 		if d.IsDir() {
 			return os.MkdirAll(target, 0o755)
 		}
-		if err := copyFile(path, target); err != nil {
+		if err := CopyFile(path, target); err != nil {
 			return fmt.Errorf("覆盖 %s 失败: %w", target, err)
 		}
 		files++
@@ -131,7 +129,8 @@ func copyTree(src, dst string) (files int, err error) {
 	})
 }
 
-func copyFile(src, dst string) error {
+// CopyFile 复制单个文件，必要时建父目录。
+func CopyFile(src, dst string) error {
 	in, err := os.Open(src)
 	if err != nil {
 		return err
@@ -148,5 +147,22 @@ func copyFile(src, dst string) error {
 	if _, err := io.Copy(out, in); err != nil {
 		return err
 	}
-	return out.Sync()
+	// 同 writeZipEntry：不 fsync（理由写在那一处）。
+	return nil
+}
+
+// CountFiles 数一棵树里的文件个数（目录不算）。给"已经解好了"这类不需要再复制的
+// 落盘路径报数用 —— 例如整个目录 rename 到位之后。
+func CountFiles(root string) (int, error) {
+	n := 0
+	err := filepath.WalkDir(root, func(_ string, d os.DirEntry, werr error) error {
+		if werr != nil {
+			return werr
+		}
+		if !d.IsDir() {
+			n++
+		}
+		return nil
+	})
+	return n, err
 }

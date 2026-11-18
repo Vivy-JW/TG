@@ -44,9 +44,26 @@ tg session ls                  # 看当前调试会话
 tg serve              # 启动本地配置页 / 调试工作台（http://127.0.0.1:28680）
 tg install path       # 把 tg 加入用户 PATH
 tg install skills     # 把内置技能安装到指定目录
+tg install bdl        # 把随包的 Genero BDL 官方手册解到本机（--to 换位置，--force 覆盖）
 tg update check       # 检查是否有新版本（不下载）
 tg version            # 查看当前版本
 ```
+
+### Genero BDL 官方手册
+
+发版包在 `tg.exe` 旁边带一个 `BDL-Markdown.zip`（19 章，约 16 MB / 5470 个 md），
+是调试与代码阅读时查 4GL 语言、画面、数据库接口的原文出处。首次使用装一次：
+
+```cmd
+tg install bdl                    # 解到 <数据目录>\BDL-Markdown（普通安装是 %APPDATA%\tg\...）
+tg install bdl --dry-run          # 只回答"会解到哪、现在装没装"
+tg config set bdldoc.dir D:\docs\BDL-Markdown   # 换个位置（长期生效）
+tg install bdl --to D:\docs\BDL-Markdown        # 或只这一次换位置
+```
+
+装过一次之后再跑会直接跳过（不会重写 5470 个文件）；`--force` 只覆盖同名文件，
+**不会删掉**你在那个目录里自己整理过的东西。设置页「应用设置 → Genero BDL 手册」
+能看到生效目录和装没装，也能改落点。
 
 ## 目录结构
 
@@ -56,6 +73,7 @@ TG/
 ├─ internal/            Go 后端全部实现（cli / config / web / host / output / update …）
 ├─ web/                 前端（React + vite，构建产物被 Go 嵌入）
 ├─ installer/           MSI 安装包定义（WiX v3）
+├─ BDL-Markdown.zip     Genero BDL 官方手册（`tg install bdl` 解出来用，不随二进制嵌入）
 ├─ skills/              对外技能手册
 └─ testdata/            测试语料（4GL 大纲夹具）
 ```

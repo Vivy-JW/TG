@@ -13,7 +13,8 @@ import (
 // 旧结构的配置不做自动迁移 —— 读侧按当前结构解析，缺的节取缺省值。
 //
 // 4：新增 skills 节（第三方技能登记的路径清单）。
-const SchemaVersion = 4
+// 5：新增 bdldoc 节（Genero BDL 官方手册的落点，由 `tg install bdl` 写）。
+const SchemaVersion = 5
 
 // 缺省值。合并前三处各自硬编码，现在只有这一份。
 const (
@@ -286,8 +287,16 @@ type DictSettings struct {
 	Dir string `json:"dir"` // 同 MirrorSettings：空串有意义，不能 omitempty
 }
 
-// SyncSettings 旧版单文件字典库落点（绝对路径）。
+// BDLDocSettings Genero BDL 官方手册（Markdown 版）的落点（绝对路径）。
 //
+// 空 = 缺省落点 `<数据目录>/BDL-Markdown`（读侧统一走 BDLDocDirFor，见 bdldoc.go）。
+// 内容不随配置走：它由 `tg install bdl` 从随包的 BDL-Markdown.zip 解出来，这里只记
+// 用户把它挪到哪儿了 —— 想问"手册在哪儿"，跑 `tg install bdl --dry-run` 就会打印出来。
+type BDLDocSettings struct {
+	Dir string `json:"dir"` // 同 MirrorSettings：空串有意义，不能 omitempty
+}
+
+// SyncSettings 旧版单文件字典库落点（绝对路径）。
 // 现在本地库按环境分文件（<数据目录>/dict/<环境>.db），Target 不再参与新落点；
 // 保留字段只为读旧配置不报错，设置页也不再写它。
 type SyncSettings struct {
@@ -367,6 +376,7 @@ type Root struct {
 	Query         QuerySettings
 	Mirror        MirrorSettings
 	Dict          DictSettings
+	BDLDoc        BDLDocSettings
 	Sync          SyncSettings
 	Net           NetSettings
 	Skills        SkillsSettings
@@ -399,6 +409,9 @@ func Load(path string) (*Root, error) {
 		return nil, err
 	}
 	if err := decodeSection(root, "dict", &r.Dict); err != nil {
+		return nil, err
+	}
+	if err := decodeSection(root, "bdldoc", &r.BDLDoc); err != nil {
 		return nil, err
 	}
 	if err := decodeSection(root, "sync", &r.Sync); err != nil {

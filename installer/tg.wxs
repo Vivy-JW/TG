@@ -87,8 +87,11 @@
     </DirectoryRef>
 
     <!-- 安装完成后解压随包的 BDL 文档（tg install bdl）。
-         目标优先取 config.json 已有的 bdldoc.dir；没有就落 %APPDATA%\tg\BDL-Markdown。
-         Return="ignore"：文档解压失败不该让整个安装失败。 -->
+         目标优先取 config.json 已有的 bdldoc.dir；没有就落 <数据目录>\BDL-Markdown
+         （MSI 形态是 %APPDATA%\tg\BDL-Markdown）。
+         Return="ignore"：文档是可选的，解压失败不该让整个安装失败 —— 用户事后还能
+         自己敲一遍 tg install bdl，设置页「Genero BDL 手册」那张卡也会显示未安装。
+         已装过时该命令自己跳过（不重复写 5470 个文件），所以修复安装不会变慢。 -->
     <CustomAction Id="InstallBDLDocs"
                   Directory="INSTALLFOLDER"
                   ExeCommand="&quot;[INSTALLFOLDER]tg.exe&quot; install bdl"

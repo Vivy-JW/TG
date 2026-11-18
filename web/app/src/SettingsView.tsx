@@ -110,12 +110,14 @@ interface DictForm {
   mirrorDir: string
   // dictDir 本地字典库根目录；空 = 缺省 <数据目录>/dict
   dictDir: string
+  // bdlDir Genero BDL 官方手册落点；空 = 缺省 <数据目录>/BDL-Markdown。只存路径，内容由 tg install bdl 解。
+  bdlDir: string
   // 刻意没有 syncTarget:字典库按环境分文件,位置由服务端算;卡片里只读显示库目录。
   // **不要**为了"完整性"把它加回来再原样回传 —— 那等于把一个不展示的键交给这一页写。
 }
 
 /** 可自动保存的配置节。脏标记与提交范围都按它划分。 */
-type ConfigKey = 'hosts' | 'debug' | 'listen' | 'query' | 'mirror' | 'dict'
+type ConfigKey = 'hosts' | 'debug' | 'listen' | 'query' | 'mirror' | 'dict' | 'bdldoc'
 
 // 主题切换卡片(shadcn 主题切换卡样式):三张卡各带一张迷你界面预览,选中卡描边+底色高亮。
 const THEME_OPTIONS: { value: ThemeMode; label: string; icon: typeof Sun }[] = [
@@ -498,7 +500,7 @@ export function SettingsView() {
   const [cfg, setCfg] = useState<HostsView | null>(null)
   const [sshs, setSshs] = useState<SshItem[]>([])
   const [dbg, setDbg] = useState<DebugForm>({ watchdogSeconds: 0 })
-  const [dict, setDict] = useState<DictForm>({ querySource: '', mirrorDir: '', dictDir: '' })
+  const [dict, setDict] = useState<DictForm>({ querySource: '', mirrorDir: '', dictDir: '', bdlDir: '' })
   const [listen, setListen] = useState('')
   // 派生状态(路径存不存在只有服务端算得出来)与配置元信息,以及 PATH 安装状态
   const [status, setStatus] = useState<ConfigStatus | null>(null)
@@ -537,7 +539,7 @@ export function SettingsView() {
   // 脏标记按**配置节**记。保存时只提交改过的节 —— 设置页的各张卡片共用 /api/hosts,
   // 把没改的节一起发过去就是用陈旧快照覆盖别张卡片刚改好的节。
   const dirtyRef = useRef<Record<ConfigKey, boolean>>({
-    hosts: false, debug: false, listen: false, query: false, mirror: false, dict: false,
+    hosts: false, debug: false, listen: false, query: false, mirror: false, dict: false, bdldoc: false,
   })
   // 基线:上一次读到 / 保存成功时那一节的表单值(序列化后的样子)。
   //
@@ -556,8 +558,9 @@ export function SettingsView() {
       : k === 'debug' ? debugPatchOf(f.dbg)
         : k === 'listen' ? f.listen.trim()
           : k === 'query' ? { source: f.dict.querySource }
-            : k === 'mirror' ? { dir: f.dict.mirrorDir.trim() }
-                : { dir: f.dict.dictDir.trim() })
+          : k === 'mirror' ? { dir: f.dict.mirrorDir.trim() }
+            : k === 'dict' ? { dir: f.dict.dictDir.trim() }
+              : { dir: f.dict.bdlDir.trim() })
   const sectionSnap = (k: ConfigKey): string => sectionSnapOf(k, formsRef.current)
   const dirtyRefAny = () => (Object.keys(dirtyRef.current) as ConfigKey[])
     .some((k) => dirtyRef.current[k] && sectionSnap(k) !== baselineRef.current[k])
@@ -602,6 +605,7 @@ export function SettingsView() {
         querySource: c.query?.source === 'auto' ? '' : (c.query?.source || ''),
         mirrorDir: c.mirror?.dir || '',
         dictDir: c.dict?.dir || '',
+        bdlDir: c.bdldoc?.dir || '',
       })
       setListen(c.listen || '')
       setLoadErr('')
@@ -694,6 +698,7 @@ export function SettingsView() {
     if (keys.includes('query')) body.query = { source: forms.dict.querySource }
     if (keys.includes('mirror')) body.mirror = { dir: forms.dict.mirrorDir.trim() }
     if (keys.includes('dict')) body.dict = { dir: forms.dict.dictDir.trim() }
+    if (keys.includes('bdldoc')) body.bdldoc = { dir: forms.dict.bdlDir.trim() }
 
     try {
       const next = await api.saveSettings(body)
@@ -1507,6 +1512,46 @@ export function SettingsView() {
                 {!status?.install.supported && status?.install.manual && (
                   <pre className="overflow-x-auto border border-border bg-muted/30 p-2 text-[11px]">{status.install.manual}</pre>
                 )}
+              </Card>
+
+              {/* Genero BDL 官方手册:读 4gl 语言/画面/数据库接口参考时查原文用。
+                  内容不随安装包"自动铺开"——16 MB、5470 个 md,由 tg install bdl 从随包的 zip 解;
+                  这一页只管"放哪",解包留在命令行(它能报进度、能 --force、能 --dry-run)。 */}
+              <Card id="card-app-bdldoc" title="Genero BDL 手册"
+                description="4gl 语言、画面/报表、数据库接口的官方参考(19 章 Markdown)。装一次就好;调试与阅读技能按这里的位置找原文。">
+                <SettingRow
+                  id="bdldoc.dir"
+                  label="手册目录"
+                  description={
+                    !dict.bdlDir.trim()
+                      ? '留空 = 用数据目录下的 BDL-Markdown(生效位置见下方)。'
+                      : status?.bdldoc?.exists
+                        ? '目录已存在。'
+                        : '目录还不存在 —— 首次 tg install bdl 会创建它。'
+                  }
+                  control={
+                    <div className="flex min-w-0 items-center gap-1">
+                      <Input className={input} value={dict.bdlDir} placeholder="留空 = 缺省目录"
+                        onChange={(e) => { setDict((s) => ({ ...s, bdlDir: e.target.value })); markDirty('bdldoc') }} />
+                      <Button variant="outline" size="sm" className="h-7 shrink-0 px-2 text-[11px]"
+                        onClick={() => setDirPick({
+                          open: true,
+                          initial: dict.bdlDir.trim(),
+                          title: '选择 BDL 手册目录',
+                          onPick: (path) => { setDict((s) => ({ ...s, bdlDir: path })); markDirty('bdldoc') },
+                        })}>
+                        选择
+                      </Button>
+                    </div>
+                  }
+                />
+                <InfoRow label="生效目录" value={status?.bdldoc?.dir || '—'} />
+                <InfoRow label="安装状态"
+                  value={status?.bdldoc?.installed ? '已解出文档' : status?.bdldoc?.exists ? '目录存在，但是空的' : '未安装'} />
+                <p className="text-[11px] leading-relaxed text-muted-foreground">
+                  解出或更新文档走命令行：<code>tg install bdl</code>（已装过要覆盖时加 --force；它只覆盖同名文件，
+                  不会删掉你在目录里多放的东西）。这一页只改路径，不解包。
+                </p>
               </Card>
 
               <Card id="card-app-info" title="运行信息">

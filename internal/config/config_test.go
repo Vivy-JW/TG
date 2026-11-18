@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -308,7 +309,8 @@ func TestNetSettingsProxy(t *testing.T) {
 	dir := t.TempDir()
 
 	full := filepath.Join(dir, "full.json")
-	seed := `{"schemaVersion": 4, "net": {"proxy": "http://127.0.0.1:10808"}}`
+	// 版本号取当前结构：这条测的是 net 节的读写，不该在每次升 schema 时被连带改红。
+	seed := fmt.Sprintf(`{"schemaVersion": %d, "net": {"proxy": "http://127.0.0.1:10808"}}`, SchemaVersion)
 	if err := os.WriteFile(full, []byte(seed), 0o600); err != nil {
 		t.Fatal(err)
 	}

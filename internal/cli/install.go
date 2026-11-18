@@ -3,6 +3,8 @@
 //	tg install skills [--to <dir>|auto] [--agent <名字>] [--force] [--dry-run] [--strict]
 //	                                           把官方技能 + 登记的第三方技能复制到目标目录
 //	tg install path   [--dry-run]              把 exe 所在目录追加到**用户** PATH(HKCU，不需要管理员)
+//	tg install bdl    [--to <dir>|--from <zip>] [--force] [--dry-run]
+//	                                           解出随包的 Genero BDL 官方手册（见 install_bdl.go）
 //
 // 合并前 TDebug / TDev / TDictCli 各有一份同形实现，注释里写着"命令形态与另外两个一致
 // （改动请三边同步）"。合并后只有这一份。
@@ -48,18 +50,20 @@ func defaultSkillsSource() (string, error) {
 func newInstallCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "install",
-		Short: "把 tg 装进你的环境（skills / path）",
+		Short: "把 tg 装进你的环境（skills / path / bdl）",
 		Long: `把 tg 装进你的环境：
 
   tg install skills [--to <dir>|auto] [--agent <名字>] [--force] [--dry-run] [--strict]
                                              把官方技能 + 登记的第三方技能复制到目标目录
-  tg install path   [--dry-run]              把 exe 所在目录追加到用户 PATH(HKCU)`,
+  tg install path   [--dry-run]              把 exe 所在目录追加到用户 PATH(HKCU)
+  tg install bdl    [--to <dir>|--from <zip>] [--force] [--dry-run]
+                                             解出随包的 Genero BDL 官方手册（Markdown 版）`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return fmt.Errorf("请指定子命令: skills 或 path\n\n%s", cmd.UsageString())
+			return fmt.Errorf("请指定子命令: skills / path / bdl\n\n%s", cmd.UsageString())
 		},
 	}
-	cmd.AddCommand(newInstallSkillsCmd(), newInstallPathCmd())
+	cmd.AddCommand(newInstallSkillsCmd(), newInstallPathCmd(), newInstallBDLCmd())
 	return cmd
 }
 

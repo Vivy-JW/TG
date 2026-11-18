@@ -5,6 +5,11 @@ description: 正在阅读或需要阅读鼎捷TOP GP代码时自动触发本技�
 
 # TOP GP 代码阅读
 
+> 4GL 语句、画面指令、报表与数据库接口的权威说明在 **Genero BDL 官方手册**（本机 Markdown）：
+> 目录跑 `tg install bdl --dry-run` 问（打印 `{"dir": ...}`，不写盘；已装过就是 `skipped`），
+> 没装先 `tg install bdl`，再到那个目录按章找（`01_genero-bdl-user-guide` … `19_copyrights-and-trademarks`）。
+> 这是查"语言本身怎么规定"，不替代 `tg sdd` / `tg interface` 查某支作业的业务语义。
+
 TOP GP 里表名、字段、画面文字全是流水号（`ima01`、`bma_file`、`gae_file`），
 光看代码读不出业务含义。所以顺序是：**定环境 → 定程序 → 读作業說明書 → 看画面 → 读代码 → 查字典/消息/库验证**。
 

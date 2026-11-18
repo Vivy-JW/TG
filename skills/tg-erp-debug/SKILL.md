@@ -5,6 +5,10 @@ description: 当需要对 TOP GP 作业进行错误排查和 DEBUG 时，触发�
 
 # TOP GP 作业命令行调试
 
+> Genero 4GL 的语法、画面、数据库接口原文查 **BDL 官方手册**（本机 Markdown）：
+> 目录跑 `tg install bdl --dry-run` 问（打印 `{"dir": ...}`，不写盘；已装过就是 `skipped`），
+> 没装先 `tg install bdl`，再到那个目录按章找（`01_genero-bdl-user-guide` … `19_copyrights-and-trademarks`）。
+
 ## 前提和原则
 
 在处理BUG时，通过阅读ERP源代码，以及借助SQL工具可以解决大部分的问题，遇到困难复杂，必须通过还原程序运行现场时才需要使用DEBUG工具，接口类只需用户提供ID就可以DEBUG，带画面的程序可能需要协助用户点击来捕获提前设置的断点

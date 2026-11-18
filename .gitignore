@@ -34,6 +34,7 @@
 # 本机构建缓存
 /.gocache/
 /.gotmp/
+/.pnpm-store/
 
 # 编辑器与工具
 /.zcode/

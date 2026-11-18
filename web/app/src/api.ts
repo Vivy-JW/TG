@@ -136,6 +136,8 @@ export interface HostsView {
   // dict 本地字典库根目录；空 = 缺省 <数据目录>/dict
   dict: { dir?: string }
   sync: { target?: string }
+  // bdldoc Genero BDL 官方手册落点；空 = 缺省 <数据目录>/BDL-Markdown。内容不在这里，由 tg install bdl 解。
+  bdldoc: { dir?: string }
   version: string
 }
 
@@ -149,6 +151,7 @@ export interface HostsPatch {
   mirror?: { dir?: string }
   dict?: { dir?: string }
   sync?: { target?: string }
+  bdldoc?: { dir?: string }
 }
 
 // 目录选择器（前端自绘）用的目录项 / 列表
@@ -166,6 +169,13 @@ export interface FsList {
 export interface DirStatus {
   dir: string
   exists: boolean
+}
+// Genero BDL 官方手册的落点状态:装没装只问"目录里有东西没",不做完整性校验
+export interface BDLDocStatus {
+  dir: string // 生效落点(配置的或缺省的)
+  configured?: string // 配置里显式写下的值;空 = 用缺省落点
+  exists: boolean
+  installed: boolean
 }
 // 一个"文件型"配置值的状态
 export interface FileStatus {
@@ -228,6 +238,8 @@ export interface ConfigStatus {
   mirror: DirStatus
   dict: DirStatus
   sync: FileStatus
+  // bdldoc Genero BDL 官方手册：落点 + 装没装（`tg install bdl` 写的目录）
+  bdldoc: BDLDocStatus
   install: InstallStatus
   cache: CacheStatus
 }

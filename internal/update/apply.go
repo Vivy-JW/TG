@@ -14,6 +14,7 @@ import (
 
 	"tg/internal/config"
 	"tg/internal/winproc"
+	"tg/internal/zipx"
 )
 
 // Plan 一次升级的全部输入。它由前台命令写好、交给脱离的更新器进程读 —— 所以是**跨进程
@@ -103,7 +104,7 @@ func Handoff(p *Plan) (int, error) {
 		return 0, fmt.Errorf("建更新器目录 %s 失败: %w", dir, err)
 	}
 	helper := filepath.Join(dir, "tg.exe")
-	if err := copyFile(self, helper); err != nil {
+	if err := zipx.CopyFile(self, helper); err != nil {
 		return 0, fmt.Errorf("复制更新器到 %s 失败: %w", helper, err)
 	}
 
@@ -211,7 +212,7 @@ func applyPortable(p *Plan, log func(string, ...any)) error {
 	old := filepath.Join(p.Dir, "tg.exe")
 	backup := filepath.Join(p.BackupDir(), "tg.exe")
 	if _, err := os.Stat(old); err == nil {
-		if err := copyFile(old, backup); err != nil {
+		if err := zipx.CopyFile(old, backup); err != nil {
 			return fmt.Errorf("备份旧 tg.exe 失败（没有它就没法回退）: %w", err)
 		}
 		log("已备份旧 tg.exe → %s", backup)
@@ -220,7 +221,7 @@ func applyPortable(p *Plan, log func(string, ...any)) error {
 	if err != nil {
 		log("覆盖目录失败，回退旧 tg.exe")
 		if _, serr := os.Stat(backup); serr == nil {
-			_ = copyFile(backup, old)
+			_ = zipx.CopyFile(backup, old)
 		}
 		return fmt.Errorf("覆盖 %s 失败: %w", p.Dir, err)
 	}

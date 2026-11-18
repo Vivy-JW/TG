@@ -74,7 +74,7 @@ tg update check                      # 只看结论：退出码 10 = 有新版�
 ③ 这一层负责证明哪件事：**"装下去的东西就是发布方发布的那一份，而且装完真的能跑"**。
 逐条对应：摘要校验证明字节（`client.go` 的 `Download`）；制品自报版本证明"这份字节是那次
 发布"（`stagePortable` 与 `Apply` 的装后校验）；换完之后 `config.json` 与包外文件仍在
-（`zipx.go` 的 `keepLocal` 与 `copyTree`）；失败时旧 `tg.exe` 回得来（`applyPortable`）。
+（`payload.go` 的 `keepLocal` 与 `zipx.CopyTree`）；失败时旧 `tg.exe` 回得来（`applyPortable`）。
 
 ④ 故意不覆盖什么：**MSI 形态的真机替换没有单测**（要一次真装，见 `tg update log` 的
 `msiexec` 退出码），这是结构上难测而不是留给别的层；`winproc` 的杀进程/探测语义由它自己

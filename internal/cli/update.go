@@ -41,6 +41,7 @@ import (
 	"tg/internal/config"
 	"tg/internal/output"
 	"tg/internal/update"
+	"tg/internal/zipx"
 )
 
 // exitUpdateAvailable "有可用更新"。它不是失败，见上面那段说明。
@@ -483,12 +484,12 @@ func stagePortable(ctx context.Context, zipPath, exePath, target string, errOut 
 		return "", applyErr(fmt.Errorf("建暂存目录 %s 失败: %w", stage, err))
 	}
 	fmt.Fprintf(errOut, "解包 → %s\n", stage)
-	if err := update.ExtractZip(zipPath, stage); err != nil {
+	if err := zipx.ExtractZip(zipPath, stage); err != nil {
 		_ = os.RemoveAll(stage)
 		return "", &output.Error{Code: output.CodeUpdateChecksum, Exit: 3,
 			Message: err.Error(), Hint: "下载到的 zip 解不开，已丢弃，这次升级中止"}
 	}
-	root, err := update.PayloadRoot(stage)
+	root, err := zipx.PayloadRoot(stage)
 	if err != nil {
 		_ = os.RemoveAll(stage)
 		return "", &output.Error{Code: output.CodeUpdateChecksum, Exit: 3, Message: err.Error()}

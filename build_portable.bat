@@ -72,11 +72,18 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo [3/4] Staging EMPTY config.json / config.example.json / README.md / skills ...
+echo [3/4] Staging EMPTY config.json / config.example.json / README.md / skills / BDL docs ...
 copy /y config.empty.json "%STAGE%\config.json" >nul || (echo COPY empty config FAILED & exit /b 1)
 copy /y config.example.json "%STAGE%\" >nul || (echo COPY config.example.json FAILED & exit /b 1)
 copy /y README.md "%STAGE%\" >nul || (echo COPY README.md FAILED & exit /b 1)
 xcopy /e /i /y /q skills "%STAGE%\skills" >nul || (echo COPY skills FAILED & exit /b 1)
+rem Genero BDL docs ship as one zip next to tg.exe, not as loose files: 5470 .md
+rem would bloat the package and the installer, and nobody reads them from the
+rem program dir anyway. `tg install bdl` unpacks it into the user's data dir
+rem (or into config bdldoc.dir). Missing zip is a hard error: the whole point of
+rem shipping it is that a fresh install can run `tg install bdl` right away.
+if not exist "BDL-Markdown.zip" (echo MISSING BDL-Markdown.zip ^(repo root^) & exit /b 1)
+copy /y BDL-Markdown.zip "%STAGE%\" >nul || (echo COPY BDL-Markdown.zip FAILED & exit /b 1)
 if not exist "%STAGE%\tg.exe" (echo MISSING staged tg.exe & exit /b 1)
 rem Portable marker: the CLI keeps its config inside the package instead of
 rem writing to the user directory (see internal/config/paths.go, IsPortable).
