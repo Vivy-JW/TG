@@ -132,25 +132,76 @@ tg dict r.t aaz_file --fields --at <环境>@<ds>
 
 TOP GP中很多弹窗、消息的内容是可以复用的，特征也比较明显，比如模块+流水的 `aap-00228`、`aap-00245`，也有很多纯数字的 `-3101`、`100`。在它们附近往往伴随着一些弹窗、提示相关的组件，不借助工具查询也是看不出来含义的。
 
-最常见的几条路（全库统计：`CALL cl_err(` 17 万处 / 6,109 个文件、`WHENEVER ERROR` 7,214 处 / 6,725 个文件、`CALL s_errmsg(` 2.2 万处 / 1,104 个文件）：
+报错在 GP 里只有固定的几种形态（按 `22主机` 镜像 7,316 个 `.4gl` 的统计），读代码时先认形态，再决定要不要去查消息：
+
+| 形态 | 规模（文件 / 处） | 典型写法 |
+|---|---|---|
+| `CALL cl_err(msg, code, n)` | 6,109 / 170,658 | `CALL cl_err(g_bma.bma01,'abm-123',0)` |
+| `WHENEVER ERROR CALL cl_err_msg_log` | 6,725 / 7,214 | 程序头一行 |
+| `CALL cl_err3(action, table, keys…, sqlcode, …)` | 3,420 / 37,240 | `CALL cl_err3("ins","bma_file",g_bma.bma01,…,SQLCA.sqlcode,"","",1)` |
+| `CALL s_errmsg(field, value, msg, code, n)` | 1,104 / 22,062 | `CALL s_errmsg('bma01',g_bma.bma01,'','abm-123',0)` |
+| `CALL cl_err_msg(title, code, replace, sec)` | 653 / 1,982 | `CALL cl_err_msg(NULL,'asf-001',g_user||'\|'||'oea01',10)` |
+| `IF SQLCA.sqlcode <> 0` | 251 / 1,324 | 自己判库错 |
+| 原生 `ERROR` / `MESSAGE` | 2,714 / 3,169、3,383 / 17,191 | `ERROR ""`、`MESSAGE 'UPDATE O.K'` |
+
+**① 主出口 `cl_err`** —— 第二个参数才是消息本体，一眼能分出「业务错」还是「系统错」：
 
 ```
-WHENEVER ERROR CALL cl_err_msg_log                     # 程序头兜底：跑飞了写错误日志（STATUS=-1109 直接退出）
-CALL cl_err(g_bma.bma01,'abm-123',0)                   # 附加说明 + 消息代号 + 停留(0=不等键 1=等CR >1=秒)
-CALL cl_err_msg(NULL,'asf-001',g_user||'|'||'oea01',10) # 直接弹窗，| 分隔替换 %1..%n
-CALL s_errmsg('bma01',g_bma.bma01,'','abm-123',0)      # 栏位级，累积到 g_err_msg[]，最后 s_showmsg() 一起弹
-CALL cl_err3('ins','bma_file',g_bma.bma01,SQLCA.sqlcode,'','',1)  # INSERT/UPDATE 失败专用
+CALL cl_err('','abm-123',0)                    # 模块-流水码：走 ze_file 消息档，按语系取原文
+CALL cl_err(g_bma.bma01,'mfg2634',0)           # 同上，第一个参数是附加说明（业务值，会拼在原文前/后）
+CALL cl_err('',-400,0)                         # Oracle 错误号：原文由 finderr 给（-263 就是资料被锁住）
+CALL cl_err("OPEN i600_cl:",STATUS,1)          # STATUS：游标/连线这类系统态错误
 ```
 
-> 注意：`INITIALIZE g_errparam … LET g_errparam.code/popup` 那套是 T100 / 新版 Genero 的写法，
-> **GP 里没有**（全库只有 `lib/4gl/cl_soapcli.4gl` 一处，而且被 `{}` 注释掉了）。
+第三个参数 `p_n` 控制停留：`0` 不停留、`1` 等 CR（GUI 下等价于弹窗确认）、`>1` 停几秒、`-1` 文本模式等同 `0`。
 
-查询系统消息、错误消息的命令：
+**② 兜底 `WHENEVER ERROR CALL cl_err_msg_log`** —— 几乎每个程序头一行；真跑飞时写错误日志（`g_need_err_log='Y'`、`g_bgjob='Y'`、cron 才写），`STATUS=-1109` 直接 `ERR_QUIT`，`LOG_ERRTIMES` 防爆。看到它不用找消息码，它不产生业务文案。
+
+**③ 库动作失败 `cl_err3`** —— `INSERT/UPDATE/DELETE` 之后紧跟，比 `cl_err` 多带动作、表名与键值，日志能直接定位到哪一行数据：
+
+```
+CALL cl_err3("ins","bma_file",g_bma.bma01,g_bma.bma06,SQLCA.sqlcode,"","",1)
+```
+
+源码不在 4gl 树里（只有 `lib/42f/cl_err3.42f` 与 `lib/sdd/cl_err3.sdd`），读不到实现时按名字理解即可。
+
+**④ 多栏位一起报 `s_errmsg` + `s_showmsg`** —— 先逐栏位攒，最后一次性弹「错误清单」表格：
+
+```
+CALL s_errmsg('bma01',g_bma.bma01,'','abm-123',0)   # 栏位名、当前值、附加说明、消息码、停留
+CALL s_errmsg('bma02',g_bma.bma02,'','abm-456',0)
+CALL s_showmsg()                                     # 把 g_err_msg[] 用 cl_show_array 列成表（lib-314 当标题）
+```
+
+`p_n=0` 时 `s_errmsg` 直接 return（等于这条不报）；`s_showmsg` 只在 `g_bgerr=TRUE` 时才弹。
+
+**⑤ 直接弹窗 `cl_err_msg`** —— 跳过 `cl_err`，`|` 分隔替换 `%1..%n`：
+
+```
+CALL cl_err_msg(NULL,'asf-001',g_user||'|'||'oea01',10)
+```
+
+**⑥ 自己判库错** —— 新代码偏多，常配 `SQLCA.SQLERRD[2]` 与 `cl_sql_dup_value()`（唯一键冲突）。
+
+**⑦ 原生 `ERROR` / `MESSAGE`** —— `ERROR ""` 多半是**用它把控制流从 `INPUT`/`MENU` 里弹出来**（真实原因在 `STATUS` 里，别当成"空错误"），`MESSAGE 'UPDATE O.K'` 是状态行提示，都不是给人看的错误文案。
+
+> 两种不存在的写法，别照抄 T100：
+> - `INITIALIZE g_errparam … LET g_errparam.code/popup = TRUE` —— GP 全库只有 `lib/4gl/cl_soapcli.4gl` 一处，还是被 `{}` 注释掉的；
+> - `CALL cl_err()` 无参 —— GP 的 `cl_err` 固定三参 `(p_msg, err_code, p_n)`。
+
+### 什么时候该调 `tg dict msg`
+
+它在本地字典的 `t_msg`（源 `ze_file`）里按「消息代号 + 语系」查原文与处理建议。**只有下面这几种情况值得查**：
 
 ```bash
-tg dict msg asf-00150 --at <环境>@<据点编号>
-tg dict msg --at <环境>@<据点编号> -- -3101
+tg dict msg abm-123 --at <环境>                # 知道代号（cl_err/cl_err_msg/s_errmsg 的 code 参数、日志里的 aap-00228）
+tg dict msg --text 锁定 --lang zh_CN --at <环境>  # 只记得大概意思，反查代号
+tg dict msg -- -3101 --at <环境>                # 纯数字码：查的是自定义文案，Oracle 原生错误用 finderr 读
 ```
+
+- **要查**：代码里写死的模块-流水码（`abm-123`、`mfg2634`）、接口/日志里冒出的 `aap-00228` 这类码、想确认某个码在简繁两种语系下的措辞；
+- **不必查**：`-400`/`-239`/`-263`/`9001` 这类 Oracle 原生错误（`finderr` 就能解释，`tg dict msg -- -263` 只是看有没有被客制过文案）、纯 `STATUS`（值在 `cl_err` 调用处的上下文里）、`ERROR ""`/`MESSAGE 'UPDATE O.K'`（不是消息码）；
+- 查不到时用可用语言提示（`可用语言: 2`）加 `--lang` 重试，别当成"没有这条消息"。
 
 ## 开窗和校验带值
 
