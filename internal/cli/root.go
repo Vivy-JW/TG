@@ -61,6 +61,7 @@ var rootCmd = &cobra.Command{
   tg debug …     作业调试（T100 的 gendbg 那一套；GP 的调试目前只在网页里）
   tg session …   会话：建 / 列 / 看 / 结束 / 收掉 / 透传
   tg env / config / serve / install / update   环境、配置、本地服务、安装、自更新
+  tg docs        两份随包 Markdown 手册（bdldoc / gpdoc）解到哪了；技能与协作者反查目录用
 
 远程操作只读：file 没有 put/rm；镜像用 SFTP 逐个文件下载，不在服务器上留东西。
 
@@ -116,6 +117,7 @@ func init() {
 	rootCmd.AddCommand(newEnvCmd())
 	rootCmd.AddCommand(newConfigCmd())
 	rootCmd.AddCommand(newCacheCmd())
+	rootCmd.AddCommand(newDocsCmd())
 	rootCmd.AddCommand(newServeCmd())
 	rootCmd.AddCommand(newInstallCmd())
 	rootCmd.AddCommand(newVersionCmd())

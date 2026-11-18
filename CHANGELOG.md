@@ -29,7 +29,7 @@ TG 是 TT 的继任者，只面向 **鼎捷 TOP GP**（T100 分支已整体移�
 - **随包的两份 Markdown 手册**：`BDL-Markdown.zip`（Genero BDL User Guide，19 章）与
   `TOP-GP-Markdown.zip`（TOP GP 技术手册，13 章 / 237 个 md）跟安装包一起发，用
   `tg install bdl` / `tg install gpdoc` 解到本机（`--to` 换位置、`--from` 换 zip、`--force` 覆盖、
-  `--dry-run` 只看落点）；落点可用 `bdldoc.dir` / `gpdoc.dir` 长期改。设置页「应用设置」
+  `--dry-run` 只看落点）；落点可用 `bdldoc.dir` / `gpdoc.dir` 长期改；反查目录用 `tg docs`（`--json` 给脚本读）。设置页「应用设置」
   两张卡显示生效目录与装没装。便携包与 MSI 都会 stage 两个 zip，MSI 装完自动各跑一次
   （`Return="ignore"`，装失败不影响安装本身）。
 

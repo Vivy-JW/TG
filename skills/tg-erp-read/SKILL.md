@@ -5,10 +5,15 @@ description: 正在阅读或需要阅读鼎捷TOP GP代码时自动触发本技�
 
 # TOP GP 代码阅读
 
-> 4GL 语句、画面指令、报表与数据库接口的权威说明在 **Genero BDL 官方手册**（本机 Markdown）：
-> 目录跑 `tg install bdl --dry-run` 问（打印 `{"dir": ...}`，不写盘；已装过就是 `skipped`），
-> 没装先 `tg install bdl`，再到那个目录按章找（`01_genero-bdl-user-guide` … `19_copyrights-and-trademarks`）。
-> 这是查"语言本身怎么规定"，不替代 `tg sdd` / `tg interface` 查某支作业的业务语义。
+> 精确原文（语句语义、画面指令、报表、SQL 接口）查本机两份 Markdown 手册，目录用命令问、别写死：
+>   `tg docs` → 两份手册的实际目录（`bdldoc` = Genero BDL User Guide、`gpdoc` = TOP GP 技术手册），
+>   `tg docs --json` 给脚本读（`data.docs[]` 里的 `dir` / `installed`）。
+> 没装就 `tg install bdl` / `tg install gpdoc`（`--to` 换位置、`--force` 覆盖）。
+> BDL 手册有 5 千多个 md，只翻对应那章：`08_language-basics`（4GL 语法）、`09_advanced-features`、
+> `10_sql-support`（SQL/游标/事务）、`11_user-interface`（画面控件与指令）、`12_reports`（报表）、
+> `13_programming-tools`（fglrun/fglform/fgldb 等）、`15_library-reference`（内建函数逐个查）。
+> GP 手册里与本技能相关的是 `03_命名原则`、`09_单档`、`10_双档`、`12_客制规范`。
+> 这是查"语言/规范本身怎么规定"，不替代 `tg sdd` / `tg interface` 查某支作业的业务语义。
 
 TOP GP 里表名、字段、画面文字全是流水号（`ima01`、`bma_file`、`gae_file`），
 光看代码读不出业务含义。所以顺序是：**定环境 → 定程序 → 读作業說明書 → 看画面 → 读代码 → 查字典/消息/库验证**。

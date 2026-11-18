@@ -5,9 +5,13 @@ description: 当需要对 TOP GP 作业进行错误排查和 DEBUG 时，触发�
 
 # TOP GP 作业命令行调试
 
-> Genero 4GL 的语法、画面、数据库接口原文查 **BDL 官方手册**（本机 Markdown）：
-> 目录跑 `tg install bdl --dry-run` 问（打印 `{"dir": ...}`，不写盘；已装过就是 `skipped`），
-> 没装先 `tg install bdl`，再到那个目录按章找（`01_genero-bdl-user-guide` … `19_copyrights-and-trademarks`）。
+> 精确原文（语句/选项/错误码/DVM 行为）查本机两份 Markdown 手册，目录用命令问、别写死：
+>   `tg docs` → 两份手册的实际目录（`bdldoc` = Genero BDL User Guide、`gpdoc` = TOP GP 技术手册），
+>   `tg docs --json` 给脚本读（`data.docs[]` 里的 `dir` / `installed`）。
+> 没装就 `tg install bdl` / `tg install gpdoc`（`--to` 换位置、`--force` 覆盖）。
+> BDL 手册只读需要的那几章：`08_language-basics`（4GL 语法）、`10_sql-support`、`11_user-interface`（画面）、
+> `12_reports`、`13_programming-tools`（fglrun/fgldb 等工具，本技能 §149 的节选就出自这里）、`15_library-reference`。
+> GP 手册里与本技能相关的是 `06_Debugger`（GDC Debugger 用法）与 `13_附录`。
 
 ## 前提和原则
 

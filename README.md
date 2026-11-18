@@ -46,6 +46,7 @@ tg install path       # 把 tg 加入用户 PATH
 tg install skills     # 把内置技能安装到指定目录
 tg install bdl        # 把随包的 Genero BDL 官方手册解到本机（--to 换位置，--force 覆盖）
 tg install gpdoc      # 同上，TOP GP 产品手册
+tg docs               # 两份手册解到哪了（技能/脚本反查目录用；--json 给机器读）
 tg update check       # 检查是否有新版本（不下载）
 tg version            # 查看当前版本
 ```
