@@ -79,6 +79,34 @@ tg interface fields bsft001_wf --42f <本地.42f>  # 手上有 .42f 就不必连
 `--labels auto|local|live|off` 控制标签来源，`--lang zh_CN|zh_TW` 控制语系。
 返回里 `labelSource` 会写清这次标签是从本地字典、远程 `gae_file` 还是离线拿的。
 
+### 4.1 栏位的中文说明不在 4GL 里
+
+在 4GL 源码里几乎看不到「主件料件」「规格」这种标题 —— 它们是 `.42f` 里**跟字段成对的 `Label` 元件**，
+运行时才按语系从 `gae_file` 取译文。`lib/4gl/cl_set_comp_visible.4gl` 是最好的证据：它的用途是
+「動態顯現/隱藏畫面上的元件」（`CALL cl_set_comp_visible("oea01,oea04", FALSE)`），遍历当前 form 的 DOM
+按 `colName`/`name` 找到元件，隐藏字段时**必须把紧挨在前面的 Label 一起隐藏**，否则界面上就成了
+「字段没了、标题还在」：
+
+```genero
+IF (ls_prev_tag.equals("Label")) AND
+   (ls_prev_name NOT MATCHES "dummy*" OR cl_null(ls_prev_name)) THEN   # "+" 展开按钮会被跳过
+    CALL lnode_prev.setAttribute("hidden",1)
+END IF
+```
+
+所以读代码时：
+
+- 程序里只有字段代码（`oea01`、`bmo06`），要中文说明就去画面/字典拿：
+  ```bash
+  tg interface fields abmi100 --at <环境> --limit 0 --brief    # 画面上的栏位标题 + labelReason
+  tg dict r.t bma_file --fields --at <环境>@<据点编号>          # 按表查字段中文名
+  ```
+- `label` 为空不是工具坏了，看 `labelReason`：`token-not-found`（42f 里的 token 在 `gae_file` 查不到）、
+  `label-not-associated`（这个元件没有配对的标题，常见于客制程序）—— 这种情况以 `.sdd` 与字段说明为准。
+- 顺带一个坑：同一个函数里查 `gav_file`（画面输出字段格式设置档）算出的 `lc_cust_flag`**算完没有使用**，
+  是历史遗留（原「必要栏位不可隐藏」逻辑被 `MOD-4C0124` 拿掉）；`gav_file` 在业务 schema 里还是同义词，
+  `tg dict r.t gav_file` 会显示 0 字段。
+
 ## 5. 读代码：本地镜像优先
 
 **优先读本地镜像**（快、可 grep、断网也能用）。用户环境没有镜像时，可以借**别的环境**的镜像
