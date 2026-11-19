@@ -170,13 +170,20 @@ func Apply(ctx context.Context, p *Plan, log func(string, ...any)) error {
 
 	// 校验：**用刚装好的那份二进制自报版本**。这是整条链上唯一能证明"装下去的是它"
 	// 的动作 —— 摘要只能证明"下到的字节是发布方发的"。
-	got, err := VersionOf(ctx, p.ExePath)
+	//
+	// 便携包要按"目录里的 tg.exe"验，而不是按当初被调用的那个文件名：载荷里的可执行文件
+	// 永远叫 tg.exe，用户若把老的 exe 改过名（tg-old.exe），拿改名后的路径去验只会得到旧版本。
+	verifyExe := p.ExePath
+	if p.Kind == TokenPortable && p.Dir != "" {
+		verifyExe = filepath.Join(p.Dir, "tg.exe")
+	}
+	got, err := VersionOf(ctx, verifyExe)
 	if err != nil {
-		return fail(fmt.Errorf("装完后跑 %s version 失败: %w", p.ExePath, err))
+		return fail(fmt.Errorf("装完后跑 %s version 失败: %w", verifyExe, err))
 	}
 	log("装完的版本: %s（目标 %s）", got, p.Target)
 	if !OutputHasVersion(got, p.Target) {
-		return fail(fmt.Errorf("装完后 %s 自报版本是 %q，与目标 %s 不一致", p.ExePath, got, p.Target))
+		return fail(fmt.Errorf("装完后 %s 自报版本是 %q，与目标 %s 不一致", verifyExe, got, p.Target))
 	}
 
 	if p.RestartServe {
