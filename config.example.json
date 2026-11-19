@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "listen": "127.0.0.1:28680",
 
   "hosts": {
@@ -11,7 +11,7 @@
         "user": "tiptop",
         "password": "换成真实口令",
         "zone": "31",
-        "workspace": "D:\\t100_wrok_dir\\某客户\\dev",
+        "workspace": "D:\\gp\\某客户\\dev",
         "db": {
           "type": "oracle",
           "host": "10.0.0.2",
@@ -40,7 +40,7 @@
         "user": "tiptop",
         "password": "换成真实口令",
         "zone": "36",
-        "workspace": "D:\\t100_wrok_dir\\某客户\\prd",
+        "workspace": "D:\\gp\\某客户\\prd",
         "db": {
           "type": "kingbase",
           "host": "10.0.1.2",
@@ -86,18 +86,10 @@
     "proxy": ""
   },
 
-  "tdev": {
-    "workspaceSuffix": "-ws",
-    "defaultOut": ""
-  },
 
   "skills": {
     "externals": [
       { "path": "D:\\我的技能库\\kb-faq", "label": "kb-faq" }
     ]
-  },
-
-  "tzs": {
-    "serverExe": ""
   }
 }

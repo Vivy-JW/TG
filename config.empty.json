@@ -1,13 +1,12 @@
 {
-  "schemaVersion": 4,
-  "listen": "127.0.0.1:28680",
   "hosts": {
-    "activeEnv": "",
     "sshs": []
   },
+  "listen": "127.0.0.1:28680",
   "query": {
     "source": "auto"
   },
+  "schemaVersion": 6,
   "skills": {
     "externals": []
   },
