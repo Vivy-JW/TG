@@ -13,34 +13,14 @@
 
 ## 能干什么
 
-读代码、查字典、调作业，各一条命令；网页调试工作台读的是同一套会话。
-
-常用几条：
-
-```cmd
-tg env list --format table                   # 配置里的环境
-tg site list --env 22主机                    # 该环境的据点与 schema
-tg dict r.t ima_file --at 22主机             # 表定义
-tg dict r.q cp_ima --at 22主机               # 开窗定义 + 现拼的 SQL
-tg sdd axmt410 --at 22主机                   # 作業說明書
-tg debug start abmi600 --env 22主机          # 起作业，停在入口
-tg session ls                                # 当前调试会话
-```
+读代码、查字典、调作业，各一条命令；网页调试工作台读的是同一套会话。完整命令看 `tg --help`。
 
 ## 安装
 
 - **便携包**：解压即用，配置优先读包内 `config.json`（不存在就就地新建）。
 - **MSI**：装到 `%LOCALAPPDATA%\Programs\TG`，配置在 `%APPDATA%\tg`。
 
-随包还有两份 Markdown 手册（查原文用，不嵌进二进制）：
-
-```cmd
-tg install bdl        # Genero BDL 官方手册（4GL 语法、画面、SQL、fgldb）
-tg install gpdoc      # TOP GP 技术手册（环境、命名、单档双档、客制规范）
-tg docs               # 两份手册解到哪了
-```
-
-设置页「应用设置」里能看生效目录、也能改落点；`tg install … --force` 只覆盖同名文件，不会删你另外放的东西。
+随包还有两份 Markdown 手册（查原文用，不嵌进二进制）：`tg install bdl` 装 Genero BDL 官方手册、`tg install gpdoc` 装 TOP GP 技术手册；`tg docs` 看它们解到哪了，设置页「应用设置」里能改落点。`--force` 只覆盖同名文件，不会删你另外放的东西。
 
 ## 它不做什么
 
