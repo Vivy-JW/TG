@@ -106,5 +106,8 @@ TG/
 
 ## 致谢与许可
 
-- 架构参考 [TT](https://github.com/luyaogod/TT)，面向 TOP GP 重新实现；T100 分支已整体移除。
-- 上游 TT 仓库未声明开源许可证，因此本仓库目前不沿用任何开源许可条款，仅作个人开发使用。
+- 架构参考 [TT](https://github.com/luyaogod/TT)，面向 TOP GP 重新实现；T100 分支已整体移除。本项目包含源自 TT 的代码，经其作者许可使用与分发。
+- **TG 以 [Apache License 2.0](LICENSE) 发布**：可自由使用、修改、再分发（保留版权与许可声明，并附免责条款）。
+- 随包分发的两份 Markdown 手册是**第三方文档**（Genero BDL 文档、TOP GP 技术手册），版权归各自权利人，**不在本项目的 Apache-2.0 授权范围内**；版权归属与依赖清单见 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)，版权声明见 [NOTICE](NOTICE)。
+
+Copyright 2026 Vivy-JW

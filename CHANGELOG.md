@@ -6,6 +6,14 @@
 TG 是 TT 的继任者，只面向 **鼎捷 TOP GP**（T100 分支已整体移除），因此版本号从 `0.1.0` 重新起算，
 不沿用 TT 的 `0.5.x`。
 
+## [Unreleased]
+
+### 新增
+
+- 开源许可：TG 以 **Apache License 2.0** 发布（`LICENSE`），补 `NOTICE` 版权声明与
+  `THIRD-PARTY-NOTICES.md`（随包两份 Markdown 手册与 Go 依赖的归属说明）。
+  README 的「致谢与许可」同步改写，不再写「仅作个人开发使用」。
+
 ## [0.1.0] - 2026-11-19
 
 首个面向 TOP GP 的版本。

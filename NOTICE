@@ -1,0 +1,10 @@
+TG — TOP GP 开发 CLI
+Copyright 2026 Vivy-JW
+
+本项目以 Apache License, Version 2.0 授权（全文见 LICENSE）。
+
+本产品包含源自 TT（https://github.com/luyaogod/TT）的代码。TT 未声明开源许可证，
+该部分代码在本项目作者的许可下使用与分发。
+
+随安装包分发的第三方文档（BDL-Markdown.zip、TOP-GP-Markdown.zip）不在本项目的
+Apache-2.0 授权范围内，版权归各自权利人所有；版权归属详见 THIRD-PARTY-NOTICES.md。
