@@ -72,10 +72,15 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo [3/4] Staging EMPTY config.json / config.example.json / README.md / skills / BDL docs ...
+echo [3/4] Staging EMPTY config.json / config.example.json / README.md / LICENSE / skills / docs ...
 copy /y config.empty.json "%STAGE%\config.json" >nul || (echo COPY empty config FAILED & exit /b 1)
 copy /y config.example.json "%STAGE%\" >nul || (echo COPY config.example.json FAILED & exit /b 1)
 copy /y README.md "%STAGE%\" >nul || (echo COPY README.md FAILED & exit /b 1)
+rem License and third-party notices travel with the package: Apache-2.0 requires
+rem shipping a copy of the License with the distributed work.
+copy /y LICENSE "%STAGE%\" >nul || (echo COPY LICENSE FAILED & exit /b 1)
+copy /y NOTICE "%STAGE%\" >nul || (echo COPY NOTICE FAILED & exit /b 1)
+copy /y THIRD-PARTY-NOTICES.md "%STAGE%\" >nul || (echo COPY THIRD-PARTY-NOTICES.md FAILED & exit /b 1)
 xcopy /e /i /y /q skills "%STAGE%\skills" >nul || (echo COPY skills FAILED & exit /b 1)
 rem Genero BDL docs ship as one zip next to tg.exe, not as loose files: 5470 .md
 rem would bloat the package and the installer, and nobody reads them from the

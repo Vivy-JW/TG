@@ -6,7 +6,16 @@
 TG 是 TT 的继任者，只面向 **鼎捷 TOP GP**（T100 分支已整体移除），因此版本号从 `0.1.0` 重新起算，
 不沿用 TT 的 `0.5.x`。
 
-## [Unreleased]
+## [0.1.1] - 2026-11-19
+
+### 修复
+
+- **`tg update` 在最后一步误判"载荷版本对不上"**：`VersionOf` 拿 `<exe> version` 的原始输出
+  直接和目标版本比字符串，而 `tg version` 现在默认输出统一信封（JSON），于是任何一次真实
+  升级都会在下发前报 `UPDATE_CHECKSUM` 中止。现在先解信封/纯文本取出版本号本身再比，
+  并补了三种形状的单测（`internal/update/apply_test.go` 的 `TestVersionToken`）。
+- `build_portable.bat` 现在把 `LICENSE`、`NOTICE`、`THIRD-PARTY-NOTICES.md` 一起 stage：
+  便携包与 MSI 都随包带许可文本（Apache-2.0 要求分发时附带许可证副本）。
 
 ### 新增
 

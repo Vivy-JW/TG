@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"time"
@@ -278,8 +279,42 @@ func VersionOf(ctx context.Context, exe string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("%w（输出：%s）", err, strings.TrimSpace(string(out)))
 	}
-	return strings.TrimSpace(string(out)), nil
+	return versionToken(string(out)), nil
 }
+
+// versionToken 从 `<exe> version` 的输出里取出版本号本身。
+//
+// 要兼容两种形状（TG 的 version 默认走统一信封，早期/TT 是纯文本）：
+//
+//	{"hints":[],"ok":true,"version":"0.1.0 (commit 176e942, 2026-11-19)"}
+//	tg 0.1.0 (commit 176e942, 2026-11-19)
+//
+// 两种都取到 `0.1.0`。取不到像版本号的词就原样返回，让上层报错时看得见原始输出。
+func versionToken(out string) string {
+	s := strings.TrimSpace(out)
+	if strings.HasPrefix(s, "{") {
+		var env struct {
+			Version string `json:"version"`
+		}
+		if json.Unmarshal([]byte(s), &env) == nil && strings.TrimSpace(env.Version) != "" {
+			s = strings.TrimSpace(env.Version)
+		}
+	}
+	for _, f := range strings.Fields(s) {
+		if v := normalizeVersion(f); v != "" && reSemver.MatchString(v) {
+			return v
+		}
+	}
+	return s
+}
+
+// normalizeVersion 只做字面清理：去掉标点与 `v` 前缀。不像 semver 时返回空串。
+func normalizeVersion(s string) string {
+	return strings.TrimPrefix(strings.Trim(s, "(),\"'"), "v")
+}
+
+// reSemver 认「1.2.3」这种形状（允许 -rc.1 / +build 后缀，版本校验不比对它们）。
+var reSemver = regexp.MustCompile(`^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.\-+]+)?$`)
 
 // OutputHasVersion 判断 `tg version` 的输出里有没有目标版本号。
 // 输出形如 `tg 0.2.1 (commit abc1234, 2026-10-07)`，所以按**词**比而不是子串比：

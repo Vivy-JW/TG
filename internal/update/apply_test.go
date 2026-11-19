@@ -74,6 +74,29 @@ func TestOutputHasVersion(t *testing.T) {
 	}
 }
 
+// `tg version` 现在默认走统一信封（JSON），而早先/TT 是纯文本；两种形状都要取到版本号本身，
+// 否则升级最后一步"载荷自报版本与目标一致吗"会把 JSON 当版本号直接判失败。
+func TestVersionToken(t *testing.T) {
+	cases := []struct{ name, out, want string }{
+		{"纯文本", "tg 0.2.2 (commit d569d10, 2026-10-07)", "0.2.2"},
+		{"纯文本带前缀v", "tg v0.2.2 (commit x)", "0.2.2"},
+		{"json信封", `{"hints":[],"ok":true,"version":"0.1.0 (commit 176e942, 2026-11-19)"}`, "0.1.0"},
+		{"json信封预发布", `{"ok":true,"version":"0.3.0-rc1 (commit x)"}`, "0.3.0-rc1"},
+		{"json信封devel", `{"ok":true,"version":"devel (commit x)"}`, "devel (commit x)"},
+		{"取不到版本号就原样返回", "boom", "boom"},
+	}
+	for _, c := range cases {
+		if got := versionToken(c.out); got != c.want {
+			t.Errorf("%s: versionToken(%q) = %q，想要 %q", c.name, c.out, got, c.want)
+		}
+	}
+	// 取出来的 token 必须能过 OutputHasVersion —— 这就是升级最后一步的判据。
+	got := versionToken(`{"hints":[],"ok":true,"version":"0.1.0 (commit 176e942, 2026-11-19)"}`)
+	if !OutputHasVersion(got, "0.1.0") {
+		t.Errorf("信封取出的 %q 没通过版本比对", got)
+	}
+}
+
 func TestPlanRoundTrip(t *testing.T) {
 	dir := t.TempDir()
 	p := &Plan{

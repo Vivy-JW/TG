@@ -1,7 +1,7 @@
 {
   "name": "tg-web",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "TT 前端：一套 SPA（调试工作台 + 覆盖三个工具的统一设置页）+ 共享的设计系统层",
   "workspaces": [
