@@ -24,12 +24,10 @@ TT/
 ├─ build_portable.bat   便携包构建：前端 + Go 二进制 + skills/
 ├─ build_msi.bat        MSI 构建：复用便携载荷，生成 perUser 安装包
 │
-├─ .agents/             项目 Agent 技能与说明（不随发行包装到用户目录）
-│  ├─ docs/             协作者共享文档与项目架构图
-│  └─ skills/           项目内技能
-│     ├─ asd-ste100/    技术英语/简化英语写作与检查
-│     ├─ tt-add-cli/    新增 CLI 命令的设计指南
-│     └─ tt-test/       真机集成测试与链路验证指南
+├─ .agents/             项目 Agent 技能与说明（**本地保留，已 gitignore**：不进仓库、不随发行包）
+│  ├─ docs/             协作者共享文档与命令图生成脚本
+│  ├─ plan/             工作计划与交接（handoff.md）
+│  └─ skills/           项目内技能（tg-pj-add-cli / tg-pj-git / tg-pj-plan / tg-pj-test）
 │
 ├─ internal/            Go 后端全部实现
 │  ├─ cli/              cobra 命令树装配处：各能力线 + 共用命令；唯一的接线处

@@ -75,8 +75,12 @@ web/dist.old-*/
 # 手工替换 dist 时的中转目录(vite --outDir ../dist.new 那套)
 /web/dist.new/
 
-# agent plan：本机的工作计划，不进公共仓库（.agents/skills 与 .agents/docs 仍入库）
-/.agents/plan/
+# 开发过程资产只留本地，不进公共仓库：
+#   .agents/plan（工作计划与交接）、.agents/skills（tg-pj-* 开发规范）、.agents/docs（命令图生成脚本）
+#   docs/tg-plan.md、docs/tg-tasks.md（项目计划与任务清单）
+/.agents/
+/docs/tg-plan.md
+/docs/tg-tasks.md
 
 # ── TG 导入 TT 0.5.2 基线时补齐的漏网规则 ──
 # 构建产物实际叫 tt-fork.exe，原规则只写了 /tt.exe.bak-*，它的备份（.bak-20261105* 共 18 个）会漏进来
