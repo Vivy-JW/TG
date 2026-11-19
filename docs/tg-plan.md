@@ -5,7 +5,7 @@
 >
 > 具体事项在 [tg-tasks.md](tg-tasks.md)（`☐` 未做 / `☑` 已完成）。
 > 依据文档：[gp-scope.md](gp-scope.md)（分层删留）、[gp-dict-wiring.md](gp-dict-wiring.md)
-> （字典接线）、[tt-commands.xlsx](tt-commands.xlsx)（118 条命令 + 处置初判）。
+> （字典接线）、`tt-commands.xlsx`（118 条命令 + 处置初判；该表已从仓库移除）。
 
 ## 范围与原则
 

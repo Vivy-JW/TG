@@ -13,7 +13,7 @@
 - ☑ Go 构建与测试跑通（`GOCACHE` 指工作区，避开沙箱；基线 50 绿 / 5 红）
 - ☑ 写出 `docs/gp-scope.md`（底座 / Genero 层 / T100 领域层三层删留）
 - ☑ 写出 `docs/gp-dict-wiring.md`（30 个 `Source` 方法逐条接线）
-- ☑ 写出 `docs/tt-commands.xlsx`（99 个末端命令 + 处置：留 31 / 改 53 / 删 15）
+- ☑ 写出 `docs/tt-commands.xlsx`（99 个末端命令 + 处置：留 31 / 改 53 / 删 15）；该表已从仓库移除
 - ☑ 前端：GP 选目录修 404（`b2aa3aa`）
 - ☑ 前端：删从未挂载的 `GpDict` 死组件（`0be3167`）
 - ☑ 真实 GP 环境实测（TOPTEST：同步 1m18s / 20.5 MB；`zr_file` 16 万行；`zz_file` 类别定义）
