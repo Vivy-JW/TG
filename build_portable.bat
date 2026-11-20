@@ -82,6 +82,9 @@ copy /y LICENSE "%STAGE%\" >nul || (echo COPY LICENSE FAILED & exit /b 1)
 copy /y NOTICE "%STAGE%\" >nul || (echo COPY NOTICE FAILED & exit /b 1)
 copy /y THIRD-PARTY-NOTICES.md "%STAGE%\" >nul || (echo COPY THIRD-PARTY-NOTICES.md FAILED & exit /b 1)
 xcopy /e /i /y /q skills "%STAGE%\skills" >nul || (echo COPY skills FAILED & exit /b 1)
+rem 同一份技能再放一份到 .agents\skills：用户把解压出来的目录当工作区打开时，
+rem Claude Code / Codex / Cursor / DSH 等会直接扫到，不用先敲 tg install skills。
+xcopy /e /i /y /q skills "%STAGE%\.agents\skills" >nul || (echo COPY .agents\skills FAILED & exit /b 1)
 rem Genero BDL docs ship as one zip next to tg.exe, not as loose files: 5470 .md
 rem would bloat the package and the installer, and nobody reads them from the
 rem program dir anyway. `tg install bdl` unpacks it into the user's data dir
